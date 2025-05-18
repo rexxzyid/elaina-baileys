@@ -12,12 +12,12 @@
     "automation",
     "multi-device"
   ],
-  "homepage": "https://github.com/RexxHayanasi/elaina-bil",
+  "homepage": "https://github.com/RexxHayanasi/elaina-baileys",
   "repository": {
-    "url": "git@github.com:RexxHayanasi/elaina-bail.git"
+    "url": "git@github.com:RexxHayanasi/elaina-baileys.git"
   },
   "license": "MIT",
-  "author": "@RexxHayanask",
+  "author": "@RexxHayanasi",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -45,22 +45,24 @@
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
     "@hapi/boom": "^9.1.3",
+    "@whiskeysockets/eslint-config": "github:whiskeysockets/eslint-config",
+    "async-mutex": "^0.5.0",
     "async-lock": "^1.4.1",
     "audio-decode": "^2.1.3",
     "axios": "^1.3.3",
     "cache-manager": "4.0.1",
     "futoin-hkdf": "^1.5.1",
     "libphonenumber-js": "^1.10.20",
-    "libsignal": "github:adiwajshing/libsignal-node",
+    "libsignal": "github:whiskeysockets/libsignal-node",
     "music-metadata": "^7.12.3",
     "node-cache": "^5.1.2",
-    "pino": "^7.0.0",
+    "pino": "^9.6",
     "protobufjs": "^7.2.4",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@adiwajshing/eslint-config": "github:adiwajshing/eslint-config",
+    "@adiwajshing/eslint-config": "github:whiskeysockets/eslint-config",
     "@types/got": "^9.6.11",
     "@types/jest": "^27.5.1",
     "@types/node": "^16.0.0",
@@ -101,5 +103,8 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }
