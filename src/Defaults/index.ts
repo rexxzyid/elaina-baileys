@@ -20,9 +20,12 @@ export const PHONE_CONNECTION_CB = 'CB:Pong'
 
 export const WA_DEFAULT_EPHEMERAL = 7 * 24 * 60 * 60
 
-const WA_VERSION = '2.24.6.77'
+// Versi WA sudah diganti ke 2.3000.1020608496 sesuai versi Baileys
+const WA_VERSION = '2.3000.1020608496'
 
+// Hitung MD5 hash dari WA_VERSION untuk MOBILE_TOKEN
 const WA_VERSION_HASH = createHash('md5').update(WA_VERSION).digest('hex')
+
 export const MOBILE_TOKEN = Buffer.from('0a1mLfGUIBVrMKF1RdvLI5lkRBvof6vn0fD2QRSM' + WA_VERSION_HASH)
 export const MOBILE_REGISTRATION_ENDPOINT = 'https://v.whatsapp.net/v2'
 export const MOBILE_USERAGENT = `WhatsApp/${WA_VERSION} iOS/15.3.1 Device/Apple-iPhone_7`
