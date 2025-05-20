@@ -127,8 +127,7 @@ export function registrationParams(params: RegistrationParams) {
 		e_regid: e_regid.toString('base64url'),
 		e_keytype: 'BQ',
 		e_ident: Buffer.from(params.signedIdentityKey.public).toString('base64url'),
-		// e_skey_id: e_skey_id.toString('base64url'),
-		e_skey_id: 'AAAA',
+		e_skey_id: e_skey_id.toString('base64url'), // Ganti dari 'AAAA'
 		e_skey_val: Buffer.from(params.signedPreKey.keyPair.public).toString('base64url'),
 		e_skey_sig: Buffer.from(params.signedPreKey.signature).toString('base64url'),
 		fdid: params.phoneId,
@@ -143,6 +142,7 @@ export function registrationParams(params: RegistrationParams) {
 		fraud_checkpoint_code: params.captcha,
 	}
 }
+
 
 /**
  * Requests a registration code for the given phone number.
