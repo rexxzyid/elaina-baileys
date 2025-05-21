@@ -1,48 +1,38 @@
 import { Boom } from '@hapi/boom'
 import axios, { AxiosRequestConfig } from 'axios'
-import { randomBytes, createHash } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import { platform, release } from 'os'
-import { Logger } from 'pino'
 import { proto } from '../../WAProto'
 import { version as baileysVersion } from '../Defaults/baileys-version.json'
 import { BaileysEventEmitter, BaileysEventMap, BrowsersMap, ConnectionState, DisconnectReason, WACallUpdateType, WAVersion } from '../Types'
 import { BinaryNode, getAllBinaryNodeChildren, jidDecode } from '../WABinary'
 
-const COMPANION_PLATFORM_MAP = {
-  'Chrome': '49',
-  'Edge': '50',
-  'Firefox': '51',
-  'Opera': '53',
-  'Safari': '54'
-}
-
 const PLATFORM_MAP = {
-  'aix': 'AIX',
-  'darwin': 'Mac OS',
-  'win32': 'Windows',
-  'android': 'Android',
-  'freebsd': 'FreeBSD',
-  'openbsd': 'OpenBSD',
-  'sunos': 'Solaris'
+	'aix': 'AIX',
+	'darwin': 'Mac OS',
+	'win32': 'Windows',
+	'android': 'Android',
+	'freebsd': 'FreeBSD',
+	'openbsd': 'OpenBSD',
+	'sunos': 'Solaris'
 }
 
 export const Browsers: BrowsersMap = {
-  ubuntu: (browser) => ['Ubuntu', browser, '22.04.4'],
-  macOS: (browser) => ['Mac OS', browser, '14.4.1'],
-  baileys: (browser) => ['Baileys', browser, '6.5.0'],
-  windows: (browser) => ['Windows', browser, '10.0.22631'], 
-  iOS: (browser) => ['iOS', browser, '18.2'],
-  linux: (browser) => ['Linux', browser, '6.12.6'],
+	ubuntu: (browser) => ['Ubuntu', browser, '22.04.4'],
+	macOS: (browser) => ['Mac OS', browser, '14.4.1'],
+	baileys: (browser) => ['Baileys', browser, '6.5.0'],
+	windows: (browser) => ['Windows', browser, '10.0.22631'],
 	/** The appropriate browser based on your OS & release */
-  appropriate: (browser) => [ PLATFORM_MAP[platform()] || 'Ubuntu', browser, release() ]
+	appropriate: (browser) => [ PLATFORM_MAP[platform()] || 'Ubuntu', browser, release() ]
 }
 
 export const getPlatformId = (browser: string) => {
 	const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()]
-	return platformType ? platformType.toString().charCodeAt(0).toString() : '1' //chrome
+	return platformType ? platformType.toString() : '1' //chrome
 }
 
 export const BufferJSON = {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	replacer: (k, value: any) => {
 		if(Buffer.isBuffer(value) || value instanceof Uint8Array || value?.type === 'Buffer') {
 			return { type: 'Buffer', data: Buffer.from(value?.data || value).toString('base64') }
@@ -50,6 +40,8 @@ export const BufferJSON = {
 
 		return value
 	},
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	reviver: (_, value: any) => {
 		if(typeof value === 'object' && !!value && (value.buffer === true || value.type === 'Buffer')) {
 			const val = value.data || value.value
@@ -62,7 +54,7 @@ export const BufferJSON = {
 
 export const getKeyAuthor = (
 	key: proto.IMessageKey | undefined | null,
-	meId: string = 'me'
+	meId = 'me'
 ) => (
 	(key?.fromMe ? meId : key?.participant || key?.remoteJid) || ''
 )
@@ -112,14 +104,14 @@ export const encodeBigEndian = (e: number, t = 4) => {
 	return a
 }
 
-export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as any).low) : t)
+export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as Long).low) : t || 0)
 
 /** unix timestamp of a date in seconds */
 export const unixTimestampSeconds = (date: Date = new Date()) => Math.floor(date.getTime() / 1000)
 
 export type DebouncedTimeout = ReturnType<typeof debouncedTimeout>
 
-export const debouncedTimeout = (intervalMs: number = 1000, task?: () => void) => {
+export const debouncedTimeout = (intervalMs = 1000, task?: () => void) => {
 	let timeout: NodeJS.Timeout | undefined
 	return {
 		start: (newIntervalMs?: number, newTask?: () => void) => {
@@ -188,6 +180,8 @@ export async function promiseTimeout<T>(ms: number | undefined, promise: (resolv
 	return p as Promise<T>
 }
 
+// inspired from whatsmeow code
+// https://github.com/tulir/whatsmeow/blob/64bc969fbe78d31ae0dd443b8d4c80a5d026d07a/send.go#L42
 export const generateMessageIDV2 = (userId?: string): string => {
 	const data = Buffer.alloc(8 + 20 + 16)
 	data.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000)))
@@ -208,10 +202,10 @@ export const generateMessageIDV2 = (userId?: string): string => {
 }
 
 // generate a random ID to attach to a message
-export const generateMessageID = () => 'FELZ' + randomBytes(6).toString('hex').toUpperCase()
+export const generateMessageID = () => '3EB0' + randomBytes(18).toString('hex').toUpperCase()
 
 export function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEventEmitter, event: T) {
-	return async(check: (u: BaileysEventMap[T]) => boolean | undefined, timeoutMs?: number) => {
+	return async(check: (u: BaileysEventMap[T]) => Promise<boolean | undefined>, timeoutMs?: number) => {
 		let listener: (item: BaileysEventMap[T]) => void
 		let closeListener: (state: Partial<ConnectionState>) => void
 		await (
@@ -228,8 +222,8 @@ export function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEve
 					}
 
 					ev.on('connection.update', closeListener)
-					listener = (update) => {
-						if(check(update)) {
+					listener = async(update) => {
+						if(await check(update)) {
 							resolve()
 						}
 					}
@@ -247,24 +241,11 @@ export function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEve
 
 export const bindWaitForConnectionUpdate = (ev: BaileysEventEmitter) => bindWaitForEvent(ev, 'connection.update')
 
-export const printQRIfNecessaryListener = (ev: BaileysEventEmitter, logger: Logger) => {
-	ev.on('connection.update', async({ qr }) => {
-		if(qr) {
-			const QR = await import('qrcode-terminal')
-				.then(m => m.default || m)
-				.catch(() => {
-					logger.error('QR code terminal not added as dependency')
-				})
-			QR?.generate(qr, { small: true })
-		}
-	})
-}
-
 /**
  * utility that fetches latest baileys version from the master branch.
  * Use to ensure your WA connection is always on the latest version
  */
-export const fetchLatestBaileysVersion = async(options: AxiosRequestConfig<any> = { }) => {
+export const fetchLatestBaileysVersion = async(options: AxiosRequestConfig<{}> = { }) => {
 	const URL = 'https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json'
 	try {
 		const result = await axios.get<{ version: WAVersion }>(
@@ -291,18 +272,33 @@ export const fetchLatestBaileysVersion = async(options: AxiosRequestConfig<any> 
  * A utility that fetches the latest web version of whatsapp.
  * Use to ensure your WA connection is always on the latest version
  */
-export const fetchLatestWaWebVersion = async(options: AxiosRequestConfig<any>) => {
+export const fetchLatestWaWebVersion = async(options: AxiosRequestConfig<{}>) => {
 	try {
-		const result = await axios.get(
-			'https://web.whatsapp.com/check-update?version=1&platform=web',
+		const { data } = await axios.get(
+			'https://web.whatsapp.com/sw.js',
 			{
 				...options,
 				responseType: 'json'
 			}
 		)
-		const version = result.data.currentVersion.split('.')
+
+		const regex = /\\?"client_revision\\?":\s*(\d+)/
+		const match = data.match(regex)
+
+		if(!match?.[1]) {
+			return {
+				version: baileysVersion as WAVersion,
+				isLatest: false,
+				error: {
+					message: 'Could not find client revision in the fetched content'
+				}
+			}
+		}
+
+		const clientRevision = match[1]
+
 		return {
-			version: [+version[0], +version[1], +version[2]] as WAVersion,
+			version: [2, 3000, +clientRevision] as WAVersion,
 			isLatest: true
 		}
 	} catch(error) {
@@ -321,6 +317,7 @@ export const generateMdTagPrefix = () => {
 }
 
 const STATUS_MAP: { [_: string]: proto.WebMessageInfo.Status } = {
+	'sender': proto.WebMessageInfo.Status.SERVER_ACK,
 	'played': proto.WebMessageInfo.Status.PLAYED,
 	'read': proto.WebMessageInfo.Status.READ,
 	'read-self': proto.WebMessageInfo.Status.READ
@@ -401,6 +398,7 @@ export const getCodeFromWSError = (error: Error) => {
 			statusCode = code
 		}
 	} else if(
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(error as any)?.code?.startsWith('E')
 		|| error?.message?.includes('timed out')
 	) { // handle ETIMEOUT, ENOTFOUND etc
@@ -418,7 +416,8 @@ export const isWABusinessPlatform = (platform: string) => {
 	return platform === 'smbi' || platform === 'smba'
 }
 
-export function trimUndefined(obj: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function trimUndefined(obj: {[_: string]: any}) {
 	for(const key in obj) {
 		if(typeof obj[key] === 'undefined') {
 			delete obj[key]
@@ -435,8 +434,8 @@ export function bytesToCrockford(buffer: Buffer): string {
 	let bitCount = 0
 	const crockford: string[] = []
 
-	for(let i = 0; i < buffer.length; i++) {
-		value = (value << 8) | (buffer[i] & 0xff)
+	for(const element of buffer) {
+		value = (value << 8) | (element & 0xff)
 		bitCount += 8
 
 		while(bitCount >= 5) {
@@ -450,4 +449,4 @@ export function bytesToCrockford(buffer: Buffer): string {
 	}
 
 	return crockford.join('')
-		}
+				 }
