@@ -54,7 +54,7 @@
     "futoin-hkdf": "^1.5.1",
     "libphonenumber-js": "^1.10.20",
     "libsignal": "github:whiskeysockets/libsignal-node",
-    "music-metadata": "^7.12.3",
+    "music-metadata": "^11.12.3",
     "node-cache": "^5.1.2",
     "pino": "^9.6",
     "protobufjs": "^7.2.4",
