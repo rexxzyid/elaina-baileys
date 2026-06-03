@@ -42,7 +42,7 @@
     "preinstall": "node ./engine-requirements.js",
     "release": "release-it",
     "test": "jest",
-    "update:version": "node scripts/update-version.js"
+    "update:version": "node script/update-version.js"
   },
   "dependencies": {
     "@roamhq/wrtc": "^0.10.0",
