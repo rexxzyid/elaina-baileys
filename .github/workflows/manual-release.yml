@@ -57,4 +57,4 @@ jobs:
 
           echo "Publishing v${VERSION} to npm..."
           npm publish --access public
-          echo "✓ Published @yemo-dev/yebail@${VERSION} to https://www.npmjs.com/package/@yemo-dev/yebail"
+          echo "✓ Published @rexxhayanasi/elaina-baileys@${VERSION} to https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys"
