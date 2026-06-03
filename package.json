@@ -24,7 +24,7 @@
     "lib/*",
     "WAProto/*",
     "engine-requirements.js",
-    "lib/assets/wasm/**/*",
+    "lib/assets/wasm/**/*"
   ],
   "scripts": {
     "build:all": "tsc && typedoc",
