@@ -1,17 +1,17 @@
 {
   "name": "@rexxhayanasi/elaina-baileys",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "description": "Custom Baileys WhatsApp API for ESM / CJS",
   "keywords": [
-    "baileys", 
-    "baileys-mod", 
-    "wabot", 
+    "baileys",
+    "baileys-mod",
+    "wabot",
     "whatsapp",
-    "js-whatsapp", 
-    "whatsapp-api", 
+    "js-whatsapp",
+    "whatsapp-api",
     "whatsapp-web",
     "whatsapp-bot",
-    "automation", 
+    "automation",
     "multi-device",
     "RexxHayanasi"
   ],
@@ -93,7 +93,7 @@
     "qrcode-terminal": "^0.12.0",
     "sharp": "^0.34.1"
   },
-  "peerDependenciesMeta": {    
+  "peerDependenciesMeta": {
     "jimp": {
       "optional": true
     },
