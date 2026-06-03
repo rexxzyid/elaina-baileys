@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message Config {
+    map<uint32, Field> field = 1;
+    optional uint32 version = 2;
+}

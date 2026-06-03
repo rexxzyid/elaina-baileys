@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotImagineMetadata {
+    optional ImagineType imagineType = 1;
+    enum ImagineType {
+        UNKNOWN = 0;
+        IMAGINE = 1;
+        MEMU = 2;
+        FLASH = 3;
+        EDIT = 4;
+    }
+}

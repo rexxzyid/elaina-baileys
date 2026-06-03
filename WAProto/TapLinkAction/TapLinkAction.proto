@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message TapLinkAction {
+    optional string title = 1;
+    optional string tapUrl = 2;
+}

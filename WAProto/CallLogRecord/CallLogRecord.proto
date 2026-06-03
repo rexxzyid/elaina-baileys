@@ -1,0 +1,51 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message CallLogRecord {
+    optional CallResult callResult = 1;
+    optional bool isDndMode = 2;
+    optional SilenceReason silenceReason = 3;
+    optional int64 duration = 4;
+    optional int64 startTime = 5;
+    optional bool isIncoming = 6;
+    optional bool isVideo = 7;
+    optional bool isCallLink = 8;
+    optional string callLinkToken = 9;
+    optional string scheduledCallId = 10;
+    optional string callId = 11;
+    optional string callCreatorJid = 12;
+    optional string groupJid = 13;
+    repeated ParticipantInfo participants = 14;
+    optional CallType callType = 15;
+    enum CallResult {
+        CONNECTED = 0;
+        REJECTED = 1;
+        CANCELLED = 2;
+        ACCEPTEDELSEWHERE = 3;
+        MISSED = 4;
+        INVALID = 5;
+        UNAVAILABLE = 6;
+        UPCOMING = 7;
+        FAILED = 8;
+        ABANDONED = 9;
+        ONGOING = 10;
+    }
+    enum CallType {
+        REGULAR = 0;
+        SCHEDULED_CALL = 1;
+        VOICE_CHAT = 2;
+    }
+    message ParticipantInfo {
+        optional string userJid = 1;
+        optional CallLogRecord.CallResult callResult = 2;
+    }
+
+    enum SilenceReason {
+        NONE = 0;
+        SCHEDULED = 1;
+        PRIVACY = 2;
+        LIGHTWEIGHT = 3;
+    }
+}

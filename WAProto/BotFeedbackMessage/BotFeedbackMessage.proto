@@ -1,0 +1,100 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotFeedbackMessage {
+    optional MessageKey messageKey = 1;
+    optional BotFeedbackKind kind = 2;
+    optional string text = 3;
+    optional uint64 kindNegative = 4;
+    optional uint64 kindPositive = 5;
+    optional ReportKind kindReport = 6;
+    optional SideBySideSurveyMetadata sideBySideSurveyMetadata = 7;
+    enum BotFeedbackKind {
+        BOT_FEEDBACK_POSITIVE = 0;
+        BOT_FEEDBACK_NEGATIVE_GENERIC = 1;
+        BOT_FEEDBACK_NEGATIVE_HELPFUL = 2;
+        BOT_FEEDBACK_NEGATIVE_INTERESTING = 3;
+        BOT_FEEDBACK_NEGATIVE_ACCURATE = 4;
+        BOT_FEEDBACK_NEGATIVE_SAFE = 5;
+        BOT_FEEDBACK_NEGATIVE_OTHER = 6;
+        BOT_FEEDBACK_NEGATIVE_REFUSED = 7;
+        BOT_FEEDBACK_NEGATIVE_NOT_VISUALLY_APPEALING = 8;
+        BOT_FEEDBACK_NEGATIVE_NOT_RELEVANT_TO_TEXT = 9;
+        BOT_FEEDBACK_NEGATIVE_PERSONALIZED = 10;
+        BOT_FEEDBACK_NEGATIVE_CLARITY = 11;
+        BOT_FEEDBACK_NEGATIVE_DOESNT_LOOK_LIKE_THE_PERSON = 12;
+        BOT_FEEDBACK_NEGATIVE_HALLUCINATION_INTERNAL_ONLY = 13;
+        BOT_FEEDBACK_NEGATIVE = 14;
+    }
+    enum BotFeedbackKindMultipleNegative {
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_GENERIC = 1;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_HELPFUL = 2;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_INTERESTING = 4;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_ACCURATE = 8;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_SAFE = 16;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_OTHER = 32;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_REFUSED = 64;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_NOT_VISUALLY_APPEALING = 128;
+        BOT_FEEDBACK_MULTIPLE_NEGATIVE_NOT_RELEVANT_TO_TEXT = 256;
+    }
+    enum BotFeedbackKindMultiplePositive {
+        BOT_FEEDBACK_MULTIPLE_POSITIVE_GENERIC = 1;
+    }
+    enum ReportKind {
+        NONE = 0;
+        GENERIC = 1;
+    }
+    message SideBySideSurveyMetadata {
+        optional string selectedRequestId = 1;
+        optional uint32 surveyId = 2;
+        optional string simonSessionFbid = 3;
+        optional string responseOtid = 4;
+        optional string responseTimestampMsString = 5;
+        optional bool isSelectedResponsePrimary = 6;
+        optional string messageIdToEdit = 7;
+        optional SideBySideSurveyAnalyticsData analyticsData = 8;
+        optional SidebySideSurveyMetaAiAnalyticsData metaAiAnalyticsData = 9;
+        message SideBySideSurveyAnalyticsData {
+            optional string tessaEvent = 1;
+            optional string tessaSessionFbid = 2;
+            optional string simonSessionFbid = 3;
+        }
+
+        message SidebySideSurveyMetaAiAnalyticsData {
+            optional uint32 surveyId = 1;
+            optional string primaryResponseId = 2;
+            optional string testArmName = 3;
+            optional string timestampMsString = 4;
+            optional SideBySideSurveyCTAImpressionEventData ctaImpressionEvent = 5;
+            optional SideBySideSurveyCTAClickEventData ctaClickEvent = 6;
+            optional SideBySideSurveyCardImpressionEventData cardImpressionEvent = 7;
+            optional SideBySideSurveyResponseEventData responseEvent = 8;
+            optional SideBySideSurveyAbandonEventData abandonEvent = 9;
+            message SideBySideSurveyAbandonEventData {
+                optional string abandonDwellTimeMsString = 1;
+            }
+
+            message SideBySideSurveyCTAClickEventData {
+                optional bool isSurveyExpired = 1;
+                optional string clickDwellTimeMsString = 2;
+            }
+
+            message SideBySideSurveyCTAImpressionEventData {
+                optional bool isSurveyExpired = 1;
+            }
+
+            message SideBySideSurveyCardImpressionEventData {
+            }
+
+            message SideBySideSurveyResponseEventData {
+                optional string responseDwellTimeMsString = 1;
+                optional string selectedResponseId = 2;
+            }
+
+        }
+
+    }
+
+}

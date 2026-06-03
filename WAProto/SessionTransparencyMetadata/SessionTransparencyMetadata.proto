@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SessionTransparencyMetadata {
+    optional string disclaimerText = 1;
+    optional string hcaId = 2;
+    optional SessionTransparencyType sessionTransparencyType = 3;
+}

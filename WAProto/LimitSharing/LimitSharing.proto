@@ -1,0 +1,17 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message LimitSharing {
+    optional bool sharingLimited = 1;
+    optional TriggerType trigger = 2;
+    optional int64 limitSharingSettingTimestamp = 3;
+    optional bool initiatedByMe = 4;
+    enum TriggerType {
+        UNKNOWN = 0;
+        CHAT_SETTING = 1;
+        BIZ_SUPPORTS_FB_HOSTING = 2;
+        UNKNOWN_GROUP = 3;
+    }
+}

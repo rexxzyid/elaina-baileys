@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message EventResponse {
+    optional MessageKey eventResponseMessageKey = 1;
+    optional int64 timestampMs = 2;
+    optional Message.EventResponseMessage eventResponseMessage = 3;
+    optional bool unread = 4;
+}

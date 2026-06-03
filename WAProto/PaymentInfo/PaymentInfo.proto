@@ -1,0 +1,72 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PaymentInfo {
+    optional Currency currencyDeprecated = 1;
+    optional uint64 amount1000 = 2;
+    optional string receiverJid = 3;
+    optional Status status = 4;
+    optional uint64 transactionTimestamp = 5;
+    optional MessageKey requestMessageKey = 6;
+    optional uint64 expiryTimestamp = 7;
+    optional bool futureproofed = 8;
+    optional string currency = 9;
+    optional TxnStatus txnStatus = 10;
+    optional bool useNoviFiatFormat = 11;
+    optional Money primaryAmount = 12;
+    optional Money exchangeAmount = 13;
+    enum Currency {
+        UNKNOWN_CURRENCY = 0;
+        INR = 1;
+    }
+    enum Status {
+        UNKNOWN_STATUS = 0;
+        PROCESSING = 1;
+        SENT = 2;
+        NEED_TO_ACCEPT = 3;
+        COMPLETE = 4;
+        COULD_NOT_COMPLETE = 5;
+        REFUNDED = 6;
+        EXPIRED = 7;
+        REJECTED = 8;
+        CANCELLED = 9;
+        WAITING_FOR_PAYER = 10;
+        WAITING = 11;
+    }
+    enum TxnStatus {
+        UNKNOWN = 0;
+        PENDING_SETUP = 1;
+        PENDING_RECEIVER_SETUP = 2;
+        INIT = 3;
+        SUCCESS = 4;
+        COMPLETED = 5;
+        FAILED = 6;
+        FAILED_RISK = 7;
+        FAILED_PROCESSING = 8;
+        FAILED_RECEIVER_PROCESSING = 9;
+        FAILED_DA = 10;
+        FAILED_DA_FINAL = 11;
+        REFUNDED_TXN = 12;
+        REFUND_FAILED = 13;
+        REFUND_FAILED_PROCESSING = 14;
+        REFUND_FAILED_DA = 15;
+        EXPIRED_TXN = 16;
+        AUTH_CANCELED = 17;
+        AUTH_CANCEL_FAILED_PROCESSING = 18;
+        AUTH_CANCEL_FAILED = 19;
+        COLLECT_INIT = 20;
+        COLLECT_SUCCESS = 21;
+        COLLECT_FAILED = 22;
+        COLLECT_FAILED_RISK = 23;
+        COLLECT_REJECTED = 24;
+        COLLECT_EXPIRED = 25;
+        COLLECT_CANCELED = 26;
+        COLLECT_CANCELLING = 27;
+        IN_REVIEW = 28;
+        REVERSAL_SUCCESS = 29;
+        REVERSAL_PENDING = 30;
+        REFUND_PENDING = 31;
+    }
+}

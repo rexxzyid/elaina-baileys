@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message EmbeddedMusic {
+    optional string musicContentMediaId = 1;
+    optional string songId = 2;
+    optional string author = 3;
+    optional string title = 4;
+    optional string artworkDirectPath = 5;
+    optional bytes artworkSha256 = 6;
+    optional bytes artworkEncSha256 = 7;
+    optional string artistAttribution = 8;
+    optional bytes countryBlocklist = 9;
+    optional bool isExplicit = 10;
+    optional bytes artworkMediaKey = 11;
+    optional int64 musicSongStartTimeInMs = 12;
+    optional int64 derivedContentStartTimeInMs = 13;
+    optional int64 overlapDurationInMs = 14;
+}

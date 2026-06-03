@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message Point {
+    optional int32 xDeprecated = 1;
+    optional int32 yDeprecated = 2;
+    optional double x = 3;
+    optional double y = 4;
+}

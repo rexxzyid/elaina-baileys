@@ -1,0 +1,32 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PatchDebugData {
+    optional bytes currentLthash = 1;
+    optional bytes newLthash = 2;
+    optional bytes patchVersion = 3;
+    optional bytes collectionName = 4;
+    optional bytes firstFourBytesFromAHashOfSnapshotMacKey = 5;
+    optional bytes newLthashSubtract = 6;
+    optional int32 numberAdd = 7;
+    optional int32 numberRemove = 8;
+    optional int32 numberOverride = 9;
+    optional Platform senderPlatform = 10;
+    optional bool isSenderPrimary = 11;
+    enum Platform {
+        ANDROID = 0;
+        SMBA = 1;
+        IPHONE = 2;
+        SMBI = 3;
+        WEB = 4;
+        UWP = 5;
+        DARWIN = 6;
+        IPAD = 7;
+        WEAROS = 8;
+        WASG = 9;
+        WEARM = 10;
+        CAPI = 11;
+    }
+}

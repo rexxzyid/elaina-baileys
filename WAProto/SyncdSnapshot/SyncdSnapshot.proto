@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SyncdSnapshot {
+    optional SyncdVersion version = 1;
+    repeated SyncdRecord records = 2;
+    optional bytes mac = 3;
+    optional KeyId keyId = 4;
+}

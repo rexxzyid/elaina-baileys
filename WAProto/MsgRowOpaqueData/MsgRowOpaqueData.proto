@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MsgRowOpaqueData {
+    optional MsgOpaqueData currentMsg = 1;
+    optional MsgOpaqueData quotedMsg = 2;
+}

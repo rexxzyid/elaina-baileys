@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotSuggestedPromptMetadata {
+    repeated string suggestedPrompts = 1;
+    optional uint32 selectedPromptIndex = 2;
+    optional BotPromptSuggestions promptSuggestions = 3;
+    optional string selectedPromptId = 4;
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BizAccountLinkInfo {
+    optional uint64 whatsappBizAcctFbid = 1;
+    optional string whatsappAcctNumber = 2;
+    optional uint64 issueTime = 3;
+    optional HostStorageType hostStorage = 4;
+    optional AccountType accountType = 5;
+    enum AccountType {
+        ENTERPRISE = 0;
+    }
+    enum HostStorageType {
+        ON_PREMISE = 0;
+        FACEBOOK = 1;
+    }
+}

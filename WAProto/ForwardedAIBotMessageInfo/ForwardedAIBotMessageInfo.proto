@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ForwardedAIBotMessageInfo {
+    optional string botName = 1;
+    optional string botJid = 2;
+    optional string creatorName = 3;
+}

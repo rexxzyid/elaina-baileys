@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message NotificationMessageInfo {
+    optional MessageKey key = 1;
+    optional Message message = 2;
+    optional uint64 messageTimestamp = 3;
+    optional string participant = 4;
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PrimaryEphemeralIdentity {
+    optional bytes publicKey = 1;
+    optional bytes nonce = 2;
+}

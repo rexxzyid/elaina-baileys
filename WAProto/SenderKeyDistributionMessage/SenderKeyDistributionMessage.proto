@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SenderKeyDistributionMessage {
+    optional uint32 id = 1;
+    optional uint32 iteration = 2;
+    optional bytes chainKey = 3;
+    optional bytes signingKey = 4;
+}

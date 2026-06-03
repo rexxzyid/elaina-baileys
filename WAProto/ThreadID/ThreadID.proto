@@ -1,0 +1,14 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ThreadID {
+    optional ThreadType threadType = 1;
+    optional MessageKey threadKey = 2;
+    enum ThreadType {
+        UNKNOWN = 0;
+        VIEW_REPLIES = 1;
+        AI_THREAD = 2;
+    }
+}

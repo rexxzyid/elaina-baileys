@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIThreadInfo {
+    optional AIThreadServerInfo serverInfo = 1;
+    optional AIThreadClientInfo clientInfo = 2;
+    message AIThreadClientInfo {
+        optional AIThreadType type = 1;
+        enum AIThreadType {
+            UNKNOWN = 0;
+            DEFAULT = 1;
+            INCOGNITO = 2;
+        }
+    }
+
+    message AIThreadServerInfo {
+        optional string title = 1;
+    }
+
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PollEncValue {
+    optional bytes encPayload = 1;
+    optional bytes encIv = 2;
+}

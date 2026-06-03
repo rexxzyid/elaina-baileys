@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message DeviceListMetadata {
+    optional bytes senderKeyHash = 1;
+    optional uint64 senderTimestamp = 2;
+    repeated uint32 senderKeyIndexes = 3 [packed=true];
+    optional ADVEncryptionType senderAccountType = 4;
+    optional ADVEncryptionType receiverAccountType = 5;
+    optional bytes recipientKeyHash = 8;
+    optional uint64 recipientTimestamp = 9;
+    repeated uint32 recipientKeyIndexes = 10 [packed=true];
+}

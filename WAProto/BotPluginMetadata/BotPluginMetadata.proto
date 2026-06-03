@@ -1,0 +1,30 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotPluginMetadata {
+    optional SearchProvider provider = 1;
+    optional PluginType pluginType = 2;
+    optional string thumbnailCdnUrl = 3;
+    optional string profilePhotoCdnUrl = 4;
+    optional string searchProviderUrl = 5;
+    optional uint32 referenceIndex = 6;
+    optional uint32 expectedLinksCount = 7;
+    optional string searchQuery = 9;
+    optional MessageKey parentPluginMessageKey = 10;
+    optional PluginType deprecatedField = 11;
+    optional PluginType parentPluginType = 12;
+    optional string faviconCdnUrl = 13;
+    enum PluginType {
+        UNKNOWN_PLUGIN = 0;
+        REELS = 1;
+        SEARCH = 2;
+    }
+    enum SearchProvider {
+        UNKNOWN = 0;
+        BING = 1;
+        GOOGLE = 2;
+        SUPPORT = 3;
+    }
+}

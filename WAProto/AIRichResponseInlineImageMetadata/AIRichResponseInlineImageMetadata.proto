@@ -1,0 +1,16 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseInlineImageMetadata {
+    optional AIRichResponseImageURL imageUrl = 1;
+    optional string imageText = 2;
+    optional AIRichResponseImageAlignment alignment = 3;
+    optional string tapLinkUrl = 4;
+    enum AIRichResponseImageAlignment {
+        AI_RICH_RESPONSE_IMAGE_LAYOUT_LEADING_ALIGNED = 0;
+        AI_RICH_RESPONSE_IMAGE_LAYOUT_TRAILING_ALIGNED = 1;
+        AI_RICH_RESPONSE_IMAGE_LAYOUT_CENTER_ALIGNED = 2;
+    }
+}

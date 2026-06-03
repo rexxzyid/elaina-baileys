@@ -1,0 +1,497 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SyncActionValue {
+    optional int64 timestamp = 1;
+    optional StarAction starAction = 2;
+    optional ContactAction contactAction = 3;
+    optional MuteAction muteAction = 4;
+    optional PinAction pinAction = 5;
+    optional PushNameSetting pushNameSetting = 7;
+    optional QuickReplyAction quickReplyAction = 8;
+    optional RecentEmojiWeightsAction recentEmojiWeightsAction = 11;
+    optional LabelEditAction labelEditAction = 14;
+    optional LabelAssociationAction labelAssociationAction = 15;
+    optional LocaleSetting localeSetting = 16;
+    optional ArchiveChatAction archiveChatAction = 17;
+    optional DeleteMessageForMeAction deleteMessageForMeAction = 18;
+    optional KeyExpiration keyExpiration = 19;
+    optional MarkChatAsReadAction markChatAsReadAction = 20;
+    optional ClearChatAction clearChatAction = 21;
+    optional DeleteChatAction deleteChatAction = 22;
+    optional UnarchiveChatsSetting unarchiveChatsSetting = 23;
+    optional PrimaryFeature primaryFeature = 24;
+    optional AndroidUnsupportedActions androidUnsupportedActions = 26;
+    optional AgentAction agentAction = 27;
+    optional SubscriptionAction subscriptionAction = 28;
+    optional UserStatusMuteAction userStatusMuteAction = 29;
+    optional TimeFormatAction timeFormatAction = 30;
+    optional NuxAction nuxAction = 31;
+    optional PrimaryVersionAction primaryVersionAction = 32;
+    optional StickerAction stickerAction = 33;
+    optional RemoveRecentStickerAction removeRecentStickerAction = 34;
+    optional ChatAssignmentAction chatAssignment = 35;
+    optional ChatAssignmentOpenedStatusAction chatAssignmentOpenedStatus = 36;
+    optional PnForLidChatAction pnForLidChatAction = 37;
+    optional MarketingMessageAction marketingMessageAction = 38;
+    optional MarketingMessageBroadcastAction marketingMessageBroadcastAction = 39;
+    optional ExternalWebBetaAction externalWebBetaAction = 40;
+    optional PrivacySettingRelayAllCalls privacySettingRelayAllCalls = 41;
+    optional CallLogAction callLogAction = 42;
+    optional UGCBot ugcBot = 43;
+    optional StatusPrivacyAction statusPrivacy = 44;
+    optional BotWelcomeRequestAction botWelcomeRequestAction = 45;
+    optional DeleteIndividualCallLogAction deleteIndividualCallLog = 46;
+    optional LabelReorderingAction labelReorderingAction = 47;
+    optional PaymentInfoAction paymentInfoAction = 48;
+    optional CustomPaymentMethodsAction customPaymentMethodsAction = 49;
+    optional LockChatAction lockChatAction = 50;
+    optional ChatLockSettings chatLockSettings = 51;
+    optional WamoUserIdentifierAction wamoUserIdentifierAction = 52;
+    optional PrivacySettingDisableLinkPreviewsAction privacySettingDisableLinkPreviewsAction = 53;
+    optional DeviceCapabilities deviceCapabilities = 54;
+    optional NoteEditAction noteEditAction = 55;
+    optional FavoritesAction favoritesAction = 56;
+    optional MerchantPaymentPartnerAction merchantPaymentPartnerAction = 57;
+    optional WaffleAccountLinkStateAction waffleAccountLinkStateAction = 58;
+    optional UsernameChatStartModeAction usernameChatStartMode = 59;
+    optional NotificationActivitySettingAction notificationActivitySettingAction = 60;
+    optional LidContactAction lidContactAction = 61;
+    optional CtwaPerCustomerDataSharingAction ctwaPerCustomerDataSharingAction = 62;
+    optional PaymentTosAction paymentTosAction = 63;
+    optional PrivacySettingChannelsPersonalisedRecommendationAction privacySettingChannelsPersonalisedRecommendationAction = 64;
+    optional BusinessBroadcastAssociationAction businessBroadcastAssociationAction = 65;
+    optional DetectedOutcomesStatusAction detectedOutcomesStatusAction = 66;
+    optional MaibaAIFeaturesControlAction maibaAiFeaturesControlAction = 68;
+    optional BusinessBroadcastListAction businessBroadcastListAction = 69;
+    optional MusicUserIdAction musicUserIdAction = 70;
+    optional StatusPostOptInNotificationPreferencesAction statusPostOptInNotificationPreferencesAction = 71;
+    optional AvatarUpdatedAction avatarUpdatedAction = 72;
+    optional PrivateProcessingSettingAction privateProcessingSettingAction = 74;
+    optional NewsletterSavedInterestsAction newsletterSavedInterestsAction = 75;
+    optional AiThreadRenameAction aiThreadRenameAction = 76;
+    optional InteractiveMessageAction interactiveMessageAction = 77;
+    message AgentAction {
+        optional string name = 1;
+        optional int32 deviceID = 2;
+        optional bool isDeleted = 3;
+    }
+
+    message AiThreadRenameAction {
+        optional string newTitle = 1;
+    }
+
+    message AndroidUnsupportedActions {
+        optional bool allowed = 1;
+    }
+
+    message ArchiveChatAction {
+        optional bool archived = 1;
+        optional SyncActionValue.SyncActionMessageRange messageRange = 2;
+    }
+
+    message AvatarUpdatedAction {
+        optional AvatarEventType eventType = 1;
+        repeated SyncActionValue.StickerAction recentAvatarStickers = 2;
+        enum AvatarEventType {
+            UPDATED = 0;
+            CREATED = 1;
+            DELETED = 2;
+        }
+    }
+
+    message BotWelcomeRequestAction {
+        optional bool isSent = 1;
+    }
+
+    message BroadcastListParticipant {
+        string lidJid = 1;
+        optional string pnJid = 2;
+    }
+
+    message BusinessBroadcastAssociationAction {
+        optional bool deleted = 1;
+    }
+
+    message BusinessBroadcastListAction {
+        optional bool deleted = 1;
+        repeated SyncActionValue.BroadcastListParticipant participants = 2;
+        optional string listName = 3;
+    }
+
+    message CallLogAction {
+        optional CallLogRecord callLogRecord = 1;
+    }
+
+    message ChatAssignmentAction {
+        optional string deviceAgentID = 1;
+    }
+
+    message ChatAssignmentOpenedStatusAction {
+        optional bool chatOpened = 1;
+    }
+
+    message ClearChatAction {
+        optional SyncActionValue.SyncActionMessageRange messageRange = 1;
+    }
+
+    message ContactAction {
+        optional string fullName = 1;
+        optional string firstName = 2;
+        optional string lidJid = 3;
+        optional bool saveOnPrimaryAddressbook = 4;
+        optional string pnJid = 5;
+        optional string username = 6;
+    }
+
+    message CtwaPerCustomerDataSharingAction {
+        optional bool isCtwaPerCustomerDataSharingEnabled = 1;
+    }
+
+    message CustomPaymentMethod {
+        string credentialId = 1;
+        string country = 2;
+        string type = 3;
+        repeated SyncActionValue.CustomPaymentMethodMetadata metadata = 4;
+    }
+
+    message CustomPaymentMethodMetadata {
+        string key = 1;
+        string value = 2;
+    }
+
+    message CustomPaymentMethodsAction {
+        repeated SyncActionValue.CustomPaymentMethod customPaymentMethods = 1;
+    }
+
+    message DeleteChatAction {
+        optional SyncActionValue.SyncActionMessageRange messageRange = 1;
+    }
+
+    message DeleteIndividualCallLogAction {
+        optional string peerJid = 1;
+        optional bool isIncoming = 2;
+    }
+
+    message DeleteMessageForMeAction {
+        optional bool deleteMedia = 1;
+        optional int64 messageTimestamp = 2;
+    }
+
+    message DetectedOutcomesStatusAction {
+        optional bool isEnabled = 1;
+    }
+
+    message ExternalWebBetaAction {
+        optional bool isOptIn = 1;
+    }
+
+    message FavoritesAction {
+        repeated Favorite favorites = 1;
+        message Favorite {
+            optional string id = 1;
+        }
+
+    }
+
+    message InteractiveMessageAction {
+        InteractiveMessageActionMode type = 1;
+        enum InteractiveMessageActionMode {
+            DISABLE_CTA = 1;
+        }
+    }
+
+    message KeyExpiration {
+        optional int32 expiredKeyEpoch = 1;
+    }
+
+    message LabelAssociationAction {
+        optional bool labeled = 1;
+    }
+
+    message LabelEditAction {
+        optional string name = 1;
+        optional int32 color = 2;
+        optional int32 predefinedId = 3;
+        optional bool deleted = 4;
+        optional int32 orderIndex = 5;
+        optional bool isActive = 6;
+        optional ListType type = 7;
+        optional bool isImmutable = 8;
+        optional int64 muteEndTimeMs = 9;
+        enum ListType {
+            NONE = 0;
+            UNREAD = 1;
+            GROUPS = 2;
+            FAVORITES = 3;
+            PREDEFINED = 4;
+            CUSTOM = 5;
+            COMMUNITY = 6;
+            SERVER_ASSIGNED = 7;
+            DRAFTED = 8;
+            AI_HANDOFF = 9;
+        }
+    }
+
+    message LabelReorderingAction {
+        repeated int32 sortedLabelIds = 1;
+    }
+
+    message LidContactAction {
+        optional string fullName = 1;
+        optional string firstName = 2;
+        optional string username = 3;
+    }
+
+    message LocaleSetting {
+        optional string locale = 1;
+    }
+
+    message LockChatAction {
+        optional bool locked = 1;
+    }
+
+    message MaibaAIFeaturesControlAction {
+        optional MaibaAIFeatureStatus aiFeatureStatus = 1;
+        enum MaibaAIFeatureStatus {
+            ENABLED = 0;
+            ENABLED_HAS_LEARNING = 1;
+            DISABLED = 2;
+        }
+    }
+
+    message MarkChatAsReadAction {
+        optional bool read = 1;
+        optional SyncActionValue.SyncActionMessageRange messageRange = 2;
+    }
+
+    message MarketingMessageAction {
+        optional string name = 1;
+        optional string message = 2;
+        optional MarketingMessagePrototypeType type = 3;
+        optional int64 createdAt = 4;
+        optional int64 lastSentAt = 5;
+        optional bool isDeleted = 6;
+        optional string mediaId = 7;
+        enum MarketingMessagePrototypeType {
+            PERSONALIZED = 0;
+        }
+    }
+
+    message MarketingMessageBroadcastAction {
+        optional int32 repliedCount = 1;
+    }
+
+    message MerchantPaymentPartnerAction {
+        Status status = 1;
+        string country = 2;
+        optional string gatewayName = 3;
+        optional string credentialId = 4;
+        enum Status {
+            ACTIVE = 0;
+            INACTIVE = 1;
+        }
+    }
+
+    message MusicUserIdAction {
+        optional string musicUserId = 1;
+        map<string, string> music_user_id_map = 2;
+    }
+
+    message MuteAction {
+        optional bool muted = 1;
+        optional int64 muteEndTimestamp = 2;
+        optional bool autoMuted = 3;
+    }
+
+    message NewsletterSavedInterestsAction {
+        optional string newsletterSavedInterests = 1;
+    }
+
+    message NoteEditAction {
+        optional NoteType type = 1;
+        optional string chatJid = 2;
+        optional int64 createdAt = 3;
+        optional bool deleted = 4;
+        optional string unstructuredContent = 5;
+        enum NoteType {
+            UNSTRUCTURED = 1;
+            STRUCTURED = 2;
+        }
+    }
+
+    message NotificationActivitySettingAction {
+        optional NotificationActivitySetting notificationActivitySetting = 1;
+        enum NotificationActivitySetting {
+            DEFAULT_ALL_MESSAGES = 0;
+            ALL_MESSAGES = 1;
+            HIGHLIGHTS = 2;
+            DEFAULT_HIGHLIGHTS = 3;
+        }
+    }
+
+    message NuxAction {
+        optional bool acknowledged = 1;
+    }
+
+    message PaymentInfoAction {
+        optional string cpi = 1;
+    }
+
+    message PaymentTosAction {
+        PaymentNotice paymentNotice = 1;
+        bool accepted = 2;
+        enum PaymentNotice {
+            BR_PAY_PRIVACY_POLICY = 0;
+        }
+    }
+
+    message PinAction {
+        optional bool pinned = 1;
+    }
+
+    message PnForLidChatAction {
+        optional string pnJid = 1;
+    }
+
+    message PrimaryFeature {
+        repeated string flags = 1;
+    }
+
+    message PrimaryVersionAction {
+        optional string version = 1;
+    }
+
+    message PrivacySettingChannelsPersonalisedRecommendationAction {
+        optional bool isUserOptedOut = 1;
+    }
+
+    message PrivacySettingDisableLinkPreviewsAction {
+        optional bool isPreviewsDisabled = 1;
+    }
+
+    message PrivacySettingRelayAllCalls {
+        optional bool isEnabled = 1;
+    }
+
+    message PrivateProcessingSettingAction {
+        optional PrivateProcessingStatus privateProcessingStatus = 1;
+        enum PrivateProcessingStatus {
+            UNDEFINED = 0;
+            ENABLED = 1;
+            DISABLED = 2;
+        }
+    }
+
+    message PushNameSetting {
+        optional string name = 1;
+    }
+
+    message QuickReplyAction {
+        optional string shortcut = 1;
+        optional string message = 2;
+        repeated string keywords = 3;
+        optional int32 count = 4;
+        optional bool deleted = 5;
+    }
+
+    message RecentEmojiWeightsAction {
+        repeated RecentEmojiWeight weights = 1;
+    }
+
+    message RemoveRecentStickerAction {
+        optional int64 lastStickerSentTs = 1;
+    }
+
+    message StarAction {
+        optional bool starred = 1;
+    }
+
+    message StatusPostOptInNotificationPreferencesAction {
+        optional bool enabled = 1;
+    }
+
+    message StatusPrivacyAction {
+        optional StatusDistributionMode mode = 1;
+        repeated string userJid = 2;
+        enum StatusDistributionMode {
+            ALLOW_LIST = 0;
+            DENY_LIST = 1;
+            CONTACTS = 2;
+            CLOSE_FRIENDS = 3;
+        }
+    }
+
+    message StickerAction {
+        optional string url = 1;
+        optional bytes fileEncSha256 = 2;
+        optional bytes mediaKey = 3;
+        optional string mimetype = 4;
+        optional uint32 height = 5;
+        optional uint32 width = 6;
+        optional string directPath = 7;
+        optional uint64 fileLength = 8;
+        optional bool isFavorite = 9;
+        optional uint32 deviceIdHint = 10;
+        optional bool isLottie = 11;
+        optional string imageHash = 12;
+        optional bool isAvatarSticker = 13;
+    }
+
+    message SubscriptionAction {
+        optional bool isDeactivated = 1;
+        optional bool isAutoRenewing = 2;
+        optional int64 expirationDate = 3;
+    }
+
+    message SyncActionMessage {
+        optional MessageKey key = 1;
+        optional int64 timestamp = 2;
+    }
+
+    message SyncActionMessageRange {
+        optional int64 lastMessageTimestamp = 1;
+        optional int64 lastSystemMessageTimestamp = 2;
+        repeated SyncActionValue.SyncActionMessage messages = 3;
+    }
+
+    message TimeFormatAction {
+        optional bool isTwentyFourHourFormatEnabled = 1;
+    }
+
+    message UGCBot {
+        optional bytes definition = 1;
+    }
+
+    message UnarchiveChatsSetting {
+        optional bool unarchiveChats = 1;
+    }
+
+    message UserStatusMuteAction {
+        optional bool muted = 1;
+    }
+
+    message UsernameChatStartModeAction {
+        optional ChatStartMode chatStartMode = 1;
+        enum ChatStartMode {
+            LID = 1;
+            PN = 2;
+        }
+    }
+
+    message WaffleAccountLinkStateAction {
+        optional AccountLinkState linkState = 2;
+        enum AccountLinkState {
+            ACTIVE = 0;
+            PAUSED = 1;
+            UNLINKED = 2;
+        }
+    }
+
+    message WamoUserIdentifierAction {
+        optional string identifier = 1;
+    }
+
+}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SyncdPatch {
+    optional SyncdVersion version = 1;
+    repeated SyncdMutation mutations = 2;
+    optional ExternalBlobReference externalMutations = 3;
+    optional bytes snapshotMac = 4;
+    optional bytes patchMac = 5;
+    optional KeyId keyId = 6;
+    optional ExitCode exitCode = 7;
+    optional uint32 deviceIndex = 8;
+    optional bytes clientDebugData = 9;
+}

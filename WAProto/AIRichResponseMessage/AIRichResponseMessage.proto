@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseMessage {
+    optional AIRichResponseMessageType messageType = 1;
+    repeated AIRichResponseSubMessage submessages = 2;
+    optional AIRichResponseUnifiedResponse unifiedResponse = 3;
+    optional ContextInfo contextInfo = 4;
+}

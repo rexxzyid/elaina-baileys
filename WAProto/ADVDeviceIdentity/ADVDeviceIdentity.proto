@@ -1,0 +1,12 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ADVDeviceIdentity {
+    optional uint32 rawId = 1;
+    optional uint64 timestamp = 2;
+    optional uint32 keyIndex = 3;
+    optional ADVEncryptionType accountType = 4;
+    optional ADVEncryptionType deviceType = 5;
+}

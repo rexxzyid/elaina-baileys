@@ -1,0 +1,12 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PollUpdate {
+    optional MessageKey pollUpdateMessageKey = 1;
+    optional Message.PollVoteMessage vote = 2;
+    optional int64 senderTimestampMs = 3;
+    optional int64 serverTimestampMs = 4;
+    optional bool unread = 5;
+}

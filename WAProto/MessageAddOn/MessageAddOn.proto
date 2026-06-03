@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MessageAddOn {
+    optional MessageAddOnType messageAddOnType = 1;
+    optional Message messageAddOn = 2;
+    optional int64 senderTimestampMs = 3;
+    optional int64 serverTimestampMs = 4;
+    optional WebMessageInfo.Status status = 5;
+    optional MessageAddOnContextInfo addOnContextInfo = 6;
+    optional MessageKey messageAddOnKey = 7;
+    optional LegacyMessage legacyMessage = 8;
+    enum MessageAddOnType {
+        UNDEFINED = 0;
+        REACTION = 1;
+        EVENT_RESPONSE = 2;
+        POLL_UPDATE = 3;
+        PIN_IN_CHAT = 4;
+    }
+}

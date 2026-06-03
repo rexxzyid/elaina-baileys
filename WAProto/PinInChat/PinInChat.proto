@@ -1,0 +1,17 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PinInChat {
+    optional Type type = 1;
+    optional MessageKey key = 2;
+    optional int64 senderTimestampMs = 3;
+    optional int64 serverTimestampMs = 4;
+    optional MessageAddOnContextInfo messageAddOnContextInfo = 5;
+    enum Type {
+        UNKNOWN_TYPE = 0;
+        PIN_FOR_ALL = 1;
+        UNPIN_FOR_ALL = 2;
+    }
+}

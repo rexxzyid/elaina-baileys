@@ -1,0 +1,34 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message DeviceCapabilities {
+    optional ChatLockSupportLevel chatLockSupportLevel = 1;
+    optional LIDMigration lidMigration = 2;
+    optional BusinessBroadcast businessBroadcast = 3;
+    optional UserHasAvatar userHasAvatar = 4;
+    optional MemberNameTagPrimarySupport memberNameTagPrimarySupport = 5;
+    message BusinessBroadcast {
+        optional bool importListEnabled = 1;
+    }
+
+    enum ChatLockSupportLevel {
+        NONE = 0;
+        MINIMAL = 1;
+        FULL = 2;
+    }
+    message LIDMigration {
+        optional uint64 chatDbMigrationTimestamp = 1;
+    }
+
+    enum MemberNameTagPrimarySupport {
+        DISABLED = 0;
+        RECEIVER_ENABLED = 1;
+        SENDER_ENABLED = 2;
+    }
+    message UserHasAvatar {
+        optional bool userHasAvatar = 1;
+    }
+
+}

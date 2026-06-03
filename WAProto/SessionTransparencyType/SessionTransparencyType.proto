@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+enum SessionTransparencyType {
+    UNKNOWN_TYPE = 0;
+    NY_AI_SAFETY_DISCLAIMER = 1;
+}

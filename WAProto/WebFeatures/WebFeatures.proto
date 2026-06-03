@@ -1,0 +1,58 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message WebFeatures {
+    optional Flag labelsDisplay = 1;
+    optional Flag voipIndividualOutgoing = 2;
+    optional Flag groupsV3 = 3;
+    optional Flag groupsV3Create = 4;
+    optional Flag changeNumberV2 = 5;
+    optional Flag queryStatusV3Thumbnail = 6;
+    optional Flag liveLocations = 7;
+    optional Flag queryVname = 8;
+    optional Flag voipIndividualIncoming = 9;
+    optional Flag quickRepliesQuery = 10;
+    optional Flag payments = 11;
+    optional Flag stickerPackQuery = 12;
+    optional Flag liveLocationsFinal = 13;
+    optional Flag labelsEdit = 14;
+    optional Flag mediaUpload = 15;
+    optional Flag mediaUploadRichQuickReplies = 18;
+    optional Flag vnameV2 = 19;
+    optional Flag videoPlaybackUrl = 20;
+    optional Flag statusRanking = 21;
+    optional Flag voipIndividualVideo = 22;
+    optional Flag thirdPartyStickers = 23;
+    optional Flag frequentlyForwardedSetting = 24;
+    optional Flag groupsV4JoinPermission = 25;
+    optional Flag recentStickers = 26;
+    optional Flag catalog = 27;
+    optional Flag starredStickers = 28;
+    optional Flag voipGroupCall = 29;
+    optional Flag templateMessage = 30;
+    optional Flag templateMessageInteractivity = 31;
+    optional Flag ephemeralMessages = 32;
+    optional Flag e2ENotificationSync = 33;
+    optional Flag recentStickersV2 = 34;
+    optional Flag recentStickersV3 = 36;
+    optional Flag userNotice = 37;
+    optional Flag support = 39;
+    optional Flag groupUiiCleanup = 40;
+    optional Flag groupDogfoodingInternalOnly = 41;
+    optional Flag settingsSync = 42;
+    optional Flag archiveV2 = 43;
+    optional Flag ephemeralAllowGroupMembers = 44;
+    optional Flag ephemeral24HDuration = 45;
+    optional Flag mdForceUpgrade = 46;
+    optional Flag disappearingMode = 47;
+    optional Flag externalMdOptInAvailable = 48;
+    optional Flag noDeleteMessageTimeLimit = 49;
+    enum Flag {
+        NOT_STARTED = 0;
+        FORCE_UPGRADE = 1;
+        DEVELOPMENT = 2;
+        PRODUCTION = 3;
+    }
+}

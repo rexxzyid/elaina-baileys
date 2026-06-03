@@ -1,0 +1,56 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotProgressIndicatorMetadata {
+    optional string progressDescription = 1;
+    repeated BotPlanningStepMetadata stepsMetadata = 2;
+    message BotPlanningStepMetadata {
+        optional string statusTitle = 1;
+        optional string statusBody = 2;
+        repeated BotPlanningSearchSourcesMetadata sourcesMetadata = 3;
+        optional PlanningStepStatus status = 4;
+        optional bool isReasoning = 5;
+        optional bool isEnhancedSearch = 6;
+        repeated BotPlanningStepSectionMetadata sections = 7;
+        message BotPlanningSearchSourceMetadata {
+            optional string title = 1;
+            optional BotProgressIndicatorMetadata.BotPlanningStepMetadata.BotSearchSourceProvider provider = 2;
+            optional string sourceUrl = 3;
+            optional string favIconUrl = 4;
+        }
+
+        message BotPlanningSearchSourcesMetadata {
+            optional string sourceTitle = 1;
+            optional BotPlanningSearchSourceProvider provider = 2;
+            optional string sourceUrl = 3;
+            enum BotPlanningSearchSourceProvider {
+                UNKNOWN = 0;
+                OTHER = 1;
+                GOOGLE = 2;
+                BING = 3;
+            }
+        }
+
+        message BotPlanningStepSectionMetadata {
+            optional string sectionTitle = 1;
+            optional string sectionBody = 2;
+            repeated BotProgressIndicatorMetadata.BotPlanningStepMetadata.BotPlanningSearchSourceMetadata sourcesMetadata = 3;
+        }
+
+        enum BotSearchSourceProvider {
+            UNKNOWN_PROVIDER = 0;
+            OTHER = 1;
+            GOOGLE = 2;
+            BING = 3;
+        }
+        enum PlanningStepStatus {
+            UNKNOWN = 0;
+            PLANNED = 1;
+            EXECUTING = 2;
+            FINISHED = 3;
+        }
+    }
+
+}

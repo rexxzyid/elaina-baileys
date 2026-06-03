@@ -1,0 +1,20 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotModelMetadata {
+    optional ModelType modelType = 1;
+    optional PremiumModelStatus premiumModelStatus = 2;
+    optional string modelNameOverride = 3;
+    enum ModelType {
+        UNKNOWN_TYPE = 0;
+        LLAMA_PROD = 1;
+        LLAMA_PROD_PREMIUM = 2;
+    }
+    enum PremiumModelStatus {
+        UNKNOWN_STATUS = 0;
+        AVAILABLE = 1;
+        QUOTA_EXCEED_LIMIT = 2;
+    }
+}

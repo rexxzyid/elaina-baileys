@@ -1,0 +1,82 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MsgOpaqueData {
+    optional string body = 1;
+    optional string caption = 3;
+    optional double lng = 5;
+    optional bool isLive = 6;
+    optional double lat = 7;
+    optional int32 paymentAmount1000 = 8;
+    optional string paymentNoteMsgBody = 9;
+    optional string matchedText = 11;
+    optional string title = 12;
+    optional string description = 13;
+    optional bytes futureproofBuffer = 14;
+    optional string clientUrl = 15;
+    optional string loc = 16;
+    optional string pollName = 17;
+    repeated PollOption pollOptions = 18;
+    optional uint32 pollSelectableOptionsCount = 20;
+    optional bytes messageSecret = 21;
+    optional string originalSelfAuthor = 51;
+    optional int64 senderTimestampMs = 22;
+    optional string pollUpdateParentKey = 23;
+    optional PollEncValue encPollVote = 24;
+    optional bool isSentCagPollCreation = 28;
+    optional PollContentType pollContentType = 42;
+    optional PollType pollType = 46;
+    optional int32 correctOptionIndex = 47;
+    optional PollVotesSnapshot pollVotesSnapshot = 41;
+    optional string encReactionTargetMessageKey = 25;
+    optional bytes encReactionEncPayload = 26;
+    optional bytes encReactionEncIv = 27;
+    optional bytes botMessageSecret = 29;
+    optional string targetMessageKey = 30;
+    optional bytes encPayload = 31;
+    optional bytes encIv = 32;
+    optional string eventName = 33;
+    optional bool isEventCanceled = 34;
+    optional string eventDescription = 35;
+    optional string eventJoinLink = 36;
+    optional int64 eventStartTime = 37;
+    optional EventLocation eventLocation = 38;
+    optional int64 eventEndTime = 40;
+    optional bool eventIsScheduledCall = 44;
+    optional bool eventExtraGuestsAllowed = 45;
+    optional bytes plainProtobufBytes = 43;
+    message EventLocation {
+        optional double degreesLatitude = 1;
+        optional double degreesLongitude = 2;
+        optional string name = 3;
+        optional string address = 4;
+        optional string url = 5;
+        optional bytes jpegThumbnail = 6;
+    }
+
+    enum PollContentType {
+        UNKNOWN = 0;
+        TEXT = 1;
+        IMAGE = 2;
+    }
+    message PollOption {
+        optional string name = 1;
+        optional string hash = 2;
+    }
+
+    enum PollType {
+        POLL = 0;
+        QUIZ = 1;
+    }
+    message PollVoteSnapshot {
+        optional MsgOpaqueData.PollOption option = 1;
+        optional int32 optionVoteCount = 2;
+    }
+
+    message PollVotesSnapshot {
+        repeated MsgOpaqueData.PollVoteSnapshot pollVotes = 1;
+    }
+
+}

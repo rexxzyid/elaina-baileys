@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message GroupParticipant {
+    string userJid = 1;
+    optional Rank rank = 2;
+    optional MemberLabel memberLabel = 3;
+    enum Rank {
+        REGULAR = 0;
+        ADMIN = 1;
+        SUPERADMIN = 2;
+    }
+}

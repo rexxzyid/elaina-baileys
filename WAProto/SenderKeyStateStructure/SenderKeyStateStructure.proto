@@ -1,0 +1,26 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SenderKeyStateStructure {
+    optional uint32 senderKeyId = 1;
+    optional SenderChainKey senderChainKey = 2;
+    optional SenderSigningKey senderSigningKey = 3;
+    repeated SenderMessageKey senderMessageKeys = 4;
+    message SenderChainKey {
+        optional uint32 iteration = 1;
+        optional bytes seed = 2;
+    }
+
+    message SenderMessageKey {
+        optional uint32 iteration = 1;
+        optional bytes seed = 2;
+    }
+
+    message SenderSigningKey {
+        optional bytes public = 1;
+        optional bytes private = 2;
+    }
+
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MemberLabel {
+    optional string label = 1;
+    optional int64 labelTimestamp = 2;
+}

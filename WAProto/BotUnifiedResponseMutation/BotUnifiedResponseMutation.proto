@@ -1,0 +1,20 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotUnifiedResponseMutation {
+    optional SideBySideMetadata sbsMetadata = 1;
+    repeated MediaDetailsMetadata mediaDetailsMetadataList = 2;
+    message MediaDetailsMetadata {
+        optional string id = 1;
+        optional BotMediaMetadata highResMedia = 2;
+        optional BotMediaMetadata previewMedia = 3;
+    }
+
+    message SideBySideMetadata {
+        optional string primaryResponseId = 1;
+        optional bool surveyCtaHasRendered = 2;
+    }
+
+}

@@ -1,0 +1,14 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseTableMetadata {
+    repeated AIRichResponseTableRow rows = 1;
+    optional string title = 2;
+    message AIRichResponseTableRow {
+        repeated string items = 1;
+        optional bool isHeading = 2;
+    }
+
+}

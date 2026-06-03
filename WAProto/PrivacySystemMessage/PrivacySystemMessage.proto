@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+enum PrivacySystemMessage {
+    E2EE_MSG = 1;
+    NE2EE_SELF = 2;
+    NE2EE_OTHER = 3;
+}

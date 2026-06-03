@@ -1,0 +1,32 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MessageAssociation {
+    optional AssociationType associationType = 1;
+    optional MessageKey parentMessageKey = 2;
+    optional int32 messageIndex = 3;
+    enum AssociationType {
+        UNKNOWN = 0;
+        MEDIA_ALBUM = 1;
+        BOT_PLUGIN = 2;
+        EVENT_COVER_IMAGE = 3;
+        STATUS_POLL = 4;
+        HD_VIDEO_DUAL_UPLOAD = 5;
+        STATUS_EXTERNAL_RESHARE = 6;
+        MEDIA_POLL = 7;
+        STATUS_ADD_YOURS = 8;
+        STATUS_NOTIFICATION = 9;
+        HD_IMAGE_DUAL_UPLOAD = 10;
+        STICKER_ANNOTATION = 11;
+        MOTION_PHOTO = 12;
+        STATUS_LINK_ACTION = 13;
+        VIEW_ALL_REPLIES = 14;
+        STATUS_ADD_YOURS_AI_IMAGINE = 15;
+        STATUS_QUESTION = 16;
+        STATUS_ADD_YOURS_DIWALI = 17;
+        STATUS_REACTION = 18;
+        HEVC_VIDEO_DUAL_UPLOAD = 19;
+    }
+}

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotSourcesMetadata {
+    repeated BotSourceItem sources = 1;
+    message BotSourceItem {
+        optional SourceProvider provider = 1;
+        optional string thumbnailCdnUrl = 2;
+        optional string sourceProviderUrl = 3;
+        optional string sourceQuery = 4;
+        optional string faviconCdnUrl = 5;
+        optional uint32 citationNumber = 6;
+        optional string sourceTitle = 7;
+        enum SourceProvider {
+            UNKNOWN = 0;
+            BING = 1;
+            GOOGLE = 2;
+            SUPPORT = 3;
+            OTHER = 4;
+        }
+    }
+
+}

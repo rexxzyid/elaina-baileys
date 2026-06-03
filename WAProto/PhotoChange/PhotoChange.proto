@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message PhotoChange {
+    optional bytes oldPhoto = 1;
+    optional bytes newPhoto = 2;
+    optional uint32 newPhotoId = 3;
+}

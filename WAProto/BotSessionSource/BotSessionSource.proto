@@ -1,0 +1,14 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+enum BotSessionSource {
+    NONE = 0;
+    NULL_STATE = 1;
+    TYPEAHEAD = 2;
+    USER_INPUT = 3;
+    EMU_FLASH = 4;
+    EMU_FLASH_FOLLOWUP = 5;
+    VOICE = 6;
+}

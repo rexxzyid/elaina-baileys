@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message StickerMetadata {
+    optional string url = 1;
+    optional bytes fileSha256 = 2;
+    optional bytes fileEncSha256 = 3;
+    optional bytes mediaKey = 4;
+    optional string mimetype = 5;
+    optional uint32 height = 6;
+    optional uint32 width = 7;
+    optional string directPath = 8;
+    optional uint64 fileLength = 9;
+    optional float weight = 10;
+    optional int64 lastStickerSentTs = 11;
+    optional bool isLottie = 12;
+    optional string imageHash = 13;
+    optional bool isAvatarSticker = 14;
+}

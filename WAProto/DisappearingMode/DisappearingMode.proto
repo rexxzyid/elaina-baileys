@@ -1,0 +1,25 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message DisappearingMode {
+    optional Initiator initiator = 1;
+    optional Trigger trigger = 2;
+    optional string initiatorDeviceJid = 3;
+    optional bool initiatedByMe = 4;
+    enum Initiator {
+        CHANGED_IN_CHAT = 0;
+        INITIATED_BY_ME = 1;
+        INITIATED_BY_OTHER = 2;
+        BIZ_UPGRADE_FB_HOSTING = 3;
+    }
+    enum Trigger {
+        UNKNOWN = 0;
+        CHAT_SETTING = 1;
+        ACCOUNT_SETTING = 2;
+        BULK_CHANGE = 3;
+        BIZ_SUPPORTS_FB_HOSTING = 4;
+        UNKNOWN_GROUPS = 5;
+    }
+}

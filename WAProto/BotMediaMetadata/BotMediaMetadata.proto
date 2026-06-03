@@ -1,0 +1,19 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotMediaMetadata {
+    optional string fileSha256 = 1;
+    optional string mediaKey = 2;
+    optional string fileEncSha256 = 3;
+    optional string directPath = 4;
+    optional int64 mediaKeyTimestamp = 5;
+    optional string mimetype = 6;
+    optional OrientationType orientationType = 7;
+    enum OrientationType {
+        CENTER = 1;
+        LEFT = 2;
+        RIGHT = 3;
+    }
+}

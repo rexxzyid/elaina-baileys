@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message RecordStructure {
+    optional SessionStructure currentSession = 1;
+    repeated SessionStructure previousSessions = 2;
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message SyncActionData {
+    optional bytes index = 1;
+    optional SyncActionValue value = 2;
+    optional bytes padding = 3;
+    optional int32 version = 4;
+}

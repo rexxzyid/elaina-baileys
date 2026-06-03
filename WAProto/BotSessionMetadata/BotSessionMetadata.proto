@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotSessionMetadata {
+    optional string sessionId = 1;
+    optional BotSessionSource sessionSource = 2;
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message WebNotificationsInfo {
+    optional uint64 timestamp = 2;
+    optional uint32 unreadChats = 3;
+    optional uint32 notifyMessageCount = 4;
+    repeated WebMessageInfo notifyMessages = 5;
+}

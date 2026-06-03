@@ -1,0 +1,37 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message HistorySync {
+    HistorySyncType syncType = 1;
+    repeated Conversation conversations = 2;
+    repeated WebMessageInfo statusV3Messages = 3;
+    optional uint32 chunkOrder = 5;
+    optional uint32 progress = 6;
+    repeated Pushname pushnames = 7;
+    optional GlobalSettings globalSettings = 8;
+    optional bytes threadIdUserSecret = 9;
+    optional uint32 threadDsTimeframeOffset = 10;
+    repeated StickerMetadata recentStickers = 11;
+    repeated PastParticipants pastParticipants = 12;
+    repeated CallLogRecord callLogRecords = 13;
+    optional BotAIWaitListState aiWaitListState = 14;
+    repeated PhoneNumberToLIDMapping phoneNumberToLidMappings = 15;
+    optional string companionMetaNonce = 16;
+    optional bytes shareableChatIdentifierEncryptionKey = 17;
+    repeated Account accounts = 18;
+    enum BotAIWaitListState {
+        IN_WAITLIST = 0;
+        AI_AVAILABLE = 1;
+    }
+    enum HistorySyncType {
+        INITIAL_BOOTSTRAP = 0;
+        INITIAL_STATUS_V3 = 1;
+        FULL = 2;
+        RECENT = 3;
+        PUSH_NAME = 4;
+        NON_BLOCKING_DATA = 5;
+        ON_DEMAND = 6;
+    }
+}

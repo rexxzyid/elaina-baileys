@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ProcessedVideo {
+    optional string directPath = 1;
+    optional bytes fileSha256 = 2;
+    optional uint32 height = 3;
+    optional uint32 width = 4;
+    optional uint64 fileLength = 5;
+    optional uint32 bitrate = 6;
+    optional VideoQuality quality = 7;
+    repeated string capabilities = 8;
+    enum VideoQuality {
+        UNDEFINED = 0;
+        LOW = 1;
+        MID = 2;
+        HIGH = 3;
+    }
+}

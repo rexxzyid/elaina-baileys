@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message CompanionEphemeralIdentity {
+    optional bytes publicKey = 1;
+    optional DeviceProps.PlatformType deviceType = 2;
+    optional string ref = 3;
+}

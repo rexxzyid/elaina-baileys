@@ -1,0 +1,12 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message Reaction {
+    optional MessageKey key = 1;
+    optional string text = 2;
+    optional string groupingKey = 3;
+    optional int64 senderTimestampMs = 4;
+    optional bool unread = 5;
+}

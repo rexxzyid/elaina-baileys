@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MessageAddOnContextInfo {
+    optional uint32 messageAddOnDurationInSecs = 1;
+    optional MessageContextInfo.MessageAddonExpiryType messageAddOnExpiryType = 2;
+}

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseImageURL {
+    optional string imagePreviewUrl = 1;
+    optional string imageHighResUrl = 2;
+    optional string sourceUrl = 3;
+}

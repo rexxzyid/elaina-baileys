@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AutoDownloadSettings {
+    optional bool downloadImages = 1;
+    optional bool downloadAudio = 2;
+    optional bool downloadVideo = 3;
+    optional bool downloadDocuments = 4;
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotMetadata {
+    optional BotAvatarMetadata avatarMetadata = 1;
+    optional string personaId = 2;
+    optional BotPluginMetadata pluginMetadata = 3;
+    optional BotSuggestedPromptMetadata suggestedPromptMetadata = 4;
+    optional string invokerJid = 5;
+    optional BotSessionMetadata sessionMetadata = 6;
+    optional BotMemuMetadata memuMetadata = 7;
+    optional string timezone = 8;
+    optional BotReminderMetadata reminderMetadata = 9;
+    optional BotModelMetadata modelMetadata = 10;
+    optional string messageDisclaimerText = 11;
+    optional BotProgressIndicatorMetadata progressIndicatorMetadata = 12;
+    optional BotCapabilityMetadata capabilityMetadata = 13;
+    optional BotImagineMetadata imagineMetadata = 14;
+    optional BotMemoryMetadata memoryMetadata = 15;
+    optional BotRenderingMetadata renderingMetadata = 16;
+    optional BotMetricsMetadata botMetricsMetadata = 17;
+    optional BotLinkedAccountsMetadata botLinkedAccountsMetadata = 18;
+    optional BotSourcesMetadata richResponseSourcesMetadata = 19;
+    optional bytes aiConversationContext = 20;
+    optional BotPromotionMessageMetadata botPromotionMessageMetadata = 21;
+    optional BotModeSelectionMetadata botModeSelectionMetadata = 22;
+    optional BotQuotaMetadata botQuotaMetadata = 23;
+    optional BotAgeCollectionMetadata botAgeCollectionMetadata = 24;
+    optional string conversationStarterPromptId = 25;
+    optional string botResponseId = 26;
+    optional BotSignatureVerificationMetadata verificationMetadata = 27;
+    optional BotUnifiedResponseMutation unifiedResponseMutation = 28;
+    optional BotMessageOriginMetadata botMessageOriginMetadata = 29;
+    optional InThreadSurveyMetadata inThreadSurveyMetadata = 30;
+    optional AIThreadInfo botThreadInfo = 31;
+    optional AIRegenerateMetadata regenerateMetadata = 32;
+    optional SessionTransparencyMetadata sessionTransparencyMetadata = 33;
+    optional bytes internalMetadata = 999;
+}

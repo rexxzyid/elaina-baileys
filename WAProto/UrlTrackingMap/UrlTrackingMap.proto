@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message UrlTrackingMap {
+    repeated UrlTrackingMapElement urlTrackingMapElements = 1;
+    message UrlTrackingMapElement {
+        optional string originalUrl = 1;
+        optional string unconsentedUsersUrl = 2;
+        optional string consentedUsersUrl = 3;
+        optional uint32 cardIndex = 4;
+    }
+
+}

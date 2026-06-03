@@ -1,0 +1,9 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ExitCode {
+    optional uint64 code = 1;
+    optional string text = 2;
+}

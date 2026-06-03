@@ -1,0 +1,13 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotRenderingMetadata {
+    repeated Keyword keywords = 1;
+    message Keyword {
+        optional string value = 1;
+        repeated string associatedPrompts = 2;
+    }
+
+}

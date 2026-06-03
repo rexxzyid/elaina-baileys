@@ -1,0 +1,13 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message NotificationSettings {
+    optional string messageVibrate = 1;
+    optional string messagePopup = 2;
+    optional string messageLight = 3;
+    optional bool lowPriorityNotifications = 4;
+    optional bool reactionsMuted = 5;
+    optional string callVibrate = 6;
+}

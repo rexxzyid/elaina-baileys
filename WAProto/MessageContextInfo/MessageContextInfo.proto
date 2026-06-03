@@ -1,0 +1,27 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message MessageContextInfo {
+    optional DeviceListMetadata deviceListMetadata = 1;
+    optional int32 deviceListMetadataVersion = 2;
+    optional bytes messageSecret = 3;
+    optional bytes paddingBytes = 4;
+    optional uint32 messageAddOnDurationInSecs = 5;
+    optional bytes botMessageSecret = 6;
+    optional BotMetadata botMetadata = 7;
+    optional int32 reportingTokenVersion = 8;
+    optional MessageAddonExpiryType messageAddOnExpiryType = 9;
+    optional MessageAssociation messageAssociation = 10;
+    optional bool capiCreatedGroup = 11;
+    optional string supportPayload = 12;
+    optional LimitSharing limitSharing = 13;
+    optional LimitSharing limitSharingV2 = 14;
+    repeated ThreadID threadId = 15;
+    optional WebLinkRenderConfig weblinkRenderConfig = 16;
+    enum MessageAddonExpiryType {
+        STATIC = 1;
+        DEPENDENT_ON_PARENT = 2;
+    }
+}

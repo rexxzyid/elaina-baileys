@@ -1,0 +1,18 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotQuotaMetadata {
+    repeated BotFeatureQuotaMetadata botFeatureQuotaMetadata = 1;
+    message BotFeatureQuotaMetadata {
+        optional BotFeatureType featureType = 1;
+        optional uint32 remainingQuota = 2;
+        optional uint64 expirationTimestamp = 3;
+        enum BotFeatureType {
+            UNKNOWN_FEATURE = 0;
+            REASONING_FEATURE = 1;
+        }
+    }
+
+}

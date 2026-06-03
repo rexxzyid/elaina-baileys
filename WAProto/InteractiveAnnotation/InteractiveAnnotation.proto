@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message InteractiveAnnotation {
+    repeated Point polygonVertices = 1;
+    optional bool shouldSkipConfirmation = 4;
+    optional EmbeddedContent embeddedContent = 5;
+    optional StatusLinkType statusLinkType = 8;
+    oneof action {
+        Location location = 2;
+        ContextInfo.ForwardedNewsletterMessageInfo newsletter = 3;
+        bool embeddedAction = 6;
+        TapLinkAction tapAction = 7;
+    }
+    enum StatusLinkType {
+        RASTERIZED_LINK_PREVIEW = 1;
+        RASTERIZED_LINK_TRUNCATED = 2;
+        RASTERIZED_LINK_FULL_URL = 3;
+    }
+}

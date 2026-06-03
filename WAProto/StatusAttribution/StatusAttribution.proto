@@ -1,0 +1,98 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message StatusAttribution {
+    optional Type type = 1;
+    optional string actionUrl = 2;
+    oneof attributionData {
+        StatusAttribution.StatusReshare statusReshare = 3;
+        StatusAttribution.ExternalShare externalShare = 4;
+        StatusAttribution.Music music = 5;
+        StatusAttribution.GroupStatus groupStatus = 6;
+        StatusAttribution.RLAttribution rlAttribution = 7;
+        StatusAttribution.AiCreatedAttribution aiCreatedAttribution = 8;
+    }
+    message AiCreatedAttribution {
+        optional Source source = 1;
+        enum Source {
+            UNKNOWN = 0;
+            STATUS_MIMICRY = 1;
+        }
+    }
+
+    message ExternalShare {
+        optional string actionUrl = 1;
+        optional Source source = 2;
+        optional int32 duration = 3;
+        optional string actionFallbackUrl = 4;
+        enum Source {
+            UNKNOWN = 0;
+            INSTAGRAM = 1;
+            FACEBOOK = 2;
+            MESSENGER = 3;
+            SPOTIFY = 4;
+            YOUTUBE = 5;
+            PINTEREST = 6;
+            THREADS = 7;
+            APPLE_MUSIC = 8;
+            SHARECHAT = 9;
+            GOOGLE_PHOTOS = 10;
+        }
+    }
+
+    message GroupStatus {
+        optional string authorJid = 1;
+    }
+
+    message Music {
+        optional string authorName = 1;
+        optional string songId = 2;
+        optional string title = 3;
+        optional string author = 4;
+        optional string artistAttribution = 5;
+        optional bool isExplicit = 6;
+    }
+
+    message RLAttribution {
+        optional Source source = 1;
+        enum Source {
+            UNKNOWN = 0;
+            RAY_BAN_META_GLASSES = 1;
+            OAKLEY_META_GLASSES = 2;
+            HYPERNOVA_GLASSES = 3;
+        }
+    }
+
+    message StatusReshare {
+        optional Source source = 1;
+        optional Metadata metadata = 2;
+        message Metadata {
+            optional int32 duration = 1;
+            optional string channelJid = 2;
+            optional int32 channelMessageId = 3;
+            optional bool hasMultipleReshares = 4;
+        }
+
+        enum Source {
+            UNKNOWN = 0;
+            INTERNAL_RESHARE = 1;
+            MENTION_RESHARE = 2;
+            CHANNEL_RESHARE = 3;
+            FORWARD = 4;
+        }
+    }
+
+    enum Type {
+        UNKNOWN = 0;
+        RESHARE = 1;
+        EXTERNAL_SHARE = 2;
+        MUSIC = 3;
+        STATUS_MENTION = 4;
+        GROUP_STATUS = 5;
+        RL_ATTRIBUTION = 6;
+        AI_CREATED = 7;
+        LAYOUTS = 8;
+    }
+}

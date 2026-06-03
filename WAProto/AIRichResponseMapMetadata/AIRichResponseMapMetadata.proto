@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseMapMetadata {
+    optional double centerLatitude = 1;
+    optional double centerLongitude = 2;
+    optional double latitudeDelta = 3;
+    optional double longitudeDelta = 4;
+    repeated AIRichResponseMapAnnotation annotations = 5;
+    optional bool showInfoList = 6;
+    message AIRichResponseMapAnnotation {
+        optional uint32 annotationNumber = 1;
+        optional double latitude = 2;
+        optional double longitude = 3;
+        optional string title = 4;
+        optional string body = 5;
+    }
+
+}

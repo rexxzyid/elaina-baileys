@@ -1,0 +1,66 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message Conversation {
+    string id = 1;
+    repeated HistorySyncMsg messages = 2;
+    optional string newJid = 3;
+    optional string oldJid = 4;
+    optional uint64 lastMsgTimestamp = 5;
+    optional uint32 unreadCount = 6;
+    optional bool readOnly = 7;
+    optional bool endOfHistoryTransfer = 8;
+    optional uint32 ephemeralExpiration = 9;
+    optional int64 ephemeralSettingTimestamp = 10;
+    optional EndOfHistoryTransferType endOfHistoryTransferType = 11;
+    optional uint64 conversationTimestamp = 12;
+    optional string name = 13;
+    optional string pHash = 14;
+    optional bool notSpam = 15;
+    optional bool archived = 16;
+    optional DisappearingMode disappearingMode = 17;
+    optional uint32 unreadMentionCount = 18;
+    optional bool markedAsUnread = 19;
+    repeated GroupParticipant participant = 20;
+    optional bytes tcToken = 21;
+    optional uint64 tcTokenTimestamp = 22;
+    optional bytes contactPrimaryIdentityKey = 23;
+    optional uint32 pinned = 24;
+    optional uint64 muteEndTime = 25;
+    optional WallpaperSettings wallpaper = 26;
+    optional MediaVisibility mediaVisibility = 27;
+    optional uint64 tcTokenSenderTimestamp = 28;
+    optional bool suspended = 29;
+    optional bool terminated = 30;
+    optional uint64 createdAt = 31;
+    optional string createdBy = 32;
+    optional string description = 33;
+    optional bool support = 34;
+    optional bool isParentGroup = 35;
+    optional string parentGroupId = 37;
+    optional bool isDefaultSubgroup = 36;
+    optional string displayName = 38;
+    optional string pnJid = 39;
+    optional bool shareOwnPn = 40;
+    optional bool pnhDuplicateLidThread = 41;
+    optional string lidJid = 42;
+    optional string username = 43;
+    optional string lidOriginType = 44;
+    optional uint32 commentsCount = 45;
+    optional bool locked = 46;
+    optional PrivacySystemMessage systemMessageToInsert = 47;
+    optional bool capiCreatedGroup = 48;
+    optional string accountLid = 49;
+    optional bool limitSharing = 50;
+    optional int64 limitSharingSettingTimestamp = 51;
+    optional LimitSharing.TriggerType limitSharingTrigger = 52;
+    optional bool limitSharingInitiatedByMe = 53;
+    optional bool maibaAiThreadEnabled = 54;
+    enum EndOfHistoryTransferType {
+        COMPLETE_BUT_MORE_MESSAGES_REMAIN_ON_PRIMARY = 0;
+        COMPLETE_AND_NO_MORE_MESSAGE_REMAIN_ON_PRIMARY = 1;
+        COMPLETE_ON_DEMAND_SYNC_BUT_MORE_MSG_REMAIN_ON_PRIMARY = 2;
+    }
+}

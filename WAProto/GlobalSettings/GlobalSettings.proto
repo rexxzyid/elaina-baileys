@@ -1,0 +1,27 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message GlobalSettings {
+    optional WallpaperSettings lightThemeWallpaper = 1;
+    optional MediaVisibility mediaVisibility = 2;
+    optional WallpaperSettings darkThemeWallpaper = 3;
+    optional AutoDownloadSettings autoDownloadWiFi = 4;
+    optional AutoDownloadSettings autoDownloadCellular = 5;
+    optional AutoDownloadSettings autoDownloadRoaming = 6;
+    optional bool showIndividualNotificationsPreview = 7;
+    optional bool showGroupNotificationsPreview = 8;
+    optional int32 disappearingModeDuration = 9;
+    optional int64 disappearingModeTimestamp = 10;
+    optional AvatarUserSettings avatarUserSettings = 11;
+    optional int32 fontSize = 12;
+    optional bool securityNotifications = 13;
+    optional bool autoUnarchiveChats = 14;
+    optional int32 videoQualityMode = 15;
+    optional int32 photoQualityMode = 16;
+    optional NotificationSettings individualNotificationSettings = 17;
+    optional NotificationSettings groupNotificationSettings = 18;
+    optional ChatLockSettings chatLockSettings = 19;
+    optional int64 chatDbLidMigrationTimestamp = 20;
+}

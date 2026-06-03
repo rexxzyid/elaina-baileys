@@ -1,0 +1,14 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message BotAgeCollectionMetadata {
+    optional bool ageCollectionEligible = 1;
+    optional bool shouldTriggerAgeCollectionOnClient = 2;
+    optional AgeCollectionType ageCollectionType = 3;
+    enum AgeCollectionType {
+        O18_BINARY = 0;
+        WAFFLE = 1;
+    }
+}

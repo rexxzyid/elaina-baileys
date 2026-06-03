@@ -1,0 +1,26 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIHomeState {
+    optional int64 lastFetchTime = 1;
+    repeated AIHomeOption capabilityOptions = 2;
+    repeated AIHomeOption conversationOptions = 3;
+    message AIHomeOption {
+        optional AIHomeActionType type = 1;
+        optional string title = 2;
+        optional string promptText = 3;
+        optional string sessionId = 4;
+        optional string imageWdsIdentifier = 5;
+        optional string imageTintColor = 6;
+        optional string imageBackgroundColor = 7;
+        enum AIHomeActionType {
+            PROMPT = 0;
+            CREATE_IMAGE = 1;
+            ANIMATE_PHOTO = 2;
+            ANALYZE_FILE = 3;
+        }
+    }
+
+}

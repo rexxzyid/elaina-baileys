@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message ADVSignedDeviceIdentityHMAC {
+    optional bytes details = 1;
+    optional bytes hmac = 2;
+    optional ADVEncryptionType accountType = 3;
+}

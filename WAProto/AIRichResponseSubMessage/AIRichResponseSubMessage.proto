@@ -1,0 +1,17 @@
+syntax = "proto3";
+package proto;
+
+/// WhatsApp Version: 2.3000.1029496320
+
+message AIRichResponseSubMessage {
+    optional AIRichResponseSubMessageType messageType = 1;
+    optional AIRichResponseGridImageMetadata gridImageMetadata = 2;
+    optional string messageText = 3;
+    optional AIRichResponseInlineImageMetadata imageMetadata = 4;
+    optional AIRichResponseCodeMetadata codeMetadata = 5;
+    optional AIRichResponseTableMetadata tableMetadata = 6;
+    optional AIRichResponseDynamicMetadata dynamicMetadata = 7;
+    optional AIRichResponseLatexMetadata latexMetadata = 8;
+    optional AIRichResponseMapMetadata mapMetadata = 9;
+    optional AIRichResponseContentItemsMetadata contentItemsMetadata = 10;
+}
