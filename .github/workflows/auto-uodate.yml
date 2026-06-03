@@ -1,0 +1,75 @@
+name: Auto Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type (patch / minor / major)'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      force:
+        description: 'Force publish even if no WA changes detected'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --no-lockfile
+
+      - name: Update WA version
+        run: yarn update:version
+
+      - name: Commit, bump, and publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BUMP: ${{ github.event.inputs.bump || 'patch' }}
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          CHANGED=$(git diff --staged --quiet && echo "no" || echo "yes")
+
+          if [ "$CHANGED" = "no" ] && [ "$FORCE" != "true" ]; then
+            echo "No changes detected, skipping release."
+            exit 0
+          fi
+
+          npm version "$BUMP" --no-git-tag-version
+          git add package.json
+
+          VERSION=$(node -p 'require("./package.json").version')
+          git commit -m "chore: release v${VERSION} — WA update $(date -u +%Y-%m-%d)"
+          git tag "v${VERSION}"
+          git pull --rebase origin main
+          git push origin main --tags
+
+          npm publish --access public
+          echo "✓ Published @rexxhayanasi/elaina-baileys@${VERSION}"
