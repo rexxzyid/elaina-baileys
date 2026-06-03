@@ -1,6 +1,6 @@
 {
   "name": "@rexxhayanasi/elaina-baileys",
-  "version": "1.2.10",
+  "version": "1.3.0-rc.1",
   "description": "Custom Baileys WhatsApp API for ESM / CJS",
   "keywords": [
     "baileys",
