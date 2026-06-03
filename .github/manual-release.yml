@@ -1,0 +1,60 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: 'Version increment (patch, minor, major, or specific version)'
+        required: true
+        default: 'patch'
+      commit_text:
+        description: 'Optional custom commit message'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Git Config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version, push, and publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm version ${{ github.event.inputs.increment }} --no-git-tag-version
+
+          VERSION=$(node -p 'require("./package.json").version')
+
+          git add package.json scripts
+          if [ -f package-lock.json ]; then
+            git add package-lock.json
+          fi
+
+          COMMIT_MESSAGE="${{ github.event.inputs.commit_text }}"
+          if [ -z "$COMMIT_MESSAGE" ]; then
+            COMMIT_MESSAGE="chore: release v${VERSION}"
+          fi
+          git commit -m "$COMMIT_MESSAGE"
+          git push origin main
+
+          echo "Publishing v${VERSION} to npm..."
+          npm publish --access public
+          echo "✓ Published @yemo-dev/yebail@${VERSION} to https://www.npmjs.com/package/@yemo-dev/yebail"
