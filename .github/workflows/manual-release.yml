@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://npmjs.org'
+      
 
       - name: Install dependencies
         run: yarn install --no-lockfile
@@ -47,9 +47,11 @@ jobs:
             echo "Menjalankan force publish untuk versi v${VERSION}..."
           fi
           
-          # Cek apakah versi mengandung tanda hubung (misal: 1.3.1-rc.0 adalah prerelease)
+          # Konfigurasi token npm secara manual hanya saat proses publish dilakukan
+          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
+          
+          # Cek apakah versi mengandung tanda hubung (prerelease)
           if [[ "$VERSION" == *"-"* ]]; then
-            # Ambil teks setelah tanda hubung dan sebelum titik (misal: rc) sebagai tag npm
             TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
             echo "Mendeteksi versi prerelease. Mempublikasikan dengan tag: --tag $TAG"
             npm publish --access public --tag "$TAG"
