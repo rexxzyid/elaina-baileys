@@ -1,4 +1,4 @@
-const { VoipClient } = require('../lib')
+const { VoipClient } = require('baileys')
 
 async function callWithMainSocket(conn, targetNumber, audioSource = 'silence') {
   if (!conn) throw new Error('conn/socket utama wajib dikirim')
