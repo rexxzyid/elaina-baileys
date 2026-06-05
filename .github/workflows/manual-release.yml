@@ -1,0 +1,51 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force publish even if no changes detected'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --no-lockfile
+
+      - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          
+          # Cek apakah versi ini sudah pernah di-publish sebelumnya
+          if npm view "@rexxhayanasi/elaina-baileys@${VERSION}" version >/dev/null 2>&1; then
+            if [ "$FORCE" != "true" ]; then
+              echo "Versi v${VERSION} sudah ada di npm. Melewati proses release."
+              exit 0
+            fi
+            echo "Menjalankan force publish untuk versi v${VERSION}..."
+          fi
+          
+          npm publish --access public
+          echo "✓ Published @rexxhayanasi/elaina-baileys@${VERSION}"
