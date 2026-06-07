@@ -1,0 +1,300 @@
+name: Update WAProto
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "Branch/tag WhiskeySockets/Baileys"
+        required: false
+        default: "master"
+      make_pr:
+        description: "Create pull request"
+        required: false
+        default: "true"
+
+  schedule:
+    # Senin 00:00 WIB = Minggu 17:00 UTC
+    - cron: "0 17 * * 0"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: "24"
+  UPSTREAM_REPO: "WhiskeySockets/Baileys"
+
+jobs:
+  update-waproto:
+    name: Update WAProto for Elaina
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Elaina Baileys
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f yarn.lock ]; then
+            yarn install --immutable || yarn install --frozen-lockfile || yarn install
+          elif [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Download latest WAProto.proto
+        shell: bash
+        run: |
+          set -e
+
+          REF="${{ inputs.upstream_ref }}"
+          if [ -z "$REF" ]; then
+            REF="master"
+          fi
+
+          mkdir -p WAProto
+
+          URL="https://raw.githubusercontent.com/${UPSTREAM_REPO}/${REF}/WAProto/WAProto.proto"
+          echo "Downloading $URL"
+
+          cp WAProto/WAProto.proto WAProto/WAProto.proto.bak 2>/dev/null || true
+
+          if ! curl -fsSL "$URL" -o WAProto/WAProto.proto.new; then
+            echo "Failed with ref: $REF"
+            echo "Trying fallback branch: main"
+            URL="https://raw.githubusercontent.com/${UPSTREAM_REPO}/main/WAProto/WAProto.proto"
+            curl -fsSL "$URL" -o WAProto/WAProto.proto.new
+          fi
+
+          if [ ! -s WAProto/WAProto.proto.new ]; then
+            echo "WAProto.proto download failed or empty"
+            exit 1
+          fi
+
+          mv WAProto/WAProto.proto.new WAProto/WAProto.proto
+
+      - name: Write imports-elaina.js
+        shell: bash
+        run: |
+          cat > WAProto/imports-elaina.js <<'EOF'
+          const { readFileSync, writeFileSync } = require('fs')
+          const { exit } = require('process')
+
+          const filePath = './index.js'
+
+          try {
+            let content = readFileSync(filePath, 'utf8')
+
+            content = content.replace(
+              /^import \$protobuf from ["']protobufjs\/minimal\.js["'];\s*/m,
+              '"use strict";\nconst $protobuf = require("protobufjs/minimal");\n'
+            )
+
+            content = content.replace(
+              /^import \* as (\$protobuf) from ["']protobufjs\/minimal(?:\.js)?["'];\s*/m,
+              '"use strict";\nconst $1 = require("protobufjs/minimal");\n'
+            )
+
+            content = content.replace(
+              /var \$protobuf = require\(["']protobufjs\/minimal\.js["']\);/g,
+              'var $protobuf = require("protobufjs/minimal");'
+            )
+
+            content = content.replace(
+              /const \$protobuf = require\(["']protobufjs\/minimal\.js["']\);/g,
+              'const $protobuf = require("protobufjs/minimal");'
+            )
+
+            content = content.replace(
+              /export const proto = \$root\.proto = \(\(\) => \{/,
+              'const proto = $root.proto = (() => {'
+            )
+
+            content = content.replace(
+              /export \{ \$root as default \};\s*$/m,
+              'module.exports = $root;\n'
+            )
+
+            if (!content.includes('module.exports = $root')) {
+              content += '\nmodule.exports = $root;\n'
+            }
+
+            writeFileSync(filePath, content, 'utf8')
+            console.log('✅ Fixed WAProto imports for Elaina CommonJS')
+          } catch (error) {
+            console.error(`❌ Error fixing WAProto imports: ${error.message}`)
+            exit(1)
+          }
+          EOF
+
+      - name: Write GenerateStatics.sh
+        shell: bash
+        run: |
+          cat > WAProto/GenerateStatics.sh <<'EOF'
+          #!/usr/bin/env sh
+          set -e
+
+          cd "$(dirname "$0")"
+
+          if yarn -s pbjs --version >/dev/null 2>&1; then
+            yarn pbjs \
+              -t static-module \
+              --no-beautify \
+              -w commonjs \
+              --no-bundle \
+              --no-delimited \
+              --no-verify \
+              --no-comments \
+              -o ./index.js \
+              ./WAProto.proto
+          else
+            npx --yes protobufjs-cli pbjs \
+              -t static-module \
+              --no-beautify \
+              -w commonjs \
+              --no-bundle \
+              --no-delimited \
+              --no-verify \
+              --no-comments \
+              -o ./index.js \
+              ./WAProto.proto
+          fi
+
+          node ./imports-elaina.js
+          node --check ./index.js
+          EOF
+
+          chmod +x WAProto/GenerateStatics.sh
+
+      - name: Run GenerateStatics.sh
+        shell: bash
+        run: |
+          ./WAProto/GenerateStatics.sh
+
+      - name: Test WAProto CommonJS
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const { proto } = require('./WAProto')
+
+          const checks = [
+            ['proto.Message', !!proto.Message],
+            ['proto.AIRichResponseMessage', !!proto.AIRichResponseMessage],
+            ['proto.AIRichResponseSubMessage', !!proto.AIRichResponseSubMessage],
+            ['proto.AIRichResponseCodeMetadata', !!proto.AIRichResponseCodeMetadata],
+            ['proto.AIRichResponseImageURL', !!proto.AIRichResponseImageURL],
+            ['proto.AIRichResponseUnifiedResponse', !!proto.AIRichResponseUnifiedResponse],
+            ['proto.BotMetadata', !!proto.BotMetadata],
+            ['proto.AIThreadInfo', !!proto.AIThreadInfo],
+            ['proto.GroupRootKeyShare', !!proto.GroupRootKeyShare],
+          ]
+
+          let failed = false
+
+          for (const [name, ok] of checks) {
+            console.log(`${ok ? '✅' : '❌'} ${name}`)
+            if (!ok) failed = true
+          }
+
+          if (failed) process.exit(1)
+
+          const msg = proto.Message.create({
+            richResponseMessage: {
+              messageType: 1,
+              submessages: [
+                {
+                  messageType: 2,
+                  messageText: 'Elaina AIRich test'
+                },
+                {
+                  messageType: 5,
+                  codeMetadata: {
+                    codeLanguage: 'js',
+                    codeBlocks: [
+                      {
+                        highlightType: 0,
+                        codeContent: 'console.log("Elaina")'
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          })
+
+          const encoded = proto.Message.encode(msg).finish()
+          const decoded = proto.Message.decode(encoded)
+
+          if (!decoded.richResponseMessage) {
+            throw new Error('AIRich encode/decode failed')
+          }
+
+          console.log('✅ AIRichResponseMessage encode/decode OK')
+          NODE
+
+      - name: Show diff
+        shell: bash
+        run: |
+          git status --short
+          git diff -- WAProto/WAProto.proto WAProto/index.js WAProto/GenerateStatics.sh WAProto/imports-elaina.js | head -300 || true
+
+      - name: Commit generated WAProto
+        id: commit
+        shell: bash
+        run: |
+          set -e
+
+          if git diff --quiet -- WAProto/WAProto.proto WAProto/index.js WAProto/GenerateStatics.sh WAProto/imports-elaina.js; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No WAProto changes"
+            exit 0
+          fi
+
+          BRANCH="proto/update-waproto"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "$BRANCH"
+
+          git add WAProto/WAProto.proto
+          git add WAProto/index.js
+          git add WAProto/GenerateStatics.sh
+          git add WAProto/imports-elaina.js
+
+          git commit -m "chore(proto): update WAProto from WhiskeySockets"
+          git push --force origin "$BRANCH"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        if: steps.commit.outputs.changed == 'true' && (github.event_name == 'schedule' || inputs.make_pr != 'false')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          BRANCH="${{ steps.commit.outputs.branch }}"
+
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo "Pull request already exists"
+            exit 0
+          fi
+
+          gh pr create \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$BRANCH" \
+            --title "chore(proto): update WAProto from WhiskeySockets" \
+            --body "Update WAProto.proto and generated CommonJS WAProto/index.js for Elaina Baileys. This keeps Elaina structure unchanged and ignores index.d.ts."
