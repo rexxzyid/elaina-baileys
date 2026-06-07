@@ -23,6 +23,7 @@ permissions:
 env:
   NODE_VERSION: "24"
   UPSTREAM_REPO: "WhiskeySockets/Baileys"
+  NPM_CONFIG_LEGACY_PEER_DEPS: "true"
 
 jobs:
   update-waproto:
@@ -46,12 +47,23 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
+          npm config set legacy-peer-deps true
+
           if [ -f yarn.lock ]; then
             yarn install --immutable || yarn install --frozen-lockfile || yarn install
           elif [ -f package-lock.json ]; then
-            npm ci
+            npm ci --legacy-peer-deps
           else
-            npm install
+            npm install --legacy-peer-deps
+          fi
+
+      - name: Ensure protobuf tools
+        shell: bash
+        run: |
+          npm config set legacy-peer-deps true
+
+          if [ ! -x ./node_modules/.bin/pbjs ]; then
+            npm install --no-save --legacy-peer-deps protobufjs protobufjs-cli
           fi
 
       - name: Download latest WAProto.proto
@@ -59,7 +71,7 @@ jobs:
         run: |
           set -e
 
-          REF="${{ inputs.upstream_ref }}"
+          REF="${{ github.event.inputs.upstream_ref }}"
           if [ -z "$REF" ]; then
             REF="master"
           fi
@@ -148,7 +160,18 @@ jobs:
 
           cd "$(dirname "$0")"
 
-          if yarn -s pbjs --version >/dev/null 2>&1; then
+          if [ -x ../node_modules/.bin/pbjs ]; then
+            ../node_modules/.bin/pbjs \
+              -t static-module \
+              --no-beautify \
+              -w commonjs \
+              --no-bundle \
+              --no-delimited \
+              --no-verify \
+              --no-comments \
+              -o ./index.js \
+              ./WAProto.proto
+          elif yarn -s pbjs --version >/dev/null 2>&1; then
             yarn pbjs \
               -t static-module \
               --no-beautify \
@@ -281,7 +304,7 @@ jobs:
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Create pull request
-        if: steps.commit.outputs.changed == 'true' && (github.event_name == 'schedule' || inputs.make_pr != 'false')
+        if: steps.commit.outputs.changed == 'true' && (github.event_name == 'schedule' || github.event.inputs.make_pr != 'false')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
