@@ -70,9 +70,12 @@
 
 > [!CAUTION]
 > `elaina-baileys` The old channel was banned due to an error by one of the admins, so we moved the information to the new channel.
+
 > Built on top of the WhiskeySockets/Baileys project. All original core logic credits go to their team. elaina-baileys extends it with thoughtful UX and DX improvements.
+
 > 🙌 Contributors outside the Baileys code
 Thanks to the following awesome contributors who help improve this project 💖
+
 ---
 
 
@@ -130,7 +133,7 @@ const { default: makeWASocket } = require('@rexxhayanasi/elaina-baileys')
 | 🖱️ Buttons | Create interactive messages with button options and quick replies. |
 | 🖼️ Albums | Send grouped images or videos as an album (carousel-like format). |
 | 👤 LID Grouping | Handle group operations using the latest @lid addressing style. |
-| 🤖 AI Message Style | Add a stylized “AI” icon to messages. |
+| 🤖 AI Message Style | Add a stylized “AI” icon to messages [ NOT AVAILABLE ]. |
 | 📷 HD Profile Pics | Upload full-size profile pictures without cropping. |
 | 🔐 Pairing Code | Generate custom alphanumeric pairing codes. |
 | 🛠️ Dev Experience | Reduced noise from logs with optimized libsignal printouts. |
