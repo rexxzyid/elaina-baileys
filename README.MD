@@ -24,10 +24,6 @@
     <img src="https://img.shields.io/npm/l/@rexxhayanasi/elaina-baileys?color=success&label=license" alt="license" />
   </a>
 
-  <!-- Gzip Bundle Size -->
-  <a href="https://bundlephobia.com/package/@rexxhayanasi/elaina-baileys">
-    <img src="https://img.shields.io/bundlephobia/minzip/@rexxhayanasi/elaina-baileys?label=minzip%20size&color=orange" alt="gzip bundle size" />
-  </a>
 
   <!-- PackagePhobia Install Size -->
   <a href="https://packagephobia.com/result?p=@rexxhayanasi/elaina-baileys">
