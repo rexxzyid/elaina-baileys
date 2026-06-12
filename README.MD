@@ -287,7 +287,7 @@ Jika Anda menemukan bug atau kendala saat menggunakan proyek ini, silakan lakuka
 - **Hubungi maintainer langsung** melalui WhatsApp
 
 <p align="center">
-  <a href="https://wa.me/6285282530851" target="_blank" rel="noopener noreferrer">
+  <a href="https://wa.me/628999045120" target="_blank" rel="noopener noreferrer">
     <img
       alt="Chat on WhatsApp"
       src="https://img.shields.io/badge/Chat%20on%20WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white"
