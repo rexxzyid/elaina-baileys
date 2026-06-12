@@ -24,11 +24,6 @@
     <img src="https://img.shields.io/npm/l/@rexxhayanasi/elaina-baileys?color=success&label=license" alt="license" />
   </a>
 
-  <!-- Bundle Size -->
-  <a href="https://bundlephobia.com/package/@rexxhayanasi/elaina-baileys">
-    <img src="https://img.shields.io/bundlephobia/min/@rexxhayanasi/elaina-baileys?label=minified%20size&color=orange" alt="bundle size" />
-  </a>
-
   <!-- Gzip Bundle Size -->
   <a href="https://bundlephobia.com/package/@rexxhayanasi/elaina-baileys">
     <img src="https://img.shields.io/bundlephobia/minzip/@rexxhayanasi/elaina-baileys?label=minzip%20size&color=orange" alt="gzip bundle size" />
@@ -58,7 +53,7 @@
 
 <p>
   <!-- WhatsApp Channel -->
-  <a href="https://whatsapp.com/channel/0029VbBdVbVGJP8K5d9LiN0q">
+  <a href="https://whatsapp.com/channel/0029Vb8RvQKEFeXmGnJr621s">
     <img src="https://img.shields.io/badge/Join-WhatsApp%20Channel-25D366?logo=whatsapp&logoColor=white" alt="WhatsApp Channel" />
   </a>
 </p>
