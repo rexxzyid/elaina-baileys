@@ -25,11 +25,6 @@
   </a>
 
 
-  <!-- PackagePhobia Install Size -->
-  <a href="https://packagephobia.com/result?p=@rexxhayanasi/elaina-baileys">
-    <img src="https://packagephobia.com/badge?p=@rexxhayanasi/elaina-baileys" alt="install size" />
-  </a>
-
   <!-- Code Quality (Codacy) -->
   <a href="https://app.codacy.com">
     <img src="https://img.shields.io/badge/Codacy-Quality%20Check-blue?logo=codacy" alt="Codacy quality" />
