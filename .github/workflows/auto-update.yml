@@ -46,15 +46,6 @@ jobs:
       - name: Update WA version
         run: yarn update:version
 
-      - name: Update WAProto
-        id: proto
-        run: yarn update:proto
-        continue-on-error: true
-
-      - name: Sync WAProto wrappers fallback
-        if: steps.proto.outcome == 'failure'
-        run: yarn sync:proto
-
       - name: Commit, bump, and publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
