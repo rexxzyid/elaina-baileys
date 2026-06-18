@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "strict": true,
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "rewriteRelativeImportExtensions": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "declaration": false,
+    "noEmit": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
