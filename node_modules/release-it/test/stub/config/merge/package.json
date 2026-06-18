@@ -1,7 +1,0 @@
-{
-  "release-it": {
-    "git": {
-      "push": false
-    }
-  }
-}
