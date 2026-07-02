@@ -60,6 +60,7 @@
     "music-metadata": "^7.12.3",
     "pino": "^9.6",
     "protobufjs": "^6.11.3",
+    "tweetnacl": "^1.0.3"
     "uuid": "^10.0.0",
     "ws": "^8.13.0"
   },
@@ -73,7 +74,6 @@
     "conventional-changelog-cli": "^2.2.2",
     "eslint": "^8.0.0",
     "jest": "^27.0.6",
-    "jimp": "^0.16.1",
     "json": "^11.0.0",
     "link-preview-js": "^3.0.0",
     "open": "^8.4.2",
