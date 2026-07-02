@@ -60,7 +60,7 @@
     "music-metadata": "^7.12.3",
     "pino": "^9.6",
     "protobufjs": "^6.11.3",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
     "uuid": "^10.0.0",
     "ws": "^8.13.0"
   },
