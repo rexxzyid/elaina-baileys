@@ -43,10 +43,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --no-lockfile
 
-      - name: Update WA version
+      - name: Update WA version (baileys-version.json + index.js)
         run: yarn update:version
 
-      - name: Commit, bump, and publish
+      - name: Commit, bump, push, and publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BUMP: ${{ github.event.inputs.bump || 'patch' }}
@@ -55,88 +55,78 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # ── deteksi perubahan (versi WA / index.js / dll) ──
           git add -A
           CHANGED=$(git diff --staged --quiet && echo "no" || echo "yes")
 
           if [ "$CHANGED" = "no" ] && [ "$FORCE" != "true" ]; then
-            echo "No changes detected, skipping release."
+            echo "Tidak ada perubahan terdeteksi, melewati release."
             exit 0
           fi
 
+          # ── bump versi package.json ──
           node <<'NODE'
           const fs = require('fs')
-
           const pkgPath = './package.json'
           const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
-
           const current = pkg.version
           const bump = process.env.BUMP || 'patch'
 
           function bumpNormal(version, type) {
             const match = version.match(/^(\d+)\.(\d+)\.(\d+)$/)
-
-            if (!match) {
-              throw new Error(`Unsupported normal version format: ${version}`)
-            }
-
-            let major = Number(match[1])
-            let minor = Number(match[2])
-            let patch = Number(match[3])
-
-            if (type === 'major') {
-              major++
-              minor = 0
-              patch = 0
-            } else if (type === 'minor') {
-              minor++
-              patch = 0
-            } else {
-              patch++
-            }
-
+            if (!match) throw new Error(`Unsupported normal version format: ${version}`)
+            let major = Number(match[1]); let minor = Number(match[2]); let patch = Number(match[3])
+            if (type === 'major') { major++; minor = 0; patch = 0 }
+            else if (type === 'minor') { minor++; patch = 0; if (minor > 9) { minor = 0; major++ } }
+            else { patch++; if (patch > 9) { patch = 0; minor++ }; if (minor > 9) { minor = 0; major++ } }
             return `${major}.${minor}.${patch}`
           }
 
           function bumpPrerelease(version) {
             const match = version.match(/^(\d+)\.(\d+)\.(\d+)-([0-9A-Za-z-]+)\.(\d+)$/)
-
             if (!match) return null
-
-            let major = Number(match[1])
-            let minor = Number(match[2])
-            let patch = Number(match[3])
-            const tag = match[4]
-            let sub = Number(match[5])
-
-            if (sub >= 9) {
-              patch++
-              sub = 0
-            } else {
-              sub++
-            }
-
+            const major = Number(match[1]); const minor = Number(match[2]); const patch = Number(match[3])
+            const tag = match[4]; const sub = Number(match[5]) + 1
             return `${major}.${minor}.${patch}-${tag}.${sub}`
           }
 
           const next = bumpPrerelease(current) || bumpNormal(current, bump)
-
           pkg.version = next
           fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
-
           console.log(`Version bumped: ${current} -> ${next}`)
           NODE
 
-          git add package.json
+          git add -A
 
           VERSION=$(node -p 'require("./package.json").version')
 
+          # ── commit + push (auto push) ──
           git commit -m "chore: release v${VERSION} — WA update $(date -u +%Y-%m-%d)"
-
           git pull --rebase origin main
-
-          git tag "v${VERSION}"
+          git tag "v${VERSION}" || echo "tag v${VERSION} sudah ada, lewati"
           git push origin main --tags
 
-          npm publish --access public
+          # ── publish gaya Manual-Release.yml ──
+          # cek apakah versi ini sudah pernah di-publish
+          if npm view "@rexxhayanasi/elaina-baileys@${VERSION}" version >/dev/null 2>&1; then
+            if [ "$FORCE" != "true" ]; then
+              echo "Versi v${VERSION} sudah ada di npm. Melewati publish (git sudah ter-push)."
+              exit 0
+            fi
+            echo "Force publish untuk versi v${VERSION}..."
+          fi
 
-          echo "✓ Published @rexxhayanasi/elaina-baileys@${VERSION}"
+          # set token npm manual saat publish
+          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
+
+          # prerelease (mengandung '-') -> publish dgn tag-nya, bukan 'latest'
+          if [[ "$VERSION" == *"-"* ]]; then
+            TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
+            echo "Versi prerelease. Publish dengan --tag $TAG"
+            npm publish --access public --tag "$TAG"
+          else
+            echo "Versi stable. Publish dengan tag default (latest)."
+            npm publish --access public
+          fi
+
+          echo "✓ Pushed + Published @rexxhayanasi/elaina-baileys@${VERSION}"
