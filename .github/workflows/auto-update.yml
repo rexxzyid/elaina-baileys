@@ -49,13 +49,15 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'yarn'
 
       - name: Enable Corepack
-        run: corepack enable
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn --version
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Update WhatsApp version
         run: yarn update:version
@@ -180,7 +182,7 @@ jobs:
           git push origin main
           git push origin "v${VERSION}"
 
-      - name: Publish to npm
+      - name: Publish to NPM
         if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -192,8 +194,7 @@ jobs:
           echo "Preparing ${PACKAGE_NAME}@${VERSION}"
 
           if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
-            echo "${PACKAGE_NAME}@${VERSION} sudah tersedia di npm."
-            echo "Versi npm yang sama tidak dapat dipublish ulang."
+            echo "${PACKAGE_NAME}@${VERSION} sudah tersedia di NPM."
             exit 0
           fi
 
@@ -230,7 +231,7 @@ jobs:
 
           if [[ "$VERSION" == *"-"* ]]; then
             TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
-            echo "- npm tag: \`${TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- NPM tag: \`${TAG}\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- npm tag: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- NPM tag: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
           fi
