@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force publish even if no changes detected'
+        description: 'Continue release checks even if version already exists'
         required: false
         default: 'false'
         type: choice
@@ -13,51 +13,129 @@ on:
           - 'true'
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: elaina-baileys-manual-release
+  cancel-in-progress: false
 
 jobs:
   release:
+    name: Publish to NPM
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '24'
-      
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn install --no-lockfile
+        run: yarn install --frozen-lockfile
 
-      - name: Publish to NPM
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          FORCE: ${{ github.event.inputs.force || 'false' }}
+      - name: Validate package
+        shell: bash
         run: |
+          PACKAGE_NAME=$(node -p 'require("./package.json").name')
           VERSION=$(node -p 'require("./package.json").version')
-          
-          # Cek apakah versi ini sudah pernah di-publish sebelumnya
-          if npm view "@rexxhayanasi/elaina-baileys@${VERSION}" version >/dev/null 2>&1; then
+
+          if [ "$PACKAGE_NAME" != "@rexxhayanasi/elaina-baileys" ]; then
+            echo "Package name tidak sesuai."
+            echo "Ditemukan: ${PACKAGE_NAME}"
+            echo "Seharusnya: @rexxhayanasi/elaina-baileys"
+            exit 1
+          fi
+
+          if [ -z "$VERSION" ]; then
+            echo "Version package.json tidak ditemukan."
+            exit 1
+          fi
+
+          echo "Package : ${PACKAGE_NAME}"
+          echo "Version : ${VERSION}"
+
+      - name: Check NPM version
+        id: npm_check
+        env:
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        shell: bash
+        run: |
+          PACKAGE_NAME="@rexxhayanasi/elaina-baileys"
+          VERSION=$(node -p 'require("./package.json").version')
+
+          if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+
+            echo "${PACKAGE_NAME}@${VERSION} sudah tersedia di NPM."
+
             if [ "$FORCE" != "true" ]; then
-              echo "Versi v${VERSION} sudah ada di npm. Melewati proses release."
+              echo "Publish dilewati."
               exit 0
             fi
-            echo "Menjalankan force publish untuk versi v${VERSION}..."
+
+            echo "Force aktif, tetapi NPM tidak mengizinkan publish ulang versi yang sama."
+            echo "Naikkan version di package.json terlebih dahulu."
+            exit 1
           fi
-          
-          # Konfigurasi token npm secara manual hanya saat proses publish dilakukan
+
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+          echo "${PACKAGE_NAME}@${VERSION} belum tersedia di NPM."
+
+      - name: Publish to NPM
+        if: steps.npm_check.outputs.exists == 'false'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: bash
+        run: |
+          PACKAGE_NAME="@rexxhayanasi/elaina-baileys"
+          VERSION=$(node -p 'require("./package.json").version')
+
           npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
-          
-          # Cek apakah versi mengandung tanda hubung (prerelease)
+
           if [[ "$VERSION" == *"-"* ]]; then
             TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
-            echo "Mendeteksi versi prerelease. Mempublikasikan dengan tag: --tag $TAG"
-            npm publish --access public --tag "$TAG"
+
+            echo "Prerelease terdeteksi."
+            echo "Publishing ${PACKAGE_NAME}@${VERSION} dengan tag: ${TAG}"
+
+            npm publish \
+              --access public \
+              --tag "${TAG}"
           else
-            echo "Mendeteksi versi stable. Mempublikasikan dengan tag default (latest)."
-            npm publish --access public
+            echo "Stable release terdeteksi."
+            echo "Publishing ${PACKAGE_NAME}@${VERSION} dengan tag: latest"
+
+            npm publish \
+              --access public
           fi
-          
-          echo "✓ Published @rexxhayanasi/elaina-baileys@${VERSION}"
+
+          echo "Published ${PACKAGE_NAME}@${VERSION}"
+
+      - name: Release summary
+        if: steps.npm_check.outputs.exists == 'false'
+        shell: bash
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+
+          echo "### Elaina Baileys Manual Release" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Package: \`@rexxhayanasi/elaina-baileys\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: \`${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Node.js: \`22\`" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$VERSION" == *"-"* ]]; then
+            TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
+            echo "- NPM tag: \`${TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- NPM tag: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
