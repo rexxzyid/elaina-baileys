@@ -923,9 +923,9 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 <a href="https://github.com/ValdazGT">
 <img src="https://avatars.githubusercontent.com/u/108647595?v=4" width="80px" alt="ValdazGT" />
 <br />
-<sub><b>MBUILDER - OWNER</b></sub>
+<sub><b>ValdazGT</b></sub>
 <br />
-<sub>Contributor</sub>
+<sub>MBuilder - OWNER</sub>
 </a>
 </td>
 </tr>
