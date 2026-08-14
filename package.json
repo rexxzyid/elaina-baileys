@@ -7,7 +7,7 @@
    "type": "module",
    "scripts": {
       "preinstall": "node ./engine-requirements.js",
-      "update:version" "node ./script/updatewa.js"
+      "update:version": "node ./script/updatewa.js"
    },
    "engines": {
       "node": ">=20.0.0"
