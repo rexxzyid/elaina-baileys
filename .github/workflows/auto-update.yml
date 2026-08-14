@@ -47,20 +47,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Enable Corepack
+      - name: Show environment
         run: |
-          corepack enable
-          corepack prepare yarn@4.9.2 --activate
-          yarn --version
+          node --version
+          npm --version
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm install
 
       - name: Update WhatsApp version
-        run: yarn update:version
+        run: npm run update:version
 
       - name: Detect changes
         id: changes
@@ -227,7 +226,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Package: \`@rexxhayanasi/elaina-baileys\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Version: \`${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Node.js: \`22\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Node.js: \`24\`" >> "$GITHUB_STEP_SUMMARY"
 
           if [[ "$VERSION" == *"-"* ]]; then
             TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
