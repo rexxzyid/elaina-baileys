@@ -838,7 +838,7 @@ If WhatsApp returns `DisconnectReason.loggedOut`, remove the invalid local sessi
 If you encounter a bug or compatibility issue, you can contact the maintainer or follow the WhatsApp Channel for project updates.
 
 <p align="center">
-  <a href="https://wa.me/628999045120">
+  <a href="https://wa.me/6285924647929">
     <img src="https://img.shields.io/badge/Chat%20on%20WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Chat on WhatsApp" />
   </a>
   <a href="https://whatsapp.com/channel/0029Vb8RvQKEFeXmGnJr621s">
@@ -862,8 +862,6 @@ This project exists thanks to the work of many developers and open-source projec
 - **adiwajshing** — original Baileys author and early ecosystem work.
 
 ### Fork / Source Contributions
-
-- **Lia Wynn / itsliaaa** — previous fork work and modifications used as part of the development history of this project.
 - **Kyuu / kiuur** — project contributor and support.
 
 ### Integrated MessageBuilder
@@ -916,6 +914,16 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 <img src="https://avatars.githubusercontent.com/u/182334162?v=4" width="80px" alt="Kyuu" />
 <br />
 <sub><b>Kyuu</b></sub>
+<br />
+<sub>Contributor</sub>
+</a>
+</td>
+
+<td align="center">
+<a href="https://github.com/ValdazGT">
+<img src="https://avatars.githubusercontent.com/u/108647595?v=4" width="80px" alt="ValdazGT" />
+<br />
+<sub><b>MBUILDER - OWNER</b></sub>
 <br />
 <sub>Contributor</sub>
 </a>
