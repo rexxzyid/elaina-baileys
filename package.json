@@ -6,7 +6,8 @@
    "types": "lib/index.d.ts",
    "type": "module",
    "scripts": {
-      "preinstall": "node ./engine-requirements.js"
+      "preinstall": "node ./engine-requirements.js",
+      "update:version" "node ./script/updatewa.js"
    },
    "engines": {
       "node": ">=20.0.0"
