@@ -52,8 +52,6 @@
 
 The package combines the socket layer, protocol utilities, LID-aware addressing support, and an integrated MessageBuilder in a single dependency. Buttons, native-flow messages, carousels, and AIRich layouts can be used directly from the package without installing a separate builder dependency.
 
-Legacy `rich-message-utils` helpers are no longer part of the public implementation. Use the integrated `AIRich` builder for rich-response layouts.
-
 ### ✨ Highlights
 
 | Feature | Description |
