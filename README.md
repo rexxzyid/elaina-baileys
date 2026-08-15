@@ -582,7 +582,7 @@ await carousel.send(jid)
 
 ## AIRich
 
-`AIRich` is the integrated rich-response builder for multiple layouts and content types. It replaces the removed legacy `rich-message-utils` path.
+`AIRich` is the integrated rich-response builder for multiple layouts and content types
 
 ### Text + Code + Table
 
