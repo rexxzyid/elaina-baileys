@@ -1,0 +1,236 @@
+name: Auto Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+      force:
+        description: 'Force release even if no WA changes detected'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: elaina-baileys-auto-release
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Update & Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Show environment
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Update WhatsApp version
+        run: npm run update:version
+
+      - name: Detect changes
+        id: changes
+        shell: bash
+        run: |
+          git add -A
+
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Tidak ada perubahan WhatsApp yang terdeteksi."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Perubahan WhatsApp terdeteksi."
+            git diff --staged --stat
+          fi
+
+      - name: Stop if no changes
+        if: steps.changes.outputs.changed == 'false' && github.event.inputs.force != 'true'
+        run: |
+          echo "Tidak ada perubahan dan force=false."
+          echo "Release dilewati."
+
+      - name: Bump package version
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
+        env:
+          BUMP: ${{ github.event.inputs.bump || 'patch' }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+
+          const pkgPath = './package.json'
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+          const current = pkg.version
+          const bump = process.env.BUMP || 'patch'
+
+          function parse(version) {
+            const match = version.match(
+              /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+)\.(\d+))?$/
+            )
+
+            if (!match) {
+              throw new Error(`Unsupported version format: ${version}`)
+            }
+
+            return {
+              major: Number(match[1]),
+              minor: Number(match[2]),
+              patch: Number(match[3]),
+              tag: match[4] || null,
+              prerelease: match[5] ? Number(match[5]) : null
+            }
+          }
+
+          function bumpStable(version, type) {
+            const v = parse(version)
+
+            if (type === 'major') {
+              return `${v.major + 1}.0.0`
+            }
+
+            if (type === 'minor') {
+              return `${v.major}.${v.minor + 1}.0`
+            }
+
+            return `${v.major}.${v.minor}.${v.patch + 1}`
+          }
+
+          function bumpVersion(version, type) {
+            const v = parse(version)
+
+            if (!v.tag) {
+              return bumpStable(version, type)
+            }
+
+            if (type === 'major') {
+              return `${v.major + 1}.0.0-${v.tag}.1`
+            }
+
+            if (type === 'minor') {
+              return `${v.major}.${v.minor + 1}.0-${v.tag}.1`
+            }
+
+            return `${v.major}.${v.minor}.${v.patch}-${v.tag}.${v.prerelease + 1}`
+          }
+
+          const next = bumpVersion(current, bump)
+
+          pkg.version = next
+
+          fs.writeFileSync(
+            pkgPath,
+            JSON.stringify(pkg, null, 2) + '\n'
+          )
+
+          console.log(`Version: ${current} -> ${next}`)
+          NODE
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          VERSION=$(node -p 'require("./package.json").version')
+
+          git add -A
+
+          git commit -m "chore: release v${VERSION} — WA update $(date -u +%Y-%m-%d)"
+
+          git pull --rebase origin main
+
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} sudah ada."
+          else
+            git tag "v${VERSION}"
+          fi
+
+          git push origin main
+          git push origin "v${VERSION}"
+
+      - name: Publish to NPM
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: bash
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          PACKAGE_NAME="@rexxhayanasi/elaina-baileys"
+
+          echo "Preparing ${PACKAGE_NAME}@${VERSION}"
+
+          if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "${PACKAGE_NAME}@${VERSION} sudah tersedia di NPM."
+            exit 0
+          fi
+
+          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
+
+          if [[ "$VERSION" == *"-"* ]]; then
+            TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
+
+            echo "Publishing prerelease dengan npm tag: ${TAG}"
+
+            npm publish \
+              --access public \
+              --tag "${TAG}"
+          else
+            echo "Publishing stable release dengan npm tag: latest"
+
+            npm publish \
+              --access public
+          fi
+
+          echo "Published ${PACKAGE_NAME}@${VERSION}"
+
+      - name: Summary
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
+        shell: bash
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+
+          echo "### Elaina Baileys Auto Update" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Package: \`@rexxhayanasi/elaina-baileys\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: \`${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Node.js: \`24\`" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$VERSION" == *"-"* ]]; then
+            TAG=$(echo "$VERSION" | cut -d'-' -f2 | cut -d'.' -f1)
+            echo "- NPM tag: \`${TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- NPM tag: \`latest\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
