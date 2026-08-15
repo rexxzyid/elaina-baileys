@@ -1,8 +1,8 @@
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
 <div align="center">
-  <h1>ðŸ’« @rexxhayanasi/elaina-baileys</h1>
-  <p><em>Custom WhatsApp library built upon Baileys â€” enhanced, modernized, and extended with an integrated message builder.</em></p>
+  <h1>💫 @rexxhayanasi/elaina-baileys</h1>
+  <p><em>Custom WhatsApp library built upon Baileys — enhanced, modernized, and extended with an integrated message builder.</em></p>
 
   <img src="https://files.catbox.moe/dulwdz.jpeg" width="400" alt="Elaina Baileys Banner" />
   <br><br>
@@ -46,7 +46,7 @@
 
 ---
 
-## ðŸ“Œ Overview
+## 📌 Overview
 
 `@rexxhayanasi/elaina-baileys` is a modern ESM-focused Baileys fork for WhatsApp Multi-Device development.
 
@@ -54,25 +54,25 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 
 Legacy `rich-message-utils` helpers are no longer part of the public implementation. Use the integrated `AIRich` builder for rich-response layouts.
 
-### âœ¨ Highlights
+### ✨ Highlights
 
 | Feature | Description |
 |---|---|
-| ðŸ”Œ Multi-Device | Connect to WhatsApp using the Baileys Multi-Device protocol. |
-| ðŸ” Pairing Code | Supports normal and custom 8-character pairing codes. |
-| ðŸ–±ï¸ Interactive Buttons | Quick reply, URL, copy, call, list/select, location, and other native-flow buttons. |
-| ðŸ§± Integrated MessageBuilder | `Button`, `ButtonV2`, `Carousel`, `AIRich`, and `Toolkit` are included in the same package. |
-| ðŸ–¼ï¸ Albums | Send multiple images/videos as an album message. |
-| ðŸ“¢ Newsletter | Create, follow, update, react to, and fetch WhatsApp Channel/Newsletter data. |
-| ðŸ‘¥ Groups | Group creation, participant management, metadata, description updates, and more. |
-| ðŸªª LID / PN Addressing | Supports modern LID addressing while exposing the PN/JID alternatives supplied by WhatsApp when available. |
-| ðŸ“· Profile Picture | Fetch, update, and remove profile pictures. |
-| ðŸ¤– AI Rich | Experimental rich-response builder for text, code, tables, media, suggestions, and other layouts. |
-| ðŸ“¦ ESM | ESM-first package designed for Node.js 22+; Node.js 24 is recommended. |
+| 🔌 Multi-Device | Connect to WhatsApp using the Baileys Multi-Device protocol. |
+| 🔐 Pairing Code | Supports normal and custom 8-character pairing codes. |
+| 🖱️ Interactive Buttons | Quick reply, URL, copy, call, list/select, location, and other native-flow buttons. |
+| 🧱 Integrated MessageBuilder | `Button`, `ButtonV2`, `Carousel`, `AIRich`, and `Toolkit` are included in the same package. |
+| 🖼️ Albums | Send multiple images/videos as an album message. |
+| 📢 Newsletter | Create, follow, update, react to, and fetch WhatsApp Channel/Newsletter data. |
+| 👥 Groups | Group creation, participant management, metadata, description updates, and more. |
+| 🪪 LID / PN Addressing | Supports modern LID addressing while exposing the PN/JID alternatives supplied by WhatsApp when available. |
+| 📷 Profile Picture | Fetch, update, and remove profile pictures. |
+| 🤖 AI Rich | Experimental rich-response builder for text, code, tables, media, suggestions, and other layouts. |
+| 📦 ESM | ESM-first package designed for Node.js 22+; Node.js 24 is recommended. |
 
 ---
 
-## ðŸ“š Table of Contents
+## 📚 Table of Contents
 
 - [Requirements](#-requirements)
 - [Installation](#-installation)
@@ -101,7 +101,7 @@ Legacy `rich-message-utils` helpers are no longer part of the public implementat
 
 ---
 
-## âš™ï¸ Requirements
+## ⚙️ Requirements
 
 - Node.js **22 or newer**
 - **Node.js 24 recommended** for development and release workflows
@@ -116,7 +116,7 @@ node -v
 
 ---
 
-## ðŸ“¦ Installation
+## 📦 Installation
 
 Install directly from npm:
 
@@ -141,7 +141,7 @@ This package is ESM-first. Use `import` syntax instead of `require()`.
 
 ---
 
-## ðŸ“¥ Import
+## 📥 Import
 
 ```js
 import makeWASocket from '@rexxhayanasi/elaina-baileys'
@@ -168,7 +168,7 @@ import makeWASocket, {
 
 ---
 
-## ðŸš€ Basic Connection
+## 🚀 Basic Connection
 
 ```js
 import makeWASocket, {
@@ -212,7 +212,7 @@ startSock()
 
 ---
 
-## ðŸ” Pairing Code
+## 🔐 Pairing Code
 
 Pairing code can be requested after creating the socket.
 
@@ -242,7 +242,7 @@ Use the phone number in international format without `+`, spaces, or symbols.
 
 ---
 
-## ðŸ“© Receive Messages
+## 📩 Receive Messages
 
 ```js
 sock.ev.on('messages.upsert', async ({ messages, type }) => {
@@ -276,7 +276,7 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 
 ---
 
-## ðŸªª LID / PN / JID Addressing
+## 🪪 LID / PN / JID Addressing
 
 Recent WhatsApp protocol versions may identify users with LID addresses instead of only phone-number JIDs. Do not assume every incoming user identifier ends with `@s.whatsapp.net`.
 
@@ -319,13 +319,13 @@ console.log(decoded)
 
 ---
 
-## ðŸ’¬ Send Messages
+## 💬 Send Messages
 
 ### Text
 
 ```js
 await sock.sendMessage(jid, {
-  text: 'Hello from Elaina ðŸ’œ'
+  text: 'Hello from Elaina 💜'
 })
 ```
 
@@ -384,7 +384,7 @@ await sock.sendMessage(jid, {
 
 ---
 
-## ðŸ“° External Ad Reply
+## 📰 External Ad Reply
 
 `externalAdReply` can be attached through `contextInfo` when you want a standard WhatsApp link-preview style card.
 
@@ -409,7 +409,7 @@ The payload can also be passed to a builder using `.setContextInfo(...)` when th
 
 ---
 
-# ðŸ§± Integrated MessageBuilder
+# 🧱 Integrated MessageBuilder
 
 MessageBuilder v4.6 is included directly inside `@rexxhayanasi/elaina-baileys`.
 
@@ -629,7 +629,7 @@ Other available AIRich helpers include:
 
 ---
 
-## ðŸ–¼ï¸ Album Message
+## 🖼️ Album Message
 
 Send multiple images or videos as one album.
 
@@ -656,7 +656,7 @@ An album requires at least two image/video media items.
 
 ---
 
-## ðŸ“¢ Newsletter / Channel
+## 📢 Newsletter / Channel
 
 ### Create Newsletter
 
@@ -716,7 +716,7 @@ await sock.newsletterUnmute('123456789@newsletter')
 await sock.newsletterReactMessage(
   '123456789@newsletter',
   '175',
-  'ðŸ”¥'
+  '🔥'
 )
 ```
 
@@ -750,7 +750,7 @@ console.log(newsletters)
 
 ---
 
-## ðŸ‘¥ Group Management
+## 👥 Group Management
 
 ### Create Group
 
@@ -798,13 +798,13 @@ await sock.groupParticipantsUpdate(groupJid, [userJid], 'demote')
 ```js
 await sock.groupUpdateDescription(
   groupJid,
-  'Welcome to Elaina Community ðŸ’œ'
+  'Welcome to Elaina Community 💜'
 )
 ```
 
 ---
 
-## ðŸ“· Profile Picture
+## 📷 Profile Picture
 
 ### Fetch Profile Picture URL
 
@@ -829,7 +829,7 @@ await sock.removeProfilePicture(jid)
 
 ---
 
-## ðŸ§° Useful Exports
+## 🧰 Useful Exports
 
 Some commonly used exports include:
 
@@ -863,7 +863,7 @@ console.log(MessageBuilder.VERSION)
 
 ---
 
-## ðŸ”„ Update WhatsApp Web Version
+## 🔄 Update WhatsApp Web Version
 
 The package includes an ESM updater script that fetches the current WhatsApp Web `client_revision` and synchronizes the version used by the runtime.
 
@@ -888,7 +888,7 @@ If your repository intentionally does not track a lockfile for this library pack
 
 ---
 
-## ðŸž Troubleshooting
+## 🐞 Troubleshooting
 
 ### Pairing code must be exactly 8 characters
 
@@ -931,7 +931,7 @@ If WhatsApp returns `DisconnectReason.loggedOut`, remove the invalid local sessi
 
 ---
 
-## ðŸž Found a Bug?
+## 🐞 Found a Bug?
 
 If you encounter a bug or compatibility issue, you can contact the maintainer or follow the WhatsApp Channel for project updates.
 
@@ -946,30 +946,30 @@ If you encounter a bug or compatibility issue, you can contact the maintainer or
 
 ---
 
-## ðŸ™ Credits
+## 🙏 Credits
 
 This project exists thanks to the work of many developers and open-source projects.
 
 ### Project Maintainer
 
-- **RexxHayanasi** â€” maintainer, fork development, integration, fixes, features, and project branding.
+- **RexxHayanasi** — maintainer, fork development, integration, fixes, features, and project branding.
 
 ### Baileys / Upstream
 
-- **WhiskeySockets/Baileys** â€” upstream Baileys project and core WhatsApp Web implementation.
-- **adiwajshing** â€” original Baileys author and early ecosystem work.
+- **WhiskeySockets/Baileys** — upstream Baileys project and core WhatsApp Web implementation.
+- **adiwajshing** — original Baileys author and early ecosystem work.
 
 ### Fork / Source Contributions
 
-- **Lia Wynn / ItsLia** â€” fork lineage and prior Baileys modifications retained where applicable.
-- **Kyuu / kiuur** â€” project contributor and support.
+- **Lia Wynn / ItsLia** — fork lineage and prior Baileys modifications retained where applicable.
+- **Kyuu / kiuur** — project contributor and support.
 
 ### Integrated MessageBuilder
 
 The integrated MessageBuilder is based on **NIXCODE / Advanced WhatsApp Interactive Message Builder**.
 
-- **Nixel** â€” original creator of the MessageBuilder implementation. [WhatsApp](https://wa.me/6285188349341) Â· [Channel](https://whatsapp.com/channel/0029VbCV1ck8fewpdNb2TY2k)
-- **Ahmad tumbuh kembang** â€” MessageBuilder contributor.
+- **Nixel** — original creator of the MessageBuilder implementation. [WhatsApp](https://wa.me/6285188349341) · [Channel](https://whatsapp.com/channel/0029VbCV1ck8fewpdNb2TY2k)
+- **Ahmad tumbuh kembang** — MessageBuilder contributor.
 
 The original builder attribution and licensing notices must be respected when modifying or redistributing its source. The builder is integrated into this package so users do not need to install `baileys-mbuilder` separately.
 
@@ -981,16 +981,16 @@ Thanks to every upstream Baileys contributor, library author, tester, issue repo
 
 ---
 
-## ðŸ’œ TQTO
+## 💜 TQTO
 
 <details>
 <summary><strong>Thanks To</strong></summary>
 
 Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan kontribusi dalam pengembangan proyek ini.
 
-- **Allah SWT** â€” atas rahmat, kemudahan, dan perlindungan-Nya.
-- **Orang Tua** â€” atas doa dan dukungan yang tiada henti.
-- **RexxHayanasi** â€” pengembang dan maintainer proyek.
+- **Allah SWT** — atas rahmat, kemudahan, dan perlindungan-Nya.
+- **Orang Tua** — atas doa dan dukungan yang tiada henti.
+- **RexxHayanasi** — pengembang dan maintainer proyek.
 - Seluruh contributor dan komunitas open source yang membantu perkembangan Baileys.
 
 </details>
@@ -1033,7 +1033,7 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 
 ---
 
-## ðŸ“„ License
+## 📄 License
 
 This project is distributed under the license included with the repository/package.
 
@@ -1044,7 +1044,7 @@ Do not remove third-party copyright or attribution notices required by their res
 ---
 
 <div align="center">
-  <b>ðŸ’« @rexxhayanasi/elaina-baileys</b>
+  <b>💫 @rexxhayanasi/elaina-baileys</b>
   <br>
   <sub>Built with respect for the Baileys open-source ecosystem.</sub>
 </div>
