@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const rootDir = join(__dirname, '..')
 
 async function fetchLatestWaWebVersion() {
     try {
@@ -15,12 +16,11 @@ async function fetchLatestWaWebVersion() {
         })
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch sw.js: ${response.statusText}`)
+            throw new Error(`Failed to fetch sw.js: ${response.status} ${response.statusText}`)
         }
 
         const data = await response.text()
-        const regex = /\\?"client_revision\\?":\s*(\d+)/
-        const match = data.match(regex)
+        const match = data.match(/\\?"client_revision\\?":\s*(\d+)/)
 
         if (!match?.[1]) {
             throw new Error('Could not find client revision in sw.js')
@@ -33,42 +33,33 @@ async function fetchLatestWaWebVersion() {
     }
 }
 
-function updateFile(filePath, regex, replacement) {
-    try {
-        const fullPath = join(__dirname, '..', filePath)
+function updateVersion(filePath, regex, replacement) {
+    const fullPath = join(rootDir, filePath)
 
-        if (!existsSync(fullPath)) {
-            console.warn(`! Skip (tidak ada): ${filePath}`)
+    if (!existsSync(fullPath)) {
+        console.error(`✗ File tidak ditemukan: ${filePath}`)
+        return false
+    }
+
+    try {
+        const originalContent = readFileSync(fullPath, 'utf8')
+
+        if (!regex.test(originalContent)) {
+            console.error(`✗ Pola version tidak ditemukan di ${filePath}`)
             return false
         }
 
-        const originalContent = readFileSync(fullPath, 'utf8')
+        regex.lastIndex = 0
+
         const updatedContent = originalContent.replace(regex, replacement)
 
-        if (originalContent !== updatedContent) {
-            writeFileSync(fullPath, updatedContent)
-            console.log(`✓ Updated ${filePath}`)
+        if (originalContent === updatedContent) {
+            console.log(`= ${filePath} sudah menggunakan versi terbaru`)
             return true
         }
 
-        console.warn(`! Pola tidak ketemu di ${filePath}`)
-        return false
-    } catch (error) {
-        console.error(`✗ Failed to update ${filePath}:`, error.message)
-        return false
-    }
-}
+        writeFileSync(fullPath, updatedContent)
 
-function updateJson(filePath, version) {
-    try {
-        const fullPath = join(__dirname, '..', filePath)
-
-        if (!existsSync(fullPath)) {
-            console.warn(`! Skip (tidak ada): ${filePath}`)
-            return false
-        }
-
-        writeFileSync(fullPath, `${JSON.stringify({ version })}\n`)
         console.log(`✓ Updated ${filePath}`)
         return true
     } catch (error) {
@@ -81,33 +72,32 @@ async function main() {
     console.log('Fetching latest WhatsApp Web version...')
 
     const version = await fetchLatestWaWebVersion()
+    const versionString = `[${version.join(', ')}]`
 
-    console.log(`Latest version found: [${version.join(', ')}]`)
+    console.log(`Latest version found: ${versionString}`)
 
-    const vStr = `[${version.join(', ')}]`
-
-    updateJson('lib/Defaults/baileys-version.json', version)
-
-    const okIndex = updateFile(
+    const defaultsUpdated = updateVersion(
         'lib/Defaults/index.js',
-        /exports\.version\s*=\s*\[\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\]/g,
-        `exports.version = ${vStr}`
+        /const\s+version\s*=\s*\[\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\]\s*;/,
+        `const version = ${versionString};`
     )
 
-    updateFile(
-        'src/Defaults/index.ts',
-        /export const version(\s*:\s*WAVersion)?\s*=\s*\[\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\]/g,
-        `export const version = ${vStr}`
+    const genericsUpdated = updateVersion(
+        'lib/Utils/generics.js',
+        /const\s+baileysVersion\s*=\s*\[\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\]\s*;/,
+        `const baileysVersion = ${versionString};`
     )
 
-    if (!okIndex) {
-        console.error(
-            '✗ GAGAL sync exports.version di lib/Defaults/index.js — dibatalkan agar versi tidak mismatch.'
-        )
+    if (!defaultsUpdated || !genericsUpdated) {
+        console.error('✗ Gagal sinkronisasi versi WhatsApp.')
         process.exit(1)
     }
 
-    console.log('Update complete! (baileys-version.json + index.js sinkron)')
+    console.log('')
+    console.log('Update complete!')
+    console.log(`WhatsApp Web version: ${versionString}`)
+    console.log('✓ lib/Defaults/index.js')
+    console.log('✓ lib/Utils/generics.js')
 }
 
 main().catch(error => {
