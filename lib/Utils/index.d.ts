@@ -23,3 +23,4 @@ export * from "./companion-reg-client-utils.js";
 export * from "./identity-change-handler.js";
 export * from "./stanza-ack.js";
 export * from "./useNekoDBAuth.js";
+export * from "./modern-messages.js";

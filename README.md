@@ -93,6 +93,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Profile Picture](#-profile-picture)
 - [Useful Exports](#-useful-exports)
 - [Update WhatsApp Web Version](#-update-whatsapp-web-version)
+- [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
 - [Troubleshooting](#-troubleshooting)
 - [Credits](#-credits)
 - [License](#-license)
@@ -883,6 +884,282 @@ npm-debug.log*
 ```
 
 If your repository intentionally does not track a lockfile for this library package, add `package-lock.json` as well. Otherwise, keep the lockfile tracked normally.
+
+
+---
+
+## 🧪 Modern WhatsApp Message APIs
+
+Elaina Baileys exposes helpers for newer protobuf message types already present in the bundled WAProto. These APIs are experimental because WhatsApp can gate rendering or server acceptance by account, platform, or rollout.
+
+```js
+import {
+  makeNewsletterStatusAttribution,
+  LOCATION_BROADCAST_JID,
+  isJidLocationBroadcast
+} from '@rexxhayanasi/elaina-baileys'
+```
+
+### Question Message
+
+```js
+await sock.sendMessage(jid, {
+  question: {
+    text: 'What feature should be added next?'
+  }
+})
+```
+
+The same payload can be sent to a newsletter JID when the account and server support newsletter questions.
+
+```js
+await sock.sendMessage('123456789@newsletter', {
+  question: {
+    text: 'Which update do you want next?'
+  }
+})
+```
+
+### Question Response
+
+```js
+await sock.sendMessage(jid, {
+  questionResponse: {
+    key: questionMessage.key,
+    text: 'MessageBuilder'
+  }
+})
+```
+
+### Status Question Answer
+
+```js
+await sock.sendMessage(jid, {
+  statusQuestionAnswer: {
+    key: statusQuestion.key,
+    text: 'Elaina Baileys'
+  }
+})
+```
+
+### Status Quoted Message
+
+```js
+await sock.sendMessage(jid, {
+  statusQuoted: {
+    originalStatusId: statusMessage.key,
+    type: 'QUESTION_ANSWER',
+    text: 'Quoted status answer'
+  }
+})
+```
+
+### Status Sticker Interaction
+
+```js
+await sock.sendMessage(jid, {
+  statusStickerInteraction: {
+    key: statusMessage.key,
+    stickerKey: 'heart',
+    type: 'REACTION'
+  }
+})
+```
+
+### Status Notification
+
+Supported notification types are `UNKNOWN`, `STATUS_ADD_YOURS`, `STATUS_RESHARE`, and `STATUS_QUESTION_ANSWER_RESHARE`.
+
+```js
+await sock.sendMessage(jid, {
+  statusNotification: {
+    responseMessageKey: responseMessage.key,
+    originalMessageKey: statusMessage.key,
+    type: 'STATUS_RESHARE'
+  }
+})
+```
+
+### Newsletter Admin Invite
+
+```js
+await sock.sendMessage(userJid, {
+  newsletterAdminInvite: {
+    newsletterJid: '123456789@newsletter',
+    newsletterName: 'Elaina Updates',
+    caption: 'Join as an admin',
+    inviteExpiration: Math.floor(Date.now() / 1000) + 86400
+  }
+})
+```
+
+`jpegThumbnail` and `contextInfo` can also be supplied.
+
+### Newsletter Follower Invite V2
+
+```js
+await sock.sendMessage(userJid, {
+  newsletterFollowerInvite: {
+    newsletterJid: '123456789@newsletter',
+    newsletterName: 'Elaina Updates',
+    caption: 'Follow this channel'
+  }
+})
+```
+
+### Newsletter Status Attribution
+
+Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.
+
+```js
+await sock.sendMessage('status@broadcast', {
+  image: { url: 'https://example.com/status.jpg' },
+  caption: 'Shared from Elaina Updates',
+  newsletterStatus: {
+    newsletterJid: '123456789@newsletter',
+    messageId: 42,
+    duration: 24,
+    hasMultipleReshares: false
+  }
+}, {
+  statusJidList: audienceJids
+})
+```
+
+The attribution can also be created manually.
+
+```js
+const attribution = makeNewsletterStatusAttribution({
+  newsletterJid: '123456789@newsletter',
+  messageId: 42
+})
+
+await sock.sendMessage('status@broadcast', {
+  text: 'Newsletter status',
+  contextInfo: {
+    statusAttributions: [attribution]
+  }
+}, {
+  statusJidList: audienceJids
+})
+```
+
+### Group Status Reaction
+
+```js
+await sock.sendMessage(groupJid, {
+  groupStatusReaction: {
+    key: groupStatusMessage.key,
+    text: '❤️'
+  }
+})
+```
+
+The reaction is wrapped in `groupStatusMessageV2`, allowing the existing relay layer to include group-status metadata.
+
+### Poll Add Option
+
+The original poll must allow adding options.
+
+```js
+await sock.sendMessage(jid, {
+  pollAddOption: {
+    pollCreationMessageKey: pollMessage.key,
+    option: 'New option'
+  }
+})
+```
+
+`addOption` can be supplied directly when you already have the protobuf option object.
+
+### Comment Message
+
+`content` accepts text or protobuf message fields. Raw protobuf content can be supplied as `message`.
+
+```js
+await sock.sendMessage(jid, {
+  comment: {
+    targetMessageKey: targetMessage.key,
+    content: {
+      text: 'Comment on this message'
+    }
+  }
+})
+```
+
+### Event Invite Message
+
+```js
+await sock.sendMessage(jid, {
+  eventInvite: {
+    eventId: 'elaina-event-001',
+    eventTitle: 'Elaina Community Event',
+    startTime: new Date(Date.now() + 3600000),
+    endTime: new Date(Date.now() + 7200000),
+    caption: 'See you there'
+  }
+})
+```
+
+### Scheduled Call
+
+```js
+const created = await sock.sendMessage(jid, {
+  scheduledCall: {
+    scheduledTimestampMs: new Date(Date.now() + 3600000),
+    callType: 'VIDEO',
+    title: 'Elaina Call'
+  }
+})
+```
+
+Cancel a scheduled call with its message key.
+
+```js
+await sock.sendMessage(jid, {
+  scheduledCallEdit: {
+    key: created.key,
+    editType: 'CANCEL'
+  }
+})
+```
+
+### Location Broadcast Identifier
+
+WhatsApp Desktop recognizes `location@broadcast` separately from `status@broadcast`. Elaina Baileys exposes the identifier and detector without treating it as normal status fanout.
+
+```js
+console.log(LOCATION_BROADCAST_JID)
+console.log(isJidLocationBroadcast('location@broadcast'))
+```
+
+### Low-Level Builders
+
+```js
+import {
+  makeQuestionMessage,
+  makeQuestionResponseMessage,
+  makeStatusQuestionAnswerMessage,
+  makeStatusQuotedMessage,
+  makeStatusStickerInteractionMessage,
+  makeStatusNotificationMessage,
+  makeNewsletterAdminInviteMessage,
+  makeNewsletterFollowerInviteMessage,
+  makePollAddOptionMessage,
+  makeCommentMessage,
+  makeEventInviteMessage,
+  makeScheduledCallCreationMessage,
+  makeScheduledCallEditMessage,
+  makeGroupStatusReactionMessage,
+  makeNewsletterStatusAttribution,
+  makeGroupStatusAttribution
+} from '@rexxhayanasi/elaina-baileys'
+```
+
+These helpers return protobuf-compatible message content that can be passed to `generateWAMessageFromContent` or custom relay logic.
+
+> [!IMPORTANT]
+> The inspected WhatsApp Desktop build also exposes schema names related to bot history sharing and identity verification. They are intentionally not added until their protobuf field numbers, parent messages, and wire layout are confirmed. Elaina Baileys does not guess protobuf tags.
 
 ---
 
