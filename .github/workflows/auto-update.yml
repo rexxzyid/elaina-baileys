@@ -56,7 +56,7 @@ jobs:
           npm --version
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --package-lock=false
 
       - name: Update WhatsApp version
         run: npm run update:version
@@ -65,7 +65,7 @@ jobs:
         id: changes
         shell: bash
         run: |
-          git add -A
+          git add lib/Defaults/index.js lib/Utils/generics.js
 
           if git diff --staged --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -166,7 +166,7 @@ jobs:
 
           VERSION=$(node -p 'require("./package.json").version')
 
-          git add -A
+          git add package.json lib/Defaults/index.js lib/Utils/generics.js
 
           git commit -m "chore: release v${VERSION} — WA update $(date -u +%Y-%m-%d)"
 
