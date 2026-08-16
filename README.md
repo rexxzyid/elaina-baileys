@@ -89,6 +89,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
   - [AIRich](#airich)
 - [Album Message](#-album-message)
 - [Newsletter / Channel](#-newsletter--channel)
+- [Native Newsletter Status](#-native-newsletter-status)
 - [Group Management](#-group-management)
 - [Profile Picture](#-profile-picture)
 - [Useful Exports](#-useful-exports)
@@ -745,6 +746,140 @@ console.log(metadata)
 ```js
 const newsletters = await sock.newsletterSubscribed()
 console.log(newsletters)
+```
+
+---
+
+## 🟢 Native Newsletter Status
+
+Elaina Baileys exposes an experimental native Newsletter Status sender based on the status transport used by WhatsApp Android 2.26.32.70. This is different from `newsletterStatus` attribution, which shares a newsletter post into a normal `status@broadcast` status.
+
+Native Newsletter Status targets the newsletter JID directly:
+
+```text
+123456789@newsletter
+```
+
+The confirmed transport shape is:
+
+```xml
+<status to="123456789@newsletter">
+  <status id="MESSAGE_ID">
+    <plaintext>PROTO_MESSAGE</plaintext>
+  </status>
+</status>
+```
+
+### Text
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  text: 'Native Newsletter Status from Elaina'
+})
+```
+
+### Image
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: 'https://example.com/status.jpg' },
+  caption: 'Newsletter status image'
+})
+```
+
+### Video / GIF / Audio
+
+The Android transport explicitly recognizes `image`, `video`, `gif`, and `audio` media types.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  video: { url: 'https://example.com/status.mp4' },
+  caption: 'Newsletter status video'
+})
+```
+
+Document and sticker payloads are intentionally rejected by this API until their native Newsletter Status transport is confirmed.
+
+### Question
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  question: {
+    text: 'Which feature should be added next?'
+  }
+})
+```
+
+The socket automatically applies `interaction_type="question"` for the `question` shortcut.
+
+### Question Response
+
+Question responses require the parent newsletter status server ID.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  questionResponse: {
+    key: questionMessage.key,
+    text: 'MessageBuilder'
+  }
+}, {
+  interactionType: 'question_response',
+  parentServerId: 175
+})
+```
+
+### Question Reshare
+
+Question reshare requires media and the parent server ID. `responseServerId` can be supplied when the response status server ID is known.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: 'https://example.com/reshare.jpg' },
+  caption: 'Question reshare'
+}, {
+  interactionType: 'question_reshare',
+  parentServerId: 175,
+  responseServerId: 176
+})
+```
+
+### Reaction
+
+Native Newsletter Status reactions use a status stanza and the parent status `server_id`, not the normal newsletter message reaction endpoint.
+
+```js
+await sock.sendNewsletterStatusReaction(
+  '123456789@newsletter',
+  175,
+  '❤️'
+)
+```
+
+An empty reaction value emits the confirmed reaction node without a `code` attribute.
+
+### Optional Transport Metadata
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: 'https://example.com/status.jpg' }
+}, {
+  mediaId: 12345,
+  aiContent: true
+})
+```
+
+`mediaId`, `server_id`, `interaction_type`, `parent_server_id`, `response_server_id`, and the `ai_content` metadata node are only emitted where the corresponding Android transport structure has been confirmed.
+
+> [!IMPORTANT]
+> Native Newsletter Status is experimental and may be gated by account, server rollout, or WhatsApp client compatibility. The sender currently uses `sendNode()` and returns after the stanza is written. It does not invent a root request ID or claim server acknowledgement because the inspected Android flow does not establish a safe outer-stanza ACK correlation format.
+
+Low-level builders are also exported:
+
+```js
+import {
+  buildNewsletterStatusNode,
+  buildNewsletterStatusReactionNode
+} from '@rexxhayanasi/elaina-baileys'
 ```
 
 ---
