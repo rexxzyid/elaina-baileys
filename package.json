@@ -60,6 +60,7 @@
   "peerDependenciesMeta": {
     "@nekodb/client": {
       "optional": true
+    },
     "@napi-rs/image": {
       "optional": true
     },
