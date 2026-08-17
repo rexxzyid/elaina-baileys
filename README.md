@@ -887,7 +887,7 @@ The publish ack does not always carry `server_id`. This is how WhatsApp Web read
 const { statuses } = await sock.getNewsletterStatuses('123456789@newsletter', {
   count: 20,        // 1..100
   before: 500,      // paginate by server id, or `after`
-  viewRole: 'ADMIN' // optional
+  viewRole: 'owner' // optional: guest | subscriber | admin | owner
 })
 
 for (const status of statuses) {
