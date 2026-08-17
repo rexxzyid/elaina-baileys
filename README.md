@@ -89,6 +89,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
   - [AIRich](#airich)
 - [Album Message](#-album-message)
 - [Newsletter / Channel](#-newsletter--channel)
+- [Username & About](#-username--about)
 - [Group Management](#-group-management)
 - [Profile Picture](#-profile-picture)
 - [Useful Exports](#-useful-exports)
@@ -813,6 +814,48 @@ await sock.newsletterAcceptAdminInvite('123456789@newsletter')
 ```js
 const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
 const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
+```
+
+---
+
+## 🪪 Username & About
+
+WhatsApp Web moved usernames and the About text to MEX queries. These call the same persisted queries the Web client uses.
+
+### Username
+
+```js
+const current = await sock.getUsername()
+console.log(current) // { username: 'elaina', state: 'ACTIVE', pin: '1234' }
+
+await sock.setUsername('elaina')
+await sock.setUsernamePin('1234')
+await sock.removeUsername()
+```
+
+`setUsername` resolves `true` only when the server answers `SUCCESS`. `state` is `ACTIVE` or `RESERVED`; pass `{ reserved: true }` when claiming a reserved name.
+
+### About / Text Status
+
+```js
+await sock.updateTextStatus('Building bots', { emoji: '🤖', ephemeralDurationSec: 0 })
+
+const mine = await sock.fetchTextStatus(['6281234567890@s.whatsapp.net'])
+const about = await sock.fetchAbout('6281234567890@s.whatsapp.net')
+console.log(about.status)
+```
+
+`updateTextStatus()` with no text clears it. `fetchTextStatus` takes one or many JIDs and answers per JID with the text, emoji, last update time and ephemeral duration. `fetchAbout` reads a single user's About through `xwa2_users_updates_since`.
+
+The classic `updateProfileStatus` IQ still works and is untouched.
+
+### Server-side Link Preview
+
+Lets WhatsApp generate the preview instead of scraping the page yourself.
+
+```js
+const preview = await sock.fetchServerLinkPreview('https://example.com')
+// { direct_path, hash, title, description, preview_type, thumb_data, width, height }
 ```
 
 ---

@@ -48,6 +48,29 @@ export function makeChatsSocket(config: any): {
     updateProfilePicture: (jid: any, content: any, dimensions: any) => Promise<void>;
     removeProfilePicture: (jid: any) => Promise<void>;
     updateProfileStatus: (status: any) => Promise<void>;
+    getUsername: () => Promise<{
+        username: string | null;
+        state: string | null;
+        pin: string | null;
+    }>;
+    setUsername: (username?: string, options?: {
+        reserved?: boolean;
+        sessionId?: string;
+        source?: string;
+    }) => Promise<boolean>;
+    removeUsername: () => Promise<boolean>;
+    setUsernamePin: (pin: string) => Promise<boolean>;
+    updateTextStatus: (text?: string | null, options?: {
+        emoji?: string;
+        ephemeralDurationSec?: number;
+    }) => Promise<any>;
+    fetchTextStatus: (jids: string[] | string) => Promise<any>;
+    fetchAbout: (jid: string) => Promise<{
+        jid: string;
+        status: string | null;
+        response: any;
+    }>;
+    fetchServerLinkPreview: (url: string) => Promise<any>;
     updateProfileName: (name: any) => Promise<void>;
     updateBlockStatus: (jid: any, action: any) => Promise<void>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
