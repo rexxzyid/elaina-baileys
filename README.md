@@ -1090,7 +1090,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-The same payload can be sent to a newsletter JID when the account and server support newsletter questions.
+The same payload can be sent to a newsletter JID. Newsletter questions are keyed by a `<meta questiontype>` node, which the socket adds automatically:
 
 ```js
 await sock.sendMessage('123456789@newsletter', {
@@ -1100,13 +1100,39 @@ await sock.sendMessage('123456789@newsletter', {
 })
 ```
 
+```xml
+<message to="123456789@newsletter" id="MESSAGE_ID" type="text">
+  <meta questiontype="question"/>
+  <plaintext>PROTO_MESSAGE</plaintext>
+</message>
+```
+
+`questiontype` is `question` when posting a question, `response` when a follower answers it, and `reply` when the channel replies to an answer.
+
 ### Question Response
+
+A follower answering a question. Sent with `questiontype="response"`.
 
 ```js
 await sock.sendMessage(jid, {
   questionResponse: {
     key: questionMessage.key,
     text: 'MessageBuilder'
+  }
+})
+```
+
+### Question Reply
+
+The channel replying to an answer, quoting it by the question's server id. Sent with `questiontype="reply"`.
+
+```js
+await sock.sendMessage('123456789@newsletter', {
+  questionReply: {
+    text: 'Good pick, shipping it next',
+    serverQuestionId: 175,
+    quotedQuestion: questionMessage.message,   // optional
+    quotedResponse: responseMessage.message    // optional
   }
 })
 ```

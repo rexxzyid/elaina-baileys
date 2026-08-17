@@ -10,6 +10,14 @@ export declare function makeQuestionResponseMessage(input: {
     text?: string
 }): proto.IMessage
 
+export declare function makeQuestionReplyMessage(input: {
+    text: string
+    serverQuestionId: number | string
+    quotedQuestion?: proto.IMessage
+    quotedResponse?: proto.IMessage
+    contextInfo?: proto.IContextInfo
+}): proto.IMessage
+
 export declare function makeStatusQuestionAnswerMessage(input: {
     key: proto.IMessageKey
     text?: string
