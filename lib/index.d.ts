@@ -9,12 +9,13 @@ export * from "./WAM/index.js";
 export * from "./WAUSync/index.js";
 export * from "./MessageBuilder/index.js";
 import baseMakeWASocket from './Socket/index.js';
-import type { NewsletterStatusSendOptions, NewsletterStatusSendResult, NewsletterStatusStanzaResult } from './Utils/newsletter-status.js';
+import type { NewsletterStatusFetchOptions, NewsletterStatusList, NewsletterStatusSendOptions, NewsletterStatusSendResult, NewsletterStatusStanzaResult } from './Utils/newsletter-status.js';
 type BaseWASocket = ReturnType<typeof baseMakeWASocket>;
 export type WASocket = BaseWASocket & {
     sendNewsletterStatus: (jid: string, content: any, options?: NewsletterStatusSendOptions) => Promise<NewsletterStatusSendResult>;
     sendNewsletterStatusReaction: (jid: string, parentServerId: string | number, reaction: string, options?: Pick<NewsletterStatusSendOptions, 'messageId' | 'ackTimeoutMs'>) => Promise<NewsletterStatusStanzaResult>;
     revokeNewsletterStatus: (jid: string, statusId: string, options?: Pick<NewsletterStatusSendOptions, 'ackTimeoutMs'>) => Promise<NewsletterStatusStanzaResult>;
+    getNewsletterStatuses: (jid: string, options?: NewsletterStatusFetchOptions) => Promise<NewsletterStatusList>;
 };
 export declare const makeWASocket: (config: Parameters<typeof baseMakeWASocket>[0]) => WASocket;
 export default makeWASocket;

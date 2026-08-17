@@ -57,6 +57,33 @@ export interface NewsletterStatusAck {
     node: any
 }
 
+export interface NewsletterStatusFetchOptions {
+    count?: number
+    before?: string | number
+    after?: string | number
+    viewRole?: string
+}
+
+export interface NewsletterStatusEntry {
+    id?: string
+    serverId?: number
+    t?: number
+    isSender: boolean
+    type?: string
+    edit?: string
+    mediaType?: NewsletterStatusMediaType
+    interactionType?: NewsletterStatusInteractionType
+    reaction?: string
+    message?: proto.Message
+    node: any
+}
+
+export interface NewsletterStatusList {
+    jid?: string
+    t?: number
+    statuses: NewsletterStatusEntry[]
+}
+
 export type NewsletterStatusSendResult = proto.WebMessageInfo & {
     newsletterStatusServerId?: number
     newsletterStatusAck?: NewsletterStatusAck
@@ -85,6 +112,8 @@ export function buildNewsletterStatusRevokeNode(input: NewsletterStatusRevokeNod
 export function makeNewsletterStatusSender(sock: any, config: any): (jid: string, content: any, options?: NewsletterStatusSendOptions) => Promise<NewsletterStatusSendResult>
 export function makeNewsletterStatusReactionSender(sock: any): (jid: string, parentServerId: string | number, reaction: string, options?: Pick<NewsletterStatusSendOptions, 'messageId' | 'ackTimeoutMs'>) => Promise<NewsletterStatusStanzaResult>
 export function makeNewsletterStatusRevokeSender(sock: any): (jid: string, statusId: string, options?: Pick<NewsletterStatusSendOptions, 'ackTimeoutMs'>) => Promise<NewsletterStatusStanzaResult>
+export function makeNewsletterStatusFetcher(sock: any): (jid: string, options?: NewsletterStatusFetchOptions) => Promise<NewsletterStatusList>
+export function parseNewsletterStatusesResponse(node: any): NewsletterStatusList
 
 export const NEWSLETTER_STATUS_CONTENT_TYPES: Set<NewsletterStatusContentType>
 export const NEWSLETTER_STATUS_MEDIA_TYPES: Set<NewsletterStatusMediaType>

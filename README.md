@@ -879,6 +879,24 @@ Deletes a status you posted. `statusId` is the message id of that status.
 await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
 ```
 
+### Read Published Statuses
+
+The publish ack does not always carry `server_id`. This is how WhatsApp Web reads it back, and it also confirms a status was really published:
+
+```js
+const { statuses } = await sock.getNewsletterStatuses('123456789@newsletter', {
+  count: 20,        // 1..100
+  before: 500,      // paginate by server id, or `after`
+  viewRole: 'ADMIN' // optional
+})
+
+for (const status of statuses) {
+  console.log(status.serverId, status.type, status.isSender, status.message?.extendedTextMessage?.text)
+}
+```
+
+Each entry carries `id`, `serverId`, `t`, `isSender`, `type`, `mediaType`, `interactionType`, `reaction`, and the decoded `message`. Use `serverId` as `parentServerId` for reactions and question responses.
+
 ### Optional Transport Metadata
 
 ```js
