@@ -752,7 +752,7 @@ console.log(newsletters)
 
 ## 🟢 Native Newsletter Status
 
-Elaina Baileys exposes an experimental native Newsletter Status sender based on the status transport used by WhatsApp Android 2.26.32.70. This is different from `newsletterStatus` attribution, which shares a newsletter post into a normal `status@broadcast` status.
+Elaina Baileys exposes a native Newsletter (Channel) Status sender. This is different from `newsletterStatus` attribution, which shares a newsletter post into a normal `status@broadcast` status.
 
 Native Newsletter Status targets the newsletter JID directly:
 
@@ -760,22 +760,31 @@ Native Newsletter Status targets the newsletter JID directly:
 123456789@newsletter
 ```
 
-The confirmed transport shape is:
+The transport mirrors the WhatsApp Web status-publish RPC. Every stanza is a single flat `<status>` element:
 
 ```xml
-<status to="123456789@newsletter">
-  <status id="MESSAGE_ID">
-    <plaintext>PROTO_MESSAGE</plaintext>
-  </status>
+<status to="123456789@newsletter" id="MESSAGE_ID" type="text">
+  <plaintext>PROTO_MESSAGE</plaintext>
 </status>
 ```
+
+The server answers with an ack carrying the same id, and the sender resolves only after that ack:
+
+```xml
+<ack from="123456789@newsletter" class="status" id="MESSAGE_ID" t="1755000000" server_id="451"/>
+```
+
+`server_id` is optional and is not always present; when it is, keep it — reactions and question responses need it as `parentServerId`.
 
 ### Text
 
 ```js
-await sock.sendNewsletterStatus('123456789@newsletter', {
+const status = await sock.sendNewsletterStatus('123456789@newsletter', {
   text: 'Native Newsletter Status from Elaina'
 })
+
+console.log(status.newsletterStatusServerId) // 451
+console.log(status.newsletterStatusAck)      // { t, serverId, class: 'status', ... }
 ```
 
 ### Image
@@ -787,9 +796,9 @@ await sock.sendNewsletterStatus('123456789@newsletter', {
 })
 ```
 
-### Video / GIF / Audio
+The newsletter upload handle is captured automatically and sent as `media_id`; pass `mediaHandle` explicitly only when you uploaded the media yourself.
 
-The Android transport explicitly recognizes `image`, `video`, `gif`, and `audio` media types.
+### Video / GIF / Audio
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
@@ -798,23 +807,27 @@ await sock.sendNewsletterStatus('123456789@newsletter', {
 })
 ```
 
-Document and sticker payloads are intentionally rejected by this API until their native Newsletter Status transport is confirmed.
+> [!NOTE]
+> WhatsApp Web itself only publishes `image` and `video` newsletter statuses. `gif` and `audio` are accepted here but unverified — the sender logs a warning and the server may reject them.
+
+Document and sticker payloads are rejected by this API.
 
 ### Question
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: 'https://example.com/question.jpg' },
   question: {
     text: 'Which feature should be added next?'
   }
 })
 ```
 
-The socket automatically applies `interaction_type="question"` for the `question` shortcut.
+The socket automatically applies `interaction_type="question"` for the `question` shortcut. WhatsApp Web publishes question statuses on top of media, so a text-only question status may be rejected.
 
 ### Question Response
 
-Question responses require the parent newsletter status server ID.
+Question responses are text statuses that reference the parent status `server_id`.
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
@@ -824,13 +837,14 @@ await sock.sendNewsletterStatus('123456789@newsletter', {
   }
 }, {
   interactionType: 'question_response',
-  parentServerId: 175
+  parentServerId: 175,
+  responseServerId: 176 // optional
 })
 ```
 
 ### Question Reshare
 
-Question reshare requires media and the parent server ID. `responseServerId` can be supplied when the response status server ID is known.
+Question reshare requires media, `parentServerId` and `responseServerId`.
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
@@ -845,7 +859,7 @@ await sock.sendNewsletterStatus('123456789@newsletter', {
 
 ### Reaction
 
-Native Newsletter Status reactions use a status stanza and the parent status `server_id`, not the normal newsletter message reaction endpoint.
+Newsletter status reactions use a status stanza and the parent status `server_id`, not the normal newsletter message reaction endpoint.
 
 ```js
 await sock.sendNewsletterStatusReaction(
@@ -855,7 +869,15 @@ await sock.sendNewsletterStatusReaction(
 )
 ```
 
-An empty reaction value emits the confirmed reaction node without a `code` attribute.
+An empty reaction value revokes the reaction (`edit="7"`).
+
+### Revoke
+
+Deletes a status you posted. `statusId` is the message id of that status.
+
+```js
+await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
+```
 
 ### Optional Transport Metadata
 
@@ -863,22 +885,27 @@ An empty reaction value emits the confirmed reaction node without a `code` attri
 await sock.sendNewsletterStatus('123456789@newsletter', {
   image: { url: 'https://example.com/status.jpg' }
 }, {
-  mediaId: 12345,
-  aiContent: true
+  mediaHandle: '2:abcdEFGH1234:newsletter-image',
+  aiContent: true,        // <meta><ai_content/></meta>
+  statusAttribution: true, // contextInfo.statusAttributions, default true
+  ackTimeoutMs: 20000
 })
 ```
 
-`mediaId`, `server_id`, `interaction_type`, `parent_server_id`, `response_server_id`, and the `ai_content` metadata node are only emitted where the corresponding Android transport structure has been confirmed.
+Every newsletter status carries `contextInfo.statusAttributions = [{ type: NEWSLETTER_STATUS }]` and `contextInfo.featureEligibilities.canBeReshared = true`, matching what WhatsApp Web attaches. Pass `statusAttribution: false` to omit them.
 
 > [!IMPORTANT]
-> Native Newsletter Status is experimental and may be gated by account, server rollout, or WhatsApp client compatibility. The sender currently uses `sendNode()` and returns after the stanza is written. It does not invent a root request ID or claim server acknowledgement because the inspected Android flow does not establish a safe outer-stanza ACK correlation format.
+> Posting a channel status is gated server side: the account needs the `channel_status_creation` feature, admin/owner rights on the channel, and the `CHANNEL_STATUS_PRODUCER` capability in the channel metadata. Without those the server replies with a negative ack (or nothing) regardless of the stanza.
 
-Low-level builders are also exported:
+Low-level builders and the ack parser are also exported:
 
 ```js
 import {
   buildNewsletterStatusNode,
-  buildNewsletterStatusReactionNode
+  buildNewsletterStatusReactionNode,
+  buildNewsletterStatusRevokeNode,
+  parseNewsletterStatusAck,
+  withNewsletterStatusAttribution
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
