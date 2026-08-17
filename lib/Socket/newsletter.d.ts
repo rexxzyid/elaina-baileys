@@ -39,6 +39,30 @@ export function makeNewsletterSocket(config: any): {
     newsletterChangeOwner: (jid: any, newOwnerJid: any) => Promise<void>;
     newsletterDemote: (jid: any, userJid: any) => Promise<void>;
     newsletterDelete: (jid: any) => Promise<void>;
+    newsletterAdminCapabilities: (jid: string) => Promise<string[]>;
+    newsletterAdminInfo: (jid: string) => Promise<any>;
+    newsletterPollVoters: (jid: string, serverId: string | number, options?: {
+        limit?: number;
+        voteHash?: string;
+    }) => Promise<any>;
+    newsletterReactionSenders: (jid: string, serverId: string | number) => Promise<any>;
+    newsletterPinMessages: (jid: string, serverIds: (string | number)[] | string | number) => Promise<any>;
+    newsletterUnpinMessages: (jid: string, serverIds: (string | number)[] | string | number) => Promise<any>;
+    newsletterLabelAiContent: (jid: string, serverId: string | number, messageType?: 'MESSAGE' | 'STATUS') => Promise<any>;
+    newsletterLabelPaidPartnership: (jid: string, serverId: string | number, messageType?: 'MESSAGE' | 'STATUS') => Promise<any>;
+    newsletterCreateAdminInvite: (jid: string, userJid: string) => Promise<any>;
+    newsletterRevokeAdminInvite: (jid: string, userJid: string) => Promise<any>;
+    newsletterAcceptAdminInvite: (jid: string) => Promise<any>;
+    newsletterRecommended: (options?: {
+        limit?: number;
+        countryCodes?: string[];
+        fetchStatusMetadata?: boolean;
+    }) => Promise<any>;
+    newsletterSimilar: (jid: string, options?: {
+        limit?: number;
+        countryCodes?: string[];
+        fetchStatusMetadata?: boolean;
+    }) => Promise<any>;
     groupQuery: (jid: any, type: any, content: any) => Promise<any>;
     groupMetadata: (jid: any) => Promise<{
         id: any;

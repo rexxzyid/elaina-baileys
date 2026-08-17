@@ -747,6 +747,74 @@ const newsletters = await sock.newsletterSubscribed()
 console.log(newsletters)
 ```
 
+### Admin Capabilities
+
+Which channel features the server has enabled for you. This is the gate WhatsApp Web itself checks before offering a feature.
+
+```js
+const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
+console.log(capabilities)
+// [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]
+```
+
+Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
+
+### Admin Profile Info
+
+```js
+const info = await sock.newsletterAdminInfo('123456789@newsletter')
+```
+
+### Pin / Unpin Messages
+
+Takes the message `server_id`, not the message key.
+
+```js
+await sock.newsletterPinMessages('123456789@newsletter', [175])
+await sock.newsletterUnpinMessages('123456789@newsletter', 175)
+```
+
+### Poll Voters
+
+```js
+const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
+  limit: 100,
+  voteHash: undefined
+})
+```
+
+The response groups voters per `vote_hash`, each with a `voter_list.edges` array.
+
+### Reaction Senders
+
+```js
+const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)
+```
+
+### Content Labels
+
+```js
+await sock.newsletterLabelAiContent('123456789@newsletter', 175)
+await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)
+```
+
+`messageType` is the third argument and defaults to `MESSAGE`; pass `STATUS` to label a channel status.
+
+### Admin Invites
+
+```js
+await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterAcceptAdminInvite('123456789@newsletter')
+```
+
+### Discovery
+
+```js
+const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
+const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
+```
+
 ---
 
 ## 👥 Group Management
