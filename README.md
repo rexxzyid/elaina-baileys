@@ -889,6 +889,38 @@ console.log(about.status)
 
 The classic `updateProfileStatus` IQ still works and is untouched.
 
+### Terms of Service Notices
+
+WhatsApp gates some features behind a notice the user has to move through. These read the notice list and report progress back, the same IQs the Web client uses.
+
+```js
+const notices = await sock.fetchUserNotices()
+// [ { id: '20601216', stage: '2', t: '...', version: '...', type: '...' } ]
+
+await sock.updateUserNoticeStage('20601216', 5)
+```
+
+`stage` is the server's own counter for that notice — read the current value from `fetchUserNotices` before advancing it.
+
+### Marketing Opt-Out List
+
+```js
+const list = await sock.fetchOptOutList({ category: 'marketing' })
+
+await sock.updateOptOut({
+  jid: '6281234567890@s.whatsapp.net',
+  category: 'marketing',
+  action: 'add',
+  reason: 'user_request'
+})
+```
+
+### Push Settings
+
+```js
+const settings = await sock.fetchPushSettings()
+```
+
 ### Server-side Link Preview
 
 Lets WhatsApp generate the preview instead of scraping the page yourself.

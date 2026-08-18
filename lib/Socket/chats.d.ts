@@ -79,6 +79,29 @@ export function makeChatsSocket(config: any): {
         response: any;
     }>;
     fetchServerLinkPreview: (url: string) => Promise<any>;
+    fetchUserNotices: (since?: number) => Promise<{
+        id?: string;
+        stage?: string;
+        t?: string;
+        version?: string;
+        type?: string;
+    }[]>;
+    updateUserNoticeStage: (noticeId: string | number, stage: string | number) => Promise<void>;
+    fetchOptOutList: (options?: {
+        category?: string;
+        dhash?: string;
+    }) => Promise<any[]>;
+    updateOptOut: (input: {
+        jid: string;
+        category: string;
+        action: string;
+        dhash?: string;
+        reason?: string;
+        entryPoint?: string;
+        signupId?: string;
+        duration?: number;
+    }) => Promise<void>;
+    fetchPushSettings: () => Promise<any>;
     updateProfileName: (name: any) => Promise<void>;
     updateBlockStatus: (jid: any, action: any) => Promise<void>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
