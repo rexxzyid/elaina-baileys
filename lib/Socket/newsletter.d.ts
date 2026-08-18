@@ -53,6 +53,29 @@ export function makeNewsletterSocket(config: any): {
     newsletterCreateAdminInvite: (jid: string, userJid: string) => Promise<any>;
     newsletterRevokeAdminInvite: (jid: string, userJid: string) => Promise<any>;
     newsletterAcceptAdminInvite: (jid: string) => Promise<any>;
+    newsletterDirectoryList: (options?: {
+        view?: 'RECOMMENDED' | 'NEW' | 'POPULAR' | 'FEATURED' | 'TRENDING';
+        categories?: string[];
+        countryCodes?: string[];
+        limit?: number;
+        cursorToken?: string;
+        fetchStatusMetadata?: boolean;
+    }) => Promise<any>;
+    newsletterDirectorySearch: (searchText: string, options?: {
+        categories?: string[];
+        limit?: number;
+        cursorToken?: string;
+        fetchStatusMetadata?: boolean;
+    }) => Promise<any>;
+    newsletterDirectoryCategories: (options?: {
+        categories?: string[];
+        countryCode?: string;
+        perCategoryLimit?: number;
+        fetchStatusMetadata?: boolean;
+    }) => Promise<any>;
+    newsletterSendPollVote: (jid: string, parentServerId: string | number, options: string[] | string) => Promise<{
+        id: string;
+    }>;
     newsletterInsights: (jid: string, options?: {
         metrics?: string[];
     }) => Promise<any>;
