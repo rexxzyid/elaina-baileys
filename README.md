@@ -816,6 +816,30 @@ const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: 
 const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
 ```
 
+### Directory
+
+Channel discovery, the same queries the Updates tab uses. Categories are `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS` and `SPECIAL_EVENTS` through `SPECIAL_EVENTS_5`.
+
+```js
+const list = await sock.newsletterDirectoryList({
+  view: 'RECOMMENDED',        // RECOMMENDED | NEW | POPULAR | FEATURED | TRENDING
+  categories: ['NEWS'],
+  countryCodes: ['ID'],
+  limit: 20
+})
+
+const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
+const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })
+```
+
+### Vote on a Channel Poll
+
+Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats.
+
+```js
+await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])
+```
+
 ### Insights
 
 Admin analytics for a channel you own.
@@ -1082,6 +1106,25 @@ import {
   isJidLocationBroadcast
 } from '@rexxhayanasi/elaina-baileys'
 ```
+
+### Photo Poll
+
+Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
+
+```js
+await sock.sendMessage(jid, {
+  poll: {
+    name: 'Which cover?',
+    values: [
+      { name: 'Jakarta', image: { url: './jakarta.jpg' } },
+      { name: 'Bandung', image: { url: './bandung.jpg' } }
+    ],
+    selectableCount: 1
+  }
+})
+```
+
+Plain string options still send a normal text poll, and the two can be mixed.
 
 ### Question Message
 
