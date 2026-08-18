@@ -1521,42 +1521,78 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 - Seluruh contributor dan komunitas open source yang membantu perkembangan Baileys.
 
 </details>
+<h2 align="center">✨ Contributors & Credits</h2>
 
-<br>
+<p align="center">
+  Thanks to everyone who contributed to this project.
+</p>
 
-<table>
-<tr>
-<td align="center">
-<a href="https://github.com/RexxHayanasi">
-<img src="https://avatars.githubusercontent.com/u/150516773?v=4" width="80px" alt="RexxHayanasi" />
-<br />
-<sub><b>RexxHayanasi</b></sub>
-<br />
-<sub>Project Maintainer</sub>
-</a>
-</td>
-
-<td align="center">
-<a href="https://github.com/kiuur">
-<img src="https://avatars.githubusercontent.com/u/182334162?v=4" width="80px" alt="Kyuu" />
-<br />
-<sub><b>Kyuu</b></sub>
-<br />
-<sub>Contributor</sub>
-</a>
-</td>
-
-<td align="center">
-<a href="https://github.com/ValdazGT">
-<img src="https://avatars.githubusercontent.com/u/108647595?v=4" width="80px" alt="ValdazGT" />
-<br />
-<sub><b>ValdazGT</b></sub>
-<br />
-<sub>MBuilder - OWNER</sub>
-</a>
-</td>
-</tr>
+<table align="center">
+  <tr>
+    <td align="center" width="180">
+      <a href="https://github.com/RexxHayanasi">
+        <img
+          src="https://avatars.githubusercontent.com/u/150516773?v=4"
+          width="90"
+          height="90"
+          alt="RexxHayanasi"
+        />
+        <br />
+        <b>RexxHayanasi</b>
+      </a>
+      <br />
+      <sub>Project Maintainer</sub>
+    </td>
+    <td align="center" width="180">
+      <a href="https://github.com/kiuur">
+        <img
+          src="https://avatars.githubusercontent.com/u/182334162?v=4"
+          width="90"
+          height="90"
+          alt="Kyuu"
+        />
+        <br />
+        <b>Kyuu</b>
+      </a>
+      <br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center" width="180">
+      <a href="https://github.com/ValdazGT">
+        <img
+          src="https://avatars.githubusercontent.com/u/108647595?v=4"
+          width="90"
+          height="90"
+          alt="ValdazGT"
+        />
+        <br />
+        <b>ValdazGT</b>
+      </a>
+      <br />
+      <sub>MBuilder · Owner</sub>
+    </td>
+    <td align="center" width="180">
+      <a href="https://github.com/itsliaaa">
+        <img
+          src="https://avatars.githubusercontent.com/u/88979678?v=4"
+          width="90"
+          height="90"
+          alt="ITSLIAAA"
+        />
+        <br />
+        <b>ITSLIAAA</b>
+      </a>
+      <br />
+      <sub>messages-send.js Reference</sub>
+      <br />
+      <sub>Early Migration Reference</sub>
+    </td>
+  </tr>
 </table>
+
+<p align="center">
+  <sub>Built and maintained with contributions from the community ❤️</sub>
+</p>
 
 ---
 
