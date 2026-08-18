@@ -1,0 +1,75 @@
+name: Cleanup Lia comments
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Remove Lia comment annotations
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+
+          const root = process.cwd()
+          const extensions = new Set(['.js', '.ts', '.mjs', '.cjs'])
+          const ignored = new Set(['.git', 'node_modules'])
+          let changed = 0
+
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              if (ignored.has(entry.name)) continue
+              const full = path.join(dir, entry.name)
+              if (entry.isDirectory()) {
+                walk(full)
+                continue
+              }
+              if (!extensions.has(path.extname(entry.name))) continue
+
+              const original = fs.readFileSync(full, 'utf8')
+              if (!/lia@/i.test(original)) continue
+
+              let next = original.replace(/\/\*[\s\S]*?\*\//g, block => /lia@/i.test(block) ? '' : block)
+              next = next.split('\n').map(line => {
+                const liaIndex = line.toLowerCase().indexOf('lia@')
+                if (liaIndex === -1) return line
+                const commentIndex = line.lastIndexOf('//', liaIndex)
+                if (commentIndex === -1) return line
+                return line.slice(0, commentIndex).replace(/[ \t]+$/, '')
+              }).join('\n')
+
+              if (next !== original) {
+                fs.writeFileSync(full, next)
+                changed++
+                console.log(path.relative(root, full))
+              }
+            }
+          }
+
+          walk(root)
+          console.log(`changed_files=${changed}`)
+          NODE
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          rm -f .github/workflows/cleanup-lia-comments.yml
+          git config user.name "rexxzyid"
+          git config user.email "150516773+rexxzyid@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: remove Lia comment annotations"
+          git push origin HEAD:main
