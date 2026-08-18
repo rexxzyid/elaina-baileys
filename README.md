@@ -816,6 +816,40 @@ const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: 
 const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
 ```
 
+### Insights
+
+Admin analytics for a channel you own.
+
+```js
+const insights = await sock.newsletterInsights('123456789@newsletter', {
+  metrics: ['NET_FOLLOWS', 'UNFOLLOWS']
+})
+// { result: [{ id, values }], last_update_time, metrics_status }
+```
+
+`metrics_status` is `OK` or `MISSING`; `MISSING` means the server has no data for the requested window yet.
+
+### Followers
+
+```js
+const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
+```
+
+### Pending Admin Invites
+
+```js
+const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')
+```
+
+### Hide a Question Response
+
+Moderates a follower's answer to a channel question.
+
+```js
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'VISIBLE')
+```
+
 ---
 
 ## 🪪 Username & About
@@ -831,6 +865,12 @@ console.log(current) // { username: 'elaina', state: 'ACTIVE', pin: '1234' }
 await sock.setUsername('elaina')
 await sock.setUsernamePin('1234')
 await sock.removeUsername()
+```
+
+Check a name before claiming it:
+
+```js
+const { available, suggestions } = await sock.checkUsernameAvailability('elaina')
 ```
 
 `setUsername` resolves `true` only when the server answers `SUCCESS`. `state` is `ACTIVE` or `RESERVED`; pass `{ reserved: true }` when claiming a reserved name.

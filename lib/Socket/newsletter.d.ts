@@ -53,6 +53,14 @@ export function makeNewsletterSocket(config: any): {
     newsletterCreateAdminInvite: (jid: string, userJid: string) => Promise<any>;
     newsletterRevokeAdminInvite: (jid: string, userJid: string) => Promise<any>;
     newsletterAcceptAdminInvite: (jid: string) => Promise<any>;
+    newsletterInsights: (jid: string, options?: {
+        metrics?: string[];
+    }) => Promise<any>;
+    newsletterFollowers: (jid: string, options?: {
+        count?: number;
+    }) => Promise<any>;
+    newsletterPendingAdminInvites: (jid: string) => Promise<any>;
+    newsletterQuestionResponseState: (jid: string, serverId: string | number, responseServerId: string | number, state: 'HIDDEN' | 'VISIBLE') => Promise<any>;
     newsletterRecommended: (options?: {
         limit?: number;
         countryCodes?: string[];

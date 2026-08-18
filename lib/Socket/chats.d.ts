@@ -60,6 +60,14 @@ export function makeChatsSocket(config: any): {
     }) => Promise<boolean>;
     removeUsername: () => Promise<boolean>;
     setUsernamePin: (pin: string) => Promise<boolean>;
+    checkUsernameAvailability: (username: string, options?: {
+        sessionId?: string;
+        source?: string;
+    }) => Promise<{
+        available: boolean;
+        suggestions: string[];
+        response: any;
+    }>;
     updateTextStatus: (text?: string | null, options?: {
         emoji?: string;
         ephemeralDurationSec?: number;
