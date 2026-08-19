@@ -41855,6 +41855,10 @@ export const proto = $root.proto = (() => {
         Message.prototype.splitPaymentMessage = null;
         Message.prototype.newsletterAdminProfileStatusMessage = null;
         Message.prototype.rootSecretDistributeMessage = null;
+        Message.prototype.splitPaymentUpdateMessage = null;
+        Message.prototype.musicMessage = null;
+        Message.prototype.statusLinkPreviewMetadata = null;
+        Message.prototype.botPlatformRegistrationSuccessMessage = null;
 
         let $oneOfFields;
 
@@ -42500,6 +42504,30 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        // Virtual OneOf for proto3 optional field
+        Object.defineProperty(Message.prototype, "_splitPaymentUpdateMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["splitPaymentUpdateMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        // Virtual OneOf for proto3 optional field
+        Object.defineProperty(Message.prototype, "_musicMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["musicMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        // Virtual OneOf for proto3 optional field
+        Object.defineProperty(Message.prototype, "_statusLinkPreviewMetadata", {
+            get: $util.oneOfGetter($oneOfFields = ["statusLinkPreviewMetadata"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        // Virtual OneOf for proto3 optional field
+        Object.defineProperty(Message.prototype, "_botPlatformRegistrationSuccessMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["botPlatformRegistrationSuccessMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         Message.create = function create(properties) {
             return new Message(properties);
         };
@@ -42721,6 +42749,14 @@ export const proto = $root.proto = (() => {
                 $root.proto.Message.FutureProofMessage.encode(m.newsletterAdminProfileStatusMessage, w.uint32(1010).fork()).ldelim();
             if (m.rootSecretDistributeMessage != null && Object.hasOwnProperty.call(m, "rootSecretDistributeMessage"))
                 $root.proto.Message.RootSecretDistributeMessage.encode(m.rootSecretDistributeMessage, w.uint32(1018).fork()).ldelim();
+            if (m.splitPaymentUpdateMessage != null && Object.hasOwnProperty.call(m, "splitPaymentUpdateMessage"))
+                $root.proto.Message.SplitPaymentUpdateMessage.encode(m.splitPaymentUpdateMessage, w.uint32(1026).fork()).ldelim();
+            if (m.musicMessage != null && Object.hasOwnProperty.call(m, "musicMessage"))
+                $root.proto.Message.MusicMessage.encode(m.musicMessage, w.uint32(1034).fork()).ldelim();
+            if (m.statusLinkPreviewMetadata != null && Object.hasOwnProperty.call(m, "statusLinkPreviewMetadata"))
+                $root.proto.Message.StatusLinkPreviewMetadata.encode(m.statusLinkPreviewMetadata, w.uint32(1042).fork()).ldelim();
+            if (m.botPlatformRegistrationSuccessMessage != null && Object.hasOwnProperty.call(m, "botPlatformRegistrationSuccessMessage"))
+                $root.proto.Message.FutureProofMessage.encode(m.botPlatformRegistrationSuccessMessage, w.uint32(1050).fork()).ldelim();
             return w;
         };
 
@@ -43163,6 +43199,22 @@ export const proto = $root.proto = (() => {
                     }
                 case 127: {
                         m.rootSecretDistributeMessage = $root.proto.Message.RootSecretDistributeMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 128: {
+                        m.splitPaymentUpdateMessage = $root.proto.Message.SplitPaymentUpdateMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 129: {
+                        m.musicMessage = $root.proto.Message.MusicMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 130: {
+                        m.statusLinkPreviewMetadata = $root.proto.Message.StatusLinkPreviewMetadata.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 131: {
+                        m.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -43714,6 +43766,26 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.Message.rootSecretDistributeMessage: object expected");
                 m.rootSecretDistributeMessage = $root.proto.Message.RootSecretDistributeMessage.fromObject(d.rootSecretDistributeMessage, n + 1);
             }
+            if (d.splitPaymentUpdateMessage != null) {
+                if (typeof d.splitPaymentUpdateMessage !== "object")
+                    throw TypeError(".proto.Message.splitPaymentUpdateMessage: object expected");
+                m.splitPaymentUpdateMessage = $root.proto.Message.SplitPaymentUpdateMessage.fromObject(d.splitPaymentUpdateMessage, n + 1);
+            }
+            if (d.musicMessage != null) {
+                if (typeof d.musicMessage !== "object")
+                    throw TypeError(".proto.Message.musicMessage: object expected");
+                m.musicMessage = $root.proto.Message.MusicMessage.fromObject(d.musicMessage, n + 1);
+            }
+            if (d.statusLinkPreviewMetadata != null) {
+                if (typeof d.statusLinkPreviewMetadata !== "object")
+                    throw TypeError(".proto.Message.statusLinkPreviewMetadata: object expected");
+                m.statusLinkPreviewMetadata = $root.proto.Message.StatusLinkPreviewMetadata.fromObject(d.statusLinkPreviewMetadata, n + 1);
+            }
+            if (d.botPlatformRegistrationSuccessMessage != null) {
+                if (typeof d.botPlatformRegistrationSuccessMessage !== "object")
+                    throw TypeError(".proto.Message.botPlatformRegistrationSuccessMessage: object expected");
+                m.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.fromObject(d.botPlatformRegistrationSuccessMessage, n + 1);
+            }
             return m;
         };
 
@@ -44255,6 +44327,26 @@ export const proto = $root.proto = (() => {
                 d.rootSecretDistributeMessage = $root.proto.Message.RootSecretDistributeMessage.toObject(m.rootSecretDistributeMessage, o);
                 if (o.oneofs)
                     d._rootSecretDistributeMessage = "rootSecretDistributeMessage";
+            }
+            if (m.splitPaymentUpdateMessage != null && m.hasOwnProperty("splitPaymentUpdateMessage")) {
+                d.splitPaymentUpdateMessage = $root.proto.Message.SplitPaymentUpdateMessage.toObject(m.splitPaymentUpdateMessage, o);
+                if (o.oneofs)
+                    d._splitPaymentUpdateMessage = "splitPaymentUpdateMessage";
+            }
+            if (m.musicMessage != null && m.hasOwnProperty("musicMessage")) {
+                d.musicMessage = $root.proto.Message.MusicMessage.toObject(m.musicMessage, o);
+                if (o.oneofs)
+                    d._musicMessage = "musicMessage";
+            }
+            if (m.statusLinkPreviewMetadata != null && m.hasOwnProperty("statusLinkPreviewMetadata")) {
+                d.statusLinkPreviewMetadata = $root.proto.Message.StatusLinkPreviewMetadata.toObject(m.statusLinkPreviewMetadata, o);
+                if (o.oneofs)
+                    d._statusLinkPreviewMetadata = "statusLinkPreviewMetadata";
+            }
+            if (m.botPlatformRegistrationSuccessMessage != null && m.hasOwnProperty("botPlatformRegistrationSuccessMessage")) {
+                d.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.toObject(m.botPlatformRegistrationSuccessMessage, o);
+                if (o.oneofs)
+                    d._botPlatformRegistrationSuccessMessage = "botPlatformRegistrationSuccessMessage";
             }
             return d;
         };
@@ -77922,6 +78014,376 @@ export const proto = $root.proto = (() => {
             })();
 
             return VideoMessage;
+        })();
+
+        Message.SplitPaymentUpdateMessage = (function() {
+            function SplitPaymentUpdateMessage(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            SplitPaymentUpdateMessage.prototype.splitId = null;
+            SplitPaymentUpdateMessage.prototype.participantJid = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SplitPaymentUpdateMessage.prototype, "_splitId", {
+                get: $util.oneOfGetter($oneOfFields = ["splitId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SplitPaymentUpdateMessage.prototype, "_participantJid", {
+                get: $util.oneOfGetter($oneOfFields = ["participantJid"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            SplitPaymentUpdateMessage.create = function create(properties) {
+                return new SplitPaymentUpdateMessage(properties);
+            };
+
+            SplitPaymentUpdateMessage.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.splitId != null && Object.hasOwnProperty.call(m, "splitId"))
+                    w.uint32(10).string(m.splitId);
+                if (m.participantJid != null && Object.hasOwnProperty.call(m, "participantJid"))
+                    w.uint32(18).string(m.participantJid);
+                return w;
+            };
+
+            SplitPaymentUpdateMessage.decode = function decode(r, l, e) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.SplitPaymentUpdateMessage();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.splitId = r.string();
+                            break;
+                        }
+                    case 2: {
+                            m.participantJid = r.string();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            SplitPaymentUpdateMessage.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.Message.SplitPaymentUpdateMessage)
+                    return d;
+                var m = new $root.proto.Message.SplitPaymentUpdateMessage();
+                if (d.splitId != null) {
+                    m.splitId = String(d.splitId);
+                }
+                if (d.participantJid != null) {
+                    m.participantJid = String(d.participantJid);
+                }
+                return m;
+            };
+
+            SplitPaymentUpdateMessage.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.splitId != null && m.hasOwnProperty("splitId")) {
+                    d.splitId = m.splitId;
+                    if (o.oneofs)
+                        d._splitId = "splitId";
+                }
+                if (m.participantJid != null && m.hasOwnProperty("participantJid")) {
+                    d.participantJid = m.participantJid;
+                    if (o.oneofs)
+                        d._participantJid = "participantJid";
+                }
+                return d;
+            };
+
+            SplitPaymentUpdateMessage.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            SplitPaymentUpdateMessage.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.SplitPaymentUpdateMessage";
+            };
+
+            return SplitPaymentUpdateMessage;
+        })();
+
+        Message.MusicMessage = (function() {
+            function MusicMessage(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            MusicMessage.prototype.embeddedMusic = null;
+            MusicMessage.prototype.songUri = null;
+            MusicMessage.prototype.artworkUri = null;
+            MusicMessage.prototype.style = null;
+            MusicMessage.prototype.contextInfo = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MusicMessage.prototype, "_embeddedMusic", {
+                get: $util.oneOfGetter($oneOfFields = ["embeddedMusic"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MusicMessage.prototype, "_songUri", {
+                get: $util.oneOfGetter($oneOfFields = ["songUri"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MusicMessage.prototype, "_artworkUri", {
+                get: $util.oneOfGetter($oneOfFields = ["artworkUri"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MusicMessage.prototype, "_style", {
+                get: $util.oneOfGetter($oneOfFields = ["style"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MusicMessage.prototype, "_contextInfo", {
+                get: $util.oneOfGetter($oneOfFields = ["contextInfo"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            MusicMessage.create = function create(properties) {
+                return new MusicMessage(properties);
+            };
+
+            MusicMessage.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.embeddedMusic != null && Object.hasOwnProperty.call(m, "embeddedMusic"))
+                    $root.proto.EmbeddedMusic.encode(m.embeddedMusic, w.uint32(10).fork()).ldelim();
+                if (m.songUri != null && Object.hasOwnProperty.call(m, "songUri"))
+                    w.uint32(18).string(m.songUri);
+                if (m.artworkUri != null && Object.hasOwnProperty.call(m, "artworkUri"))
+                    w.uint32(26).string(m.artworkUri);
+                if (m.style != null && Object.hasOwnProperty.call(m, "style"))
+                    w.uint32(34).int32(m.style);
+                if (m.contextInfo != null && Object.hasOwnProperty.call(m, "contextInfo"))
+                    $root.proto.ContextInfo.encode(m.contextInfo, w.uint32(42).fork()).ldelim();
+                return w;
+            };
+
+            MusicMessage.decode = function decode(r, l, e) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.MusicMessage();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.embeddedMusic = $root.proto.EmbeddedMusic.decode(r, r.uint32());
+                            break;
+                        }
+                    case 2: {
+                            m.songUri = r.string();
+                            break;
+                        }
+                    case 3: {
+                            m.artworkUri = r.string();
+                            break;
+                        }
+                    case 4: {
+                            m.style = r.int32();
+                            break;
+                        }
+                    case 5: {
+                            m.contextInfo = $root.proto.ContextInfo.decode(r, r.uint32());
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            MusicMessage.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.Message.MusicMessage)
+                    return d;
+                var m = new $root.proto.Message.MusicMessage();
+                if (d.embeddedMusic != null) {
+                    if (typeof d.embeddedMusic !== "object")
+                        throw TypeError(".proto.Message.MusicMessage.embeddedMusic: object expected");
+                    m.embeddedMusic = $root.proto.EmbeddedMusic.fromObject(d.embeddedMusic);
+                }
+                if (d.songUri != null) {
+                    m.songUri = String(d.songUri);
+                }
+                if (d.artworkUri != null) {
+                    m.artworkUri = String(d.artworkUri);
+                }
+                if (d.style != null) {
+                    m.style = d.style | 0;
+                }
+                if (d.contextInfo != null) {
+                    if (typeof d.contextInfo !== "object")
+                        throw TypeError(".proto.Message.MusicMessage.contextInfo: object expected");
+                    m.contextInfo = $root.proto.ContextInfo.fromObject(d.contextInfo);
+                }
+                return m;
+            };
+
+            MusicMessage.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.embeddedMusic != null && m.hasOwnProperty("embeddedMusic")) {
+                    d.embeddedMusic = $root.proto.EmbeddedMusic.toObject(m.embeddedMusic, o);
+                    if (o.oneofs)
+                        d._embeddedMusic = "embeddedMusic";
+                }
+                if (m.songUri != null && m.hasOwnProperty("songUri")) {
+                    d.songUri = m.songUri;
+                    if (o.oneofs)
+                        d._songUri = "songUri";
+                }
+                if (m.artworkUri != null && m.hasOwnProperty("artworkUri")) {
+                    d.artworkUri = m.artworkUri;
+                    if (o.oneofs)
+                        d._artworkUri = "artworkUri";
+                }
+                if (m.style != null && m.hasOwnProperty("style")) {
+                    d.style = m.style;
+                    if (o.oneofs)
+                        d._style = "style";
+                }
+                if (m.contextInfo != null && m.hasOwnProperty("contextInfo")) {
+                    d.contextInfo = $root.proto.ContextInfo.toObject(m.contextInfo, o);
+                    if (o.oneofs)
+                        d._contextInfo = "contextInfo";
+                }
+                return d;
+            };
+
+            MusicMessage.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            MusicMessage.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.MusicMessage";
+            };
+
+            return MusicMessage;
+        })();
+
+        Message.StatusLinkPreviewMetadata = (function() {
+            function StatusLinkPreviewMetadata(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            StatusLinkPreviewMetadata.prototype.style = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(StatusLinkPreviewMetadata.prototype, "_style", {
+                get: $util.oneOfGetter($oneOfFields = ["style"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            StatusLinkPreviewMetadata.create = function create(properties) {
+                return new StatusLinkPreviewMetadata(properties);
+            };
+
+            StatusLinkPreviewMetadata.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.style != null && Object.hasOwnProperty.call(m, "style"))
+                    w.uint32(10).int32(m.style);
+                return w;
+            };
+
+            StatusLinkPreviewMetadata.decode = function decode(r, l, e) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.StatusLinkPreviewMetadata();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.style = r.int32();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            StatusLinkPreviewMetadata.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.Message.StatusLinkPreviewMetadata)
+                    return d;
+                var m = new $root.proto.Message.StatusLinkPreviewMetadata();
+                if (d.style != null) {
+                    m.style = d.style | 0;
+                }
+                return m;
+            };
+
+            StatusLinkPreviewMetadata.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.style != null && m.hasOwnProperty("style")) {
+                    d.style = m.style;
+                    if (o.oneofs)
+                        d._style = "style";
+                }
+                return d;
+            };
+
+            StatusLinkPreviewMetadata.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            StatusLinkPreviewMetadata.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.StatusLinkPreviewMetadata";
+            };
+
+            return StatusLinkPreviewMetadata;
         })();
 
         return Message;

@@ -5967,6 +5967,10 @@ export namespace proto {
         splitPaymentMessage?: (proto.Message.ISplitPaymentMessage|null);
         newsletterAdminProfileStatusMessage?: (proto.Message.IFutureProofMessage|null);
         rootSecretDistributeMessage?: (proto.Message.IRootSecretDistributeMessage|null);
+        splitPaymentUpdateMessage?: (proto.Message.ISplitPaymentUpdateMessage|null);
+        musicMessage?: (proto.Message.IMusicMessage|null);
+        statusLinkPreviewMetadata?: (proto.Message.IStatusLinkPreviewMetadata|null);
+        botPlatformRegistrationSuccessMessage?: (proto.Message.IFutureProofMessage|null);
     }
 
     class Message implements IMessage {
@@ -6078,6 +6082,10 @@ export namespace proto {
         public splitPaymentMessage?: (proto.Message.ISplitPaymentMessage|null);
         public newsletterAdminProfileStatusMessage?: (proto.Message.IFutureProofMessage|null);
         public rootSecretDistributeMessage?: (proto.Message.IRootSecretDistributeMessage|null);
+        public splitPaymentUpdateMessage?: (proto.Message.ISplitPaymentUpdateMessage|null);
+        public musicMessage?: (proto.Message.IMusicMessage|null);
+        public statusLinkPreviewMetadata?: (proto.Message.IStatusLinkPreviewMetadata|null);
+        public botPlatformRegistrationSuccessMessage?: (proto.Message.IFutureProofMessage|null);
         public static create(properties?: proto.IMessage): proto.Message;
         public static encode(m: proto.IMessage, w?: $protobuf.Writer): $protobuf.Writer;
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message;
@@ -9934,6 +9942,64 @@ export namespace proto {
                 CHAT_OPEN = 0,
                 COMPANION_PAIRING = 1
             }
+        }
+
+        interface ISplitPaymentUpdateMessage {
+            splitId?: (string|null);
+            participantJid?: (string|null);
+        }
+
+        class SplitPaymentUpdateMessage implements ISplitPaymentUpdateMessage {
+            constructor(p?: proto.Message.ISplitPaymentUpdateMessage);
+            public splitId?: (string|null);
+            public participantJid?: (string|null);
+            public static create(properties?: proto.Message.ISplitPaymentUpdateMessage): proto.Message.SplitPaymentUpdateMessage;
+            public static encode(m: proto.Message.ISplitPaymentUpdateMessage, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.SplitPaymentUpdateMessage;
+            public static fromObject(d: { [k: string]: any }): proto.Message.SplitPaymentUpdateMessage;
+            public static toObject(m: proto.Message.SplitPaymentUpdateMessage, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IMusicMessage {
+            embeddedMusic?: (proto.IEmbeddedMusic|null);
+            songUri?: (string|null);
+            artworkUri?: (string|null);
+            style?: (number|null);
+            contextInfo?: (proto.IContextInfo|null);
+        }
+
+        class MusicMessage implements IMusicMessage {
+            constructor(p?: proto.Message.IMusicMessage);
+            public embeddedMusic?: (proto.IEmbeddedMusic|null);
+            public songUri?: (string|null);
+            public artworkUri?: (string|null);
+            public style?: (number|null);
+            public contextInfo?: (proto.IContextInfo|null);
+            public static create(properties?: proto.Message.IMusicMessage): proto.Message.MusicMessage;
+            public static encode(m: proto.Message.IMusicMessage, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.MusicMessage;
+            public static fromObject(d: { [k: string]: any }): proto.Message.MusicMessage;
+            public static toObject(m: proto.Message.MusicMessage, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IStatusLinkPreviewMetadata {
+            style?: (number|null);
+        }
+
+        class StatusLinkPreviewMetadata implements IStatusLinkPreviewMetadata {
+            constructor(p?: proto.Message.IStatusLinkPreviewMetadata);
+            public style?: (number|null);
+            public static create(properties?: proto.Message.IStatusLinkPreviewMetadata): proto.Message.StatusLinkPreviewMetadata;
+            public static encode(m: proto.Message.IStatusLinkPreviewMetadata, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.StatusLinkPreviewMetadata;
+            public static fromObject(d: { [k: string]: any }): proto.Message.StatusLinkPreviewMetadata;
+            public static toObject(m: proto.Message.StatusLinkPreviewMetadata, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         interface IRootSecretDistributeMessage {
