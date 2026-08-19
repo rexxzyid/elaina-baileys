@@ -28,6 +28,33 @@ const collectChunkUrls = html => {
 
 const MESSAGE_ANCHOR = 'internalSpec={conversation:[1,'
 const FIELD_PATTERN = /([a-zA-Z0-9]+):\[(\d+),(?:\(e=o\("WAProtoConst"\)\)|e)\.TYPES\./g
+const SPEC_PATTERN = /([A-Za-z$_]{1,4})\.name="([^"]+)",\1\.internalSpec=\{/g
+
+const closingBrace = (source, open) => {
+    let depth = 0
+    for (let i = open; i < source.length; i++) {
+        if (source[i] === '{') depth++
+        else if (source[i] === '}') {
+            depth--
+            if (!depth) return i
+        }
+    }
+    return source.length
+}
+
+const parseAllSpecs = source => {
+    const specs = new Map()
+    for (const match of source.matchAll(SPEC_PATTERN)) {
+        const open = match.index + match[0].length - 1
+        const body = source.slice(open, closingBrace(source, open))
+        const fields = new Set([...body.matchAll(/([a-zA-Z0-9]+):\[\d+,/g)].map(field => field[1]))
+        if (!fields.size) continue
+        const name = match[2].split('$').pop()
+        const known = specs.get(name)
+        if (!known || fields.size > known.size) specs.set(name, fields)
+    }
+    return specs
+}
 
 const parseMessageSpec = source => {
     const at = source.indexOf(MESSAGE_ANCHOR)
@@ -49,7 +76,8 @@ const parseMessageSpec = source => {
     for (const match of source.slice(at, end).matchAll(FIELD_PATTERN)) {
         fields.set(match[1], Number.parseInt(match[2], 10))
     }
-    return fields.size > 50 ? fields : undefined
+    if (fields.size <= 50) return undefined
+    return { fields, specs: parseAllSpecs(source) }
 }
 
 const findMessageSpec = async urls => {
@@ -74,13 +102,31 @@ const findMessageSpec = async urls => {
     return found
 }
 
-const readForkFields = () => {
+const readForkProto = () => {
     const target = join(root, 'WAProto/index.d.ts')
     if (!existsSync(target)) throw new Error('WAProto/index.d.ts not found')
     const source = readFileSync(target, 'utf8')
-    const block = source.match(/interface IMessage \{([\s\S]*?)\n {4}\}/)
-    if (!block) throw new Error('IMessage interface not found')
-    return new Set([...block[1].matchAll(/^\s+([a-zA-Z0-9]+)\?:/gm)].map(match => match[1]))
+    const interfaces = new Map()
+    for (const match of source.matchAll(/interface I([A-Za-z0-9]+) \{/g)) {
+        const open = match.index + match[0].length - 1
+        let depth = 0
+        let end = source.length
+        for (let i = open; i < source.length; i++) {
+            if (source[i] === '{') depth++
+            else if (source[i] === '}') {
+                depth--
+                if (!depth) {
+                    end = i
+                    break
+                }
+            }
+        }
+        const fields = new Set([...source.slice(open, end).matchAll(/^\s+([a-zA-Z0-9]+)\?:/gm)].map(field => field[1]))
+        const known = interfaces.get(match[1])
+        if (!known || fields.size > known.size) interfaces.set(match[1], fields)
+    }
+    if (!interfaces.has('Message')) throw new Error('IMessage interface not found')
+    return interfaces
 }
 
 const readClientRevision = source => {
@@ -99,24 +145,38 @@ const html = await fetchText('https://web.whatsapp.com/')
 const liveRevision = readClientRevision(await fetchText('https://web.whatsapp.com/sw.js'))
 const pinned = pinnedRevision()
 
-const bundleFields = await findMessageSpec(collectChunkUrls(html))
-if (!bundleFields) throw new Error('Could not locate the Message spec in the bundle')
-const forkFields = readForkFields()
-const missing = [...bundleFields].filter(([name]) => !forkFields.has(name)).sort((a, b) => a[1] - b[1])
+const bundle = await findMessageSpec(collectChunkUrls(html))
+if (!bundle) throw new Error('Could not locate the Message spec in the bundle')
+const fork = readForkProto()
+const forkMessage = fork.get('Message')
+const missing = [...bundle.fields].filter(([name]) => !forkMessage.has(name)).sort((a, b) => a[1] - b[1])
+
+const missingElsewhere = []
+for (const [name, fields] of bundle.specs) {
+    if (name === 'Message') continue
+    const declared = fork.get(name)
+    if (!declared) continue
+    const gap = [...fields].filter(field => !declared.has(field))
+    if (gap.length) missingElsewhere.push(`  - ${name}: ${gap.sort().join(', ')}`)
+}
+missingElsewhere.sort()
 
 const report = [
     `WhatsApp Web client revision: live ${liveRevision}, pinned ${pinned}${liveRevision === pinned ? '' : ' (outdated)'}`,
-    `Message fields: bundle ${bundleFields.size}, WAProto ${forkFields.size}`,
+    `Message fields: bundle ${bundle.fields.size}, WAProto ${forkMessage.size}`,
     missing.length
-        ? `Missing from WAProto (${missing.length}):\n` + missing.map(([name, id]) => `  - ${name} (field ${id})`).join('\n')
-        : 'Missing from WAProto: none'
+        ? `Missing Message fields (${missing.length}):\n` + missing.map(([name, id]) => `  - ${name} (field ${id})`).join('\n')
+        : 'Missing Message fields: none',
+    missingElsewhere.length
+        ? `Types with missing fields (${missingElsewhere.length}):\n` + missingElsewhere.join('\n')
+        : 'Types with missing fields: none'
 ].join('\n')
 
 console.log(report)
 
 if (process.env.GITHUB_OUTPUT) {
     writeFileSync(process.env.GITHUB_OUTPUT,
-        `missing_count=${missing.length}\n` +
+        `missing_count=${missing.length + missingElsewhere.length}\n` +
         `revision_outdated=${liveRevision === pinned ? 'false' : 'true'}\n` +
         `live_revision=${liveRevision}\n`, { flag: 'a' })
 }
@@ -124,4 +184,4 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     writeFileSync(process.env.GITHUB_STEP_SUMMARY, '```\n' + report + '\n```\n', { flag: 'a' })
 }
 
-process.exitCode = missing.length ? 1 : 0
+process.exitCode = missing.length + missingElsewhere.length ? 1 : 0
