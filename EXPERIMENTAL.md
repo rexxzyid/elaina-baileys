@@ -257,6 +257,44 @@ quietly missing from received messages, not as errors.
 
 ---
 
+## Unmodelled MEX notifications
+
+WhatsApp Web routes 35 operations through its `w:mex` notification handler. This fork
+named 16 and shared 14 of them with the Web list; the remaining 21 fell into a `default`
+branch that logged and returned, so nothing downstream could ever see them:
+
+| Area | Operations |
+|---|---|
+| Events | `NotificationEventDelete`, `Invite`, `InviteRemove`, `Reminder`, `Rsvp`, `Update` |
+| Group properties | `NotificationGroupPropertyUpdate`, `GroupHiddenPropertyUpdate`, `GroupLimitSharingPropertyUpdate`, `GroupMemberLinkPropertyUpdate`, `GroupMemberShareGroupHistoryModePropertyUpdate`, `GroupSafetyCheckPropertyUpdate`, `GroupAppealStatusUpdate` |
+| Communities | `NotificationCommunityOwnerUpdate` |
+| Newsletters | `NotificationNewsletterAIContentUpdate`, `NotificationNewsletterAdminProfileUpdate`, `NotificationNewsletterPaidPartnershipUpdate` |
+| Scheduled messages | `NotificationScheduledMessagePost`, `NotificationScheduledMessageReveal` |
+| Integrity | `NotificationIntegrityChallengeRequest`, `NotificationUserBrigadingUpdate` |
+
+One of those is a plain name mismatch rather than a missing feature: the fork listened for
+`NotificationNewsletterPaidPartnership`, while the Web bundle sends
+`NotificationNewsletterPaidPartnershipUpdate`. Both names now route to the newsletter
+handler, so paid-partnership notifications reach it for the first time.
+
+The default branch now re-emits the rest instead:
+
+```js
+sock.ev.on('mex.notification', ({ operation, updates, data }) => {
+  console.log(operation, updates)
+})
+```
+
+Modelling each one properly means knowing its payload shape, which the bundle only gives
+for the operations WhatsApp Web itself renders. The passthrough is the honest middle
+ground: the data reaches you unchanged, typed as whatever the server sent, and anything
+worth modelling can be promoted to a real event later without breaking it.
+
+**Verification: Offline.** The operation list is read from the Web bundle's notification
+router; the payloads have not been observed on the wire.
+
+---
+
 ## Keeping up with WhatsApp Web
 
 ```bash
