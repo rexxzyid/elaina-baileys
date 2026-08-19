@@ -1,0 +1,100 @@
+name: Proto Watch
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: elaina-baileys-proto-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Watch WhatsApp Web proto
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Compare WhatsApp Web proto with WAProto
+        id: proto
+        continue-on-error: true
+        run: node ./script/checkproto.js | tee proto-report.txt
+
+      - name: Apply the client revision bump
+        if: steps.proto.outputs.revision_outdated == 'true'
+        run: npm run update:version
+
+      - name: Commit the client revision bump
+        if: steps.proto.outputs.revision_outdated == 'true'
+        run: |
+          git add lib/Defaults/index.js lib/Utils/generics.js
+
+          if git diff --staged --quiet; then
+            echo "Client revision already up to date in the working tree."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: WA update, client revision ${{ steps.proto.outputs.live_revision }}"
+          git push
+
+      - name: Report new Message fields
+        if: steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const report = fs.readFileSync('proto-report.txt', 'utf8')
+            const title = 'WAProto is behind the WhatsApp Web Message spec'
+            const body = [
+              'The daily proto watch found Message fields WhatsApp Web sends that `WAProto` does not declare.',
+              'Messages using them decode incompletely until the proto is regenerated.',
+              '',
+              '```',
+              report.trim(),
+              '```',
+              '',
+              'Run `node ./script/checkproto.js` locally to reproduce.',
+              'Adding fields is done by regenerating `WAProto`, not by editing the generated files by hand.'
+            ].join('\n')
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'proto-watch'
+            })
+
+            if (existing.data.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body
+              })
+              return
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['proto-watch']
+            })

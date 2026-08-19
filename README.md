@@ -39,6 +39,9 @@
 > Use this project responsibly and comply with WhatsApp's Terms of Service and applicable laws.
 
 > [!NOTE]
+> Features reconstructed from the WhatsApp Web bundle, and how far each one has been verified, are documented in [EXPERIMENTAL.md](EXPERIMENTAL.md).
+
+> [!NOTE]
 > This project is built on top of the Baileys ecosystem and extends it with additional fixes, compatibility changes, interactive messaging support, and an integrated MessageBuilder.
 
 > [!CAUTION]

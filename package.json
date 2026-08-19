@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "preinstall": "node ./engine-requirements.js",
-    "update:version": "node ./script/updatewa.js"
+    "update:version": "node ./script/updatewa.js",
+    "check:proto": "node ./script/checkproto.js"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -16,7 +17,8 @@
     "lib/**/*",
     "WAProto/**/*",
     "engine-requirements.js",
-    "NOTICE.md"
+    "NOTICE.md",
+    "EXPERIMENTAL.md"
   ],
   "keywords": [
     "automation",
