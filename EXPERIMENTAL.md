@@ -226,15 +226,47 @@ on the wire was read back from the raw bytes to confirm 128 through 131.
 
 ---
 
+## Known proto gaps beyond Message
+
+Catching `Message` up to field 131 closed the top-level oneof, but the bundle declares
+fields on other types that `WAProto` does not. These are recorded rather than patched:
+adding them means regenerating the proto, and the watcher below reports them on every run.
+
+The ones most likely to matter:
+
+| Type | Missing fields |
+|---|---|
+| `PreKeySignalMessage` | `kyberCiphertext`, `kyberPreKeyId` — post-quantum prekeys |
+| `ContextInfo` | `aiProvenance`, `instagramThreadLink` |
+| `MessageContextInfo` | `accountEncryptionAttestation`, `associatedPrimaryIdentityKey` |
+| `ProtocolMessage` | `coexStateSync`, `markAsVerifiedAction` |
+| `SyncActionValue` | `bubbleLockMessageAction`, `ctwaMessageReceivedAction`, `deviceCapabilitiesV2`, `labelSublistAction` |
+| `ExtendedTextMessage` | `faviconMmsMetadata` |
+| `DeviceCapabilities` | `aiFbidMigration`, `bizAiSettingsSync`, `contactRefresh` |
+| `Call` | `callReason` |
+| `HistorySyncConfig` | `supportNewsletter` |
+
+Smaller gaps sit on `BotMetadata`, `BotAgentDeepLinkMetadata`,
+`BotSignatureVerificationUseCaseProof`, `BusinessBroadcastListAction`,
+`BusinessInteractionPills`, `MessageHistoryNotice`, `MusicUserIdAction`,
+`PaymentExtendedMetadata`, `PeerDataOperationResult`, `RootSecretEntry`,
+`SenderKeyDistributionMessage` and `SettingsSyncAction`.
+
+Unknown proto fields are skipped on decode rather than fatal, so these show up as data
+quietly missing from received messages, not as errors.
+
+---
+
 ## Keeping up with WhatsApp Web
 
 ```bash
 npm run check:proto
 ```
 
-Downloads the current bundle, extracts the `Message` spec, and compares it with
-`WAProto`. It prints the live and pinned client revisions and exits non-zero when
-WhatsApp declares Message fields this proto does not.
+Downloads the current bundle, extracts every proto spec in it, and compares both the
+`Message` oneof and the fields of every other type with `WAProto`. It prints the live and
+pinned client revisions and exits non-zero when WhatsApp declares fields this proto does
+not.
 
 The `Proto Watch` workflow runs it daily. When the client revision drifts it applies
 `npm run update:version` and commits the bump. When new Message fields appear it opens or
