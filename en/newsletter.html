@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-page="newsletter">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Newsletter — Elaina Baileys</title>
+<meta name="description" content="Create and run WhatsApp channels: metadata, admins, polls, questions and insights.">
+<meta property="og:title" content="Newsletter — Elaina Baileys">
+<meta property="og:description" content="Create and run WhatsApp channels: metadata, admins, polls, questions and insights.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/newsletter.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html" class="active">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#creating-and-editing">Creating and editing</a><a href="#following-and-muting">Following and muting</a><a href="#reading-a-channel">Reading a channel</a><a href="#reacting">Reacting</a><a href="#check-what-you-are-allowed-to-do-first">Check what you are allowed to do first</a><a href="#moderation">Moderation</a><a href="#admins">Admins</a><a href="#polls-and-who-voted">Polls and who voted</a><a href="#followers-and-insights">Followers and insights</a><a href="#discovery">Discovery</a><a href="#how-far-this-is-verified">How far this is verified</a></nav>
+    <article class="prose"><h1 id="newsletter">Newsletter<a class="anchor" href="#newsletter" aria-label="link">#</a></h1>
+<p>Newsletters are WhatsApp channels. A channel JID ends in <code>@newsletter</code>, and messages inside one are addressed by a numeric <strong>server id</strong> rather than by a message key.</p>
+<p>That distinction matters: most of the moderation and analytics methods below take a <code>server_id</code>, which you read from an incoming channel message, not the <code>key.id</code> you would use in a chat.</p>
+<h2 id="creating-and-editing">Creating and editing<a class="anchor" href="#creating-and-editing" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const newsletter = await sock.newsletterCreate(
+  'Elaina Updates',
+  'Official update channel'
+)
+
+console.log(newsletter)</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterUpdateName('123456789@newsletter', 'Elaina News')
+await sock.newsletterUpdateDescription('123456789@newsletter', 'Fresh updates from Elaina')
+await sock.newsletterUpdatePicture('123456789@newsletter', { url: 'https://example.com/channel.jpg' })
+await sock.newsletterRemovePicture('123456789@newsletter')</code></pre></div>
+<h2 id="following-and-muting">Following and muting<a class="anchor" href="#following-and-muting" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterFollow('123456789@newsletter')
+await sock.newsletterUnfollow('123456789@newsletter')
+
+await sock.newsletterMute('123456789@newsletter')
+await sock.newsletterUnmute('123456789@newsletter')</code></pre></div>
+<h2 id="reading-a-channel">Reading a channel<a class="anchor" href="#reading-a-channel" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const metadata = await sock.newsletterMetadata('jid', '123456789@newsletter')
+const newsletters = await sock.newsletterSubscribed()</code></pre></div>
+<h2 id="reacting">Reacting<a class="anchor" href="#reacting" aria-label="link">#</a></h2>
+<p>Reactions are addressed by server id:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterReactMessage('123456789@newsletter', '175', '🔥')</code></pre></div>
+<p>Remove one by passing an empty string:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterReactMessage('123456789@newsletter', '175', '')</code></pre></div>
+<h2 id="check-what-you-are-allowed-to-do-first">Check what you are allowed to do first<a class="anchor" href="#check-what-you-are-allowed-to-do-first" aria-label="link">#</a></h2>
+<p>Before offering a channel feature, WhatsApp Web asks the server which ones are enabled for this account. Do the same — it saves you from debugging a feature the server was never going to allow.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
+console.log(capabilities)
+// [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]</code></pre></div>
+<p>Requires admin or owner rights. Other channels answer <code>Not Authorized</code>.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>This is the single most useful call on this page. Several channel features are gated server-side per account, and when a capability is missing the server does not error — it accepts the request and quietly discards it.</p></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const info = await sock.newsletterAdminInfo('123456789@newsletter')</code></pre></div>
+<h2 id="moderation">Moderation<a class="anchor" href="#moderation" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterPinMessages('123456789@newsletter', [175])
+await sock.newsletterUnpinMessages('123456789@newsletter', 175)</code></pre></div>
+<p>Content labels — <code>messageType</code> is the third argument and defaults to <code>MESSAGE</code>; pass <code>STATUS</code> to label a channel status:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterLabelAiContent('123456789@newsletter', 175)
+await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)</code></pre></div>
+<p>Hide or restore a follower's answer to a channel question:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'VISIBLE')</code></pre></div>
+<h2 id="admins">Admins<a class="anchor" href="#admins" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterAcceptAdminInvite('123456789@newsletter')
+
+const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')</code></pre></div>
+<h2 id="polls-and-who-voted">Polls and who voted<a class="anchor" href="#polls-and-who-voted" aria-label="link">#</a></h2>
+<p>Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
+  limit: 100,
+  voteHash: undefined
+})</code></pre></div>
+<p>The response groups voters per <code>vote_hash</code>, each with a <code>voter_list.edges</code> array.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)</code></pre></div>
+<h2 id="followers-and-insights">Followers and insights<a class="anchor" href="#followers-and-insights" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const insights = await sock.newsletterInsights('123456789@newsletter', {
+  metrics: ['NET_FOLLOWS', 'UNFOLLOWS']
+})
+// { result: [{ id, values }], last_update_time, metrics_status }</code></pre></div>
+<p><code>metrics_status</code> is <code>OK</code> or <code>MISSING</code>. <code>MISSING</code> means the server has no data for that window yet — it is not an error, and retrying immediately will not help.</p>
+<p>Only <code>NET_FOLLOWS</code> and <code>UNFOLLOWS</code> appear as literals in the WhatsApp Web bundle and are the defaults, but the metric list is a parameter, so other names can be tried.</p>
+<h2 id="discovery">Discovery<a class="anchor" href="#discovery" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
+const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })</code></pre></div>
+<p>The directory is what the Updates tab uses:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const list = await sock.newsletterDirectoryList({
+  view: 'RECOMMENDED',
+  categories: ['NEWS'],
+  countryCodes: ['ID'],
+  limit: 20
+})
+
+const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
+const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })</code></pre></div>
+<p>Views are <code>RECOMMENDED</code>, <code>NEW</code>, <code>POPULAR</code>, <code>FEATURED</code> and <code>TRENDING</code>. Categories are <code>BUSINESS</code>, <code>ENTERTAINMENT</code>, <code>LIFESTYLE</code>, <code>NEWS</code>, <code>ORGANIZATIONS</code>, <code>PEOPLE</code>, <code>SPORTS</code> and <code>SPECIAL_EVENTS</code> through <code>SPECIAL_EVENTS_5</code>.</p>
+<h2 id="how-far-this-is-verified">How far this is verified<a class="anchor" href="#how-far-this-is-verified" aria-label="link">#</a></h2>
+<p>Most of this page was reconstructed from the WhatsApp Web bundle rather than from an existing implementation.</p>
+<div class="table-scroll"><table><thead><tr><th>Method</th><th>Status</th></tr></thead><tbody><tr><td><code>newsletterAdminCapabilities</code></td><td><strong>Live</strong> — answered with a real capability list, and <code>Not Authorized</code> for a channel the account does not administer</td></tr><tr><td>Everything else on this page</td><td><strong>Derived</strong> — shape read from the bundle, never executed</td></tr></tbody></table></div>
+<p>Derived does not mean broken; it means untested against a server. When one answers with a GraphQL error, the error text usually names the field that is wrong, and the fix is normally a variable name rather than a redesign.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p><code>newsletterSubscribers</code> uses a query id that in the current bundle belongs to the pending-admin-invites query, and its data path does not exist in that response. Use <code>newsletterFollowers</code>, which is what WhatsApp Web itself uses. The old binding was left in place rather than silently repointed.</p></div>
+<p>Full detail is in <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="id" data-page="groups">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grup — Elaina Baileys</title>
+<meta name="description" content="Pengelolaan grup dan komunitas, peserta, dan foto profil.">
+<meta property="og:title" content="Grup — Elaina Baileys">
+<meta property="og:description" content="Pengelolaan grup dan komunitas, peserta, dan foto profil.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/groups.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html" class="active">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#membuat-grup">Membuat grup</a><a href="#peserta">Peserta</a><a href="#metadata-dan-pengaturan">Metadata dan pengaturan</a><a href="#komunitas">Komunitas</a><a href="#foto-profil">Foto profil</a></nav>
+    <article class="prose"><h1 id="grup">Grup<a class="anchor" href="#grup" aria-label="link">#</a></h1>
+<p>JID grup berakhiran <code>@g.us</code>. Peserta dialamati dengan JID pengguna — yang pada versi WhatsApp terbaru bisa berupa alamat <code>@lid</code>, bukan JID nomor telepon. Baca <a href="./messages.html#pengalamatan-jid-pn-dan-lid">Pesan</a> sebelum mengasumsikan formatnya.</p>
+<h2 id="membuat-grup">Membuat grup<a class="anchor" href="#membuat-grup" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const group = await sock.groupCreate(
+  'Elaina Community',
+  [
+    '6281234567890@s.whatsapp.net',
+    '6289876543210@s.whatsapp.net'
+  ]
+)
+
+console.log(group.id)</code></pre></div>
+<p><code>id</code> yang dikembalikan adalah JID grup yang kamu pakai untuk semua operasi lain.</p>
+<h2 id="peserta">Peserta<a class="anchor" href="#peserta" aria-label="link">#</a></h2>
+<p>Semua perubahan peserta lewat satu method, dengan aksinya sebagai argumen ketiga:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.groupParticipantsUpdate(groupJid, [userJid], 'add')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'remove')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'promote')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'demote')</code></pre></div>
+<p>Method ini menerima array, jadi gabungkan perubahan dalam satu panggilan daripada melakukan loop.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p><code>add</code> tidak selalu benar-benar menambahkan. Kalau pengaturan privasi pengguna tidak mengizinkan ditambahkan ke grup, WhatsApp mengirimi mereka undangan. Cek status per peserta di responsnya, jangan langsung menganggap berhasil.</p></div>
+<h2 id="metadata-dan-pengaturan">Metadata dan pengaturan<a class="anchor" href="#metadata-dan-pengaturan" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.groupUpdateDescription(groupJid, 'Selamat datang di Elaina Community 💜')</code></pre></div>
+<p>Socket juga menyediakan metadata grup, ubah subjek, pengaturan, kode undangan, dan penanganan permintaan bergabung. Daftar lengkapnya ada di bagian <strong>Groups</strong> pada <a href="./api.html#group">Referensi API</a>.</p>
+<h2 id="komunitas">Komunitas<a class="anchor" href="#komunitas" aria-label="link">#</a></h2>
+<p>Komunitas adalah grup yang berisi grup lain. Method-nya terpisah, semuanya berawalan <code>community</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const community = await sock.communityCreate('Elaina Community', 'Deskripsi')
+
+await sock.communityLinkGroup(groupJid, parentCommunityJid)
+await sock.communityUnlinkGroup(groupJid, parentCommunityJid)
+
+const linked = await sock.communityFetchLinkedGroups(communityJid)</code></pre></div>
+<p>Penanganan pesertanya mengikuti pola grup:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.communityParticipantsUpdate(communityJid, [userJid], 'add')</code></pre></div>
+<p>Daftar lengkapnya ada di bagian <strong>Communities</strong> pada <a href="./api.html#community">Referensi API</a>.</p>
+<h2 id="foto-profil">Foto profil<a class="anchor" href="#foto-profil" aria-label="link">#</a></h2>
+<p>Ini berlaku untuk JID pengguna, JID grup, maupun akunmu sendiri:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const url = await sock.profilePictureUrl(jid, 'image')</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.updateProfilePicture(jid, { url: 'https://example.com/profile.jpg' })
+await sock.removeProfilePicture(jid)</code></pre></div>
+<p><code>profilePictureUrl</code> menerima <code>'image'</code> untuk ukuran penuh atau <code>'preview'</code> untuk thumbnail. Method ini melempar error kalau akunnya tidak punya foto atau pengaturan privasinya menyembunyikannya — tangkap errornya supaya tidak menghentikan handler pesan:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const url = await sock.profilePictureUrl(jid, 'image').catch(() =&gt; null)</code></pre></div></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-page="messages">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages — Elaina Baileys</title>
+<meta name="description" content="Receive messages, read their text, address users correctly, and send every basic message type.">
+<meta property="og:title" content="Messages — Elaina Baileys">
+<meta property="og:description" content="Receive messages, read their text, address users correctly, and send every basic message type.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/messages.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html" class="active">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#receiving">Receiving</a><a href="#reading-the-text">Reading the text</a><a href="#addressing-jid-pn-and-lid">Addressing: JID, PN and LID</a><a href="#sending">Sending</a><a href="#replying-and-quoting">Replying and quoting</a><a href="#link-preview-cards">Link preview cards</a><a href="#next">Next</a></nav>
+    <article class="prose"><h1 id="messages">Messages<a class="anchor" href="#messages" aria-label="link">#</a></h1>
+<h2 id="receiving">Receiving<a class="anchor" href="#receiving" aria-label="link">#</a></h2>
+<p>Everything arrives through <code>messages.upsert</code>. The <code>type</code> tells you whether this is a live message or part of a history sync — for a bot you usually want only <code>notify</code>.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('messages.upsert', async ({ messages, type }) =&gt; {
+  if (type !== 'notify') return
+
+  const message = messages[0]
+  if (!message?.message) return
+
+  console.log('From:', message.key.remoteJid)
+  console.log('Message:', message.message)
+})</code></pre></div>
+<p>Skipping the <code>type</code> check is the most common reason a bot replies to hundreds of old messages the moment it starts.</p>
+<h2 id="reading-the-text">Reading the text<a class="anchor" href="#reading-the-text" aria-label="link">#</a></h2>
+<p>A message body lives in a different field depending on its type, so pulling out plain text means checking a handful of places:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('messages.upsert', async ({ messages }) =&gt; {
+  const m = messages[0]
+  if (!m?.message) return
+
+  const text =
+    m.message.conversation ||
+    m.message.extendedTextMessage?.text ||
+    m.message.imageMessage?.caption ||
+    m.message.videoMessage?.caption ||
+    ''
+
+  console.log(text)
+})</code></pre></div>
+<p><code>conversation</code> is a plain text message. <code>extendedTextMessage</code> is text with something attached — a link preview, a quote, formatting.</p>
+<h2 id="addressing-jid-pn-and-lid">Addressing: JID, PN and LID<a class="anchor" href="#addressing-jid-pn-and-lid" aria-label="link">#</a></h2>
+<p>Recent WhatsApp versions may identify a user by a <strong>LID</strong> rather than a phone-number JID. Do not assume every identifier ends in <code>@s.whatsapp.net</code>.</p>
+<div class="code-block"><span class="code-lang">text</span><button class="copy" type="button" data-copy>copy</button><pre><code>6281234567890@s.whatsapp.net
+123456789012345@lid
+120363xxxxxxxxxx@g.us
+123456789@newsletter</code></pre></div>
+<p>Incoming keys carry both forms when WhatsApp supplies them:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const key = message.key
+
+console.log('remoteJid:', key.remoteJid)
+console.log('remoteJidAlt:', key.remoteJidAlt)
+console.log('participant:', key.participant)
+console.log('participantAlt:', key.participantAlt)</code></pre></div>
+<p><code>remoteJidAlt</code> and <code>participantAlt</code> hold the alternate address, so an application that prefers phone-number JIDs can use them. Keep the original around too — some protocol operations still need the address WhatsApp originally sent.</p>
+<p>Normalise with the built-in helpers rather than string surgery:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { jidDecode, jidEncode, jidNormalizedUser } from '@rexxhayanasi/elaina-baileys'
+
+const normalized = jidNormalizedUser(jid)
+const decoded = jidDecode(jid)</code></pre></div>
+<div class="alert alert-important"><span class="alert-label">important</span><p>A LID and a PN are two addresses for the same account only when WhatsApp gives you the mapping, or your application already knows it. Never invent a phone number by swapping <code>@lid</code> for <code>@s.whatsapp.net</code> — the digits are unrelated.</p></div>
+<h2 id="sending">Sending<a class="anchor" href="#sending" aria-label="link">#</a></h2>
+<h3 id="text">Text<a class="anchor" href="#text" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  text: 'Hello from Elaina 💜'
+})</code></pre></div>
+<h3 id="image">Image<a class="anchor" href="#image" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  image: { url: 'https://example.com/image.jpg' },
+  caption: 'Elaina Image'
+})</code></pre></div>
+<p>Media accepts <code>{ url }</code> for a remote file or a local path, and also a <code>Buffer</code> and a stream.</p>
+<h3 id="video">Video<a class="anchor" href="#video" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  video: { url: 'https://example.com/video.mp4' },
+  caption: 'Elaina Video'
+})</code></pre></div>
+<h3 id="document">Document<a class="anchor" href="#document" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  document: { url: 'https://example.com/file.pdf' },
+  fileName: 'document.pdf',
+  mimetype: 'application/pdf'
+})</code></pre></div>
+<p><code>fileName</code> is what the recipient sees and what they get when they save it. Without a <code>mimetype</code>, WhatsApp may not preview the file.</p>
+<h3 id="location">Location<a class="anchor" href="#location" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  location: {
+    degreesLatitude: -6.200000,
+    degreesLongitude: 106.816666,
+    name: 'Jakarta',
+    address: 'Jakarta, Indonesia'
+  }
+})</code></pre></div>
+<h3 id="poll">Poll<a class="anchor" href="#poll" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  poll: {
+    name: 'Choose one',
+    values: ['Option A', 'Option B', 'Option C'],
+    selectableCount: 1
+  }
+})</code></pre></div>
+<p><code>selectableCount: 1</code> makes it single-choice. Raise it to allow multiple answers.</p>
+<h3 id="photo-poll">Photo poll<a class="anchor" href="#photo-poll" aria-label="link">#</a></h3>
+<p>Give an option an <code>image</code> and the poll becomes a photo poll:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  poll: {
+    name: 'Which cover?',
+    values: [
+      { name: 'Jakarta', image: { url: './jakarta.jpg' } },
+      { name: 'Bandung', image: { url: './bandung.jpg' } }
+    ],
+    selectableCount: 1
+  }
+})</code></pre></div>
+<p>String options and image options can be mixed. Plain strings still send a normal text poll.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p>Photo polls are verified <strong>Offline</strong> — the proto is confirmed locally but has not been run against WhatsApp's servers. See <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>.</p></div>
+<h2 id="replying-and-quoting">Replying and quoting<a class="anchor" href="#replying-and-quoting" aria-label="link">#</a></h2>
+<p>Pass the original message as <code>quoted</code> to reply to it:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, { text: 'pong' }, { quoted: message })</code></pre></div>
+<h2 id="link-preview-cards">Link preview cards<a class="anchor" href="#link-preview-cards" aria-label="link">#</a></h2>
+<p><code>externalAdReply</code> renders a large card with a thumbnail and a source link:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  text: 'Elaina Baileys',
+  contextInfo: {
+    externalAdReply: {
+      title: 'Elaina Baileys',
+      body: 'Modern WhatsApp Multi-Device library',
+      mediaType: 1,
+      thumbnailUrl: 'https://example.com/elaina.jpg',
+      sourceUrl: 'https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys',
+      renderLargerThumbnail: true,
+      showAdAttribution: false
+    }
+  }
+})</code></pre></div>
+<p>Set <code>renderLargerThumbnail: false</code> for a compact card. <code>showAdAttribution: true</code> adds the &quot;Sponsored&quot; label.</p>
+<h2 id="next">Next<a class="anchor" href="#next" aria-label="link">#</a></h2>
+<p>For buttons, lists and carousels, continue to <a href="./builder.html">MessageBuilder</a>.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

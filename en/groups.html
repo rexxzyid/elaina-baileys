@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-page="groups">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Groups — Elaina Baileys</title>
+<meta name="description" content="Group and community management, participants, and profile pictures.">
+<meta property="og:title" content="Groups — Elaina Baileys">
+<meta property="og:description" content="Group and community management, participants, and profile pictures.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/groups.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html" class="active">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#creating-a-group">Creating a group</a><a href="#participants">Participants</a><a href="#metadata-and-settings">Metadata and settings</a><a href="#communities">Communities</a><a href="#profile-pictures">Profile pictures</a></nav>
+    <article class="prose"><h1 id="groups">Groups<a class="anchor" href="#groups" aria-label="link">#</a></h1>
+<p>A group JID ends in <code>@g.us</code>. Participants are addressed by their user JID — which, on recent WhatsApp versions, may be a <code>@lid</code> address rather than a phone-number JID. See <a href="./messages.html#addressing-jid-pn-and-lid">Messages</a> before you assume the format.</p>
+<h2 id="creating-a-group">Creating a group<a class="anchor" href="#creating-a-group" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const group = await sock.groupCreate(
+  'Elaina Community',
+  [
+    '6281234567890@s.whatsapp.net',
+    '6289876543210@s.whatsapp.net'
+  ]
+)
+
+console.log(group.id)</code></pre></div>
+<p>The returned <code>id</code> is the group JID you use for everything else.</p>
+<h2 id="participants">Participants<a class="anchor" href="#participants" aria-label="link">#</a></h2>
+<p>Every participant change goes through one method, with the action as the third argument:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.groupParticipantsUpdate(groupJid, [userJid], 'add')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'remove')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'promote')
+await sock.groupParticipantsUpdate(groupJid, [userJid], 'demote')</code></pre></div>
+<p>It takes an array, so batch changes in one call rather than looping.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p><code>add</code> does not always add. If the user's privacy settings do not allow being added to groups, WhatsApp sends them an invite instead. Check the per-participant status in the response rather than assuming success.</p></div>
+<h2 id="metadata-and-settings">Metadata and settings<a class="anchor" href="#metadata-and-settings" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.groupUpdateDescription(groupJid, 'Welcome to Elaina Community 💜')</code></pre></div>
+<p>The socket also exposes group metadata, subject updates, settings, invite codes and join-request handling. They are listed in full under <strong>Groups</strong> in the <a href="./api.html#group">API reference</a>.</p>
+<h2 id="communities">Communities<a class="anchor" href="#communities" aria-label="link">#</a></h2>
+<p>Communities are groups that contain other groups. They have their own set of methods, all prefixed <code>community</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const community = await sock.communityCreate('Elaina Community', 'Description')
+
+await sock.communityLinkGroup(groupJid, parentCommunityJid)
+await sock.communityUnlinkGroup(groupJid, parentCommunityJid)
+
+const linked = await sock.communityFetchLinkedGroups(communityJid)</code></pre></div>
+<p>Participant handling mirrors groups:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.communityParticipantsUpdate(communityJid, [userJid], 'add')</code></pre></div>
+<p>The full list is under <strong>Communities</strong> in the <a href="./api.html#community">API reference</a>.</p>
+<h2 id="profile-pictures">Profile pictures<a class="anchor" href="#profile-pictures" aria-label="link">#</a></h2>
+<p>These work for a user JID, a group JID, or your own account:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const url = await sock.profilePictureUrl(jid, 'image')</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.updateProfilePicture(jid, { url: 'https://example.com/profile.jpg' })
+await sock.removeProfilePicture(jid)</code></pre></div>
+<p><code>profilePictureUrl</code> takes <code>'image'</code> for the full-size picture or <code>'preview'</code> for the thumbnail. It throws when the account has no picture or their privacy settings hide it — catch it rather than letting it stop a message handler:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const url = await sock.profilePictureUrl(jid, 'image').catch(() =&gt; null)</code></pre></div></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

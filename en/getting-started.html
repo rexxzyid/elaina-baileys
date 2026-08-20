@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-page="getting-started">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started — Elaina Baileys</title>
+<meta name="description" content="Install the package, open a connection, and pair a device with a pairing code.">
+<meta property="og:title" content="Getting started — Elaina Baileys">
+<meta property="og:description" content="Install the package, open a connection, and pair a device with a pairing code.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/getting-started.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html" class="active">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#requirements">Requirements</a><a href="#install">Install</a><a href="#import">Import</a><a href="#a-connection-that-survives-restarts">A connection that survives restarts</a><a href="#pairing-with-a-code">Pairing with a code</a><a href="#where-the-session-lives">Where the session lives</a><a href="#next">Next</a></nav>
+    <article class="prose"><h1 id="getting-started">Getting started<a class="anchor" href="#getting-started" aria-label="link">#</a></h1>
+<h2 id="requirements">Requirements<a class="anchor" href="#requirements" aria-label="link">#</a></h2>
+<ul><li>Node.js <strong>22 or newer</strong> (24 recommended)</li><li>npm</li><li>A WhatsApp account to pair with</li></ul>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>node -v</code></pre></div>
+<h2 id="install">Install<a class="anchor" href="#install" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm install @rexxhayanasi/elaina-baileys</code></pre></div>
+<p>The package is ESM-first, so your <code>package.json</code> needs <code>&quot;type&quot;: &quot;module&quot;</code>:</p>
+<div class="code-block"><span class="code-lang">json</span><button class="copy" type="button" data-copy>copy</button><pre><code>{
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;dependencies&quot;: {
+    &quot;@rexxhayanasi/elaina-baileys&quot;: &quot;latest&quot;
+  }
+}</code></pre></div>
+<h2 id="import">Import<a class="anchor" href="#import" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<p>Everything else comes from the same entry point:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason,
+  Button,
+  ButtonV2,
+  Carousel,
+  AIRich,
+  MessageBuilder,
+  MB
+} from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<div class="alert alert-note"><span class="alert-label">note</span><p>MessageBuilder is already integrated. You do not need to install <code>baileys-mbuilder</code> separately.</p></div>
+<h2 id="a-connection-that-survives-restarts">A connection that survives restarts<a class="anchor" href="#a-connection-that-survives-restarts" aria-label="link">#</a></h2>
+<p>The important part is not the socket — it is reconnecting when WhatsApp drops you, and knowing when <em>not</em> to reconnect.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+async function startSock() {
+  const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+  const sock = makeWASocket({
+    auth: state,
+    logger: pino({ level: 'silent' })
+  })
+
+  sock.ev.on('creds.update', saveCreds)
+
+  sock.ev.on('connection.update', ({ connection, lastDisconnect }) =&gt; {
+    if (connection === 'open') {
+      console.log('WhatsApp connected')
+    }
+
+    if (connection === 'close') {
+      const statusCode = lastDisconnect?.error?.output?.statusCode
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut
+
+      if (shouldReconnect) {
+        startSock()
+      } else {
+        console.log('Session logged out')
+      }
+    }
+  })
+
+  return sock
+}
+
+startSock()</code></pre></div>
+<p>Two things earn their place here:</p>
+<p><strong><code>saveCreds</code> on <code>creds.update</code>.</strong> Without it the session is not persisted and you re-pair on every restart.</p>
+<p><strong>The <code>loggedOut</code> check.</strong> Every other disconnect reason is worth retrying. <code>loggedOut</code> is not — the session is gone, and reconnecting in a loop just burns through requests. Delete <code>./session</code> and pair again.</p>
+<h2 id="pairing-with-a-code">Pairing with a code<a class="anchor" href="#pairing-with-a-code" aria-label="link">#</a></h2>
+<p>Pairing by code avoids scanning a QR. Request it after the socket exists, and only when the account is not registered yet.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const phoneNumber = '6281234567890'
+
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Pairing code:', code)
+}</code></pre></div>
+<p>Use the international format without <code>+</code>, spaces, or symbols.</p>
+<h3 id="a-custom-code">A custom code<a class="anchor" href="#a-custom-code" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const code = await sock.requestPairingCode(
+  '6281234567890',
+  'ELAINA01'
+)
+
+console.log(code)</code></pre></div>
+<div class="alert alert-important"><span class="alert-label">important</span><p>A custom pairing code must be exactly 8 characters. Anything shorter or longer is rejected.</p></div>
+<h2 id="where-the-session-lives">Where the session lives<a class="anchor" href="#where-the-session-lives" aria-label="link">#</a></h2>
+<p><code>useMultiFileAuthState('./session')</code> writes credentials and signal keys as JSON files in that folder. Treat it like a password:</p>
+<ul><li>Do not commit it. Add <code>session/</code> to <code>.gitignore</code>.</li><li>Copying it to another machine logs that machine in as you.</li><li>Deleting it logs you out and forces a fresh pairing.</li></ul>
+<p>Other backends ship with the library and all return the same <code>{ state, saveCreds }</code> shape:</p>
+<div class="table-scroll"><table><thead><tr><th>Function</th><th>Takes</th></tr></thead><tbody><tr><td><code>useMultiFileAuthState(folder)</code></td><td>a directory path</td></tr><tr><td><code>useSingleFileAuthState(fileName)</code></td><td>one JSON file</td></tr><tr><td><code>useSqliteAuthState(opts)</code></td><td>an options object</td></tr><tr><td><code>useNekoDBAuth(db, collectionName?)</code></td><td>a database handle; also returns <code>clearAuth()</code></td></tr></tbody></table></div>
+<h2 id="next">Next<a class="anchor" href="#next" aria-label="link">#</a></h2>
+<p>Once the connection stays open, go to <a href="./messages.html">Messages</a> to read what arrives and reply to it.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

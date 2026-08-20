@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-page="index">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview — Elaina Baileys</title>
+<meta name="description" content="A modern WhatsApp Multi-Device library for Node.js, with MessageBuilder and channel support built in.">
+<meta property="og:title" content="Overview — Elaina Baileys">
+<meta property="og:description" content="A modern WhatsApp Multi-Device library for Node.js, with MessageBuilder and channel support built in.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/index.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html" class="active">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#what-comes-with-it">What comes with it</a><a href="#where-to-start">Where to start</a><a href="#install">Install</a><a href="#the-shortest-thing-that-works">The shortest thing that works</a><a href="#a-note-on-what-is-verified">A note on what is verified</a><a href="#licence-and-credit">Licence and credit</a></nav>
+    <article class="prose"><h1 id="elaina-baileys">Elaina Baileys<a class="anchor" href="#elaina-baileys" aria-label="link">#</a></h1>
+<p>A WhatsApp Multi-Device library for Node.js. It speaks the WhatsApp Web protocol directly over a WebSocket — no browser, no Selenium, no headless Chrome.</p>
+<p>This fork tracks the WhatsApp Web bundle closely: the protobuf schema, the client revision, and the newer message types are kept in step with what the official client actually sends.</p>
+<h2 id="what-comes-with-it">What comes with it<a class="anchor" href="#what-comes-with-it" aria-label="link">#</a></h2>
+<ul><li><strong>MessageBuilder built in.</strong> Buttons, lists, carousels and AIRich responses without installing a second package.</li><li><strong>Channel support.</strong> Create and run newsletters, including polls, questions, insights and admin invites.</li><li><strong>A protobuf schema that stays current.</strong> A daily workflow compares <code>WAProto</code> against the live bundle and applies what is missing.</li><li><strong>LID-aware addressing.</strong> Handles the newer <code>@lid</code> identifiers alongside phone-number JIDs.</li></ul>
+<h2 id="where-to-start">Where to start<a class="anchor" href="#where-to-start" aria-label="link">#</a></h2>
+<ul><li><a href="./getting-started.html">Getting started</a> — install, connect, pair a device</li><li><a href="./messages.html">Messages</a> — receive, read and send</li><li><a href="./builder.html">MessageBuilder</a> — interactive messages</li><li><a href="./newsletter.html">Newsletter</a> — channels</li><li><a href="./groups.html">Groups</a> — groups and communities</li><li><a href="./examples.html">Examples</a> — complete bots</li><li><a href="./api.html">API reference</a> — every method, generated from the code</li></ul>
+<h2 id="install">Install<a class="anchor" href="#install" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm install @rexxhayanasi/elaina-baileys</code></pre></div>
+<p>Needs Node.js 22 or newer. The package is ESM-first, so use <code>import</code> rather than <code>require()</code>.</p>
+<h2 id="the-shortest-thing-that-works">The shortest thing that works<a class="anchor" href="#the-shortest-thing-that-works" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+const sock = makeWASocket({ auth: state })
+
+sock.ev.on('creds.update', saveCreds)
+
+sock.ev.on('messages.upsert', async ({ messages }) =&gt; {
+  const message = messages[0]
+  if (!message?.message) return
+  await sock.sendMessage(message.key.remoteJid, { text: 'Hello 💜' })
+})</code></pre></div>
+<p>That connects, prints a QR code in the terminal, and replies to everything. <a href="./getting-started.html">Getting started</a> turns it into something you would actually run.</p>
+<h2 id="a-note-on-what-is-verified">A note on what is verified<a class="anchor" href="#a-note-on-what-is-verified" aria-label="link">#</a></h2>
+<p>Parts of this library were reconstructed by reading the WhatsApp Web bundle rather than from an existing implementation. Those parts are documented honestly in <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>, which labels each feature as <strong>Live</strong> (executed against WhatsApp's servers), <strong>Offline</strong> (verified locally, never sent), or <strong>Derived</strong> (shape taken from the bundle, never run).</p>
+<p>Read that file before shipping anything that depends on the newer channel APIs.</p>
+<h2 id="licence-and-credit">Licence and credit<a class="anchor" href="#licence-and-credit" aria-label="link">#</a></h2>
+<p>This is a maintained fork. Upstream notices are preserved in <code>LICENSE</code> and <code>NOTICE.md</code>, and the credits are listed in the repository README.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

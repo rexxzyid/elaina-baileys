@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id" data-page="newsletter">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Newsletter — Elaina Baileys</title>
+<meta name="description" content="Buat dan kelola channel WhatsApp: metadata, admin, polling, pertanyaan, dan insight.">
+<meta property="og:title" content="Newsletter — Elaina Baileys">
+<meta property="og:description" content="Buat dan kelola channel WhatsApp: metadata, admin, polling, pertanyaan, dan insight.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/newsletter.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html" class="active">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#membuat-dan-menyunting">Membuat dan menyunting</a><a href="#follow-dan-mute">Follow dan mute</a><a href="#membaca-channel">Membaca channel</a><a href="#reaksi">Reaksi</a><a href="#cek-dulu-apa-yang-boleh-kamu-lakukan">Cek dulu apa yang boleh kamu lakukan</a><a href="#moderasi">Moderasi</a><a href="#admin">Admin</a><a href="#polling-dan-siapa-yang-memilih">Polling dan siapa yang memilih</a><a href="#follower-dan-insight">Follower dan insight</a><a href="#penemuan-channel">Penemuan channel</a><a href="#seberapa-jauh-ini-terverifikasi">Seberapa jauh ini terverifikasi</a></nav>
+    <article class="prose"><h1 id="newsletter">Newsletter<a class="anchor" href="#newsletter" aria-label="link">#</a></h1>
+<p>Newsletter adalah channel WhatsApp. JID channel berakhiran <code>@newsletter</code>, dan pesan di dalamnya dialamati dengan <strong>server id</strong> berupa angka, bukan dengan message key.</p>
+<p>Perbedaan itu penting: sebagian besar method moderasi dan analitik di bawah menerima <code>server_id</code>, yang kamu baca dari pesan channel yang masuk — bukan <code>key.id</code> yang biasa dipakai di chat.</p>
+<h2 id="membuat-dan-menyunting">Membuat dan menyunting<a class="anchor" href="#membuat-dan-menyunting" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const newsletter = await sock.newsletterCreate(
+  'Elaina Updates',
+  'Channel update resmi'
+)
+
+console.log(newsletter)</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterUpdateName('123456789@newsletter', 'Elaina News')
+await sock.newsletterUpdateDescription('123456789@newsletter', 'Update terbaru dari Elaina')
+await sock.newsletterUpdatePicture('123456789@newsletter', { url: 'https://example.com/channel.jpg' })
+await sock.newsletterRemovePicture('123456789@newsletter')</code></pre></div>
+<h2 id="follow-dan-mute">Follow dan mute<a class="anchor" href="#follow-dan-mute" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterFollow('123456789@newsletter')
+await sock.newsletterUnfollow('123456789@newsletter')
+
+await sock.newsletterMute('123456789@newsletter')
+await sock.newsletterUnmute('123456789@newsletter')</code></pre></div>
+<h2 id="membaca-channel">Membaca channel<a class="anchor" href="#membaca-channel" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const metadata = await sock.newsletterMetadata('jid', '123456789@newsletter')
+const newsletters = await sock.newsletterSubscribed()</code></pre></div>
+<h2 id="reaksi">Reaksi<a class="anchor" href="#reaksi" aria-label="link">#</a></h2>
+<p>Reaksi dialamati dengan server id:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterReactMessage('123456789@newsletter', '175', '🔥')</code></pre></div>
+<p>Hapus reaksi dengan string kosong:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterReactMessage('123456789@newsletter', '175', '')</code></pre></div>
+<h2 id="cek-dulu-apa-yang-boleh-kamu-lakukan">Cek dulu apa yang boleh kamu lakukan<a class="anchor" href="#cek-dulu-apa-yang-boleh-kamu-lakukan" aria-label="link">#</a></h2>
+<p>Sebelum menawarkan fitur channel, WhatsApp Web bertanya ke server fitur mana yang aktif untuk akun ini. Lakukan hal yang sama — ini menyelamatkan kamu dari mendebug fitur yang memang tidak akan pernah diizinkan server.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
+console.log(capabilities)
+// [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]</code></pre></div>
+<p>Butuh hak admin atau owner. Channel lain menjawab <code>Not Authorized</code>.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>Ini panggilan paling berguna di halaman ini. Beberapa fitur channel dibatasi di sisi server per akun, dan ketika sebuah capability tidak ada, server <strong>tidak</strong> mengembalikan error — ia menerima request lalu membuangnya diam-diam.</p></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const info = await sock.newsletterAdminInfo('123456789@newsletter')</code></pre></div>
+<h2 id="moderasi">Moderasi<a class="anchor" href="#moderasi" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterPinMessages('123456789@newsletter', [175])
+await sock.newsletterUnpinMessages('123456789@newsletter', 175)</code></pre></div>
+<p>Label konten — <code>messageType</code> adalah argumen ketiga dan default-nya <code>MESSAGE</code>; kirim <code>STATUS</code> untuk melabeli status channel:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterLabelAiContent('123456789@newsletter', 175)
+await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)</code></pre></div>
+<p>Sembunyikan atau tampilkan lagi jawaban follower atas pertanyaan channel:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'VISIBLE')</code></pre></div>
+<h2 id="admin">Admin<a class="anchor" href="#admin" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterAcceptAdminInvite('123456789@newsletter')
+
+const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')</code></pre></div>
+<h2 id="polling-dan-siapa-yang-memilih">Polling dan siapa yang memilih<a class="anchor" href="#polling-dan-siapa-yang-memilih" aria-label="link">#</a></h2>
+<p>Vote channel dikirim tanpa enkripsi sebagai hash opsi, berbeda dengan vote terenkripsi yang dipakai di chat:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
+  limit: 100,
+  voteHash: undefined
+})</code></pre></div>
+<p>Responsnya mengelompokkan pemilih per <code>vote_hash</code>, masing-masing dengan array <code>voter_list.edges</code>.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)</code></pre></div>
+<h2 id="follower-dan-insight">Follower dan insight<a class="anchor" href="#follower-dan-insight" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const insights = await sock.newsletterInsights('123456789@newsletter', {
+  metrics: ['NET_FOLLOWS', 'UNFOLLOWS']
+})
+// { result: [{ id, values }], last_update_time, metrics_status }</code></pre></div>
+<p><code>metrics_status</code> bernilai <code>OK</code> atau <code>MISSING</code>. <code>MISSING</code> berarti server belum punya data untuk rentang itu — bukan error, dan mengulang seketika tidak akan membantu.</p>
+<p>Hanya <code>NET_FOLLOWS</code> dan <code>UNFOLLOWS</code> yang muncul sebagai literal di bundle WhatsApp Web dan jadi default-nya, tapi daftar metrik adalah parameter, jadi nama lain bisa dicoba.</p>
+<h2 id="penemuan-channel">Penemuan channel<a class="anchor" href="#penemuan-channel" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
+const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })</code></pre></div>
+<p>Direktori adalah yang dipakai tab Pembaruan:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const list = await sock.newsletterDirectoryList({
+  view: 'RECOMMENDED',
+  categories: ['NEWS'],
+  countryCodes: ['ID'],
+  limit: 20
+})
+
+const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
+const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })</code></pre></div>
+<p>Nilai <code>view</code>: <code>RECOMMENDED</code>, <code>NEW</code>, <code>POPULAR</code>, <code>FEATURED</code>, <code>TRENDING</code>. Kategori: <code>BUSINESS</code>, <code>ENTERTAINMENT</code>, <code>LIFESTYLE</code>, <code>NEWS</code>, <code>ORGANIZATIONS</code>, <code>PEOPLE</code>, <code>SPORTS</code>, dan <code>SPECIAL_EVENTS</code> sampai <code>SPECIAL_EVENTS_5</code>.</p>
+<h2 id="seberapa-jauh-ini-terverifikasi">Seberapa jauh ini terverifikasi<a class="anchor" href="#seberapa-jauh-ini-terverifikasi" aria-label="link">#</a></h2>
+<p>Sebagian besar halaman ini direkonstruksi dari bundle WhatsApp Web, bukan dari implementasi yang sudah ada.</p>
+<div class="table-scroll"><table><thead><tr><th>Method</th><th>Status</th></tr></thead><tbody><tr><td><code>newsletterAdminCapabilities</code></td><td><strong>Live</strong> — menjawab dengan daftar capability sungguhan, dan <code>Not Authorized</code> untuk channel yang tidak diadministrasi akun ini</td></tr><tr><td>Sisanya di halaman ini</td><td><strong>Derived</strong> — bentuknya dibaca dari bundle, belum pernah dijalankan</td></tr></tbody></table></div>
+<p>Derived bukan berarti rusak; artinya belum diuji ke server. Kalau salah satunya menjawab dengan error GraphQL, teks error-nya biasanya menyebut field mana yang salah, dan perbaikannya umumnya sekadar nama variabel, bukan rancang ulang.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p><code>newsletterSubscribers</code> memakai query id yang di bundle sekarang justru milik query pending-admin-invites, dan data path-nya tidak ada di respons itu. Pakai <code>newsletterFollowers</code>, yang memang dipakai WhatsApp Web sendiri. Binding lama sengaja dibiarkan, bukan diam-diam diarahkan ulang.</p></div>
+<p>Detail lengkapnya ada di <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

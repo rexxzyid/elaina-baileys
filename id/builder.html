@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="id" data-page="builder">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MessageBuilder — Elaina Baileys</title>
+<meta name="description" content="Pesan interaktif: tombol, list, carousel, dan respons kaya AIRich.">
+<meta property="og:title" content="MessageBuilder — Elaina Baileys">
+<meta property="og:description" content="Pesan interaktif: tombol, list, carousel, dan respons kaya AIRich.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/builder.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./messages.html">Pesan</a><a href="./builder.html" class="active">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#button">Button</a><a href="#list">List</a><a href="#buttonv2">ButtonV2</a><a href="#carousel">Carousel</a><a href="#airich">AIRich</a><a href="#memilih-yang-mana">Memilih yang mana</a><a href="#perbedaan-tampilan">Perbedaan tampilan</a></nav>
+    <article class="prose"><h1 id="messagebuilder">MessageBuilder<a class="anchor" href="#messagebuilder" aria-label="link">#</a></h1>
+<p>MessageBuilder sudah termasuk di dalam paket. Fungsinya membangun tipe pesan interaktif WhatsApp tanpa kamu merakit protobuf-nya sendiri.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import {
+  Button,
+  ButtonV2,
+  Carousel,
+  AIRich,
+  Toolkit,
+  MessageBuilder,
+  MB,
+  MESSAGE_BUILDER_VERSION
+} from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<p>Kelas-kelasnya juga bisa diakses lewat namespace <code>MessageBuilder</code> atau alias pendeknya <code>MB</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const button = new MessageBuilder.Button(sock)
+const carousel = new MB.Carousel(sock)</code></pre></div>
+<p>Semua builder menerima socket di constructor dan diakhiri <code>.send(jid)</code>. Pakai <code>.build(jid)</code> kalau kamu mau objek pesannya saja tanpa mengirim.</p>
+<h2 id="button">Button<a class="anchor" href="#button" aria-label="link">#</a></h2>
+<p><code>Button</code> membangun pesan interaktif native-flow — tipe tombol yang modern.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Button } from '@rexxhayanasi/elaina-baileys'
+
+const message = new Button(sock)
+  .setTitle('Elaina Menu')
+  .setBody('Pilih salah satu di bawah.')
+  .setFooter('@rexxhayanasi/elaina-baileys')
+  .addReply('Ping', 'ping')
+  .addUrl('Buka Website', 'https://example.com')
+  .addCopy('Salin Kode', 'ELAINA2026')
+
+await message.send(jid)</code></pre></div>
+<p><code>addReply(teks, id)</code> mengirim balik <code>id</code> ke bot kamu saat ditekan — <code>id</code> itulah yang kamu cocokkan di <code>messages.upsert</code>.</p>
+<h3 id="dengan-header-media">Dengan header media<a class="anchor" href="#dengan-header-media" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const message = new Button(sock)
+  .setImage('https://example.com/elaina.jpg')
+  .setTitle('Elaina')
+  .setBody('Pesan interaktif dengan header gambar.')
+  .setFooter('Powered by Elaina Baileys')
+  .addReply('Menu', 'menu')
+  .addUrl('Website', 'https://example.com')
+
+await message.send(jid)</code></pre></div>
+<h3 id="jenis-tombol">Jenis tombol<a class="anchor" href="#jenis-tombol" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>.addReply(displayText, id)
+.addUrl(displayText, url)
+.addCopy(displayText, copyCode)
+.addCall(displayText, id)
+.addReminder(displayText, id)
+.addCancelReminder(displayText, id)
+.addAddress(displayText, id)
+.addLocation(options)
+.addSelection(title, options)
+.addButton(name, params)</code></pre></div>
+<h3 id="method-konten">Method konten<a class="anchor" href="#method-konten" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>.setTitle(text)
+.setSubtitle(text)
+.setBody(text)
+.setFooter(text)
+.setImage(urlOrBuffer)
+.setVideo(urlOrBuffer)
+.setDocument(urlOrBuffer)
+.setMedia(object)
+.setContextInfo(object)
+.addPayload(object)
+.clearButtons()
+.setParams(object)
+.build(jid)
+.send(jid)</code></pre></div>
+<h2 id="list">List<a class="anchor" href="#list" aria-label="link">#</a></h2>
+<p>List pilihan tunggal adalah <code>Button</code> dengan <code>addSelection</code>, lalu section dan row:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const list = new Button(sock)
+  .setTitle('Elaina Menu')
+  .setBody('Pilih satu menu.')
+  .setFooter('Elaina Baileys')
+  .addSelection('Buka Menu')
+  .makeSection('Menu Utama')
+  .makeRow('', 'Profil', 'Buka menu profil', 'profile')
+  .makeRow('', 'Pengaturan', 'Buka menu pengaturan', 'settings')
+  .makeSection('Lainnya')
+  .makeRow('', 'Tentang', 'Tentang bot ini', 'about')
+
+await list.send(jid)</code></pre></div>
+<p><code>makeRow(header, judul, deskripsi, id)</code> — argumen terakhir adalah id yang dikirim balik ke kamu, sama seperti <code>addReply</code>.</p>
+<p>Row menempel ke section yang dideklarasikan di atasnya, jadi panggil <code>makeSection</code> sebelum row yang menjadi isinya.</p>
+<h2 id="buttonv2">ButtonV2<a class="anchor" href="#buttonv2" aria-label="link">#</a></h2>
+<p><code>ButtonV2</code> adalah builder tombol klasik yang lebih sederhana. Jenis tombolnya lebih sedikit, pengaturannya lebih ringkas.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { ButtonV2 } from '@rexxhayanasi/elaina-baileys'
+
+const message = new ButtonV2(sock)
+  .setTitle('Elaina')
+  .setSubtitle('WhatsApp Bot')
+  .setBody('Pilih tindakan.')
+  .setFooter('Elaina Baileys')
+  .setThumbnail('https://example.com/elaina.jpg')
+  .addButton('Menu', 'menu')
+  .addButton('Ping', 'ping')
+
+await message.send(jid)</code></pre></div>
+<h2 id="carousel">Carousel<a class="anchor" href="#carousel" aria-label="link">#</a></h2>
+<p>Carousel adalah beberapa kartu yang bisa digeser. Bangun tiap kartu dengan <code>Button.toCard()</code>, lalu serahkan ke <code>Carousel</code>.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Button, Carousel } from '@rexxhayanasi/elaina-baileys'
+
+const card1 = await new Button(sock)
+  .setImage('https://example.com/card1.jpg')
+  .setBody('Kartu pertama')
+  .addReply('Pilih', 'card_1')
+  .toCard()
+
+const card2 = await new Button(sock)
+  .setImage('https://example.com/card2.jpg')
+  .setBody('Kartu kedua')
+  .addUrl('Buka', 'https://example.com')
+  .toCard()
+
+const carousel = new Carousel(sock)
+  .setBody('Pilih salah satu kartu di bawah.')
+  .setFooter('Elaina Carousel')
+  .addCard([card1, card2])
+
+await carousel.send(jid)</code></pre></div>
+<p><code>toCard()</code> bersifat async karena mengunggah medianya — jangan lupa <code>await</code>.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>Setiap kartu carousel butuh gambar atau video di header-nya. Kartu tanpa media tidak akan tampil.</p></div>
+<h2 id="airich">AIRich<a class="anchor" href="#airich" aria-label="link">#</a></h2>
+<p><code>AIRich</code> membangun respons kaya dengan blok konten campuran — teks, kode, tabel — dalam satu pesan.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock)
+  .setTitle('Elaina AI')
+  .setFooter('Dibuat dengan AIRich')
+  .addText('Halo! Ini respons kaya.')
+  .addCode('javascript', `console.log('Hello Elaina')`)
+
+await rich.send(jid)</code></pre></div>
+<p>Blok tampil sesuai urutan kamu menambahkannya, jadi urutan pemanggilan itulah tata letaknya.</p>
+<h2 id="memilih-yang-mana">Memilih yang mana<a class="anchor" href="#memilih-yang-mana" aria-label="link">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Pakai</th><th>Kapan</th></tr></thead><tbody><tr><td><code>Button</code></td><td>tombol interaktif modern, URL, copy, call, list</td></tr><tr><td><code>ButtonV2</code></td><td>tombol balasan biasa, tidak lebih</td></tr><tr><td><code>Carousel</code></td><td>beberapa kartu media dalam satu pesan yang bisa digeser</td></tr><tr><td><code>AIRich</code></td><td>campuran blok teks, kode, dan tabel</td></tr></tbody></table></div>
+<h2 id="perbedaan-tampilan">Perbedaan tampilan<a class="anchor" href="#perbedaan-tampilan" aria-label="link">#</a></h2>
+<p>Pesan interaktif bergantung pada versi dan platform WhatsApp penerima. Tombol yang tampil di Android bisa jatuh jadi teks polos di klien desktop lama. Uji di platform yang benar-benar kamu dukung, dan pastikan pesannya tetap terbaca kalau bagian interaktifnya gagal tampil.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

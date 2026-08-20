@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id" data-page="getting-started">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mulai cepat — Elaina Baileys</title>
+<meta name="description" content="Pasang paket, buka koneksi, dan pasangkan perangkat dengan pairing code.">
+<meta property="og:title" content="Mulai cepat — Elaina Baileys">
+<meta property="og:description" content="Pasang paket, buka koneksi, dan pasangkan perangkat dengan pairing code.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/getting-started.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html" class="active">Mulai cepat</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#kebutuhan">Kebutuhan</a><a href="#pemasangan">Pemasangan</a><a href="#import">Import</a><a href="#koneksi-yang-tahan-restart">Koneksi yang tahan restart</a><a href="#pairing-dengan-kode">Pairing dengan kode</a><a href="#sesi-disimpan-di-mana">Sesi disimpan di mana</a><a href="#selanjutnya">Selanjutnya</a></nav>
+    <article class="prose"><h1 id="mulai-cepat">Mulai cepat<a class="anchor" href="#mulai-cepat" aria-label="link">#</a></h1>
+<h2 id="kebutuhan">Kebutuhan<a class="anchor" href="#kebutuhan" aria-label="link">#</a></h2>
+<ul><li>Node.js <strong>22 atau lebih baru</strong> (disarankan 24)</li><li>npm</li><li>Akun WhatsApp untuk dipasangkan</li></ul>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>node -v</code></pre></div>
+<h2 id="pemasangan">Pemasangan<a class="anchor" href="#pemasangan" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm install @rexxhayanasi/elaina-baileys</code></pre></div>
+<p>Paket ini ESM-first, jadi <code>package.json</code> kamu butuh <code>&quot;type&quot;: &quot;module&quot;</code>:</p>
+<div class="code-block"><span class="code-lang">json</span><button class="copy" type="button" data-copy>copy</button><pre><code>{
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;dependencies&quot;: {
+    &quot;@rexxhayanasi/elaina-baileys&quot;: &quot;latest&quot;
+  }
+}</code></pre></div>
+<h2 id="import">Import<a class="anchor" href="#import" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<p>Sisanya datang dari entry point yang sama:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason,
+  Button,
+  ButtonV2,
+  Carousel,
+  AIRich,
+  MessageBuilder,
+  MB
+} from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<div class="alert alert-note"><span class="alert-label">note</span><p>MessageBuilder sudah terintegrasi. Kamu tidak perlu memasang <code>baileys-mbuilder</code> terpisah.</p></div>
+<h2 id="koneksi-yang-tahan-restart">Koneksi yang tahan restart<a class="anchor" href="#koneksi-yang-tahan-restart" aria-label="link">#</a></h2>
+<p>Bagian pentingnya bukan socket-nya — tapi menyambung ulang saat WhatsApp memutus, dan tahu kapan <em>tidak</em> boleh menyambung ulang.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+async function startSock() {
+  const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+  const sock = makeWASocket({
+    auth: state,
+    logger: pino({ level: 'silent' })
+  })
+
+  sock.ev.on('creds.update', saveCreds)
+
+  sock.ev.on('connection.update', ({ connection, lastDisconnect }) =&gt; {
+    if (connection === 'open') {
+      console.log('WhatsApp tersambung')
+    }
+
+    if (connection === 'close') {
+      const statusCode = lastDisconnect?.error?.output?.statusCode
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut
+
+      if (shouldReconnect) {
+        startSock()
+      } else {
+        console.log('Sesi sudah logout')
+      }
+    }
+  })
+
+  return sock
+}
+
+startSock()</code></pre></div>
+<p>Dua hal di sini yang benar-benar penting:</p>
+<p><strong><code>saveCreds</code> pada <code>creds.update</code>.</strong> Tanpa itu sesi tidak tersimpan dan kamu harus pairing ulang tiap kali restart.</p>
+<p><strong>Pengecekan <code>loggedOut</code>.</strong> Semua alasan diskoneksi lain layak dicoba ulang. <code>loggedOut</code> tidak — sesinya sudah hilang, dan menyambung ulang terus-menerus cuma menghabiskan request. Hapus <code>./session</code> lalu pairing lagi.</p>
+<h2 id="pairing-dengan-kode">Pairing dengan kode<a class="anchor" href="#pairing-dengan-kode" aria-label="link">#</a></h2>
+<p>Pairing lewat kode menghindari scan QR. Minta setelah socket dibuat, dan hanya kalau akun belum terdaftar.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const phoneNumber = '6281234567890'
+
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Pairing code:', code)
+}</code></pre></div>
+<p>Pakai format internasional tanpa <code>+</code>, spasi, atau simbol.</p>
+<h3 id="kode-kustom">Kode kustom<a class="anchor" href="#kode-kustom" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const code = await sock.requestPairingCode(
+  '6281234567890',
+  'ELAINA01'
+)
+
+console.log(code)</code></pre></div>
+<div class="alert alert-important"><span class="alert-label">important</span><p>Pairing code kustom harus tepat 8 karakter. Lebih pendek atau lebih panjang akan ditolak.</p></div>
+<h2 id="sesi-disimpan-di-mana">Sesi disimpan di mana<a class="anchor" href="#sesi-disimpan-di-mana" aria-label="link">#</a></h2>
+<p><code>useMultiFileAuthState('./session')</code> menulis kredensial dan signal key sebagai file JSON di folder itu. Perlakukan seperti password:</p>
+<ul><li>Jangan di-commit. Tambahkan <code>session/</code> ke <code>.gitignore</code>.</li><li>Menyalinnya ke mesin lain berarti mesin itu login sebagai kamu.</li><li>Menghapusnya berarti logout dan harus pairing dari awal.</li></ul>
+<p>Backend lain juga tersedia dan semuanya mengembalikan bentuk <code>{ state, saveCreds }</code> yang sama:</p>
+<div class="table-scroll"><table><thead><tr><th>Fungsi</th><th>Menerima</th></tr></thead><tbody><tr><td><code>useMultiFileAuthState(folder)</code></td><td>path direktori</td></tr><tr><td><code>useSingleFileAuthState(fileName)</code></td><td>satu file JSON</td></tr><tr><td><code>useSqliteAuthState(opts)</code></td><td>objek opsi</td></tr><tr><td><code>useNekoDBAuth(db, collectionName?)</code></td><td>handle database; mengembalikan <code>clearAuth()</code> juga</td></tr></tbody></table></div>
+<h2 id="selanjutnya">Selanjutnya<a class="anchor" href="#selanjutnya" aria-label="link">#</a></h2>
+<p>Setelah koneksi stabil, lanjut ke <a href="./messages.html">Pesan</a> untuk membaca yang masuk dan membalasnya.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

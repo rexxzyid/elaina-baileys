@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en" data-page="examples">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples — Elaina Baileys</title>
+<meta name="description" content="Complete, runnable bots assembled from the pieces in this documentation.">
+<meta property="og:title" content="Examples — Elaina Baileys">
+<meta property="og:description" content="Complete, runnable bots assembled from the pieces in this documentation.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/examples.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html" class="active">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#a-command-bot">A command bot</a><a href="#pairing-by-code">Pairing by code</a><a href="#an-interactive-menu">An interactive menu</a><a href="#posting-to-a-channel">Posting to a channel</a><a href="#downloading-incoming-media">Downloading incoming media</a><a href="#keeping-the-session-safe">Keeping the session safe</a></nav>
+    <article class="prose"><h1 id="examples">Examples<a class="anchor" href="#examples" aria-label="link">#</a></h1>
+<p>Complete programs, not fragments. Each one runs as written once you have <code>@rexxhayanasi/elaina-baileys</code> installed and <code>&quot;type&quot;: &quot;module&quot;</code> set.</p>
+<h2 id="a-command-bot">A command bot<a class="anchor" href="#a-command-bot" aria-label="link">#</a></h2>
+<p>Reconnects on drop, ignores history sync, and routes text commands.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+const PREFIX = '.'
+
+function textOf(message) {
+  const m = message.message
+  if (!m) return ''
+  return (
+    m.conversation ||
+    m.extendedTextMessage?.text ||
+    m.imageMessage?.caption ||
+    m.videoMessage?.caption ||
+    ''
+  )
+}
+
+async function start() {
+  const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+  const sock = makeWASocket({
+    auth: state,
+    logger: pino({ level: 'silent' })
+  })
+
+  sock.ev.on('creds.update', saveCreds)
+
+  sock.ev.on('connection.update', ({ connection, lastDisconnect }) =&gt; {
+    if (connection === 'open') console.log('connected')
+
+    if (connection === 'close') {
+      const code = lastDisconnect?.error?.output?.statusCode
+      if (code !== DisconnectReason.loggedOut) start()
+      else console.log('logged out, delete ./session and pair again')
+    }
+  })
+
+  sock.ev.on('messages.upsert', async ({ messages, type }) =&gt; {
+    if (type !== 'notify') return
+
+    const message = messages[0]
+    if (!message?.message || message.key.fromMe) return
+
+    const jid = message.key.remoteJid
+    const body = textOf(message).trim()
+    if (!body.startsWith(PREFIX)) return
+
+    const [command, ...args] = body.slice(PREFIX.length).split(/\s+/)
+
+    switch (command.toLowerCase()) {
+      case 'ping':
+        await sock.sendMessage(jid, { text: 'pong' }, { quoted: message })
+        break
+
+      case 'echo':
+        if (!args.length) {
+          await sock.sendMessage(jid, { text: `Usage: ${PREFIX}echo &lt;text&gt;` }, { quoted: message })
+          break
+        }
+        await sock.sendMessage(jid, { text: args.join(' ') }, { quoted: message })
+        break
+
+      case 'id':
+        await sock.sendMessage(jid, { text: jid }, { quoted: message })
+        break
+
+      default:
+        break
+    }
+  })
+}
+
+start()</code></pre></div>
+<p>Three details worth copying:</p>
+<p><strong><code>message.key.fromMe</code></strong> — without this the bot answers its own messages and can loop.</p>
+<p><strong><code>type !== 'notify'</code></strong> — history sync delivers old messages through the same event. Skipping this makes the bot reply to your entire backlog on startup.</p>
+<p><strong><code>{ quoted: message }</code></strong> — replies thread properly in groups, where several people talk at once.</p>
+<h2 id="pairing-by-code">Pairing by code<a class="anchor" href="#pairing-by-code" aria-label="link">#</a></h2>
+<p>For a headless server where scanning a QR is awkward.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+const PHONE = '6281234567890'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+const sock = makeWASocket({
+  auth: state,
+  logger: pino({ level: 'silent' })
+})
+
+sock.ev.on('creds.update', saveCreds)
+
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode(PHONE)
+  console.log('Pairing code:', code)
+}
+
+sock.ev.on('connection.update', ({ connection }) =&gt; {
+  if (connection === 'open') console.log('paired and connected')
+})</code></pre></div>
+<p>Enter the code on the phone under <strong>Linked devices → Link with phone number</strong>.</p>
+<h2 id="an-interactive-menu">An interactive menu<a class="anchor" href="#an-interactive-menu" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Button } from '@rexxhayanasi/elaina-baileys'
+
+async function sendMenu(sock, jid) {
+  const menu = new Button(sock)
+    .setTitle('Elaina')
+    .setBody('What would you like to do?')
+    .setFooter('Elaina Baileys')
+    .addReply('Ping', 'menu_ping')
+    .addReply('About', 'menu_about')
+    .addUrl('Docs', 'https://github.com/rexxzyid/elaina-baileys')
+
+  await menu.send(jid)
+}</code></pre></div>
+<p>Button taps come back as ordinary messages carrying the id you set, so handle them in the same place you handle text:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('messages.upsert', async ({ messages, type }) =&gt; {
+  if (type !== 'notify') return
+
+  const message = messages[0]
+  if (!message?.message || message.key.fromMe) return
+
+  const jid = message.key.remoteJid
+  const selected =
+    message.message.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+    message.message.buttonsResponseMessage?.selectedButtonId ||
+    message.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    ''
+
+  if (selected.includes('menu_ping')) {
+    await sock.sendMessage(jid, { text: 'pong' })
+  }
+
+  if (selected.includes('menu_about')) {
+    await sock.sendMessage(jid, { text: 'Elaina Baileys 💜' })
+  }
+})</code></pre></div>
+<p>Native-flow replies arrive as <code>paramsJson</code>, a JSON string rather than a bare id — which is why the check above uses <code>includes</code> instead of an equality test. Parse it when you need the structured payload.</p>
+<h2 id="posting-to-a-channel">Posting to a channel<a class="anchor" href="#posting-to-a-channel" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const CHANNEL = '123456789@newsletter'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+const sock = makeWASocket({ auth: state })
+sock.ev.on('creds.update', saveCreds)
+
+sock.ev.on('connection.update', async ({ connection }) =&gt; {
+  if (connection !== 'open') return
+
+  const capabilities = await sock
+    .newsletterAdminCapabilities(CHANNEL)
+    .catch(() =&gt; null)
+
+  if (!capabilities) {
+    console.log('not an admin of this channel')
+    return
+  }
+
+  console.log('capabilities:', capabilities)
+
+  await sock.sendMessage(CHANNEL, { text: 'Update from Elaina 💜' })
+})</code></pre></div>
+<p>Checking capabilities first is worth the extra call. Several channel features are gated per account, and when one is missing the server accepts the request and discards it without an error — so a silent no-op looks exactly like success.</p>
+<h2 id="downloading-incoming-media">Downloading incoming media<a class="anchor" href="#downloading-incoming-media" aria-label="link">#</a></h2>
+<p><code>downloadContentFromMessage</code> takes the media node itself — not the whole message — plus its type, and returns a stream:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { downloadContentFromMessage } from '@rexxhayanasi/elaina-baileys'
+import { writeFile } from 'node:fs/promises'
+
+async function toBuffer(stream) {
+  const chunks = []
+  for await (const chunk of stream) chunks.push(chunk)
+  return Buffer.concat(chunks)
+}
+
+sock.ev.on('messages.upsert', async ({ messages, type }) =&gt; {
+  if (type !== 'notify') return
+
+  const image = messages[0]?.message?.imageMessage
+  if (!image) return
+
+  const stream = await downloadContentFromMessage(image, 'image')
+  const buffer = await toBuffer(stream)
+
+  await writeFile('./received.jpg', buffer)
+  console.log('saved', buffer.length, 'bytes')
+})</code></pre></div>
+<p>The second argument is the media type — <code>'image'</code>, <code>'video'</code>, <code>'audio'</code>, <code>'document'</code>, <code>'sticker'</code> — and it must match the node you passed, because it selects the decryption keys.</p>
+<h2 id="keeping-the-session-safe">Keeping the session safe<a class="anchor" href="#keeping-the-session-safe" aria-label="link">#</a></h2>
+<p>Everything above writes credentials to <code>./session</code>. Add it to <code>.gitignore</code> before your first commit:</p>
+<div class="code-block"><span class="code-lang">text</span><button class="copy" type="button" data-copy>copy</button><pre><code>session/
+node_modules/</code></pre></div>
+<p>Anyone holding that folder is logged in as you. Copying it to another machine gives that machine your session; deleting it forces a fresh pairing.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

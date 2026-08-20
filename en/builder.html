@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en" data-page="builder">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MessageBuilder — Elaina Baileys</title>
+<meta name="description" content="Interactive messages: buttons, lists, carousels and AIRich rich responses.">
+<meta property="og:title" content="MessageBuilder — Elaina Baileys">
+<meta property="og:description" content="Interactive messages: buttons, lists, carousels and AIRich rich responses.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/builder.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./messages.html">Messages</a><a href="./builder.html" class="active">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#button">Button</a><a href="#lists">Lists</a><a href="#buttonv2">ButtonV2</a><a href="#carousel">Carousel</a><a href="#airich">AIRich</a><a href="#choosing-one">Choosing one</a><a href="#rendering-differences">Rendering differences</a></nav>
+    <article class="prose"><h1 id="messagebuilder">MessageBuilder<a class="anchor" href="#messagebuilder" aria-label="link">#</a></h1>
+<p>MessageBuilder is included in the package. It builds WhatsApp's interactive message types without you assembling the protobuf by hand.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import {
+  Button,
+  ButtonV2,
+  Carousel,
+  AIRich,
+  Toolkit,
+  MessageBuilder,
+  MB,
+  MESSAGE_BUILDER_VERSION
+} from '@rexxhayanasi/elaina-baileys'</code></pre></div>
+<p>The classes are also reachable through the <code>MessageBuilder</code> namespace or its short alias <code>MB</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const button = new MessageBuilder.Button(sock)
+const carousel = new MB.Carousel(sock)</code></pre></div>
+<p>Every builder takes the socket in its constructor and ends with <code>.send(jid)</code>. Use <code>.build(jid)</code> instead when you want the message object without sending it.</p>
+<h2 id="button">Button<a class="anchor" href="#button" aria-label="link">#</a></h2>
+<p><code>Button</code> builds native-flow interactive messages — the modern button type.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Button } from '@rexxhayanasi/elaina-baileys'
+
+const message = new Button(sock)
+  .setTitle('Elaina Menu')
+  .setBody('Choose an option below.')
+  .setFooter('@rexxhayanasi/elaina-baileys')
+  .addReply('Ping', 'ping')
+  .addUrl('Open Website', 'https://example.com')
+  .addCopy('Copy Code', 'ELAINA2026')
+
+await message.send(jid)</code></pre></div>
+<p><code>addReply(text, id)</code> sends <code>id</code> back to your bot when tapped — that <code>id</code> is what you match on in <code>messages.upsert</code>.</p>
+<h3 id="with-a-media-header">With a media header<a class="anchor" href="#with-a-media-header" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const message = new Button(sock)
+  .setImage('https://example.com/elaina.jpg')
+  .setTitle('Elaina')
+  .setBody('Interactive message with image header.')
+  .setFooter('Powered by Elaina Baileys')
+  .addReply('Menu', 'menu')
+  .addUrl('Website', 'https://example.com')
+
+await message.send(jid)</code></pre></div>
+<h3 id="button-types">Button types<a class="anchor" href="#button-types" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>.addReply(displayText, id)
+.addUrl(displayText, url)
+.addCopy(displayText, copyCode)
+.addCall(displayText, id)
+.addReminder(displayText, id)
+.addCancelReminder(displayText, id)
+.addAddress(displayText, id)
+.addLocation(options)
+.addSelection(title, options)
+.addButton(name, params)</code></pre></div>
+<h3 id="content-methods">Content methods<a class="anchor" href="#content-methods" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>.setTitle(text)
+.setSubtitle(text)
+.setBody(text)
+.setFooter(text)
+.setImage(urlOrBuffer)
+.setVideo(urlOrBuffer)
+.setDocument(urlOrBuffer)
+.setMedia(object)
+.setContextInfo(object)
+.addPayload(object)
+.clearButtons()
+.setParams(object)
+.build(jid)
+.send(jid)</code></pre></div>
+<h2 id="lists">Lists<a class="anchor" href="#lists" aria-label="link">#</a></h2>
+<p>A single-select list is a <code>Button</code> with <code>addSelection</code>, then sections and rows:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const list = new Button(sock)
+  .setTitle('Elaina Menu')
+  .setBody('Select one menu.')
+  .setFooter('Elaina Baileys')
+  .addSelection('Open Menu')
+  .makeSection('Main Menu')
+  .makeRow('', 'Profile', 'Open profile menu', 'profile')
+  .makeRow('', 'Settings', 'Open settings menu', 'settings')
+  .makeSection('Other')
+  .makeRow('', 'About', 'About this bot', 'about')
+
+await list.send(jid)</code></pre></div>
+<p><code>makeRow(header, title, description, id)</code> — the last argument is the id delivered back to you, the same as <code>addReply</code>.</p>
+<p>Rows attach to the section declared above them, so call <code>makeSection</code> before the rows that belong to it.</p>
+<h2 id="buttonv2">ButtonV2<a class="anchor" href="#buttonv2" aria-label="link">#</a></h2>
+<p><code>ButtonV2</code> is the simpler classic button builder. Fewer button types, less to configure.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { ButtonV2 } from '@rexxhayanasi/elaina-baileys'
+
+const message = new ButtonV2(sock)
+  .setTitle('Elaina')
+  .setSubtitle('WhatsApp Bot')
+  .setBody('Choose an action.')
+  .setFooter('Elaina Baileys')
+  .setThumbnail('https://example.com/elaina.jpg')
+  .addButton('Menu', 'menu')
+  .addButton('Ping', 'ping')
+
+await message.send(jid)</code></pre></div>
+<h2 id="carousel">Carousel<a class="anchor" href="#carousel" aria-label="link">#</a></h2>
+<p>A carousel is several cards you can swipe. Build each card with <code>Button.toCard()</code>, then hand them to <code>Carousel</code>.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Button, Carousel } from '@rexxhayanasi/elaina-baileys'
+
+const card1 = await new Button(sock)
+  .setImage('https://example.com/card1.jpg')
+  .setBody('First card')
+  .addReply('Select', 'card_1')
+  .toCard()
+
+const card2 = await new Button(sock)
+  .setImage('https://example.com/card2.jpg')
+  .setBody('Second card')
+  .addUrl('Open', 'https://example.com')
+  .toCard()
+
+const carousel = new Carousel(sock)
+  .setBody('Choose one of the cards below.')
+  .setFooter('Elaina Carousel')
+  .addCard([card1, card2])
+
+await carousel.send(jid)</code></pre></div>
+<p><code>toCard()</code> is async because it uploads the media — remember the <code>await</code>.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>Every carousel card needs an image or video in its header. A card without media will not render.</p></div>
+<h2 id="airich">AIRich<a class="anchor" href="#airich" aria-label="link">#</a></h2>
+<p><code>AIRich</code> builds rich responses with mixed content blocks — text, code, tables — in one message.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock)
+  .setTitle('Elaina AI')
+  .setFooter('Generated with AIRich')
+  .addText('Hello! This is a rich response.')
+  .addCode('javascript', `console.log('Hello Elaina')`)
+
+await rich.send(jid)</code></pre></div>
+<p>Blocks render in the order you add them, so the call order is the layout.</p>
+<h2 id="choosing-one">Choosing one<a class="anchor" href="#choosing-one" aria-label="link">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Use</th><th>When</th></tr></thead><tbody><tr><td><code>Button</code></td><td>modern interactive buttons, URLs, copy, calls, lists</td></tr><tr><td><code>ButtonV2</code></td><td>plain reply buttons, nothing more</td></tr><tr><td><code>Carousel</code></td><td>several media cards in one swipeable message</td></tr><tr><td><code>AIRich</code></td><td>mixed blocks of text, code and tables</td></tr></tbody></table></div>
+<h2 id="rendering-differences">Rendering differences<a class="anchor" href="#rendering-differences" aria-label="link">#</a></h2>
+<p>Interactive messages depend on the recipient's WhatsApp version and platform. A button that renders on Android may fall back to plain text on an older desktop client. Test on the platforms you actually support, and keep the message readable if the interactive part does not render.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

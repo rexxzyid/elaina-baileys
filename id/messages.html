@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="id" data-page="messages">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pesan — Elaina Baileys</title>
+<meta name="description" content="Terima pesan, baca teksnya, alamati pengguna dengan benar, dan kirim semua tipe pesan dasar.">
+<meta property="og:title" content="Pesan — Elaina Baileys">
+<meta property="og:description" content="Terima pesan, baca teksnya, alamati pengguna dengan benar, dan kirim semua tipe pesan dasar.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/messages.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./messages.html" class="active">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#menerima">Menerima</a><a href="#membaca-teksnya">Membaca teksnya</a><a href="#pengalamatan-jid-pn-dan-lid">Pengalamatan: JID, PN, dan LID</a><a href="#mengirim">Mengirim</a><a href="#membalas-dan-mengutip">Membalas dan mengutip</a><a href="#kartu-preview-link">Kartu preview link</a><a href="#selanjutnya">Selanjutnya</a></nav>
+    <article class="prose"><h1 id="pesan">Pesan<a class="anchor" href="#pesan" aria-label="link">#</a></h1>
+<h2 id="menerima">Menerima<a class="anchor" href="#menerima" aria-label="link">#</a></h2>
+<p>Semua masuk lewat <code>messages.upsert</code>. <code>type</code> memberi tahu apakah ini pesan langsung atau bagian dari sinkronisasi riwayat — untuk bot biasanya kamu cuma mau <code>notify</code>.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('messages.upsert', async ({ messages, type }) =&gt; {
+  if (type !== 'notify') return
+
+  const message = messages[0]
+  if (!message?.message) return
+
+  console.log('Dari:', message.key.remoteJid)
+  console.log('Pesan:', message.message)
+})</code></pre></div>
+<p>Melewatkan pengecekan <code>type</code> adalah penyebab paling umum bot membalas ratusan pesan lama begitu dinyalakan.</p>
+<h2 id="membaca-teksnya">Membaca teksnya<a class="anchor" href="#membaca-teksnya" aria-label="link">#</a></h2>
+<p>Isi pesan ada di field berbeda tergantung tipenya, jadi mengambil teks polos berarti mengecek beberapa tempat:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('messages.upsert', async ({ messages }) =&gt; {
+  const m = messages[0]
+  if (!m?.message) return
+
+  const text =
+    m.message.conversation ||
+    m.message.extendedTextMessage?.text ||
+    m.message.imageMessage?.caption ||
+    m.message.videoMessage?.caption ||
+    ''
+
+  console.log(text)
+})</code></pre></div>
+<p><code>conversation</code> adalah pesan teks polos. <code>extendedTextMessage</code> adalah teks yang membawa sesuatu — preview link, kutipan, atau format.</p>
+<h2 id="pengalamatan-jid-pn-dan-lid">Pengalamatan: JID, PN, dan LID<a class="anchor" href="#pengalamatan-jid-pn-dan-lid" aria-label="link">#</a></h2>
+<p>Versi WhatsApp terbaru bisa mengidentifikasi pengguna lewat <strong>LID</strong>, bukan JID nomor telepon. Jangan berasumsi semua identitas berakhiran <code>@s.whatsapp.net</code>.</p>
+<div class="code-block"><span class="code-lang">text</span><button class="copy" type="button" data-copy>copy</button><pre><code>6281234567890@s.whatsapp.net
+123456789012345@lid
+120363xxxxxxxxxx@g.us
+123456789@newsletter</code></pre></div>
+<p>Key pesan masuk membawa kedua bentuk kalau WhatsApp menyediakannya:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const key = message.key
+
+console.log('remoteJid:', key.remoteJid)
+console.log('remoteJidAlt:', key.remoteJidAlt)
+console.log('participant:', key.participant)
+console.log('participantAlt:', key.participantAlt)</code></pre></div>
+<p><code>remoteJidAlt</code> dan <code>participantAlt</code> menyimpan alamat alternatifnya, jadi aplikasi yang lebih suka JID nomor telepon bisa memakainya. Simpan juga yang asli — sebagian operasi protokol tetap butuh alamat yang WhatsApp kirim semula.</p>
+<p>Normalkan dengan helper bawaan, bukan dengan potong-potong string:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { jidDecode, jidEncode, jidNormalizedUser } from '@rexxhayanasi/elaina-baileys'
+
+const normalized = jidNormalizedUser(jid)
+const decoded = jidDecode(jid)</code></pre></div>
+<div class="alert alert-important"><span class="alert-label">important</span><p>LID dan PN adalah dua alamat untuk akun yang sama <strong>hanya kalau</strong> WhatsApp memberi kamu pemetaannya, atau aplikasimu sudah tahu. Jangan pernah mengarang nomor telepon dengan mengganti <code>@lid</code> jadi <code>@s.whatsapp.net</code> — angkanya tidak berhubungan.</p></div>
+<h2 id="mengirim">Mengirim<a class="anchor" href="#mengirim" aria-label="link">#</a></h2>
+<h3 id="teks">Teks<a class="anchor" href="#teks" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  text: 'Halo dari Elaina 💜'
+})</code></pre></div>
+<h3 id="gambar">Gambar<a class="anchor" href="#gambar" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  image: { url: 'https://example.com/image.jpg' },
+  caption: 'Elaina Image'
+})</code></pre></div>
+<p>Media menerima <code>{ url }</code> untuk file remote atau path lokal, dan juga <code>Buffer</code> serta stream.</p>
+<h3 id="video">Video<a class="anchor" href="#video" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  video: { url: 'https://example.com/video.mp4' },
+  caption: 'Elaina Video'
+})</code></pre></div>
+<h3 id="dokumen">Dokumen<a class="anchor" href="#dokumen" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  document: { url: 'https://example.com/file.pdf' },
+  fileName: 'document.pdf',
+  mimetype: 'application/pdf'
+})</code></pre></div>
+<p><code>fileName</code> adalah yang dilihat penerima dan yang mereka dapat saat menyimpan. Tanpa <code>mimetype</code>, WhatsApp bisa gagal menampilkan preview.</p>
+<h3 id="lokasi">Lokasi<a class="anchor" href="#lokasi" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  location: {
+    degreesLatitude: -6.200000,
+    degreesLongitude: 106.816666,
+    name: 'Jakarta',
+    address: 'Jakarta, Indonesia'
+  }
+})</code></pre></div>
+<h3 id="polling">Polling<a class="anchor" href="#polling" aria-label="link">#</a></h3>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  poll: {
+    name: 'Pilih satu',
+    values: ['Opsi A', 'Opsi B', 'Opsi C'],
+    selectableCount: 1
+  }
+})</code></pre></div>
+<p><code>selectableCount: 1</code> membuatnya pilihan tunggal. Naikkan angkanya untuk mengizinkan lebih dari satu jawaban.</p>
+<h3 id="polling-foto">Polling foto<a class="anchor" href="#polling-foto" aria-label="link">#</a></h3>
+<p>Beri sebuah opsi <code>image</code> dan polling berubah jadi polling foto:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  poll: {
+    name: 'Cover yang mana?',
+    values: [
+      { name: 'Jakarta', image: { url: './jakarta.jpg' } },
+      { name: 'Bandung', image: { url: './bandung.jpg' } }
+    ],
+    selectableCount: 1
+  }
+})</code></pre></div>
+<p>Opsi string dan opsi gambar boleh dicampur. String biasa tetap mengirim polling teks normal.</p>
+<div class="alert alert-note"><span class="alert-label">note</span><p>Polling foto berstatus <strong>Offline</strong> — proto-nya sudah diverifikasi lokal tapi belum pernah dijalankan ke server WhatsApp. Lihat <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>.</p></div>
+<h2 id="membalas-dan-mengutip">Membalas dan mengutip<a class="anchor" href="#membalas-dan-mengutip" aria-label="link">#</a></h2>
+<p>Berikan pesan aslinya sebagai <code>quoted</code> untuk membalasnya:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, { text: 'pong' }, { quoted: message })</code></pre></div>
+<h2 id="kartu-preview-link">Kartu preview link<a class="anchor" href="#kartu-preview-link" aria-label="link">#</a></h2>
+<p><code>externalAdReply</code> menampilkan kartu besar dengan thumbnail dan link sumber:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.sendMessage(jid, {
+  text: 'Elaina Baileys',
+  contextInfo: {
+    externalAdReply: {
+      title: 'Elaina Baileys',
+      body: 'Modern WhatsApp Multi-Device library',
+      mediaType: 1,
+      thumbnailUrl: 'https://example.com/elaina.jpg',
+      sourceUrl: 'https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys',
+      renderLargerThumbnail: true,
+      showAdAttribution: false
+    }
+  }
+})</code></pre></div>
+<p>Pakai <code>renderLargerThumbnail: false</code> untuk kartu ringkas. <code>showAdAttribution: true</code> menambahkan label &quot;Sponsored&quot;.</p>
+<h2 id="selanjutnya">Selanjutnya<a class="anchor" href="#selanjutnya" aria-label="link">#</a></h2>
+<p>Untuk tombol, list, dan carousel, lanjut ke <a href="./builder.html">MessageBuilder</a>.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

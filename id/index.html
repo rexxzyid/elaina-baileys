@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id" data-page="index">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ringkasan — Elaina Baileys</title>
+<meta name="description" content="Library WhatsApp Multi-Device modern untuk Node.js, dengan MessageBuilder dan dukungan channel bawaan.">
+<meta property="og:title" content="Ringkasan — Elaina Baileys">
+<meta property="og:description" content="Library WhatsApp Multi-Device modern untuk Node.js, dengan MessageBuilder dan dukungan channel bawaan.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.3.8-rc.1</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/index.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html" class="active">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#isinya-apa-saja">Isinya apa saja</a><a href="#mulai-dari-mana">Mulai dari mana</a><a href="#pemasangan">Pemasangan</a><a href="#versi-terpendek-yang-sudah-jalan">Versi terpendek yang sudah jalan</a><a href="#catatan-soal-tingkat-verifikasi">Catatan soal tingkat verifikasi</a><a href="#lisensi-dan-kredit">Lisensi dan kredit</a></nav>
+    <article class="prose"><h1 id="elaina-baileys">Elaina Baileys<a class="anchor" href="#elaina-baileys" aria-label="link">#</a></h1>
+<p>Library WhatsApp Multi-Device untuk Node.js. Bicara langsung ke protokol WhatsApp Web lewat WebSocket — tanpa browser, tanpa Selenium, tanpa headless Chrome.</p>
+<p>Fork ini mengikuti bundle WhatsApp Web dari dekat: skema protobuf, revisi klien, dan tipe pesan baru dijaga tetap sejalan dengan yang benar-benar dikirim klien resmi.</p>
+<h2 id="isinya-apa-saja">Isinya apa saja<a class="anchor" href="#isinya-apa-saja" aria-label="link">#</a></h2>
+<ul><li><strong>MessageBuilder sudah termasuk.</strong> Tombol, list, carousel, dan respons AIRich tanpa memasang paket kedua.</li><li><strong>Dukungan channel.</strong> Buat dan kelola newsletter, termasuk polling, pertanyaan, insight, dan undangan admin.</li><li><strong>Skema protobuf yang selalu terkini.</strong> Workflow harian membandingkan <code>WAProto</code> dengan bundle live dan menerapkan yang kurang.</li><li><strong>Sadar LID.</strong> Menangani identitas <code>@lid</code> yang baru berdampingan dengan JID nomor telepon.</li></ul>
+<h2 id="mulai-dari-mana">Mulai dari mana<a class="anchor" href="#mulai-dari-mana" aria-label="link">#</a></h2>
+<ul><li><a href="./getting-started.html">Mulai cepat</a> — pasang, sambungkan, pasangkan perangkat</li><li><a href="./messages.html">Pesan</a> — terima, baca, dan kirim</li><li><a href="./builder.html">MessageBuilder</a> — pesan interaktif</li><li><a href="./newsletter.html">Newsletter</a> — channel</li><li><a href="./groups.html">Grup</a> — grup dan komunitas</li><li><a href="./examples.html">Contoh</a> — bot lengkap</li><li><a href="./api.html">Referensi API</a> — semua method, dibangkitkan dari kode</li></ul>
+<h2 id="pemasangan">Pemasangan<a class="anchor" href="#pemasangan" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm install @rexxhayanasi/elaina-baileys</code></pre></div>
+<p>Butuh Node.js 22 atau lebih baru. Paket ini ESM-first, jadi pakai <code>import</code>, bukan <code>require()</code>.</p>
+<h2 id="versi-terpendek-yang-sudah-jalan">Versi terpendek yang sudah jalan<a class="anchor" href="#versi-terpendek-yang-sudah-jalan" aria-label="link">#</a></h2>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+const sock = makeWASocket({ auth: state })
+
+sock.ev.on('creds.update', saveCreds)
+
+sock.ev.on('messages.upsert', async ({ messages }) =&gt; {
+  const message = messages[0]
+  if (!message?.message) return
+  await sock.sendMessage(message.key.remoteJid, { text: 'Halo 💜' })
+})</code></pre></div>
+<p>Itu menyambung, menampilkan QR di terminal, dan membalas semua pesan. <a href="./getting-started.html">Mulai cepat</a> mengubahnya jadi sesuatu yang benar-benar layak dijalankan.</p>
+<h2 id="catatan-soal-tingkat-verifikasi">Catatan soal tingkat verifikasi<a class="anchor" href="#catatan-soal-tingkat-verifikasi" aria-label="link">#</a></h2>
+<p>Sebagian library ini direkonstruksi dengan membaca bundle WhatsApp Web, bukan dari implementasi yang sudah ada. Bagian itu didokumentasikan apa adanya di <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md">EXPERIMENTAL.md</a>, yang menandai tiap fitur sebagai <strong>Live</strong> (sudah dijalankan ke server WhatsApp), <strong>Offline</strong> (diverifikasi lokal, belum pernah dikirim), atau <strong>Derived</strong> (bentuknya diambil dari bundle, belum pernah dijalankan).</p>
+<p>Baca file itu dulu sebelum merilis apa pun yang bergantung pada API channel yang baru.</p>
+<h2 id="lisensi-dan-kredit">Lisensi dan kredit<a class="anchor" href="#lisensi-dan-kredit" aria-label="link">#</a></h2>
+<p>Ini fork yang dipelihara aktif. Pemberitahuan upstream disimpan di <code>LICENSE</code> dan <code>NOTICE.md</code>, dan daftar kreditnya ada di README repositori.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>
