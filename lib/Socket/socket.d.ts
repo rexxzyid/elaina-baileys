@@ -40,6 +40,7 @@ export function makeSocket(config: any): {
     digestKeyBundle: () => Promise<void>;
     rotateSignedPreKey: () => Promise<void>;
     requestPairingCode: (phoneNumber: any, customPairingCode: any) => Promise<any>;
+    cancelPairingCode: () => boolean;
     updateServerTimeOffset: ({ attrs }: {
         attrs: any;
     }) => void;

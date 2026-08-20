@@ -52,6 +52,7 @@ export namespace DEFAULT_CONNECTION_CONFIG {
     export let ackRetryDelayMs: number;
     export let maxAckRetryCount: number;
     export let maxRetryQueueSize: number;
+    export let pairingCodeTimeoutMs: number;
     export let fireInitQueries: boolean;
     export let auth: undefined;
     export let markOnlineOnConnect: boolean;
