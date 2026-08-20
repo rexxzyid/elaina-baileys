@@ -226,34 +226,45 @@ on the wire was read back from the raw bytes to confirm 128 through 131.
 
 ---
 
-## Known proto gaps beyond Message
+## Proto gaps beyond Message
 
-Catching `Message` up to field 131 closed the top-level oneof, but the bundle declares
-fields on other types that `WAProto` does not. These are recorded rather than patched:
-adding them means regenerating the proto, and the watcher below reports them on every run.
+Catching `Message` up to field 131 closed the top-level oneof, but the bundle also declares
+fields on other types. Those are now applied too — **34 fields across 21 types, plus the 24
+supporting types they reference**:
 
-The ones most likely to matter:
-
-| Type | Missing fields |
+| Type | Fields added |
 |---|---|
-| `PreKeySignalMessage` | `kyberCiphertext`, `kyberPreKeyId` — post-quantum prekeys |
+| `PreKeySignalMessage`, `SessionStructure.PendingPreKey` | `kyberCiphertext`, `kyberPreKeyId` — post-quantum prekeys |
 | `ContextInfo` | `aiProvenance`, `instagramThreadLink` |
 | `MessageContextInfo` | `accountEncryptionAttestation`, `associatedPrimaryIdentityKey` |
-| `ProtocolMessage` | `coexStateSync`, `markAsVerifiedAction` |
-| `SyncActionValue` | `bubbleLockMessageAction`, `ctwaMessageReceivedAction`, `deviceCapabilitiesV2`, `labelSublistAction` |
-| `ExtendedTextMessage` | `faviconMmsMetadata` |
+| `Message.ProtocolMessage` | `coexStateSync`, `markAsVerifiedAction` |
+| `SyncActionValue` | `bubbleLockMessageAction`, `businessFolderActivationAction`, `contactManagerMetadataAction`, `ctwaMessageReceivedAction`, `deviceCapabilitiesV2`, `labelSublistAction`, `sharedDeviceAllowlistAction` |
 | `DeviceCapabilities` | `aiFbidMigration`, `bizAiSettingsSync`, `contactRefresh` |
-| `Call` | `callReason` |
-| `HistorySyncConfig` | `supportNewsletter` |
+| `Conversation` | `identityVerification` |
+| `Message.Call` | `callReason` |
+| `DeviceProps.HistorySyncConfig` | `supportNewsletter` |
+| `ReportingTokenInfo` | `reportingTagTimestamp` |
 
-Smaller gaps sit on `BotMetadata`, `BotAgentDeepLinkMetadata`,
-`BotSignatureVerificationUseCaseProof`, `BusinessBroadcastListAction`,
-`BusinessInteractionPills`, `MessageHistoryNotice`, `MusicUserIdAction`,
-`PaymentExtendedMetadata`, `PeerDataOperationResult`, `RootSecretEntry`,
-`SenderKeyDistributionMessage` and `SettingsSyncAction`.
+The rest sit on `BotMetadata`, `BotAgentDeepLinkMetadata`,
+`BotSignatureVerificationUseCaseProof`, `Message.MessageHistoryNotice`,
+`Message.PaymentExtendedMetadata`, `PeerDataOperationResult`,
+`ContextInfo.BusinessInteractionPills`, `SyncActionValue.BusinessBroadcastListAction`,
+`SyncActionValue.SettingsSyncAction` and `RootSecretEntry`.
 
-Unknown proto fields are skipped on decode rather than fatal, so these show up as data
-quietly missing from received messages, not as errors.
+Enum-typed fields are declared `int32`. The bundle carries enum member names in a form the
+extractor cannot resolve, and int32 is wire compatible with an enum, so the value arrives
+intact even though the name does not.
+
+`ExtendedTextMessage.faviconMmsMetadata` is **not** in that list: `WAProto` already had it
+as `faviconMMSMetadata`. The comparison is case-insensitive now so an acronym spelled
+differently on each side does not read as a missing field.
+
+167 types in the bundle have no `WAProto` counterpart at all. Almost all of them are the
+`ConsumerApplication` / Armadillo message family, which this library does not speak; they
+are counted in the report but never patched.
+
+Unknown proto fields are skipped on decode rather than fatal, so a gap shows up as data
+quietly missing from received messages, not as an error.
 
 ---
 
@@ -299,17 +310,36 @@ router; the payloads have not been observed on the wire.
 
 ```bash
 npm run check:proto
+npm run sync:proto
+node ./script/verifyproto.js
 ```
 
-Downloads the current bundle, extracts every proto spec in it, and compares both the
-`Message` oneof and the fields of every other type with `WAProto`. It prints the live and
-pinned client revisions and exits non-zero when WhatsApp declares fields this proto does
-not.
+`check:proto` downloads the current bundle, extracts every proto spec in it, and compares
+the `Message` oneof and every other type against `WAProto`. It prints the live and pinned
+client revisions and exits non-zero when WhatsApp declares fields this proto does not.
 
-The `Proto Watch` workflow runs it daily. When the client revision drifts it applies
-`npm run update:version` and commits the bump. When new Message fields appear it opens or
-updates an issue labelled `proto-watch` instead of patching anything: adding fields means
-regenerating `WAProto`, which should be reviewed rather than committed by a robot.
+`sync:proto` applies them — it patches the generated `WAProto/index.js` and `index.d.ts` in
+place, adding whatever supporting types the new fields reference. It is additive and
+idempotent: running it twice changes nothing the second time. It refuses to touch a gap in
+the `Message` oneof, because a new top-level message type warrants regenerating the proto
+by hand.
+
+`verifyproto.js` is the safety net. It encodes every field the bundle declares, reads the
+field number back off the wire, decodes it again and runs `toObject` — roughly 2,900 fields
+on the current bundle. A patch that writes the wrong tag or loses a value fails here.
+
+All three take `PROTO_BUNDLE_DIR` to read chunks off disk instead of the network;
+`script/fetchbundle.js` downloads them once.
+
+The `Proto Watch` workflow runs daily and chains them: fetch the bundle, compare, bump the
+client revision if it drifted, apply new fields, verify, and commit. If verification fails
+the proto patch is rolled back and an issue labelled `proto-watch` is opened instead, so a
+broken proto is never pushed.
+
+Commits are made as the repository owner. Push uses `GH_PAT` when that secret exists and
+falls back to `GITHUB_TOKEN` otherwise; with the fallback the commit is still authored by
+the owner, it is simply pushed by Actions. Run it by hand from the Actions tab with
+`apply: false` to get the report without any changes.
 
 ---
 

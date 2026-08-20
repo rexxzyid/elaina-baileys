@@ -8,7 +8,8 @@
   "scripts": {
     "preinstall": "node ./engine-requirements.js",
     "update:version": "node ./script/updatewa.js",
-    "check:proto": "node ./script/checkproto.js"
+    "check:proto": "node ./script/checkproto.js",
+    "sync:proto": "node ./script/syncproto.js"
   },
   "engines": {
     "node": ">=22.0.0"
