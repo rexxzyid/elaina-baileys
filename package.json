@@ -9,7 +9,8 @@
     "preinstall": "node ./engine-requirements.js",
     "update:version": "node ./script/updatewa.js",
     "check:proto": "node ./script/checkproto.js",
-    "sync:proto": "node ./script/syncproto.js"
+    "sync:proto": "node ./script/syncproto.js",
+    "build:docs": "node ./script/apiref.js site-api.json && node ./script/builddocs.js site"
   },
   "engines": {
     "node": ">=22.0.0"
