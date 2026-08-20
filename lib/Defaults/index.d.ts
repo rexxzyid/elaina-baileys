@@ -148,3 +148,4 @@ declare const version: number[];
 import { makeLibSignalRepository } from '../Signal/libsignal.js';
 export {};
 export const MAX_OUTBOUND_RESEND_ENTRIES: number;
+export const PAIRING_RESPONSE_GRACE_MS: number;
