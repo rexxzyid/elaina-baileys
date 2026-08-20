@@ -35,6 +35,7 @@ export namespace DEFAULT_CACHE_TTLS {
     let MSG_RETRY: number;
     let CALL_OFFER: number;
     let USER_DEVICES: number;
+    let OUTBOUND_RESEND: number;
 }
 export namespace DEFAULT_CONNECTION_CONFIG {
     export { version };
@@ -144,3 +145,4 @@ import { proto } from '../../WAProto/index.js';
 declare const version: number[];
 import { makeLibSignalRepository } from '../Signal/libsignal.js';
 export {};
+export const MAX_OUTBOUND_RESEND_ENTRIES: number;
