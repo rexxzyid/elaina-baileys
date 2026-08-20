@@ -1,0 +1,81 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'lib/**/*.d.ts'
+      - 'script/apiref.js'
+      - 'script/builddocs.js'
+      - 'script/markdown.js'
+      - 'package.json'
+      - '.github/workflows/docs.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: elaina-baileys-docs
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build and publish to web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Build the site
+        run: npm run build:docs
+
+      - name: Identify as the repository owner
+        run: |
+          git config user.name "RexxHayanasi Pengen S.Kom"
+          git config user.email "150516773+rexxzyid@users.noreply.github.com"
+
+      - name: Publish to the web branch
+        run: |
+          if git ls-remote --exit-code --heads origin web; then
+            git fetch origin web:web
+            git worktree add ../web-out web
+          else
+            git worktree add --orphan -b web ../web-out
+          fi
+
+          find ../web-out -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -r site/. ../web-out/
+
+          cd ../web-out
+          git add -A
+
+          if git diff --staged --quiet; then
+            echo "Situs tidak berubah."
+            exit 0
+          fi
+
+          git -c commit.gpgsign=false commit -m "docs: rebuild from ${GITHUB_SHA::7}"
+
+          for attempt in 1 2 3 4; do
+            if git push origin web; then
+              exit 0
+            fi
+            sleep $((2 ** attempt))
+            git pull --rebase origin web || true
+          done
+
+          echo "Push gagal setelah 4 percobaan."
+          exit 1

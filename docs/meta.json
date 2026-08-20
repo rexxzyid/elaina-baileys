@@ -1,0 +1,129 @@
+{
+ "site": {
+  "name": "Elaina Baileys",
+  "repository": "https://github.com/rexxzyid/elaina-baileys",
+  "npm": "https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys",
+  "domain": ""
+ },
+ "languages": [
+  "en",
+  "id"
+ ],
+ "strings": {
+  "en": {
+   "skip": "Skip to content",
+   "onThisPage": "On this page",
+   "footer": "Elaina Baileys documentation. Source on {repo}.",
+   "apiIntro": "{total} socket members, generated from the type declarations of v{version} on {date}. Every entry below is read straight from the code, so it never drifts from what the library actually exposes.",
+   "apiSearch": "Filter methods…",
+   "returns": "Returns",
+   "type": "Type",
+   "optional": "optional",
+   "moduleExports": "Module exports",
+   "exportsIntro": "The exports most worth knowing, grouped by what they do. The package exports {total} names in total, including internals you will rarely reach for."
+  },
+  "id": {
+   "skip": "Lompat ke konten",
+   "onThisPage": "Di halaman ini",
+   "footer": "Dokumentasi Elaina Baileys. Sumbernya di {repo}.",
+   "apiIntro": "{total} anggota socket, dibangkitkan dari deklarasi tipe v{version} pada {date}. Semua entri di bawah dibaca langsung dari kode, jadi tidak pernah melenceng dari yang benar-benar disediakan library.",
+   "apiSearch": "Saring method…",
+   "returns": "Mengembalikan",
+   "type": "Tipe",
+   "optional": "opsional",
+   "moduleExports": "Ekspor modul",
+   "exportsIntro": "Ekspor yang paling perlu diketahui, dikelompokkan berdasarkan fungsinya. Paket ini mengekspor {total} nama secara keseluruhan, termasuk internal yang jarang kamu butuhkan."
+  }
+ },
+ "pages": [
+  {
+   "id": "index",
+   "title": {
+    "en": "Overview",
+    "id": "Ringkasan"
+   },
+   "description": {
+    "en": "A modern WhatsApp Multi-Device library for Node.js, with MessageBuilder and channel support built in.",
+    "id": "Library WhatsApp Multi-Device modern untuk Node.js, dengan MessageBuilder dan dukungan channel bawaan."
+   }
+  },
+  {
+   "id": "getting-started",
+   "title": {
+    "en": "Getting started",
+    "id": "Mulai cepat"
+   },
+   "description": {
+    "en": "Install the package, open a connection, and pair a device with a pairing code.",
+    "id": "Pasang paket, buka koneksi, dan pasangkan perangkat dengan pairing code."
+   }
+  },
+  {
+   "id": "messages",
+   "title": {
+    "en": "Messages",
+    "id": "Pesan"
+   },
+   "description": {
+    "en": "Receive messages, read their text, address users correctly, and send every basic message type.",
+    "id": "Terima pesan, baca teksnya, alamati pengguna dengan benar, dan kirim semua tipe pesan dasar."
+   }
+  },
+  {
+   "id": "builder",
+   "title": {
+    "en": "MessageBuilder",
+    "id": "MessageBuilder"
+   },
+   "description": {
+    "en": "Interactive messages: buttons, lists, carousels and AIRich rich responses.",
+    "id": "Pesan interaktif: tombol, list, carousel, dan respons kaya AIRich."
+   }
+  },
+  {
+   "id": "newsletter",
+   "title": {
+    "en": "Newsletter",
+    "id": "Newsletter"
+   },
+   "description": {
+    "en": "Create and run WhatsApp channels: metadata, admins, polls, questions and insights.",
+    "id": "Buat dan kelola channel WhatsApp: metadata, admin, polling, pertanyaan, dan insight."
+   }
+  },
+  {
+   "id": "groups",
+   "title": {
+    "en": "Groups",
+    "id": "Grup"
+   },
+   "description": {
+    "en": "Group and community management, participants, and profile pictures.",
+    "id": "Pengelolaan grup dan komunitas, peserta, dan foto profil."
+   }
+  },
+  {
+   "id": "examples",
+   "title": {
+    "en": "Examples",
+    "id": "Contoh"
+   },
+   "description": {
+    "en": "Complete, runnable bots assembled from the pieces in this documentation.",
+    "id": "Bot lengkap yang bisa langsung dijalankan, dirakit dari potongan di dokumentasi ini."
+   }
+  },
+  {
+   "id": "api",
+   "generated": "api",
+   "title": {
+    "en": "API reference",
+    "id": "Referensi API"
+   },
+   "description": {
+    "en": "Every socket method and module export, generated from the type declarations on main.",
+    "id": "Semua method socket dan ekspor modul, dibangkitkan dari deklarasi tipe di branch main."
+   }
+  }
+ ]
+}
