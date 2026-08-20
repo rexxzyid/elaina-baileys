@@ -5,6 +5,15 @@ on:
     - cron: '0 6 * * *'
 
   workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Apply new proto fields instead of only reporting them'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 permissions:
   contents: write
@@ -13,6 +22,9 @@ permissions:
 concurrency:
   group: elaina-baileys-proto-watch
   cancel-in-progress: false
+
+env:
+  PROTO_BUNDLE_DIR: bundle
 
 jobs:
   watch:
@@ -23,55 +35,104 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
+      - name: Install dependencies
+        run: npm install --package-lock=false --ignore-scripts
+
+      - name: Identify as the repository owner
+        run: |
+          git config user.name "RexxHayanasi Pengen S.Kom"
+          git config user.email "150516773+rexxzyid@users.noreply.github.com"
+
+      - name: Download the WhatsApp Web bundle
+        run: node ./script/fetchbundle.js bundle
+
       - name: Compare WhatsApp Web proto with WAProto
         id: proto
         continue-on-error: true
         run: node ./script/checkproto.js | tee proto-report.txt
 
-      - name: Apply the client revision bump
+      - name: Update the pinned client revision
         if: steps.proto.outputs.revision_outdated == 'true'
         run: npm run update:version
 
-      - name: Commit the client revision bump
-        if: steps.proto.outputs.revision_outdated == 'true'
+      - name: Apply new proto fields
+        id: sync
+        if: steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != '' && github.event.inputs.apply != 'false'
+        continue-on-error: true
+        run: node ./script/syncproto.js | tee proto-sync.txt
+
+      - name: Verify the patched proto still round-trips
+        id: verify
+        if: steps.sync.outcome == 'success'
+        continue-on-error: true
+        run: node ./script/verifyproto.js
+
+      - name: Roll back an unverified proto patch
+        if: steps.sync.outcome == 'success' && steps.verify.outcome != 'success'
+        run: git checkout -- WAProto
+
+      - name: Commit and push
+        id: commit
         run: |
-          git add lib/Defaults/index.js lib/Utils/generics.js
+          git add -A
 
           if git diff --staged --quiet; then
-            echo "Client revision already up to date in the working tree."
+            echo "Tidak ada perubahan untuk di-commit."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: WA update, client revision ${{ steps.proto.outputs.live_revision }}"
-          git push
+          SUBJECT="chore: sync WAProto with the WhatsApp Web bundle"
 
-      - name: Report new Message fields
-        if: steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != ''
+          if [ "${{ steps.proto.outputs.revision_outdated }}" = "true" ]; then
+            SUBJECT="chore: WA update, client revision ${{ steps.proto.outputs.live_revision }}"
+          fi
+
+          git -c commit.gpgsign=false commit -m "${SUBJECT}"
+
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:${{ github.ref_name }}; then
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep $((2 ** attempt))
+            git pull --rebase origin ${{ github.ref_name }} || true
+          done
+
+          echo "Push gagal setelah 4 percobaan."
+          exit 1
+
+      - name: Report fields that could not be applied
+        if: always() && steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != '' && (steps.sync.outcome == 'failure' || steps.verify.outcome == 'failure' || github.event.inputs.apply == 'false')
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs')
-            const report = fs.readFileSync('proto-report.txt', 'utf8')
-            const title = 'WAProto is behind the WhatsApp Web Message spec'
+            const read = name => fs.existsSync(name) ? fs.readFileSync(name, 'utf8').trim() : '(tidak ada keluaran)'
+            const title = 'WAProto is behind the WhatsApp Web bundle'
             const body = [
-              'The daily proto watch found Message fields WhatsApp Web sends that `WAProto` does not declare.',
-              'Messages using them decode incompletely until the proto is regenerated.',
+              'The daily proto watch found fields WhatsApp Web declares that `WAProto` does not,',
+              'and could not apply them automatically. Messages using them decode incompletely until this is fixed.',
               '',
               '```',
-              report.trim(),
+              read('proto-report.txt'),
               '```',
               '',
-              'Run `node ./script/checkproto.js` locally to reproduce.',
-              'Adding fields is done by regenerating `WAProto`, not by editing the generated files by hand.'
+              '```',
+              read('proto-sync.txt'),
+              '```',
+              '',
+              'Reproduce locally with `npm run check:proto`, then `npm run sync:proto` to apply and',
+              '`node ./script/verifyproto.js` to check the result round-trips.',
+              '',
+              'A gap in the `Message` oneof is never patched automatically — that one needs `WAProto` regenerated.'
             ].join('\n')
 
             const existing = await github.rest.issues.listForRepo({
