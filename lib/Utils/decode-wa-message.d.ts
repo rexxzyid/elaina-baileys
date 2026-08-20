@@ -35,7 +35,9 @@ export namespace DECRYPTION_RETRY_CONFIG {
     let sessionRecordErrors: string[];
 }
 export namespace NACK_REASONS {
+    let StaleGroupAddressingMode: number;
     let SenderReachoutTimelocked: number;
+    let NewChatMessagesCapped: number;
     let ParsingError: number;
     let UnrecognizedStanza: number;
     let UnrecognizedStanzaClass: number;
@@ -53,7 +55,9 @@ export namespace NACK_REASONS {
 export namespace SERVER_ERROR_CODES {
     let MessageAccountRestriction: string;
     let SmaxInvalid: string;
+    let NewChatMessagesCapped: string;
 }
+export const RETRYABLE_ACK_CODES: Set<string>;
 export function extractAddressingContext(stanza: any): {
     addressingMode: any;
     senderAlt: any;
