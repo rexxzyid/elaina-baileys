@@ -10,7 +10,11 @@
     "update:version": "node ./script/updatewa.js",
     "check:proto": "node ./script/checkproto.js",
     "sync:proto": "node ./script/syncproto.js",
-    "build:docs": "node ./script/apiref.js site-api.json && node ./script/builddocs.js site"
+    "build:docs": "node ./script/apiref.js site-api.json && node ./script/builddocs.js site",
+    "wa:update": "node ./script/waupdate.js",
+    "wa:diff": "node ./script/diffbundle.js",
+    "verify:proto": "node ./script/verifyproto.js",
+    "fetch:bundle": "node ./script/fetchbundle.js"
   },
   "engines": {
     "node": ">=22.0.0"
