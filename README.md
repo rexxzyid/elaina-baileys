@@ -416,8 +416,7 @@ Text options and image options can be mixed in the same poll, exactly as the com
 
 `endDate` takes a `Date`, not a timestamp — it is converted to epoch milliseconds on the way out.
 
-> [!NOTE]
-> Photo polls and add-option are gated server side per account, and the recipient's client has to know the feature to render it. When either is missing the poll still arrives, just without that part.
+Photo polls work in groups and one-to-one chats, not just channels. WhatsApp Web only offers them in its channel composer, but that is a limitation of its own UI — the protocol accepts them anywhere.
 
 ---
 
@@ -1160,6 +1159,8 @@ await sock.sendMessage(jid, {
   }
 })
 ```
+
+Each option image is uploaded and then sent as its own `pollCreationOptionImageMessage`, linked back to the poll by `MEDIA_POLL` association. A poll with two image options is three messages on the wire.
 
 Plain string options still send a normal text poll, and the two can be mixed. The rest of the poll switches — multiple answers, hidden voters, add-option, end time — are listed under [Poll settings](#poll-settings).
 
