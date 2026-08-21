@@ -385,6 +385,40 @@ await sock.sendMessage(jid, {
 })
 ```
 
+#### Poll settings
+
+Every switch WhatsApp shows on its own poll composer is available here. The option names do not match the protobuf field names, so they are listed side by side:
+
+| Option | Protobuf field | Default | What it does |
+|---|---|---|---|
+| `selectableCount` | `selectableOptionsCount` | `1` | how many answers one person may pick |
+| `hideVoter` | `hideParticipantName` | `false` | hides who voted for what |
+| `canAddOption` | `allowAddOption` | `false` | lets recipients add their own options |
+| `endDate` | `endTime` | none | a `Date` after which the poll closes |
+
+```js
+await sock.sendMessage(jid, {
+  poll: {
+    name: 'Where should we eat?',
+    values: [
+      { name: 'Padang', image: { url: './padang.jpg' } },
+      'Sunda'
+    ],
+    selectableCount: 2,
+    hideVoter: true,
+    canAddOption: true,
+    endDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+  }
+})
+```
+
+Text options and image options can be mixed in the same poll, exactly as the composer allows. An option carrying an `image` turns the poll into a [photo poll](#photo-poll); once `canAddOption` is set, recipients extend it with [Poll Add Option](#poll-add-option).
+
+`endDate` takes a `Date`, not a timestamp — it is converted to epoch milliseconds on the way out.
+
+> [!NOTE]
+> Photo polls and add-option are gated server side per account, and the recipient's client has to know the feature to render it. When either is missing the poll still arrives, just without that part.
+
 ---
 
 ## 📰 External Ad Reply
@@ -1127,7 +1161,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-Plain string options still send a normal text poll, and the two can be mixed.
+Plain string options still send a normal text poll, and the two can be mixed. The rest of the poll switches — multiple answers, hidden voters, add-option, end time — are listed under [Poll settings](#poll-settings).
 
 ### Question Message
 
@@ -1314,7 +1348,7 @@ The reaction is wrapped in `groupStatusMessageV2`, allowing the existing relay l
 
 ### Poll Add Option
 
-The original poll must allow adding options.
+The original poll must have been created with `canAddOption: true` (see [Poll settings](#poll-settings)). One message carries one option — `addOption` is a single value in the protobuf, not a list, so send several messages to add several options.
 
 ```js
 await sock.sendMessage(jid, {
