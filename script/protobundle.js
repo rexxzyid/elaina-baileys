@@ -1,10 +1,13 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { execFile } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const BROWSER_HEADERS = {
+export const BROWSER_HEADERS = {
     accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'accept-language': 'en-US,en;q=0.9',
     'sec-fetch-dest': 'document',
@@ -14,10 +17,41 @@ const BROWSER_HEADERS = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
 }
 
+const execFileAsync = promisify(execFile)
+
+/**
+ * Statuses that mean the request was refused rather than genuinely absent.
+ * Some networks let curl through where undici is blocked, so these are worth
+ * a second attempt through a different client before giving up.
+ */
+const FALLBACK_STATUS = new Set([401, 403, 405, 407, 429, 503])
+
+const curlText = async (url, headers) => {
+    const args = ['-sS', '--http2', '--compressed', '--fail', '--max-time', '90', url]
+    for (const [key, value] of Object.entries(headers)) args.push('-H', `${key}: ${value}`)
+    const { stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 1024 })
+    return stdout
+}
+
 export const fetchText = async (url, headers = BROWSER_HEADERS) => {
-    const response = await fetch(url, { headers })
-    if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
-    return response.text()
+    let reason
+    try {
+        const response = await fetch(url, { headers })
+        if (response.ok) return await response.text()
+        reason = `${response.status} ${response.statusText}`
+        if (!FALLBACK_STATUS.has(response.status)) throw new Error(`Failed to fetch ${url}: ${reason}`)
+    }
+    catch (error) {
+        if (reason) throw error
+        reason = error.message
+    }
+    try {
+        return await curlText(url, headers)
+    }
+    catch (error) {
+        const detail = String(error.stderr || error.message).trim().split('\n').pop()
+        throw new Error(`Failed to fetch ${url}: ${reason} (curl fallback: ${detail})`)
+    }
 }
 
 export const closingBrace = (source, open) => {
@@ -106,7 +140,7 @@ const parseMessageFields = source => {
     return fields.size > 50 ? fields : undefined
 }
 
-const collectChunkUrls = html => {
+export const collectChunkUrls = html => {
     const unescaped = html.replaceAll('\\/', '/')
     const matches = unescaped.matchAll(/https:\/\/static\.whatsapp\.net\/rsrc\.php\/[A-Za-z0-9_\-/.]+?\.js/g)
     return [...new Set([...matches].map(match => match[0]))]
@@ -225,11 +259,81 @@ export const readClientRevision = source => {
     return Number.parseInt(match[1], 10)
 }
 
+const PINNED_FILES = ['lib/Defaults/index.js', 'lib/Utils/generics.js']
+const PINNED_PATTERN = /(\[\s*\d+\s*,\s*\d+\s*,\s*)(\d+)(\s*\])/
+
 export const pinnedRevision = () => {
-    const target = join(root, 'lib/Defaults/index.js')
+    const target = join(root, PINNED_FILES[0])
     if (!existsSync(target)) return 0
     const match = readFileSync(target, 'utf8').match(/const\s+version\s*=\s*\[\s*\d+\s*,\s*\d+\s*,\s*(\d+)\s*\]/)
     return match ? Number.parseInt(match[1], 10) : 0
 }
 
+/**
+ * Rewrites the pinned client revision everywhere it is declared. Returns the
+ * files that actually changed so a caller can refuse to commit a no-op.
+ */
+export const writePinnedRevision = revision => {
+    const touched = []
+    for (const relative of PINNED_FILES) {
+        const target = join(root, relative)
+        if (!existsSync(target)) continue
+        const before = readFileSync(target, 'utf8')
+        const after = before.replace(PINNED_PATTERN, (_, head, current, tail) => head + revision + tail)
+        if (after === before) continue
+        writeFileSync(target, after)
+        touched.push(relative)
+    }
+    return touched
+}
+
 export const liveRevision = async () => readClientRevision(await fetchText('https://web.whatsapp.com/sw.js'))
+
+/**
+ * Downloads every chunk of the live bundle into `directory` and records the
+ * revision alongside it, so a later run can diff two snapshots offline.
+ */
+export const snapshotBundle = async ({ directory, concurrency = 12, onProgress } = {}) => {
+    mkdirSync(directory, { recursive: true })
+    const revision = readClientRevision(await fetchText('https://web.whatsapp.com/sw.js'))
+    const urls = collectChunkUrls(await fetchText('https://web.whatsapp.com/'))
+    if (!urls.length) throw new Error('No bundle chunks found on the page')
+
+    const queue = [...urls]
+    let saved = 0
+    let failed = 0
+    const workers = Array.from({ length: concurrency }, async () => {
+        while (queue.length) {
+            const url = queue.shift()
+            if (!url) return
+            try {
+                const source = await fetchText(url, { ...BROWSER_HEADERS, referer: 'https://web.whatsapp.com/' })
+                writeFileSync(join(directory, createHash('sha1').update(url).digest('hex').slice(0, 12) + '.js'), source)
+                saved++
+            }
+            catch {
+                failed++
+            }
+            finally {
+                if (onProgress) onProgress(saved + failed, urls.length)
+            }
+        }
+    })
+    await Promise.all(workers)
+
+    if (!saved) throw new Error('Every chunk download failed')
+    const meta = { revision, total: urls.length, saved, failed, capturedAt: new Date().toISOString() }
+    writeFileSync(join(directory, 'snapshot.json'), JSON.stringify(meta, null, 2) + '\n')
+    return meta
+}
+
+export const readSnapshotMeta = directory => {
+    const target = join(directory, 'snapshot.json')
+    if (!existsSync(target)) return undefined
+    try {
+        return JSON.parse(readFileSync(target, 'utf8'))
+    }
+    catch {
+        return undefined
+    }
+}
