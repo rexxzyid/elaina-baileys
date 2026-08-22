@@ -495,7 +495,14 @@ Text options and image options can be mixed in the same poll, exactly as the com
 
 `endDate` takes a `Date`, not a timestamp — it is converted to epoch milliseconds on the way out.
 
-Photo polls work in groups and one-to-one chats, not just channels. WhatsApp Web only offers them in its channel composer, but that is a limitation of its own UI — the protocol accepts them anywhere.
+**Photo polls are channel-only on the receiving side.** WhatsApp Web decides with:
+
+```js
+isPhotoPollReceiverEnabled = msg =>
+  isNewsletterMsg({ from: msg.from, to: msg.to }) && isNewsletterPhotoPollsReceiverEnabled()
+```
+
+A poll whose `pollContentType` is `IMAGE` is accepted only when the message is a newsletter message. Sent to a group or a one-to-one chat it takes the same unsupported path as a disabled setting, so the option images never appear. Use text options outside channels.
 
 ---
 
@@ -1255,8 +1262,10 @@ import {
 
 Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
 
+Send these to a **channel**. The receiver only accepts an image poll when the message is a newsletter message — in a group or a one-to-one chat the poll arrives as an unsupported placeholder and the images never show. See [Poll settings](#poll-settings).
+
 ```js
-await sock.sendMessage(jid, {
+await sock.sendMessage(newsletterJid, {
   poll: {
     name: 'Which cover?',
     values: [
