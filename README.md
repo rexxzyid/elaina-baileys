@@ -474,6 +474,17 @@ Every switch WhatsApp shows on its own poll composer is available here. The opti
 >
 > To find out what a given account supports, send one poll per setting and see which arrive as real polls.
 
+**Do not combine these switches with image options.** `hideVoter` and `endDate` move the message to `pollCreationMessageV6`, and an image poll sent as V6 arrives with the poll rendered but the option images missing. Observed behaviour by combination:
+
+| Poll | Version | Result |
+|---|---|---|
+| images only | V3 | poll and images render |
+| images + `hideVoter` / `endDate` | V6 | poll renders, **images do not** |
+| images + `canAddOption` | V6 | whole poll unsupported |
+| text only + `hideVoter` / `endDate` | V6 | renders normally |
+
+So keep photo polls plain, and use the switches on text polls.
+
 ```js
 await sock.sendMessage(jid, {
   poll: {
