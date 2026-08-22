@@ -5,6 +5,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "type": "module",
+  "bin": {
+    "elaina-baileys-mcp": "./mcp/src/index.js"
+  },
   "scripts": {
     "preinstall": "node ./engine-requirements.js",
     "update:version": "node ./script/updatewa.js",
@@ -15,7 +18,9 @@
     "wa:diff": "node ./script/diffbundle.js",
     "verify:proto": "node ./script/verifyproto.js",
     "fetch:bundle": "node ./script/fetchbundle.js",
-    "test:pairing": "node ./script/testpairing.js"
+    "test:pairing": "node ./script/testpairing.js",
+    "mcp:start": "node ./mcp/src/index.js",
+    "mcp:check": "node --check ./mcp/src/index.js && node --check ./mcp/src/runtime.js && node --check ./mcp/src/shared.js && node --check ./mcp/src/tools-core.js && node --check ./mcp/src/tools-messages.js && node --check ./mcp/src/tools-groups.js && node --check ./mcp/src/tools-newsletters.js"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -23,6 +28,7 @@
   "files": [
     "lib/**/*",
     "WAProto/**/*",
+    "mcp/**/*",
     "engine-requirements.js",
     "NOTICE.md",
     "EXPERIMENTAL.md"
@@ -33,6 +39,8 @@
     "bot",
     "interactive-messages",
     "js-whatsapp",
+    "mcp",
+    "model-context-protocol",
     "multi-device",
     "whatsapp",
     "whatsapp-api",
@@ -45,6 +53,7 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@cacheable/node-cache": "^1.4.0",
     "@hapi/boom": "^9.1.3",
+    "@modelcontextprotocol/server": "2.0.0",
     "async-mutex": "^0.5.0",
     "fflate": "^0.8.2",
     "fluent-ffmpeg": "*",
@@ -56,7 +65,8 @@
     "protobufjs": "^7.5.6",
     "sharp": "^0.33.0",
     "whatsapp-rust-bridge": "0.5.5",
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@nekodb/client": "*",
