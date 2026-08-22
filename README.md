@@ -466,6 +466,14 @@ Every switch WhatsApp shows on its own poll composer is available here. The opti
 | `canAddOption` | `allowAddOption` | `false` | lets recipients add their own options |
 | `endDate` | `endTime` | none | a `Date` after which the poll closes |
 
+> **These four are gated on the receiving account.** WhatsApp checks each one against a server-controlled flag, and when a flag is off the recipient does not merely ignore the setting — the **entire poll** renders as *"You received a message that your version of WhatsApp doesn't support"*. Option images are relayed separately, so a failed poll can look like only the pictures arrived.
+>
+> The check is on the field being *present*, not on its value, which is why this library omits `hideParticipantName` and `allowAddOption` entirely when you leave them off rather than sending `false`.
+>
+> `canAddOption` is the least available of the four: WhatsApp Web has no sending gate for it at all, meaning its own composer never offers it, and the receiving flag `poll_add_option_receiving_enabled` still defaults to off. Treat it as experimental. `selectableCount` is the one setting that is never gated.
+>
+> To find out what a given account supports, send one poll per setting and see which arrive as real polls.
+
 ```js
 await sock.sendMessage(jid, {
   poll: {
@@ -476,11 +484,12 @@ await sock.sendMessage(jid, {
     ],
     selectableCount: 2,
     hideVoter: true,
-    canAddOption: true,
     endDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
   }
 })
 ```
+
+`canAddOption` is left out of the example on purpose — add it only once you have confirmed the recipient supports it, since it is the one most likely to turn the whole poll into an unsupported placeholder.
 
 Text options and image options can be mixed in the same poll, exactly as the composer allows. An option carrying an `image` turns the poll into a [photo poll](#photo-poll); once `canAddOption` is set, recipients extend it with [Poll Add Option](#poll-add-option).
 
