@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: 'Apply new proto fields instead of only reporting them'
+        description: 'Bump the pinned revision and apply proto changes instead of only reporting'
         required: false
         default: 'true'
         type: choice
@@ -23,12 +23,9 @@ concurrency:
   group: elaina-baileys-proto-watch
   cancel-in-progress: false
 
-env:
-  PROTO_BUNDLE_DIR: bundle
-
 jobs:
   watch:
-    name: Watch WhatsApp Web proto
+    name: Watch WhatsApp Web
     runs-on: ubuntu-latest
 
     steps:
@@ -50,29 +47,70 @@ jobs:
           git config user.name "RexxHayanasi Pengen S.Kom"
           git config user.email "150516773+rexxzyid@users.noreply.github.com"
 
-      - name: Download the WhatsApp Web bundle
-        run: node ./script/fetchbundle.js bundle
+      # The previous snapshot is what makes the cross-revision diff possible.
+      # Without it every run starts blind and can only report proto gaps.
+      - name: Restore the previous bundle snapshot
+        uses: actions/cache@v4
+        with:
+          path: .wa-bundle
+          key: wa-bundle-${{ github.run_id }}
+          restore-keys: |
+            wa-bundle-
 
-      - name: Compare WhatsApp Web proto with WAProto
-        id: proto
+      - name: Check WhatsApp Web for updates
+        id: wa
         continue-on-error: true
-        run: node ./script/checkproto.js | tee proto-report.txt
+        run: |
+          if [ "${{ github.event.inputs.apply }}" = "false" ]; then
+            npm run wa:update -- --keep 2
+          else
+            npm run wa:update -- --apply --keep 2
+          fi
 
-      - name: Update the pinned client revision
-        if: steps.proto.outputs.revision_outdated == 'true'
-        run: npm run update:version
+      - name: Read the verdict
+        id: report
+        run: |
+          node -e '
+            const fs = require("fs")
+            const path = ".wa-bundle/report.json"
+            if (!fs.existsSync(path)) {
+              console.log("Laporan tidak ada, pipeline gagal sebelum menulis hasil.")
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, "verdict=crashed\n")
+              process.exit(0)
+            }
+            const r = JSON.parse(fs.readFileSync(path, "utf8"))
+            const out = [
+              `verdict=${r.verdict}`,
+              `live=${r.live}`,
+              `pinned=${r.pinned}`,
+              `proto_gaps=${r.protoGaps}`,
+              `verify_passed=${r.verifyPassed}`,
+              `protocol_touched=${r.protocolTouched}`
+            ].join("\n")
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n")
+            console.log(out)
+          '
 
-      - name: Apply new proto fields
+      - name: Publish the report to the job summary
+        if: always()
+        run: |
+          if [ -f .wa-bundle/report.md ]; then
+            cat .wa-bundle/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Laporan tidak dihasilkan.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Apply missing proto fields
         id: sync
-        if: steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != '' && github.event.inputs.apply != 'false'
+        if: steps.report.outputs.verdict == 'needs-work' && github.event.inputs.apply != 'false'
         continue-on-error: true
-        run: node ./script/syncproto.js | tee proto-sync.txt
+        run: npm run sync:proto | tee proto-sync.txt
 
       - name: Verify the patched proto still round-trips
         id: verify
         if: steps.sync.outcome == 'success'
         continue-on-error: true
-        run: node ./script/verifyproto.js
+        run: npm run verify:proto
 
       - name: Roll back an unverified proto patch
         if: steps.sync.outcome == 'success' && steps.verify.outcome != 'success'
@@ -85,21 +123,19 @@ jobs:
 
           if git diff --staged --quiet; then
             echo "Tidak ada perubahan untuk di-commit."
-            echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           SUBJECT="chore: sync WAProto with the WhatsApp Web bundle"
 
-          if [ "${{ steps.proto.outputs.revision_outdated }}" = "true" ]; then
-            SUBJECT="chore: WA update, client revision ${{ steps.proto.outputs.live_revision }}"
+          if [ "${{ steps.report.outputs.verdict }}" = "bump-only" ] || [ "${{ steps.report.outputs.verdict }}" = "bump-and-review" ]; then
+            SUBJECT="chore: WA update, client revision ${{ steps.report.outputs.live }}"
           fi
 
           git -c commit.gpgsign=false commit -m "${SUBJECT}"
 
           for attempt in 1 2 3 4; do
             if git push origin HEAD:${{ github.ref_name }}; then
-              echo "pushed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             sleep $((2 ** attempt))
@@ -109,30 +145,47 @@ jobs:
           echo "Push gagal setelah 4 percobaan."
           exit 1
 
-      - name: Report fields that could not be applied
-        if: always() && steps.proto.outputs.missing_count != '0' && steps.proto.outputs.missing_count != '' && (steps.sync.outcome == 'failure' || steps.verify.outcome == 'failure' || github.event.inputs.apply == 'false')
+      - name: Report what could not be handled automatically
+        if: always() && (steps.report.outputs.verdict == 'blocked' || steps.report.outputs.verdict == 'crashed' || (steps.report.outputs.verdict == 'needs-work' && steps.verify.outcome != 'success') || steps.report.outputs.protocol_touched == 'true')
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs')
             const read = name => fs.existsSync(name) ? fs.readFileSync(name, 'utf8').trim() : '(tidak ada keluaran)'
-            const title = 'WAProto is behind the WhatsApp Web bundle'
+            const verdict = '${{ steps.report.outputs.verdict }}'
+
+            const alasan = {
+              'blocked': 'Round-trip encoder gagal. Versi TIDAK dibump sampai ini hijau.',
+              'crashed': 'Pipeline berhenti sebelum menulis laporan.',
+              'needs-work': 'Ada field protobuf yang belum ada di WAProto dan sync otomatis tidak lolos verifikasi.',
+              'bump-and-review': 'Revisi naik DAN ada permukaan protokol yang berubah. Perlu dibaca manual.'
+            }[verdict] || `Verdict: ${verdict}`
+
             const body = [
-              'The daily proto watch found fields WhatsApp Web declares that `WAProto` does not,',
-              'and could not apply them automatically. Messages using them decode incompletely until this is fixed.',
+              alasan,
               '',
-              '```',
-              read('proto-report.txt'),
-              '```',
+              `- Revisi terpasang: \`${{ steps.report.outputs.pinned }}\``,
+              `- Revisi live: \`${{ steps.report.outputs.live }}\``,
+              `- Celah protobuf: ${{ steps.report.outputs.proto_gaps }}`,
+              `- Round-trip: ${{ steps.report.outputs.verify_passed }}`,
+              '',
+              '<details><summary>Laporan lengkap</summary>',
+              '',
+              read('.wa-bundle/report.md'),
+              '',
+              '</details>',
+              '',
+              '<details><summary>Keluaran sync:proto</summary>',
               '',
               '```',
               read('proto-sync.txt'),
               '```',
               '',
-              'Reproduce locally with `npm run check:proto`, then `npm run sync:proto` to apply and',
-              '`node ./script/verifyproto.js` to check the result round-trips.',
+              '</details>',
               '',
-              'A gap in the `Message` oneof is never patched automatically — that one needs `WAProto` regenerated.'
+              'Reproduksi lokal: `npm run wa:update`, lalu `npm run sync:proto` dan `npm run verify:proto` bila perlu.',
+              '',
+              'Celah pada oneof `Message` tidak pernah ditambal otomatis — itu butuh WAProto digenerate ulang.'
             ].join('\n')
 
             const existing = await github.rest.issues.listForRepo({
@@ -155,7 +208,7 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title,
+              title: 'WhatsApp Web update needs attention',
               body,
               labels: ['proto-watch']
             })
