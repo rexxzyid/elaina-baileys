@@ -14,7 +14,8 @@
     "wa:update": "node ./script/waupdate.js",
     "wa:diff": "node ./script/diffbundle.js",
     "verify:proto": "node ./script/verifyproto.js",
-    "fetch:bundle": "node ./script/fetchbundle.js"
+    "fetch:bundle": "node ./script/fetchbundle.js",
+    "test:pairing": "node ./script/testpairing.js"
   },
   "engines": {
     "node": ">=22.0.0"
