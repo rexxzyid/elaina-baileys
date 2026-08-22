@@ -53,6 +53,7 @@ const collectSurfaces = directory => {
         stanzaTags: new Set(),
         stanzaAttrs: new Set(),
         xmlns: new Set(),
+        waMexOperations: new Set(),
         mexOperations: new Set(),
         mediaPaths: new Set(),
         flags: new Set()
@@ -65,7 +66,11 @@ const collectSurfaces = directory => {
         for (const match of source.matchAll(MODULE_PATTERN)) surfaces.modules.add(match[1])
         for (const match of source.matchAll(STANZA_TAG_PATTERN)) surfaces.stanzaTags.add(match[1])
         for (const match of source.matchAll(XMLNS_PATTERN)) surfaces.xmlns.add(match[1])
-        for (const match of source.matchAll(MEX_PATTERN)) surfaces.mexOperations.add(`${match[2]} ${match[1]}`)
+        for (const match of source.matchAll(MEX_PATTERN)) {
+            const entry = `${match[2]} ${match[1]}`
+            surfaces.mexOperations.add(entry)
+            if (match[2].startsWith('WAWebMex')) surfaces.waMexOperations.add(entry)
+        }
         for (const match of source.matchAll(MEDIA_PATTERN)) surfaces.mediaPaths.add(match[1])
         for (const match of source.matchAll(FLAG_PATTERN)) surfaces.flags.add(match[1])
 
@@ -120,7 +125,7 @@ export const diffSnapshots = async (beforeDir, afterDir) => {
         surfaces.stanzaTags.added.length || surfaces.stanzaTags.removed.length ||
         surfaces.stanzaAttrs.added.length || surfaces.stanzaAttrs.removed.length ||
         surfaces.xmlns.added.length || surfaces.xmlns.removed.length ||
-        surfaces.mexOperations.added.length || surfaces.mexOperations.removed.length ||
+        surfaces.waMexOperations.added.length || surfaces.waMexOperations.removed.length ||
         surfaces.mediaPaths.added.length || surfaces.mediaPaths.removed.length ||
         proto.newTypes.length || proto.changedTypes.length || proto.messageFields.added.length
     )
@@ -146,7 +151,8 @@ const LABELS = {
     stanzaTags: 'Tag stanza (smax)',
     stanzaAttrs: 'Atribut stanza',
     xmlns: 'Namespace (xmlns)',
-    mexOperations: 'Operasi MEX',
+    waMexOperations: 'Operasi MEX WhatsApp (w:mex)',
+    mexOperations: 'Operasi Relay (semua, termasuk UI Facebook)',
     mediaPaths: 'Path media',
     flags: 'Flag / feature string'
 }
