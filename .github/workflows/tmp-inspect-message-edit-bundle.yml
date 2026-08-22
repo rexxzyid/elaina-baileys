@@ -1,0 +1,30 @@
+name: Temp Inspect Message Edit Bundle
+
+on:
+  push:
+    branches:
+      - tmp-e2ee-message-edit-verify
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --package-lock=false > install.log 2>&1
+      - run: npm run wa:update -- --keep 2 > wa-update.log 2>&1
+      - run: node script/tmp-inspect-message-edit-bundle.js
+      - run: |
+          git config user.name "RexxHayanasi Pengen S.Kom"
+          git config user.email "150516773+rexxzyid@users.noreply.github.com"
+          git add -- bundle-message-edit-evidence.txt
+          git commit -m "temp: record bundle message edit evidence"
+          git push origin HEAD:tmp-e2ee-message-edit-verify
