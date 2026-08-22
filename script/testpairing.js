@@ -3,11 +3,17 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import makeWASocket, { Browsers, DisconnectReason, useMultiFileAuthState } from '../lib/index.js'
 
-const nomor = (process.argv[2] || '').replace(/\D/g, '')
+const argumen = process.argv.slice(2)
+const hanyaCek = argumen.includes('--check-only')
+const nomor = (argumen.find(a => !a.startsWith('--')) || process.env.PAIRING_PHONE || '').replace(/\D/g, '')
 
 if (!nomor) {
-    console.error('Pakai: node script/testpairing.js <nomor>')
+    console.error('Pakai: node script/testpairing.js <nomor> [--check-only]')
     console.error('Contoh: node script/testpairing.js 6281234567890')
+    console.error('Nomor juga bisa lewat env PAIRING_PHONE.')
+    console.error('')
+    console.error('--check-only  hanya melaporkan diterima/ditolak server, kode tidak pernah dicetak.')
+    console.error('              Wajib dipakai di lingkungan yang lognya bisa dibaca orang lain.')
     process.exit(2)
 }
 
@@ -76,6 +82,12 @@ log('meminta kode pairing untuk', nomor)
 try {
     const kode = await sock.requestPairingCode(nomor)
     console.log('')
+    if (hanyaCek) {
+        log('registrasi DITERIMA server — ref tercatat')
+        log('Kode tidak dicetak karena --check-only aktif.')
+        log('Server menerima permintaan, jadi tidak ada rate limit maupun blokir fitur.')
+        await tutup(0)
+    }
     console.log('  KODE PAIRING : ' + kode.match(/.{1,4}/g).join('-'))
     console.log('')
     log('registrasi DITERIMA server — ref tercatat')
