@@ -7,3 +7,4 @@ proto-sync.txt
 site/
 site-api.json
 .wa-bundle/
+.mcp-data/
