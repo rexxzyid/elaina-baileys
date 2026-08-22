@@ -213,6 +213,21 @@ async function startSock() {
 startSock()
 ```
 
+### Retry and pairing options
+
+Beyond the usual Baileys options, these control how the socket handles undecryptable messages, rejected sends, and pairing:
+
+| Option | Default | What it does |
+|---|---|---|
+| `maxMsgRetryCount` | `3` | decryption retries requested per incoming message |
+| `retryRequestDelayMs` | `250` | wait before asking the sender to re-encrypt |
+| `maxRetryQueueSize` | `64` | messages allowed to queue for retry at once |
+| `ackRetryDelayMs` | `750` | wait before resending after a retryable nack |
+| `maxAckRetryCount` | `3` | resend attempts after a retryable nack |
+| `pairingCodeTimeoutMs` | `180000` | how long a pairing code stays valid |
+
+`maxRetryQueueSize` is a safety valve, not a throughput knob. A burst of undecryptable messages would otherwise queue without limit and grow the heap; past the cap the extras are acked without a retry. Raising it does not rescue more messages — `retryRequestDelayMs` is the setting that does, at the cost of pressing the sender harder.
+
 ---
 
 ## 🔐 Pairing Code
@@ -228,6 +243,53 @@ if (!state.creds.registered) {
 }
 ```
 
+The number is normalized before it is used, so `+62 812-3456-7890` and `6281234567890` are the same request. What is rejected is a number that cannot be valid: fewer than 6 or more than 15 digits, or a leading `0` — country codes never start with one, so `081234567890` is the local form, not the international one WhatsApp expects.
+
+```js
+await sock.requestPairingCode('081234567890')
+// Boom 400: phoneNumber must be in international format:
+// country code followed by the national number, digits only
+```
+
+### The request is confirmed by the server
+
+`requestPairingCode` waits for WhatsApp's answer and only returns once the server has registered the code. A rejection is thrown rather than swallowed, so a code you receive is a code the server actually knows about:
+
+```js
+try {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Pairing code:', code)
+} catch (error) {
+  console.log(error.message)   // e.g. rate-overlimit, not-allowed
+  console.log(error.data)      // e.g. 429
+}
+```
+
+The two rejections you are most likely to meet are `rate-overlimit` — too many attempts, wait before retrying — and a not-allowed variant, meaning link-by-phone-number is not enabled for that account.
+
+### One code at a time
+
+A pairing response can only be decrypted by the keys that produced it, so a second request while one is still pending would destroy the first. That is refused with a `409`:
+
+```js
+try {
+  await sock.requestPairingCode(phoneNumber)
+} catch (error) {
+  if (error.output?.statusCode === 409) {
+    console.log('still pending, seconds left:', error.data.secondsLeft)
+  }
+}
+```
+
+Call `cancelPairingCode()` to abandon a pending attempt and request a new one immediately. It returns whether there was anything to cancel:
+
+```js
+sock.cancelPairingCode()
+const code = await sock.requestPairingCode(phoneNumber)
+```
+
+The guard clears itself once the code expires. WhatsApp rotates a pairing code every 3 minutes; adjust with `pairingCodeTimeoutMs` if you need a different window.
+
 ### Custom Pairing Code
 
 A custom pairing code must contain exactly **8 characters**.
@@ -241,7 +303,15 @@ const code = await sock.requestPairingCode(
 console.log(code)
 ```
 
-Use the phone number in international format without `+`, spaces, or symbols.
+### Checking pairing without touching a running bot
+
+`script/testpairing.js` runs one pairing request against a throwaway session directory, so credentials of a bot that is already connected are never replaced:
+
+```bash
+node script/testpairing.js 6281234567890 --check-only
+```
+
+`--check-only` reports whether the server accepted the registration and never prints the code — use it anywhere the output can be read by someone else. Drop the flag to print the code and wait for the link to complete.
 
 ---
 
@@ -1107,15 +1177,44 @@ console.log(MessageBuilder.VERSION)
 
 ## 🔄 Update WhatsApp Web Version
 
-The package includes an ESM updater script that fetches the current WhatsApp Web `client_revision` and synchronizes the version used by the runtime.
-
-Run:
+One command performs the whole check:
 
 ```bash
-npm run update:version
+npm run wa:update
 ```
 
-The updater does not require Yarn or Corepack. With Node.js 24, the script uses the built-in `fetch` implementation.
+It reads the pinned revision, fetches the live one, downloads the bundle into `.wa-bundle/<revision>/`, parses WhatsApp Web's protobuf specs and compares them against `WAProto`, diffs the new snapshot against the previous one, round-trips every field through the encoder, and writes `.wa-bundle/report.md` and `report.json`.
+
+The report ends in one verdict:
+
+| Verdict | Meaning |
+|---|---|
+| `no-change` | live revision matches the pinned one |
+| `bump-only` | revision moved, no wire surface changed |
+| `bump-and-review` | revision moved **and** a wire surface changed — read the diff |
+| `needs-work` | WhatsApp declares protobuf fields `WAProto` does not |
+| `blocked` | the round-trip encoder failed; do not bump |
+
+Add `--apply` to bump the pinned revision, which is refused unless the verdict is a bump and the encoder passed.
+
+```bash
+npm run wa:update -- --apply
+```
+
+Supporting commands:
+
+| Command | Purpose |
+|---|---|
+| `npm run wa:diff -- <old> <new>` | diff two bundle snapshots on their own |
+| `npm run check:proto` | protobuf gap check only |
+| `npm run sync:proto` | add missing protobuf fields to `WAProto` |
+| `npm run verify:proto` | round-trip encoder only |
+| `npm run fetch:bundle -- <dir>` | download the raw bundle |
+| `npm run update:version` | bump the pinned revision without any of the checks |
+
+The diff covers every surface a WhatsApp change can reach the wire through — protobuf specs, stanza tags and attributes, `xmlns`, MEX operations, media paths — so a release that only moves UI code is reported as exactly that. `AGENTS.md` documents which surfaces matter and which are client-side noise.
+
+Set `PROTO_BUNDLE_DIR` to read from a local directory and `PROTO_OFFLINE=1` to skip the live revision lookup. Where the built-in `fetch` is refused, the scripts fall back to `curl` automatically.
 
 For automated releases, only commit the files actually changed by the updater and `package.json`. Do not commit `node_modules`.
 
@@ -1464,6 +1563,26 @@ await sock.requestPairingCode(phone, 'ELAINA01')
 ```
 
 The custom value must contain exactly eight characters.
+
+### A pairing code appears but the phone never shows a prompt
+
+Check what the request threw before assuming the notification is at fault. `requestPairingCode` now waits for the server and reports a rejection instead of returning a code that was never registered:
+
+| Message | Meaning |
+|---|---|
+| `rate-overlimit` (`429`) | too many attempts — wait, retrying makes it worse |
+| `not-allowed` / feature errors | link-by-phone-number is not enabled for that account |
+| `must be in international format` (`400`) | the number is not `<country code><national number>` |
+| `accepted without registering` | the server replied without a pairing ref |
+| `never answered` | no reply arrived at all |
+
+If none of these fire and the code is registered, type it manually through **WhatsApp → Linked Devices → Link with phone number**. If it is accepted there, the registration was fine and only the push notification did not arrive, which is decided server-side.
+
+Verify from outside your bot with `node script/testpairing.js <number> --check-only`.
+
+### A pairing request is refused with 409
+
+Another code is still pending. Wait it out or call `sock.cancelPairingCode()` first — see [Pairing Code](#-pairing-code).
 
 ### `Socket is required`
 
