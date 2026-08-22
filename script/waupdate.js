@@ -40,8 +40,19 @@ const step = message => console.log(`• ${message}`)
 const pinned = pinnedRevision()
 step(`Revisi terpasang di repo: ${pinned}`)
 
-const live = await liveRevision()
+/**
+ * WhatsApp rolls a release out gradually, so different edge nodes answer with
+ * different revisions at the same moment. Sampling once picks whichever node
+ * replied and can walk backwards between runs; take the highest of a few.
+ */
+const samples = []
+for (let attempt = 0; attempt < 5; attempt++) samples.push(await liveRevision())
+const observed = snapshotDirs().map(entry => entry.revision)
+const live = Math.max(...samples, pinned, ...observed)
+const spread = [...new Set(samples)].sort((a, b) => b - a)
 step(`Revisi live WhatsApp Web: ${live}`)
+if (spread.length > 1) step(`  beberapa revisi dilayani bersamaan: ${spread.join(', ')}`)
+if (live > Math.max(...samples)) step(`  sampel kali ini maksimum ${Math.max(...samples)}, memakai yang lebih tinggi dan pernah teramati`)
 
 const existing = snapshotDirs()
 const previous = existing.filter(entry => entry.revision !== live).pop()
