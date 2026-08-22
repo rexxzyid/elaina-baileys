@@ -14,66 +14,78 @@ const terms = [
     'secretEncType',
     'remoteKeyId',
     'wasaRootSecretAction',
-    'messageSecret'
+    'messageSecret',
+    'HKDF',
+    'hkdf',
+    'AES-GCM',
+    'aesGcm',
+    'HMAC'
 ]
-const hits = []
+const modules = []
 
 for (const name of readdirSync(snapshot)) {
     if (!name.endsWith('.js')) continue
-    const path = join(snapshot, name)
-    const source = readFileSync(path, 'utf8')
-    const matches = []
-    for (const term of terms) {
-        let from = 0
-        let count = 0
-        while (count < 12) {
-            const at = source.indexOf(term, from)
-            if (at < 0) break
-            matches.push({ term, at })
-            count++
-            from = at + term.length
+    const source = readFileSync(join(snapshot, name), 'utf8')
+    const starts = []
+    let from = 0
+    while (true) {
+        const at = source.indexOf('__d("', from)
+        if (at < 0) break
+        starts.push(at)
+        from = at + 5
+    }
+    for (let index = 0; index < starts.length; index++) {
+        const start = starts[index]
+        const end = index + 1 < starts.length ? starts[index + 1] : source.length
+        const body = source.slice(start, end)
+        const nameMatch = body.match(/^__d\("([^"]+)"/)
+        if (!nameMatch) continue
+        const moduleName = nameMatch[1]
+        const counts = Object.fromEntries(terms.map(term => [term, body.split(term).length - 1]))
+        const relevant = moduleName.includes('MessageEdit') || moduleName.includes('SecretEncrypted') || counts.MessageEdit || counts.messageEdit || counts.MESSAGE_EDIT || counts.secretEncryptedMessage || counts.SecretEncryptedMessage || counts.targetMessageKey || counts.wasaRootSecretAction
+        if (!relevant) continue
+        const excerpts = []
+        for (const term of terms) {
+            let offset = 0
+            let count = 0
+            while (count < 5) {
+                const at = body.indexOf(term, offset)
+                if (at < 0) break
+                excerpts.push({
+                    term,
+                    at,
+                    text: body.slice(Math.max(0, at - 3500), Math.min(body.length, at + term.length + 3500))
+                })
+                count++
+                offset = at + term.length
+            }
         }
+        const score = (moduleName.includes('MessageEdit') ? 200 : 0) + (moduleName.includes('SecretEncrypted') ? 150 : 0) + counts.targetMessageKey * 80 + counts.secretEncryptedMessage * 80 + counts.SecretEncryptedMessage * 60 + counts['Message Edit'] * 50 + counts.MessageEdit * 40 + counts.messageEdit * 40 + counts.MESSAGE_EDIT * 40 + counts.remoteKeyId * 20 + counts.wasaRootSecretAction * 20 + counts.messageSecret * 10 + counts.HKDF * 10 + counts.hkdf * 10 + counts['AES-GCM'] * 10 + counts.aesGcm * 10 + counts.HMAC * 10
+        modules.push({ file: basename(name), moduleName, bytes: body.length, score, counts, excerpts, body: body.length <= 60000 && (moduleName.includes('MessageEdit') || moduleName.includes('SecretEncrypted')) ? body : undefined })
     }
-    if (!matches.length) continue
-    const selected = []
-    const seen = []
-    matches.sort((a, b) => a.at - b.at)
-    for (const match of matches) {
-        if (seen.some(at => Math.abs(at - match.at) < 2500)) continue
-        seen.push(match.at)
-        selected.push({
-            term: match.term,
-            at: match.at,
-            snippet: source.slice(Math.max(0, match.at - 5000), Math.min(source.length, match.at + 5000))
-        })
-        if (selected.length >= 10) break
-    }
-    hits.push({
-        file: basename(path),
-        bytes: source.length,
-        counts: Object.fromEntries(terms.map(term => [term, source.split(term).length - 1])),
-        selected
-    })
 }
 
-hits.sort((a, b) => {
-    const score = x => x.counts['Message Edit'] * 20 + x.counts.MessageEdit * 20 + x.counts.messageEdit * 20 + x.counts.MESSAGE_EDIT * 20 + x.counts.secretEncryptedMessage * 10 + x.counts.targetMessageKey * 10 + x.counts.remoteKeyId * 5 + x.counts.wasaRootSecretAction * 5 + x.counts.messageSecret
-    return score(b) - score(a)
-})
-
+modules.sort((a, b) => b.score - a.score || a.moduleName.localeCompare(b.moduleName))
 let output = ''
 output += `pinned=${report.pinned}\n`
 output += `live=${report.live}\n`
 output += `verdict=${report.verdict}\n`
 output += `protoGaps=${report.protoGaps}\n`
 output += `verifyPassed=${report.verifyPassed}\n`
-output += `matchingFiles=${hits.length}\n\n`
-for (const hit of hits.slice(0, 40)) {
-    output += `===== ${hit.file} bytes=${hit.bytes} =====\n`
-    output += JSON.stringify(hit.counts) + '\n'
-    for (const item of hit.selected) {
-        output += `--- ${item.term} @ ${item.at} ---\n`
-        output += item.snippet + '\n'
+output += `matchingModules=${modules.length}\n\n`
+for (const item of modules.slice(0, 60)) {
+    output += `===== ${item.moduleName} file=${item.file} bytes=${item.bytes} score=${item.score} =====\n`
+    output += JSON.stringify(item.counts) + '\n'
+    if (item.body) {
+        output += `--- FULL MODULE ---\n${item.body}\n`
+    } else {
+        const seen = []
+        for (const excerpt of item.excerpts.sort((a, b) => a.at - b.at)) {
+            if (seen.some(at => Math.abs(at - excerpt.at) < 1800)) continue
+            seen.push(excerpt.at)
+            output += `--- ${excerpt.term} @ ${excerpt.at} ---\n${excerpt.text}\n`
+            if (seen.length >= 8) break
+        }
     }
     output += '\n'
 }
