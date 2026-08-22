@@ -474,16 +474,16 @@ Every switch WhatsApp shows on its own poll composer is available here. The opti
 >
 > To find out what a given account supports, send one poll per setting and see which arrive as real polls.
 
-**Do not combine these switches with image options.** `hideVoter` and `endDate` move the message to `pollCreationMessageV6`, and an image poll sent as V6 arrives with the poll rendered but the option images missing. Observed behaviour by combination:
+`hideVoter` and `endDate` work on photo polls too. Every poll version carries the same `PollCreationMessage`, so `pollCreationMessageV3` holds those fields exactly as V6 does and the receiver reads them from whichever version arrived — but the option images only attach on V3. This library therefore keeps a photo poll on V3 and reserves V6 for text polls:
 
-| Poll | Version | Result |
-|---|---|---|
-| images only | V3 | poll and images render |
-| images + `hideVoter` / `endDate` | V6 | poll renders, **images do not** |
-| images + `canAddOption` | V6 | whole poll unsupported |
-| text only + `hideVoter` / `endDate` | V6 | renders normally |
+| Poll | Version sent |
+|---|---|
+| any option carrying an `image` | V3, settings included |
+| text options + `hideVoter` / `endDate` | V6 |
+| text options, one answer | V3 |
+| text options, several answers | `pollCreationMessage` |
 
-So keep photo polls plain, and use the switches on text polls.
+`canAddOption` remains the exception: it fails the whole poll wherever its receiving flag is off, images or not.
 
 ```js
 await sock.sendMessage(jid, {
@@ -1275,7 +1275,7 @@ import {
 
 Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
 
-These work in groups and one-to-one chats as well as channels. Keep them free of `hideVoter` and `endDate` — those switch the message to `pollCreationMessageV6`, where the images may not render. See [Poll settings](#poll-settings).
+These work in groups and one-to-one chats as well as channels, and `hideVoter` and `endDate` can be combined with them — the poll stays on `pollCreationMessageV3`, which is the version the option images attach to. See [Poll settings](#poll-settings).
 
 ```js
 await sock.sendMessage(jid, {
