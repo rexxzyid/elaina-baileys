@@ -25,3 +25,4 @@ export * from "./stanza-ack.js";
 export * from "./useNekoDBAuth.js";
 export * from "./modern-messages.js";
 export * from "./newsletter-status.js";
+export * from "./voice-recognition.js";
