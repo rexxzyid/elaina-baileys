@@ -1,4 +1,21 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
+export interface NewsletterEnforcement {
+    enforcementId?: string;
+    createdAt?: number;
+    violationCategory?: string;
+    source?: string;
+    appealState?: string;
+    appealCreatedAt?: number;
+    appealReasonOptions: { reason?: string; label?: string }[];
+    appealFormUrl?: string;
+    policy?: {
+        headline?: string;
+        subtitle?: string;
+        overview?: string;
+        explanation?: string;
+        adminDisclaimer?: string;
+    };
+}
 export function makeNewsletterSocket(config: any): {
     executeWMexQuery: (variables: any, queryId: any, dataPath: any) => Promise<any>;
     newsletterCreate: (name: any, description: any) => Promise<{
@@ -60,6 +77,15 @@ export function makeNewsletterSocket(config: any): {
     newsletterDemote: (jid: any, userJid: any) => Promise<void>;
     newsletterDelete: (jid: any) => Promise<void>;
     newsletterAdminCapabilities: (jid: string) => Promise<string[]>;
+    newsletterEnforcements: (jid: string, locale?: string) => Promise<{
+        adminProfiles: NewsletterEnforcement[];
+        profilePictureDeletions: NewsletterEnforcement[];
+        suspensions: NewsletterEnforcement[];
+        violatingMessages: NewsletterEnforcement[];
+        geoSuspensions: NewsletterEnforcement[];
+    }>;
+    newsletterReports: (locale?: string) => Promise<any[]>;
+    newsletterAppealReport: (reportId: string | number, reason: string) => Promise<any>;
     newsletterCanPostStatus: (jid: string) => Promise<{
         canPost: boolean;
         canPostMusic: boolean;
