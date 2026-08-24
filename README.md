@@ -19,7 +19,7 @@
     </a>
     <img src="https://img.shields.io/badge/Node.js-%3E%3D22-339933?logo=node.js&logoColor=white" alt="Node.js" />
     <img src="https://img.shields.io/badge/Module-ESM-F7DF1E?logo=javascript&logoColor=black" alt="ESM" />
-    <img src="https://img.shields.io/badge/MessageBuilder-v4.6-7F5AF0" alt="Message Builder" />
+    <img src="https://img.shields.io/badge/MessageBuilder-v4.7-7F5AF0" alt="Message Builder" />
   </p>
 
   <p>
@@ -546,7 +546,7 @@ The payload can also be passed to a builder using `.setContextInfo(...)` when th
 
 # 🧱 Integrated MessageBuilder
 
-MessageBuilder v4.6 is included directly inside `@rexxhayanasi/elaina-baileys`.
+MessageBuilder v4.7 is included directly inside `@rexxhayanasi/elaina-baileys`.
 
 Available exports:
 
@@ -559,7 +559,12 @@ import {
   Toolkit,
   MessageBuilder,
   MB,
-  MESSAGE_BUILDER_VERSION
+  MESSAGE_BUILDER_VERSION,
+  AIRichError,
+  ItemNotFoundError,
+  DuplicateIdError,
+  InvalidTargetError,
+  ContentValidationError
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
@@ -755,8 +760,71 @@ Other available AIRich helpers include:
 .addPost(data)
 .addTip(text)
 .addSuggest(suggestion, options)
+.addFOAText(text)
+.addMetadata(text)
+.addWidget(data, options)
+.addFooterAction(data, options)
 .addSection(section)
 .addSubmessage(submessage)
+```
+
+### Editing a Live Message
+
+Every `add*` call accepts `id`, `insertAt`, and `replace`, so a sent message can keep changing instead of being resent.
+
+```js
+const rich = new AIRich(sock)
+  .setTitle('Elaina AI')
+  .addText('Working on it…', { id: 'intro' })
+
+await rich.send(jid)
+
+rich.addImage('', { status: 'GENERATING', update_text: 'Generating image…', insertAt: 'intro', id: 'pic' })
+await rich.sendEdit()
+
+rich.addImage('https://example.com/result.jpg', { replace: 'pic' })
+await rich.sendEdit()
+```
+
+`sendEdit()` reuses the key of the last `send()`, so no jid or message id is needed for the common case; pass them explicitly to edit some other message. `buildEdit(jid, id)` returns the edit payload without sending it.
+
+Item bookkeeping:
+
+```js
+rich.getIds()          // [ 'intro', 'pic' ]
+rich.hasId('pic')      // true
+rich.peek('pic')       // the node behind that id
+rich.assignId(0, 'first')  // names an item that has no id yet
+rich.delete('pic')
+```
+
+`assignId` refuses to rename an item that already carries an id, and refuses an id another item is using.
+
+Bad targets throw typed errors instead of failing silently — `ItemNotFoundError`, `DuplicateIdError`, `InvalidTargetError`, and `ContentValidationError`, all extending `AIRichError` with a `code` field.
+
+### Mixing Instances
+
+`sections` and `items` expose what a builder holds, so content built in one instance can be dropped into another.
+
+```js
+const cards = new AIRich(sock)
+  .addProduct({ title: 'Elaina', brand: 'Baileys', product_url: 'https://example.com' })
+  .addPost({ username: 'elaina', caption: 'Hello', url: 'https://example.com' })
+  .items
+
+rich.addSection(AIRich.newLayout('HScroll', cards), { id: 'mixed' })
+await rich.sendEdit()
+```
+
+### Reading an Existing Message
+
+`loadFrom` rebuilds a builder from a message you received, so an incoming interactive message can be edited and resent.
+
+```js
+const rich = new AIRich(sock).loadFrom(m.message)
+const button = new Button(sock).loadFrom(m.message)
+const carousel = new Carousel(sock).loadFrom(m.message)
+const buttonV2 = new ButtonV2(sock).loadFrom(m.message)
 ```
 
 > [!WARNING]
