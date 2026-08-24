@@ -8,6 +8,7 @@ export * from "./WABinary/index.js";
 export * from "./WAM/index.js";
 export * from "./WAUSync/index.js";
 export * from "./MessageBuilder/index.js";
+export * from "./MessageBuilder/extras.js";
 import baseMakeWASocket from './Socket/index.js';
 import type { NewsletterStatusFetchOptions, NewsletterStatusList, NewsletterStatusSendOptions, NewsletterStatusSendResult, NewsletterStatusStanzaResult } from './Utils/newsletter-status.js';
 type BaseWASocket = ReturnType<typeof baseMakeWASocket>;

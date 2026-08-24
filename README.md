@@ -827,6 +827,65 @@ const carousel = new Carousel(sock).loadFrom(m.message)
 const buttonV2 = new ButtonV2(sock).loadFrom(m.message)
 ```
 
+### Primitives MessageBuilder Has No Helper For
+
+MessageBuilder 4.7 covers 11 of the 20 AI Rich primitives the WhatsApp client knows. The rest are exposed here as plain section builders you drop into `addSection`.
+
+```js
+import {
+  dividerSection,
+  spacerSection,
+  imageSection,
+  taskSection,
+  latexSection,
+  thinkingSection,
+  progressSection,
+  TaskStatus,
+  ThinkingIcon
+} from '@rexxhayanasi/elaina-baileys'
+
+rich.addSection(dividerSection(), { id: 'rule' })
+rich.addSection(spacerSection({ spacing: 3 }))
+rich.addSection(imageSection('https://example.com/photo.jpg'))
+rich.addSection(taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: TaskStatus.RUNNING }))
+rich.addSection(latexSection('E = mc^2'))
+rich.addSection(thinkingSection('Searching the web…', { icon: ThinkingIcon.WEB_SEARCH }))
+rich.addSection(progressSection('Almost done', { inProgress: false }))
+```
+
+| Builder | Primitive | Fields |
+|---|---|---|
+| `dividerSection` | `GenAIDividerPrimitive` | `divider_type` — `HORIZONTAL_LINE` or `DOT` |
+| `spacerSection` | `GenAISpacerPrimitive` | `spacing`; 1 or less draws a rule, more draws that many blank lines |
+| `imageSection` | `GenAIImagePrimitive` | `full_image` / `preview_image`, each with `url` and `url_fallback` |
+| `taskSection` | `GenAITaskPrimitive` | `task_id`, `title`, `subtitle`, `status`; an empty `task_id` makes the client drop the item |
+| `latexSection` | `GenAILatexUXPrimitive` | `latex_expression`, optional rendered `latex_image` |
+| `thinkingSection` | `GenAIBotThinkingStatusPrimitive` | `title`, `icon`, `is_in_progress`, `meta_search_apps` |
+| `progressSection` | `GenAIBotProgressStatusPrimitive` | same fields as thinking |
+
+Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is a Meta subscription upsell card, and `FOABloksPrimitive` renders a Bloks screen, neither of which a bot can populate.
+
+Enum values, read from the client rather than guessed:
+
+```js
+import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES } from '@rexxhayanasi/elaina-baileys'
+```
+
+`AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
+
+### Inspecting a Received AI Rich Message
+
+`decodeAIRich` unpacks the base64 `unifiedResponse` so you can see exactly which primitives a message uses — useful for reproducing something another bot sent.
+
+```js
+import { decodeAIRich } from '@rexxhayanasi/elaina-baileys'
+
+const info = decodeAIRich(m.message)
+console.log(info.layouts)     // [ 'Single', 'HScroll' ]
+console.log(info.typenames)   // [ 'GenAIMarkdownTextUXPrimitive', 'GenAIProductItemCardPrimitive' ]
+console.log(info.sections)
+```
+
 > [!WARNING]
 > AIRich and some experimental interactive payloads depend on WhatsApp client/server compatibility. Rendering may change between WhatsApp versions.
 
