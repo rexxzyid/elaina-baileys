@@ -1031,6 +1031,55 @@ const insights = await sock.newsletterInsights('123456789@newsletter', {
 const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
 ```
 
+### Question Responses
+
+Answers to a channel question, with the follower behind each one.
+
+```js
+const { responses } = await sock.newsletterQuestionResponses('123456789@newsletter', 175, {
+  count: 50,
+  filter: 'starred',
+  searchText: 'harga'
+})
+
+for (const r of responses) {
+  console.log(r.sender.notifyName, r.sender.lid)
+  console.log(r.message?.conversation)
+  console.log(r.starred, r.replied)
+}
+```
+
+`filter` accepts `contacts`, `replied`, or `starred`; `searchText` searches the answers; `before` pages backwards.
+
+### Your Own Reactions and Votes
+
+What you reacted or voted on across channels, without walking every message.
+
+```js
+const groups = await sock.newsletterMyAddOns({ limit: 100 })
+const oneChannel = await sock.newsletterMyAddOns({ limit: 50, jid: '123456789@newsletter' })
+const onStatuses = await sock.newsletterStatusMyAddOns({ limit: 50 })
+
+for (const group of groups) {
+  for (const m of group.messages) {
+    console.log(group.jid, m.serverId, m.reaction?.code, m.pollVote?.hashes)
+  }
+}
+```
+
+`pollVote.hashes` are the SHA-256 option hashes, hex encoded — match them against the poll's options to know which one you picked.
+
+### Incremental Message Updates
+
+Poll only what changed on a channel since a timestamp, instead of refetching history.
+
+```js
+const { messages } = await sock.newsletterFetchMessageUpdates('123456789@newsletter', {
+  count: 50,
+  since: 1770000000
+})
+```
+
 ### Enforcements and Appeals
 
 When a channel feature quietly disappears — the admin profile setting, the status ring, the ability to post — the cause is often an enforcement on the channel, not a missing rollout. This reads what WhatsApp is holding against it.
