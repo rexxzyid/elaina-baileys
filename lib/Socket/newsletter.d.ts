@@ -1,4 +1,12 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
+export interface NewsletterAddOnGroup {
+    jid?: string;
+    messages: {
+        serverId?: number;
+        reaction?: { code?: string; t?: number };
+        pollVote?: { t?: number; hashes: string[] };
+    }[];
+}
 export interface NewsletterEnforcement {
     enforcementId?: string;
     createdAt?: number;
@@ -69,6 +77,46 @@ export function makeNewsletterSocket(config: any): {
     newsletterFetchMessages: (type: any, key: any, count: any, after: any, before: any) => Promise<{
         [k: string]: any;
     }[]>;
+    newsletterFetchMessageUpdates: (jid: string, options?: {
+        count?: number;
+        since?: number;
+        before?: string | number;
+        after?: string | number;
+    }) => Promise<{
+        jid: string;
+        messages: { [k: string]: any }[];
+    }>;
+    newsletterQuestionResponses: (jid: string, serverId: string | number, options?: {
+        count?: number;
+        before?: string;
+        filter?: 'contacts' | 'replied' | 'starred';
+        searchText?: string;
+    }) => Promise<{
+        jid: string;
+        serverId: number;
+        responses: {
+            id?: string;
+            t?: number;
+            isSender: boolean;
+            responseServerId?: string;
+            sender: {
+                lid?: string;
+                notifyName?: string;
+                pictureDirectPath?: string;
+            };
+            replied: boolean;
+            starred: boolean;
+            message?: any;
+        }[];
+    }>;
+    newsletterMyAddOns: (options?: {
+        limit?: number;
+        jid?: string;
+    }) => Promise<NewsletterAddOnGroup[]>;
+    newsletterStatusMyAddOns: (options?: {
+        limit?: number;
+        jid?: string;
+    }) => Promise<NewsletterAddOnGroup[]>;
     subscribeNewsletterUpdates: (jid: any) => Promise<{
         duration: any;
     } | null>;
