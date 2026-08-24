@@ -60,6 +60,11 @@ export function makeNewsletterSocket(config: any): {
     newsletterDemote: (jid: any, userJid: any) => Promise<void>;
     newsletterDelete: (jid: any) => Promise<void>;
     newsletterAdminCapabilities: (jid: string) => Promise<string[]>;
+    newsletterCanPostStatus: (jid: string) => Promise<{
+        canPost: boolean;
+        canPostMusic: boolean;
+        capabilities: string[];
+    }>;
     newsletterAdminInfo: (jid: string) => Promise<{
         id: string;
         adminCount: number;
