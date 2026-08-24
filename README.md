@@ -1494,6 +1494,50 @@ await sock.sendMessage(userJid, {
 })
 ```
 
+### Who Sent a Channel Message
+
+A channel message carries the posting admin's display name and picture in a `<meta>` block that used to be dropped on the floor. It is now decoded into `newsletterMeta`.
+
+```js
+sock.ev.on('messages.upsert', ({ messages }) => {
+  for (const msg of messages) {
+    if (!msg.newsletterMeta) continue
+    console.log(msg.newsletterMeta.adminProfile.name)               // 'Rexx Hayanasi'
+    console.log(msg.newsletterMeta.adminProfile.pictureDirectPath)
+    console.log(msg.newsletterMeta.paidPartnership)                 // sponsored post
+    console.log(msg.newsletterMeta.aiContent)                       // self-declared AI content
+    console.log(msg.newsletterMeta.editTimestamp)
+  }
+})
+```
+
+There is **no username here** — WhatsApp only ships `id`, `name` and `picture` for a channel admin. `name` is the admin profile name the channel owner set, which is not the same as the account's `@username`, and it is only present when the channel turned admin profiles on. `pushName` falls back to it so existing code that reads `msg.pushName` starts showing the admin instead of nothing.
+
+Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
+
+### Read Channel Statuses
+
+```js
+const list = await sock.getNewsletterStatuses('123456789@newsletter', { count: 20 })
+
+for (const status of list.statuses) {
+  console.log(status.serverId, status.type, status.viewsCount, status.responsesCount)
+  console.log(status.adminProfile?.name)
+  console.log(status.reactionCounts) // [ { code: '👍', count: 12 } ]
+}
+```
+
+Page backwards with `{ before: serverId }` or forwards with `{ after: serverId }`.
+
+To poll only what changed since a timestamp, use the updates feed — it goes to the channel jid, not to the server:
+
+```js
+const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
+  count: 20,
+  since: 1770000000
+})
+```
+
 ### Newsletter Status Attribution
 
 Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.

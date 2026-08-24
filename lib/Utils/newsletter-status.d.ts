@@ -74,8 +74,30 @@ export interface NewsletterStatusEntry {
     mediaType?: NewsletterStatusMediaType
     interactionType?: NewsletterStatusInteractionType
     reaction?: string
+    adminProfile?: NewsletterAdminProfileInfo
+    paidPartnership: boolean
+    aiContent: boolean
+    editTimestamp?: number
+    originalTimestamp?: number
+    reactionCounts?: { code?: string, count?: number }[]
+    viewsCount?: number
+    responsesCount?: number
     message?: proto.Message
     node: any
+}
+
+export interface NewsletterAdminProfileInfo {
+    id?: string
+    name?: string
+    pictureId?: string
+    pictureDirectPath?: string
+}
+
+export interface NewsletterStatusUpdatesFetchOptions {
+    count?: number
+    since?: number
+    before?: string | number
+    after?: string | number
 }
 
 export interface NewsletterStatusList {
@@ -114,6 +136,8 @@ export function makeNewsletterStatusReactionSender(sock: any): (jid: string, par
 export function makeNewsletterStatusRevokeSender(sock: any): (jid: string, statusId: string, options?: Pick<NewsletterStatusSendOptions, 'ackTimeoutMs'>) => Promise<NewsletterStatusStanzaResult>
 export function makeNewsletterStatusFetcher(sock: any): (jid: string, options?: NewsletterStatusFetchOptions) => Promise<NewsletterStatusList>
 export function parseNewsletterStatusesResponse(node: any): NewsletterStatusList
+export function parseNewsletterStatusUpdatesResponse(node: any): NewsletterStatusList
+export function makeNewsletterStatusUpdatesFetcher(sock: any): (jid: string, options?: NewsletterStatusUpdatesFetchOptions) => Promise<NewsletterStatusList>
 
 export const NEWSLETTER_STATUS_CONTENT_TYPES: Set<NewsletterStatusContentType>
 export const NEWSLETTER_STATUS_MEDIA_TYPES: Set<NewsletterStatusMediaType>

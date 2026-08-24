@@ -26,6 +26,18 @@ export function decodeMessageNode(stanza: any, meId: any, meLid: any): {
     sender: any;
 };
 export function getDecryptionJid(sender: any, repository: any): Promise<any>;
+export function extractNewsletterMessageMeta(stanza: any): {
+    adminProfile?: {
+        id?: string;
+        name?: string;
+        pictureId?: string;
+        pictureDirectPath?: string;
+    };
+    paidPartnership?: boolean;
+    aiContent?: boolean;
+    editTimestamp?: number;
+    originalTimestamp?: number;
+} | undefined;
 export const NO_MESSAGE_FOUND_ERROR_TEXT: "Message absent from node";
 export const MISSING_KEYS_ERROR_TEXT: "Key used already or never filled";
 export const ACCOUNT_RESTRICTED_TEXT: "Your account has been restricted";
