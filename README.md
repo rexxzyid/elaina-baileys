@@ -899,7 +899,15 @@ Requires admin or owner rights on the channel; other channels answer `Not Author
 
 ```js
 const info = await sock.newsletterAdminInfo('123456789@newsletter')
+// {
+//   id: '123456789@newsletter',
+//   adminCount: 3,
+//   adminProfile: { id, name, picture: { id, directPath } },
+//   adminProfilesEnabled: true
+// }
 ```
+
+`adminProfile` is only filled in when the channel has admin profiles turned on, so check `adminProfilesEnabled` before reading it.
 
 ### Pin / Unpin Messages
 
@@ -998,6 +1006,7 @@ const followers = await sock.newsletterFollowers('123456789@newsletter', { count
 
 ```js
 const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')
+// [ { id: '628xxxxxxxxx@s.whatsapp.net', phoneNumber: '628xxxxxxxxx' } ]
 ```
 
 ### Hide a Question Response

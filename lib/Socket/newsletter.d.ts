@@ -17,7 +17,16 @@ export function makeNewsletterSocket(config: any): {
         mute_state: any;
     }>;
     newsletterUpdate: (jid: any, updates: any) => Promise<any>;
-    newsletterSubscribers: (jid: any) => Promise<any>;
+    newsletterSubscribers: (jid: string, options?: {
+        count?: number;
+    }) => Promise<{
+        id?: string;
+        phoneNumber?: string;
+        displayName?: string;
+        username?: string;
+        role?: string;
+        followTime?: number;
+    }[]>;
     newsletterSubscribed: () => Promise<any>;
     newsletterMetadata: (type: any, key: any) => Promise<any>;
     newsletterFollow: (jid: any) => Promise<any>;
@@ -40,7 +49,19 @@ export function makeNewsletterSocket(config: any): {
     newsletterDemote: (jid: any, userJid: any) => Promise<void>;
     newsletterDelete: (jid: any) => Promise<void>;
     newsletterAdminCapabilities: (jid: string) => Promise<string[]>;
-    newsletterAdminInfo: (jid: string) => Promise<any>;
+    newsletterAdminInfo: (jid: string) => Promise<{
+        id: string;
+        adminCount: number;
+        adminProfile?: {
+            id?: string;
+            name?: string;
+            picture?: {
+                id?: string;
+                directPath?: string;
+            };
+        };
+        adminProfilesEnabled: boolean;
+    }>;
     newsletterPollVoters: (jid: string, serverId: string | number, options?: {
         limit?: number;
         voteHash?: string;
@@ -82,7 +103,10 @@ export function makeNewsletterSocket(config: any): {
     newsletterFollowers: (jid: string, options?: {
         count?: number;
     }) => Promise<any>;
-    newsletterPendingAdminInvites: (jid: string) => Promise<any>;
+    newsletterPendingAdminInvites: (jid: string) => Promise<{
+        id?: string;
+        phoneNumber?: string;
+    }[]>;
     newsletterQuestionResponseState: (jid: string, serverId: string | number, responseServerId: string | number, state: 'HIDDEN' | 'VISIBLE') => Promise<any>;
     newsletterRecommended: (options?: {
         limit?: number;
