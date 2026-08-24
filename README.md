@@ -873,8 +873,37 @@ const metadata = await sock.newsletterMetadata(
   '123456789@newsletter'
 )
 
-console.log(metadata)
+console.log(metadata.thread_metadata.handle)          // the channel's @username
+console.log(metadata.thread_metadata.subscribers_count)
+console.log(metadata.thread_metadata.settings.reaction_codes.value)
 ```
+
+`handle` is the channel's public username — the part after `wa.me/channel/`. It comes back on every call, whether or not you own the channel.
+
+Three extra sections are off by default because they cost the server extra work:
+
+```js
+const metadata = await sock.newsletterMetadata('jid', '123456789@newsletter', {
+  fetchPinnedMessages: true,
+  fetchStatusMetadata: true,
+  fetchWamoSub: true
+})
+
+metadata.thread_metadata.pinned_messages   // [ { message_id, expiry_ts } ]
+metadata.thread_metadata.wamo_sub          // { plan_id }
+metadata.status_metadata                   // { last_status_server_id, last_status_sent_time }
+```
+
+### Mute Admin or Follower Activity
+
+WhatsApp Web replaced the old mute/unmute pair with one setting that separates admin notifications from follower notifications.
+
+```js
+await sock.newsletterUpdateUserSetting('123456789@newsletter', 'ADMIN_NOTIFICATIONS', true)
+await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFICATIONS', false)
+```
+
+`newsletterMute` and `newsletterUnmute` still work and still mute everything at once.
 
 ### Fetch Subscribed Newsletters
 
@@ -1042,6 +1071,35 @@ const { available, suggestions } = await sock.checkUsernameAvailability('elaina'
 ```
 
 `setUsername` resolves `true` only when the server answers `SUCCESS`. `state` is `ACTIVE` or `RESERVED`; pass `{ reserved: true }` when claiming a reserved name.
+
+#### Username Rules
+
+`setUsername` and `checkUsernameAvailability` reject a bad name locally before it reaches the server, so you get the reason instead of a generic failure. The rules are read straight out of the Web client:
+
+| Rule | Error |
+|---|---|
+| Only `a-z`, `A-Z`, `0-9`, `_`, `.` | `INVALID_CHARACTER` |
+| 3 to 35 characters | `INVALID_LENGTH` |
+| At least one letter | `INVALID_NO_LETTERS` |
+| No leading or trailing `.`, no `..` | `INVALID_PERIODS` |
+| Cannot start with `www.` | `INVALID_WWW_PREFIX` |
+| Cannot end with `.com .org .net .int .edu .gov .mil .arpa .html .htm .txt .xml` | `INVALID_DOMAIN_SUFFIX` |
+| Cannot contain `whatsapp`, `instagram`, `facebook`, `oculus` | `INVALID_WORD` |
+
+The PIN is exactly four digits.
+
+Validate without calling the server:
+
+```js
+import { validateUsername, isUsernamePin, displayUsername } from '@rexxhayanasi/elaina-baileys'
+
+validateUsername('rexx.hayanasi')  // { isValid: true }
+validateUsername('rexx.com')       // { isValid: false, errorType: 'INVALID_DOMAIN_SUFFIX' }
+isUsernamePin('1234')              // true
+displayUsername('rexx')            // '@rexx'
+```
+
+A leading `@` is stripped for you, so `setUsername('@elaina')` and `setUsername('elaina')` are the same call.
 
 ### About / Text Status
 
