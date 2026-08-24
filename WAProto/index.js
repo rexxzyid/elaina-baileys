@@ -23819,6 +23819,7 @@ export const proto = $root.proto = (() => {
 
         ContextInfo.prototype.instagramThreadLink = null;
         ContextInfo.prototype.aiProvenance = null;
+        ContextInfo.prototype.experienceIds = $util.emptyArray;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -24326,6 +24327,12 @@ export const proto = $root.proto = (() => {
                 $root.proto.ContextInfo.InstagramThreadLink.encode(m.instagramThreadLink, w.uint32(642).fork()).ldelim();
             if (m.aiProvenance != null && Object.hasOwnProperty.call(m, "aiProvenance"))
                 $root.proto.AIProvenance.encode(m.aiProvenance, w.uint32(650).fork()).ldelim();
+            if (m.experienceIds != null && m.experienceIds.length) {
+                w.uint32(658).fork();
+                for (var i = 0; i < m.experienceIds.length; ++i)
+                    w.uint32(m.experienceIds[i]);
+                w.ldelim();
+            }
             return w;
         };
 
@@ -24602,6 +24609,17 @@ export const proto = $root.proto = (() => {
                     }
                 case 81: {
                         m.aiProvenance = $root.proto.AIProvenance.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 82: {
+                        if (!(m.experienceIds && m.experienceIds.length))
+                            m.experienceIds = [];
+                        if ((t & 7) === 2) {
+                            var c2 = r.uint32() + r.pos;
+                            while (r.pos < c2)
+                                m.experienceIds.push(r.uint32());
+                        } else
+                            m.experienceIds.push(r.uint32());
                         break;
                     }
                 default:
@@ -25045,6 +25063,13 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.aiProvenance: object expected");
                 m.aiProvenance = $root.proto.AIProvenance.fromObject(d.aiProvenance, n + 1);
             }
+            if (d.experienceIds) {
+                if (!Array.isArray(d.experienceIds))
+                    throw TypeError(".proto.ContextInfo.experienceIds: array expected");
+                m.experienceIds = [];
+                for (var i = 0; i < d.experienceIds.length; ++i)
+                    m.experienceIds[i] = d.experienceIds[i] >>> 0;
+            }
             return m;
         };
 
@@ -25056,6 +25081,7 @@ export const proto = $root.proto = (() => {
                 d.mentionedJid = [];
                 d.groupMentions = [];
                 d.statusAttributions = [];
+                d.experienceIds = [];
             }
             if (m.stanzaId != null && m.hasOwnProperty("stanzaId")) {
                 d.stanzaId = m.stanzaId;
@@ -25382,6 +25408,11 @@ export const proto = $root.proto = (() => {
                 d.aiProvenance = $root.proto.AIProvenance.toObject(m.aiProvenance, o);
                 if (o.oneofs)
                     d._aiProvenance = "aiProvenance";
+            }
+            if (m.experienceIds && m.experienceIds.length) {
+                d.experienceIds = [];
+                for (var j = 0; j < m.experienceIds.length; ++j)
+                    d.experienceIds[j] = m.experienceIds[j];
             }
             return d;
         };
@@ -42778,6 +42809,7 @@ export const proto = $root.proto = (() => {
         Message.prototype.musicMessage = null;
         Message.prototype.statusLinkPreviewMetadata = null;
         Message.prototype.botPlatformRegistrationSuccessMessage = null;
+        Message.prototype.newsletterScheduledMessage = null;
 
         let $oneOfFields;
 
@@ -43442,6 +43474,10 @@ export const proto = $root.proto = (() => {
         });
 
         // Virtual OneOf for proto3 optional field
+        Object.defineProperty(Message.prototype, "_newsletterScheduledMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["newsletterScheduledMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
         Object.defineProperty(Message.prototype, "_botPlatformRegistrationSuccessMessage", {
             get: $util.oneOfGetter($oneOfFields = ["botPlatformRegistrationSuccessMessage"]),
             set: $util.oneOfSetter($oneOfFields)
@@ -43676,6 +43712,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.Message.StatusLinkPreviewMetadata.encode(m.statusLinkPreviewMetadata, w.uint32(1042).fork()).ldelim();
             if (m.botPlatformRegistrationSuccessMessage != null && Object.hasOwnProperty.call(m, "botPlatformRegistrationSuccessMessage"))
                 $root.proto.Message.FutureProofMessage.encode(m.botPlatformRegistrationSuccessMessage, w.uint32(1050).fork()).ldelim();
+            if (m.newsletterScheduledMessage != null && Object.hasOwnProperty.call(m, "newsletterScheduledMessage"))
+                $root.proto.Message.FutureProofMessage.encode(m.newsletterScheduledMessage, w.uint32(1058).fork()).ldelim();
             return w;
         };
 
@@ -44134,6 +44172,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 131: {
                         m.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 132: {
+                        m.newsletterScheduledMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -44705,6 +44747,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.Message.botPlatformRegistrationSuccessMessage: object expected");
                 m.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.fromObject(d.botPlatformRegistrationSuccessMessage, n + 1);
             }
+            if (d.newsletterScheduledMessage != null) {
+                if (typeof d.newsletterScheduledMessage !== "object")
+                    throw TypeError(".proto.Message.newsletterScheduledMessage: object expected");
+                m.newsletterScheduledMessage = $root.proto.Message.FutureProofMessage.fromObject(d.newsletterScheduledMessage, n + 1);
+            }
             return m;
         };
 
@@ -45266,6 +45313,11 @@ export const proto = $root.proto = (() => {
                 d.botPlatformRegistrationSuccessMessage = $root.proto.Message.FutureProofMessage.toObject(m.botPlatformRegistrationSuccessMessage, o);
                 if (o.oneofs)
                     d._botPlatformRegistrationSuccessMessage = "botPlatformRegistrationSuccessMessage";
+            }
+            if (m.newsletterScheduledMessage != null && m.hasOwnProperty("newsletterScheduledMessage")) {
+                d.newsletterScheduledMessage = $root.proto.Message.FutureProofMessage.toObject(m.newsletterScheduledMessage, o);
+                if (o.oneofs)
+                    d._newsletterScheduledMessage = "newsletterScheduledMessage";
             }
             return d;
         };

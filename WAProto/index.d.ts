@@ -3479,6 +3479,7 @@ export namespace proto {
     interface IContextInfo {
         instagramThreadLink?: (proto.ContextInfo.IInstagramThreadLink|null);
         aiProvenance?: (proto.IAIProvenance|null);
+        experienceIds?: (number[]|null);
         stanzaId?: (string|null);
         participant?: (string|null);
         quotedMessage?: (proto.IMessage|null);
@@ -3546,6 +3547,7 @@ export namespace proto {
     class ContextInfo implements IContextInfo {
         public instagramThreadLink?: (proto.ContextInfo.IInstagramThreadLink|null);
         public aiProvenance?: (proto.IAIProvenance|null);
+        public experienceIds: number[];
         constructor(p?: proto.IContextInfo);
         public stanzaId?: (string|null);
         public participant?: (string|null);
@@ -6113,6 +6115,7 @@ export namespace proto {
         musicMessage?: (proto.Message.IMusicMessage|null);
         statusLinkPreviewMetadata?: (proto.Message.IStatusLinkPreviewMetadata|null);
         botPlatformRegistrationSuccessMessage?: (proto.Message.IFutureProofMessage|null);
+        newsletterScheduledMessage?: (proto.Message.IFutureProofMessage|null);
     }
 
     class Message implements IMessage {
@@ -6228,6 +6231,7 @@ export namespace proto {
         public musicMessage?: (proto.Message.IMusicMessage|null);
         public statusLinkPreviewMetadata?: (proto.Message.IStatusLinkPreviewMetadata|null);
         public botPlatformRegistrationSuccessMessage?: (proto.Message.IFutureProofMessage|null);
+        public newsletterScheduledMessage?: (proto.Message.IFutureProofMessage|null);
         public static create(properties?: proto.IMessage): proto.Message;
         public static encode(m: proto.IMessage, w?: $protobuf.Writer): $protobuf.Writer;
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message;
