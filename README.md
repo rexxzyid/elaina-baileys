@@ -1031,6 +1031,45 @@ const insights = await sock.newsletterInsights('123456789@newsletter', {
 const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
 ```
 
+### Enforcements and Appeals
+
+When a channel feature quietly disappears — the admin profile setting, the status ring, the ability to post — the cause is often an enforcement on the channel, not a missing rollout. This reads what WhatsApp is holding against it.
+
+```js
+const enf = await sock.newsletterEnforcements('123456789@newsletter')
+
+console.log(enf.suspensions)
+console.log(enf.adminProfiles)            // enforcement aimed at the admin profile feature
+console.log(enf.profilePictureDeletions)
+console.log(enf.violatingMessages)
+console.log(enf.geoSuspensions)
+```
+
+Every entry carries the same shape:
+
+```js
+{
+  enforcementId: '...',
+  createdAt: 1770000000,
+  violationCategory: 'GENERIC_VIOLATION',
+  source: '...',
+  appealState: '...',
+  appealCreatedAt: undefined,
+  appealReasonOptions: [ { reason: 'RM_COPS', label: 'I own the rights' } ],
+  appealFormUrl: 'https://...',
+  policy: { headline, subtitle, overview, explanation, adminDisclaimer }
+}
+```
+
+`appealReasonOptions` and `appealFormUrl` are the appeal path WhatsApp itself offers — there is no other way to ask for a decision to be reviewed. An empty result in every bucket means the channel is clean and whatever is missing is a rollout, not a penalty.
+
+Reports you filed, and appealing their outcome:
+
+```js
+const reports = await sock.newsletterReports()
+await sock.newsletterAppealReport(reports[0].report_id, 'RESPONSE_VIOLATES_GUIDELINES')
+```
+
 ### Pending Admin Invites
 
 ```js
