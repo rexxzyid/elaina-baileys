@@ -1515,6 +1515,72 @@ There is **no username here** — WhatsApp only ships `id`, `name` and `picture`
 
 Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
 
+### Post a Channel Status
+
+A channel can publish its own status — the ring around the channel avatar, playable like a story. It is a real WhatsApp feature with its own stanza, not a `status@broadcast` post addressed to a channel.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: './poster.jpg' },
+  caption: 'New drop today'
+})
+
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  text: 'Thanks for 10k followers'
+})
+```
+
+React to one, or take a reaction back:
+
+```js
+await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, '🔥')
+await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, undefined)
+```
+
+Delete one:
+
+```js
+await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
+```
+
+#### Channel Status vs `status@broadcast`
+
+They look the same to a viewer and are completely different on the wire.
+
+| | `status@broadcast` | Channel status |
+|---|---|---|
+| Stanza | `<status to="status@broadcast" id t>` | `<status to="…@newsletter" id>` |
+| Payload | `<enc>` nodes, one per recipient device | `<plaintext>` — the raw protobuf |
+| Encryption | end-to-end, sender-key fanout | none, channels are not E2EE |
+| Audience | your contact list, `statusJidList` | everyone following the channel |
+| Who may post | anyone | channel admins with the producer capability |
+| Media | normal media upload | newsletter upload, referenced by `media_id` |
+
+The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
+
+#### Check Whether the Channel May Post
+
+WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:
+
+```js
+const { canPost, canPostMusic, capabilities } = await sock.newsletterCanPostStatus('123456789@newsletter')
+```
+
+`canPost` is `CHANNEL_STATUS_PRODUCER` in the capability list. The full gate WhatsApp Web applies is: the `channel_status_creation` flag is on, you are admin or owner, the channel is not suspended or terminated, and the channel holds `CHANNEL_STATUS_PRODUCER`. Only the last one is visible to a client, and it is the one that actually varies per channel — the rollout flag is off by default on Web, which is why the button is missing there while the phone shows it.
+
+#### Question Statuses
+
+A channel status can carry a question box, and followers answer it.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: './bg.jpg' },
+  question: { text: 'Ask me anything' }
+})
+```
+
+Answers come back as `questionResponseMessage`. Reshare one on top of a new status with `interactionType: 'question_reshare'` plus `parentServerId` and `responseServerId`; publish your own answer with `interactionType: 'question_response'` and `parentServerId`. A question status has to sit on media — WhatsApp Web never publishes a text-only one.
+
 ### Read Channel Statuses
 
 ```js
