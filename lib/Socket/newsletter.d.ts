@@ -28,9 +28,20 @@ export function makeNewsletterSocket(config: any): {
         followTime?: number;
     }[]>;
     newsletterSubscribed: () => Promise<any>;
-    newsletterMetadata: (type: any, key: any) => Promise<any>;
+    newsletterMetadata: (type: 'invite' | 'jid', key: string, options?: {
+        fetchCreationTime?: boolean;
+        fetchFullImage?: boolean;
+        fetchViewerMetadata?: boolean;
+        fetchPinnedMessages?: boolean;
+        fetchStatusMetadata?: boolean;
+        fetchWamoSub?: boolean;
+    }) => Promise<any>;
     newsletterFollow: (jid: any) => Promise<any>;
     newsletterUnfollow: (jid: any) => Promise<any>;
+    newsletterUpdateUserSetting: (jid: string, type: 'ADMIN_NOTIFICATIONS' | 'FOLLOWER_NOTIFICATIONS', value: boolean) => Promise<{
+        id: string;
+        state?: string;
+    }>;
     newsletterMute: (jid: any) => Promise<any>;
     newsletterUnmute: (jid: any) => Promise<any>;
     newsletterUpdateName: (jid: any, name: any) => Promise<any>;
