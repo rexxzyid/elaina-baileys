@@ -56,7 +56,21 @@ export function makeSocket(config: any): {
         timeEnforcementEnds: Date | undefined;
         enforcementType: any;
     }>;
-    fetchNewChatMessageCap: () => Promise<any>;
+    fetchNewChatMessageCap: () => Promise<{
+        status: string;
+        capped: boolean;
+        warned: boolean;
+        totalQuota?: number;
+        usedQuota?: number;
+        remaining?: number;
+        cycleStart?: number;
+        cycleEnd?: number;
+        serverTime?: number;
+        oteStatus?: string;
+        mvStatus?: string;
+        subscriptionStatus?: string;
+        response: any;
+    }>;
 };
 import { WebSocketClient } from './Client/index.js';
 import { BinaryInfo } from '../WAM/BinaryInfo.js';

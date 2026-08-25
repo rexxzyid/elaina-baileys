@@ -527,5 +527,19 @@ declare function makeWASocket(config: any): {
         timeEnforcementEnds: Date | undefined;
         enforcementType: any;
     }>;
-    fetchNewChatMessageCap: () => Promise<any>;
+    fetchNewChatMessageCap: () => Promise<{
+        status: string;
+        capped: boolean;
+        warned: boolean;
+        totalQuota?: number;
+        usedQuota?: number;
+        remaining?: number;
+        cycleStart?: number;
+        cycleEnd?: number;
+        serverTime?: number;
+        oteStatus?: string;
+        mvStatus?: string;
+        subscriptionStatus?: string;
+        response: any;
+    }>;
 };
