@@ -92,6 +92,15 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
   - [AIRich](#airich)
 - [Album Message](#-album-message)
 - [Newsletter / Channel](#-newsletter--channel)
+  - [Creating and Editing a Channel](#creating-and-editing-a-channel)
+  - [Following a Channel](#following-a-channel)
+  - [Reading a Channel](#reading-a-channel)
+  - [Posting and Reacting](#posting-and-reacting)
+  - [Channel Status](#channel-status)
+  - [Questions](#questions)
+  - [Admins](#admins)
+  - [Finding Channels](#finding-channels)
+  - [Enforcements](#enforcements)
 - [Username & About](#-username--about)
 - [Group Management](#-group-management)
 - [Profile Picture](#-profile-picture)
@@ -920,7 +929,9 @@ An album requires at least two image/video media items.
 
 ## 📢 Newsletter / Channel
 
-### Create Newsletter
+### Creating and Editing a Channel
+
+#### Create Newsletter
 
 ```js
 const newsletter = await sock.newsletterCreate(
@@ -931,7 +942,7 @@ const newsletter = await sock.newsletterCreate(
 console.log(newsletter)
 ```
 
-### Update Name
+#### Update Name
 
 ```js
 await sock.newsletterUpdateName(
@@ -940,7 +951,7 @@ await sock.newsletterUpdateName(
 )
 ```
 
-### Update Description
+#### Update Description
 
 ```js
 await sock.newsletterUpdateDescription(
@@ -949,7 +960,7 @@ await sock.newsletterUpdateDescription(
 )
 ```
 
-### Update Picture
+#### Update Picture
 
 ```js
 await sock.newsletterUpdatePicture(
@@ -958,41 +969,51 @@ await sock.newsletterUpdatePicture(
 )
 ```
 
-### Follow / Unfollow
+#### Reaction Settings
+
+```js
+await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
+```
+
+`ALL` allows any emoji, `BASIC` the default set only, `NONE` disables reactions, `BLOCKLIST` uses the server-side blocklist. Anything else is rejected before the request leaves.
+
+### Following a Channel
+
+#### Follow / Unfollow
 
 ```js
 await sock.newsletterFollow('123456789@newsletter')
 await sock.newsletterUnfollow('123456789@newsletter')
 ```
 
-### Mute / Unmute
+#### Mute / Unmute
 
 ```js
 await sock.newsletterMute('123456789@newsletter')
 await sock.newsletterUnmute('123456789@newsletter')
 ```
 
-### React to Newsletter Message
+#### Mute Admin or Follower Activity
+
+WhatsApp Web replaced the old mute/unmute pair with one setting that separates admin notifications from follower notifications.
 
 ```js
-await sock.newsletterReactMessage(
-  '123456789@newsletter',
-  '175',
-  '🔥'
-)
+await sock.newsletterUpdateUserSetting('123456789@newsletter', 'ADMIN_NOTIFICATIONS', true)
+await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFICATIONS', false)
 ```
 
-Remove a reaction by using an empty value:
+`newsletterMute` and `newsletterUnmute` still work and still mute everything at once.
+
+#### Fetch Subscribed Newsletters
 
 ```js
-await sock.newsletterReactMessage(
-  '123456789@newsletter',
-  '175',
-  ''
-)
+const newsletters = await sock.newsletterSubscribed()
+console.log(newsletters)
 ```
 
-### Fetch Newsletter Metadata
+### Reading a Channel
+
+#### Fetch Newsletter Metadata
 
 ```js
 const metadata = await sock.newsletterMetadata(
@@ -1021,159 +1042,24 @@ metadata.thread_metadata.wamo_sub          // { plan_id }
 metadata.status_metadata                   // { last_status_server_id, last_status_sent_time }
 ```
 
-### Mute Admin or Follower Activity
+#### Incremental Message Updates
 
-WhatsApp Web replaced the old mute/unmute pair with one setting that separates admin notifications from follower notifications.
-
-```js
-await sock.newsletterUpdateUserSetting('123456789@newsletter', 'ADMIN_NOTIFICATIONS', true)
-await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFICATIONS', false)
-```
-
-`newsletterMute` and `newsletterUnmute` still work and still mute everything at once.
-
-### Fetch Subscribed Newsletters
+Poll only what changed on a channel since a timestamp, instead of refetching history.
 
 ```js
-const newsletters = await sock.newsletterSubscribed()
-console.log(newsletters)
-```
-
-### Admin Capabilities
-
-Which channel features the server has enabled for you. This is the gate WhatsApp Web itself checks before offering a feature.
-
-```js
-const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
-console.log(capabilities)
-// [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]
-```
-
-Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
-
-### Admin Profiles
-
-A channel admin can set a name and photo of their own that ride along with every update they post, so followers see who wrote it instead of only the channel. WhatsApp calls the channel-level switch **Show admin profile**.
-
-Three parts of this are readable from the library:
-
-```js
-const info = await sock.newsletterAdminInfo('123456789@newsletter')
-info.adminProfilesEnabled   // is the switch on for this channel
-info.adminProfile           // your own name and photo, when it is
-
-const caps = await sock.newsletterAdminCapabilities('123456789@newsletter')
-caps.includes('ADMIN_PROFILE')   // has WhatsApp granted the feature to this channel
-```
-
-Incoming updates carry the posting admin in `newsletterMeta`, and the library now also surfaces the live change notification:
-
-```js
-sock.ev.on('newsletter-admin-profile.update', ({ id, adminProfile }) => {
-  console.log(id, adminProfile)
-  // { id, name, pictureId, pictureDirectPath } — or null when an admin clears theirs
+const { messages } = await sock.newsletterFetchMessageUpdates('123456789@newsletter', {
+  count: 50,
+  since: 1770000000
 })
 ```
 
-Setting your own admin name or photo is **not possible from any client API**. WhatsApp Web only ever receives admin profiles: there is no mutation for it, `newsletterUpdate` accepts only name, description, picture and reaction settings, and the "Show admin profile" switch in the Web UI is rendered without a handler. It is set from the phone, and only on channels that hold the `ADMIN_PROFILE` capability.
-
-### Reaction Settings
+#### Followers
 
 ```js
-await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
+const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
 ```
 
-`ALL` allows any emoji, `BASIC` the default set only, `NONE` disables reactions, `BLOCKLIST` uses the server-side blocklist. Anything else is rejected before the request leaves.
-
-### Admin Profile Info
-
-```js
-const info = await sock.newsletterAdminInfo('123456789@newsletter')
-// {
-//   id: '123456789@newsletter',
-//   adminCount: 3,
-//   adminProfile: { id, name, picture: { id, directPath } },
-//   adminProfilesEnabled: true
-// }
-```
-
-`adminProfile` is only filled in when the channel has admin profiles turned on, so check `adminProfilesEnabled` before reading it.
-
-### Pin / Unpin Messages
-
-Takes the message `server_id`, not the message key.
-
-```js
-await sock.newsletterPinMessages('123456789@newsletter', [175])
-await sock.newsletterUnpinMessages('123456789@newsletter', 175)
-```
-
-### Poll Voters
-
-```js
-const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
-  limit: 100,
-  voteHash: undefined
-})
-```
-
-The response groups voters per `vote_hash`, each with a `voter_list.edges` array.
-
-### Reaction Senders
-
-```js
-const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)
-```
-
-### Content Labels
-
-```js
-await sock.newsletterLabelAiContent('123456789@newsletter', 175)
-await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)
-```
-
-`messageType` is the third argument and defaults to `MESSAGE`; pass `STATUS` to label a channel status.
-
-### Admin Invites
-
-```js
-await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
-await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
-await sock.newsletterAcceptAdminInvite('123456789@newsletter')
-```
-
-### Discovery
-
-```js
-const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
-const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
-```
-
-### Directory
-
-Channel discovery, the same queries the Updates tab uses. Categories are `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS` and `SPECIAL_EVENTS` through `SPECIAL_EVENTS_5`.
-
-```js
-const list = await sock.newsletterDirectoryList({
-  view: 'RECOMMENDED',        // RECOMMENDED | NEW | POPULAR | FEATURED | TRENDING
-  categories: ['NEWS'],
-  countryCodes: ['ID'],
-  limit: 20
-})
-
-const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
-const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })
-```
-
-### Vote on a Channel Poll
-
-Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats.
-
-```js
-await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])
-```
-
-### Insights
+#### Insights
 
 Admin analytics for a channel you own.
 
@@ -1186,13 +1072,241 @@ const insights = await sock.newsletterInsights('123456789@newsletter', {
 
 `metrics_status` is `OK` or `MISSING`; `MISSING` means the server has no data for the requested window yet.
 
-### Followers
+#### Your Own Reactions and Votes
+
+What you reacted or voted on across channels, without walking every message.
 
 ```js
-const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
+const groups = await sock.newsletterMyAddOns({ limit: 100 })
+const oneChannel = await sock.newsletterMyAddOns({ limit: 50, jid: '123456789@newsletter' })
+const onStatuses = await sock.newsletterStatusMyAddOns({ limit: 50 })
+
+for (const group of groups) {
+  for (const m of group.messages) {
+    console.log(group.jid, m.serverId, m.reaction?.code, m.pollVote?.hashes)
+  }
+}
 ```
 
-### Question Responses
+`pollVote.hashes` are the SHA-256 option hashes, hex encoded — match them against the poll's options to know which one you picked.
+
+### Posting and Reacting
+
+#### React to Newsletter Message
+
+```js
+await sock.newsletterReactMessage(
+  '123456789@newsletter',
+  '175',
+  '🔥'
+)
+```
+
+Remove a reaction by using an empty value:
+
+```js
+await sock.newsletterReactMessage(
+  '123456789@newsletter',
+  '175',
+  ''
+)
+```
+
+#### Pin / Unpin Messages
+
+Takes the message `server_id`, not the message key.
+
+```js
+await sock.newsletterPinMessages('123456789@newsletter', [175])
+await sock.newsletterUnpinMessages('123456789@newsletter', 175)
+```
+
+#### Content Labels
+
+```js
+await sock.newsletterLabelAiContent('123456789@newsletter', 175)
+await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)
+```
+
+`messageType` is the third argument and defaults to `MESSAGE`; pass `STATUS` to label a channel status.
+
+#### Vote on a Channel Poll
+
+Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats.
+
+```js
+await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])
+```
+
+#### Poll Voters
+
+```js
+const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
+  limit: 100,
+  voteHash: undefined
+})
+```
+
+The response groups voters per `vote_hash`, each with a `voter_list.edges` array.
+
+#### Reaction Senders
+
+```js
+const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)
+```
+
+### Channel Status
+
+#### Post a Channel Status
+
+A channel can publish its own status — the ring around the channel avatar, playable like a story. It is a real WhatsApp feature with its own stanza, not a `status@broadcast` post addressed to a channel.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: './poster.jpg' },
+  caption: 'New drop today'
+})
+
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  text: 'Thanks for 10k followers'
+})
+```
+
+React to one, or take a reaction back:
+
+```js
+await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, '🔥')
+await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, undefined)
+```
+
+Delete one:
+
+```js
+await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
+```
+
+##### Channel Status vs `status@broadcast`
+
+They look the same to a viewer and are completely different on the wire.
+
+| | `status@broadcast` | Channel status |
+|---|---|---|
+| Stanza | `<status to="status@broadcast" id t>` | `<status to="…@newsletter" id>` |
+| Payload | `<enc>` nodes, one per recipient device | `<plaintext>` — the raw protobuf |
+| Encryption | end-to-end, sender-key fanout | none, channels are not E2EE |
+| Audience | your contact list, `statusJidList` | everyone following the channel |
+| Who may post | anyone | channel admins with the producer capability |
+| Media | normal media upload | newsletter upload, referenced by `media_id` |
+
+The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
+
+##### Check Whether the Channel May Post
+
+WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:
+
+```js
+const { canPost, canPostMusic, capabilities } = await sock.newsletterCanPostStatus('123456789@newsletter')
+```
+
+`canPost` is `CHANNEL_STATUS_PRODUCER` in the capability list. The full gate WhatsApp Web applies is: the `channel_status_creation` flag is on, you are admin or owner, the channel is not suspended or terminated, and the channel holds `CHANNEL_STATUS_PRODUCER`. Only the last one is visible to a client, and it is the one that actually varies per channel — the rollout flag is off by default on Web, which is why the button is missing there while the phone shows it.
+
+##### Question Statuses
+
+A channel status can carry a question box, and followers answer it.
+
+```js
+await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: './bg.jpg' },
+  question: { text: 'Ask me anything' }
+})
+```
+
+Answers come back as `questionResponseMessage`. Reshare one on top of a new status with `interactionType: 'question_reshare'` plus `parentServerId` and `responseServerId`; publish your own answer with `interactionType: 'question_response'` and `parentServerId`. A question status has to sit on media — WhatsApp Web never publishes a text-only one.
+
+#### Read Channel Statuses
+
+```js
+const list = await sock.getNewsletterStatuses('123456789@newsletter', { count: 20 })
+
+for (const status of list.statuses) {
+  console.log(status.serverId, status.type, status.viewsCount, status.responsesCount)
+  console.log(status.adminProfile?.name)
+  console.log(status.reactionCounts) // [ { code: '👍', count: 12 } ]
+}
+```
+
+Page backwards with `{ before: serverId }` or forwards with `{ after: serverId }`.
+
+To poll only what changed since a timestamp, use the updates feed — it goes to the channel jid, not to the server:
+
+```js
+const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
+  count: 20,
+  since: 1770000000
+})
+```
+
+#### Newsletter Status Attribution
+
+Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.
+
+```js
+await sock.sendMessage('status@broadcast', {
+  image: { url: 'https://example.com/status.jpg' },
+  caption: 'Shared from Elaina Updates',
+  newsletterStatus: {
+    newsletterJid: '123456789@newsletter',
+    messageId: 42,
+    duration: 24,
+    hasMultipleReshares: false
+  }
+}, {
+  statusJidList: audienceJids
+})
+```
+
+The attribution can also be created manually.
+
+```js
+const attribution = makeNewsletterStatusAttribution({
+  newsletterJid: '123456789@newsletter',
+  messageId: 42
+})
+
+await sock.sendMessage('status@broadcast', {
+  text: 'Newsletter status',
+  contextInfo: {
+    statusAttributions: [attribution]
+  }
+}, {
+  statusJidList: audienceJids
+})
+```
+
+#### Who Sent a Channel Message
+
+A channel message carries the posting admin's display name and picture in a `<meta>` block that used to be dropped on the floor. It is now decoded into `newsletterMeta`.
+
+```js
+sock.ev.on('messages.upsert', ({ messages }) => {
+  for (const msg of messages) {
+    if (!msg.newsletterMeta) continue
+    console.log(msg.newsletterMeta.adminProfile.name)               // 'Rexx Hayanasi'
+    console.log(msg.newsletterMeta.adminProfile.pictureDirectPath)
+    console.log(msg.newsletterMeta.paidPartnership)                 // sponsored post
+    console.log(msg.newsletterMeta.aiContent)                       // self-declared AI content
+    console.log(msg.newsletterMeta.editTimestamp)
+  }
+})
+```
+
+There is **no username here** — WhatsApp only ships `id`, `name` and `picture` for a channel admin. `name` is the admin profile name the channel owner set, which is not the same as the account's `@username`, and it is only present when the channel turned admin profiles on. `pushName` falls back to it so existing code that reads `msg.pushName` starts showing the admin instead of nothing.
+
+Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
+
+### Questions
+
+#### Question Responses
 
 Answers to a channel question, with the follower behind each one.
 
@@ -1212,36 +1326,104 @@ for (const r of responses) {
 
 `filter` accepts `contacts`, `replied`, or `starred`; `searchText` searches the answers; `before` pages backwards.
 
-### Your Own Reactions and Votes
+#### Hide a Question Response
 
-What you reacted or voted on across channels, without walking every message.
+Moderates a follower's answer to a channel question.
 
 ```js
-const groups = await sock.newsletterMyAddOns({ limit: 100 })
-const oneChannel = await sock.newsletterMyAddOns({ limit: 50, jid: '123456789@newsletter' })
-const onStatuses = await sock.newsletterStatusMyAddOns({ limit: 50 })
-
-for (const group of groups) {
-  for (const m of group.messages) {
-    console.log(group.jid, m.serverId, m.reaction?.code, m.pollVote?.hashes)
-  }
-}
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
+await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'VISIBLE')
 ```
 
-`pollVote.hashes` are the SHA-256 option hashes, hex encoded — match them against the poll's options to know which one you picked.
+---
 
-### Incremental Message Updates
+### Admins
 
-Poll only what changed on a channel since a timestamp, instead of refetching history.
+#### Admin Capabilities
+
+Which channel features the server has enabled for you. This is the gate WhatsApp Web itself checks before offering a feature.
 
 ```js
-const { messages } = await sock.newsletterFetchMessageUpdates('123456789@newsletter', {
-  count: 50,
-  since: 1770000000
+const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
+console.log(capabilities)
+// [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]
+```
+
+Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
+
+#### Admin Profiles
+
+A channel admin can set a name and photo of their own that ride along with every update they post, so followers see who wrote it instead of only the channel. WhatsApp calls the channel-level switch **Show admin profile**.
+
+Three parts of this are readable from the library:
+
+```js
+const info = await sock.newsletterAdminInfo('123456789@newsletter')
+// {
+//   id: '123456789@newsletter',
+//   adminCount: 3,
+//   adminProfile: { id, name, picture: { id, directPath } },
+//   adminProfilesEnabled: true
+// }
+
+const caps = await sock.newsletterAdminCapabilities('123456789@newsletter')
+caps.includes('ADMIN_PROFILE')   // has WhatsApp granted the feature to this channel
+```
+
+Incoming updates carry the posting admin in `newsletterMeta`, and the library now also surfaces the live change notification:
+
+```js
+sock.ev.on('newsletter-admin-profile.update', ({ id, adminProfile }) => {
+  console.log(id, adminProfile)
+  // { id, name, pictureId, pictureDirectPath } — or null when an admin clears theirs
 })
 ```
 
-### Enforcements and Appeals
+Setting your own admin name or photo is **not possible from any client API**. WhatsApp Web only ever receives admin profiles: there is no mutation for it, `newsletterUpdate` accepts only name, description, picture and reaction settings, and the "Show admin profile" switch in the Web UI is rendered without a handler. It is set from the phone, and only on channels that hold the `ADMIN_PROFILE` capability.
+
+#### Admin Invites
+
+```js
+await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
+await sock.newsletterAcceptAdminInvite('123456789@newsletter')
+```
+
+#### Pending Admin Invites
+
+```js
+const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')
+// [ { id: '628xxxxxxxxx@s.whatsapp.net', phoneNumber: '628xxxxxxxxx' } ]
+```
+
+### Finding Channels
+
+#### Discovery
+
+```js
+const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
+const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
+```
+
+#### Directory
+
+Channel discovery, the same queries the Updates tab uses. Categories are `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS` and `SPECIAL_EVENTS` through `SPECIAL_EVENTS_5`.
+
+```js
+const list = await sock.newsletterDirectoryList({
+  view: 'RECOMMENDED',        // RECOMMENDED | NEW | POPULAR | FEATURED | TRENDING
+  categories: ['NEWS'],
+  countryCodes: ['ID'],
+  limit: 20
+})
+
+const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
+const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })
+```
+
+### Enforcements
+
+#### Enforcements and Appeals
 
 When a channel feature quietly disappears — the admin profile setting, the status ring, the ability to post — the cause is often an enforcement on the channel, not a missing rollout. This reads what WhatsApp is holding against it.
 
@@ -1279,24 +1461,6 @@ Reports you filed, and appealing their outcome:
 const reports = await sock.newsletterReports()
 await sock.newsletterAppealReport(reports[0].report_id, 'RESPONSE_VIOLATES_GUIDELINES')
 ```
-
-### Pending Admin Invites
-
-```js
-const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')
-// [ { id: '628xxxxxxxxx@s.whatsapp.net', phoneNumber: '628xxxxxxxxx' } ]
-```
-
-### Hide a Question Response
-
-Moderates a follower's answer to a channel question.
-
-```js
-await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
-await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'VISIBLE')
-```
-
----
 
 ## 🪪 Username & About
 
@@ -1576,7 +1740,6 @@ If your repository intentionally does not track a lockfile for this library pack
 ---
 
 ## 🧪 Modern WhatsApp Message APIs
-
 Elaina Baileys exposes helpers for newer protobuf message types already present in the bundled WAProto. These APIs are experimental because WhatsApp can gate rendering or server acceptance by account, platform, or rollout.
 
 ```js
@@ -1740,153 +1903,6 @@ await sock.sendMessage(userJid, {
     newsletterName: 'Elaina Updates',
     caption: 'Follow this channel'
   }
-})
-```
-
-### Who Sent a Channel Message
-
-A channel message carries the posting admin's display name and picture in a `<meta>` block that used to be dropped on the floor. It is now decoded into `newsletterMeta`.
-
-```js
-sock.ev.on('messages.upsert', ({ messages }) => {
-  for (const msg of messages) {
-    if (!msg.newsletterMeta) continue
-    console.log(msg.newsletterMeta.adminProfile.name)               // 'Rexx Hayanasi'
-    console.log(msg.newsletterMeta.adminProfile.pictureDirectPath)
-    console.log(msg.newsletterMeta.paidPartnership)                 // sponsored post
-    console.log(msg.newsletterMeta.aiContent)                       // self-declared AI content
-    console.log(msg.newsletterMeta.editTimestamp)
-  }
-})
-```
-
-There is **no username here** — WhatsApp only ships `id`, `name` and `picture` for a channel admin. `name` is the admin profile name the channel owner set, which is not the same as the account's `@username`, and it is only present when the channel turned admin profiles on. `pushName` falls back to it so existing code that reads `msg.pushName` starts showing the admin instead of nothing.
-
-Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
-
-### Post a Channel Status
-
-A channel can publish its own status — the ring around the channel avatar, playable like a story. It is a real WhatsApp feature with its own stanza, not a `status@broadcast` post addressed to a channel.
-
-```js
-await sock.sendNewsletterStatus('123456789@newsletter', {
-  image: { url: './poster.jpg' },
-  caption: 'New drop today'
-})
-
-await sock.sendNewsletterStatus('123456789@newsletter', {
-  text: 'Thanks for 10k followers'
-})
-```
-
-React to one, or take a reaction back:
-
-```js
-await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, '🔥')
-await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, undefined)
-```
-
-Delete one:
-
-```js
-await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
-```
-
-#### Channel Status vs `status@broadcast`
-
-They look the same to a viewer and are completely different on the wire.
-
-| | `status@broadcast` | Channel status |
-|---|---|---|
-| Stanza | `<status to="status@broadcast" id t>` | `<status to="…@newsletter" id>` |
-| Payload | `<enc>` nodes, one per recipient device | `<plaintext>` — the raw protobuf |
-| Encryption | end-to-end, sender-key fanout | none, channels are not E2EE |
-| Audience | your contact list, `statusJidList` | everyone following the channel |
-| Who may post | anyone | channel admins with the producer capability |
-| Media | normal media upload | newsletter upload, referenced by `media_id` |
-
-The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
-
-#### Check Whether the Channel May Post
-
-WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:
-
-```js
-const { canPost, canPostMusic, capabilities } = await sock.newsletterCanPostStatus('123456789@newsletter')
-```
-
-`canPost` is `CHANNEL_STATUS_PRODUCER` in the capability list. The full gate WhatsApp Web applies is: the `channel_status_creation` flag is on, you are admin or owner, the channel is not suspended or terminated, and the channel holds `CHANNEL_STATUS_PRODUCER`. Only the last one is visible to a client, and it is the one that actually varies per channel — the rollout flag is off by default on Web, which is why the button is missing there while the phone shows it.
-
-#### Question Statuses
-
-A channel status can carry a question box, and followers answer it.
-
-```js
-await sock.sendNewsletterStatus('123456789@newsletter', {
-  image: { url: './bg.jpg' },
-  question: { text: 'Ask me anything' }
-})
-```
-
-Answers come back as `questionResponseMessage`. Reshare one on top of a new status with `interactionType: 'question_reshare'` plus `parentServerId` and `responseServerId`; publish your own answer with `interactionType: 'question_response'` and `parentServerId`. A question status has to sit on media — WhatsApp Web never publishes a text-only one.
-
-### Read Channel Statuses
-
-```js
-const list = await sock.getNewsletterStatuses('123456789@newsletter', { count: 20 })
-
-for (const status of list.statuses) {
-  console.log(status.serverId, status.type, status.viewsCount, status.responsesCount)
-  console.log(status.adminProfile?.name)
-  console.log(status.reactionCounts) // [ { code: '👍', count: 12 } ]
-}
-```
-
-Page backwards with `{ before: serverId }` or forwards with `{ after: serverId }`.
-
-To poll only what changed since a timestamp, use the updates feed — it goes to the channel jid, not to the server:
-
-```js
-const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
-  count: 20,
-  since: 1770000000
-})
-```
-
-### Newsletter Status Attribution
-
-Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.
-
-```js
-await sock.sendMessage('status@broadcast', {
-  image: { url: 'https://example.com/status.jpg' },
-  caption: 'Shared from Elaina Updates',
-  newsletterStatus: {
-    newsletterJid: '123456789@newsletter',
-    messageId: 42,
-    duration: 24,
-    hasMultipleReshares: false
-  }
-}, {
-  statusJidList: audienceJids
-})
-```
-
-The attribution can also be created manually.
-
-```js
-const attribution = makeNewsletterStatusAttribution({
-  newsletterJid: '123456789@newsletter',
-  messageId: 42
-})
-
-await sock.sendMessage('status@broadcast', {
-  text: 'Newsletter status',
-  contextInfo: {
-    statusAttributions: [attribution]
-  }
-}, {
-  statusJidList: audienceJids
 })
 ```
 
