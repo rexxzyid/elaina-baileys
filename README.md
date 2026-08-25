@@ -108,6 +108,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Update WhatsApp Web Version](#-update-whatsapp-web-version)
 - [Scheduled Messages](#-scheduled-messages)
 - [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
+- [Account Health Signals](#-account-health-signals)
 - [Troubleshooting](#-troubleshooting)
 - [Credits](#-credits)
 - [License](#-license)
@@ -2117,6 +2118,64 @@ These helpers return protobuf-compatible message content that can be passed to `
 > The inspected WhatsApp Desktop build also exposes schema names related to bot history sharing and identity verification. They are intentionally not added until their protobuf field numbers, parent messages, and wire layout are confirmed. Elaina Baileys does not guess protobuf tags.
 
 ---
+
+## 🛡️ Account Health Signals
+
+WhatsApp tracks how an account reaches out to people it has not spoken to before, and it tells the client where it stands. Reading those two signals is far more reliable than guessing at a safe delay.
+
+### New-Chat Message Quota
+
+```js
+const cap = await sock.fetchNewChatMessageCap()
+// {
+//   status: 'NONE' | 'FIRST_WARNING' | 'SECOND_WARNING' | 'CAPPED',
+//   capped: false, warned: false,
+//   totalQuota: 200, usedQuota: 41, remaining: 159,
+//   cycleStart, cycleEnd, serverTime, oteStatus, mvStatus, subscriptionStatus
+// }
+```
+
+`status` is WhatsApp's own escalation ladder for messaging **new** chats: `NONE` → `FIRST_WARNING` → `SECOND_WARNING` → `CAPPED`. `remaining` is what is left in the current cycle, and `cycleEnd` is when it resets.
+
+Only first contact with a new chat consumes quota. Replying inside a conversation the other person started does not.
+
+### Reachout Timelock
+
+```js
+const lock = await sock.fetchAccountReachoutTimelock()
+// { isActive: true, timeEnforcementEnds: Date, enforcementType: 'BIZ_QUALITY' }
+```
+
+`isActive` means the account is already restricted from reaching out, and `timeEnforcementEnds` is when that lifts. `enforcementType` says why — `BIZ_QUALITY` is the quality-based one, the `BIZ_COMMERCE_VIOLATION_*` values are policy categories.
+
+Both signals also arrive unprompted:
+
+```js
+sock.ev.on('connection.update', ({ reachoutTimeLock }) => {
+  if (reachoutTimeLock?.isActive) stopSending()
+})
+```
+
+### Using Them as a Guard
+
+```js
+const guard = async () => {
+  const lock = await sock.fetchAccountReachoutTimelock()
+  if (lock.isActive) return { send: false, reason: 'reachout timelock until ' + lock.timeEnforcementEnds }
+
+  const cap = await sock.fetchNewChatMessageCap()
+  if (cap.capped) return { send: false, reason: 'new-chat quota exhausted until ' + new Date(cap.cycleEnd * 1000) }
+  if (cap.warned) return { send: false, reason: 'WhatsApp already warned this account: ' + cap.status }
+  if (cap.remaining !== undefined && cap.remaining < 10) return { send: false, reason: 'only ' + cap.remaining + ' left this cycle' }
+
+  return { send: true, remaining: cap.remaining }
+}
+```
+
+Check it before a run and again every batch — `SECOND_WARNING` is the last state before the cap lands, so stopping there is the difference between a pause and a block.
+
+> [!NOTE]
+> Sending in bulk through an unofficial client is outside WhatsApp's Terms of Service whatever the recipients agreed to. The sanctioned route for opt-in bulk messaging is the WhatsApp Business Platform. These signals reduce the odds of tripping automated limits; they do not make an account safe.
 
 ## 🐞 Troubleshooting
 
