@@ -70,6 +70,7 @@ export function makeNewsletterSocket(config: any): {
     newsletterMute: (jid: any) => Promise<any>;
     newsletterUnmute: (jid: any) => Promise<any>;
     newsletterUpdateName: (jid: any, name: any) => Promise<any>;
+    newsletterUpdateReactions: (jid: string, setting: 'ALL' | 'BASIC' | 'NONE' | 'BLOCKLIST') => Promise<any>;
     newsletterUpdateDescription: (jid: any, description: any) => Promise<any>;
     newsletterUpdatePicture: (jid: any, content: any) => Promise<any>;
     newsletterRemovePicture: (jid: any) => Promise<any>;

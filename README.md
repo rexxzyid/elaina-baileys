@@ -1051,6 +1051,40 @@ console.log(capabilities)
 
 Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
 
+### Admin Profiles
+
+A channel admin can set a name and photo of their own that ride along with every update they post, so followers see who wrote it instead of only the channel. WhatsApp calls the channel-level switch **Show admin profile**.
+
+Three parts of this are readable from the library:
+
+```js
+const info = await sock.newsletterAdminInfo('123456789@newsletter')
+info.adminProfilesEnabled   // is the switch on for this channel
+info.adminProfile           // your own name and photo, when it is
+
+const caps = await sock.newsletterAdminCapabilities('123456789@newsletter')
+caps.includes('ADMIN_PROFILE')   // has WhatsApp granted the feature to this channel
+```
+
+Incoming updates carry the posting admin in `newsletterMeta`, and the library now also surfaces the live change notification:
+
+```js
+sock.ev.on('newsletter-admin-profile.update', ({ id, adminProfile }) => {
+  console.log(id, adminProfile)
+  // { id, name, pictureId, pictureDirectPath } — or null when an admin clears theirs
+})
+```
+
+Setting your own admin name or photo is **not possible from any client API**. WhatsApp Web only ever receives admin profiles: there is no mutation for it, `newsletterUpdate` accepts only name, description, picture and reaction settings, and the "Show admin profile" switch in the Web UI is rendered without a handler. It is set from the phone, and only on channels that hold the `ADMIN_PROFILE` capability.
+
+### Reaction Settings
+
+```js
+await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
+```
+
+`ALL` allows any emoji, `BASIC` the default set only, `NONE` disables reactions, `BLOCKLIST` uses the server-side blocklist. Anything else is rejected before the request leaves.
+
 ### Admin Profile Info
 
 ```js
