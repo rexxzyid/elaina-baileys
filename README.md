@@ -106,6 +106,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Profile Picture](#-profile-picture)
 - [Useful Exports](#-useful-exports)
 - [Update WhatsApp Web Version](#-update-whatsapp-web-version)
+- [Scheduled Messages](#-scheduled-messages)
 - [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
 - [Troubleshooting](#-troubleshooting)
 - [Credits](#-credits)
@@ -1738,6 +1739,67 @@ If your repository intentionally does not track a lockfile for this library pack
 
 
 ---
+
+## ⏰ Scheduled Messages
+
+WhatsApp schedules a message by sending it **immediately, encrypted**, and letting the server hand out the key at the chosen time. The envelope is `conditionalRevealMessage`; the key travels in a `<meta type="scheduled_message">` node beside the message.
+
+The pieces are exposed as building blocks, reconstructed from the WhatsApp Web client:
+
+```js
+import {
+  encodeScheduledMessage,
+  decodeScheduledMessage,
+  buildScheduledMsgMetaNode,
+  buildUnscheduleProtocolMessage,
+  isScheduledTimeValid,
+  SCHEDULED_MSG_WINDOW
+} from '@rexxhayanasi/elaina-baileys'
+
+const at = Math.floor(Date.now() / 1000) + 3600
+if (!isScheduledTimeValid(at)) throw new Error('outside the allowed window')
+
+const scheduled = encodeScheduledMessage({ conversation: 'sent later' })
+// { revealKey, revealKeyId, encIv, encPayload, message: { conditionalRevealMessage } }
+
+const meta = buildScheduledMsgMetaNode({
+  scheduledTimestampS: at,
+  revealKeyId: scheduled.revealKeyId,
+  revealKey: scheduled.revealKey
+})
+// <meta type="scheduled_message" st="…"><key rkid="…">{32 bytes}</key></meta>
+
+await sock.relayMessage(jid, scheduled.message, {
+  messageId: sock.generateMessageTag(),
+  additionalNodes: [meta]
+})
+```
+
+Reading one back, once you hold the reveal key:
+
+```js
+const message = decodeScheduledMessage(msg.message, revealKey)
+```
+
+Cancelling a scheduled message is a protocol message:
+
+```js
+await sock.relayMessage(jid, buildUnscheduleProtocolMessage(scheduledKey), { messageId })
+```
+
+Limits taken from the client, not guessed:
+
+| | Chat | Channel |
+|---|---|---|
+| Earliest | 10 minutes ahead | 10 minutes ahead |
+| Latest | 14 days | 30 days |
+| Per chat | 30 scheduled messages | 30 |
+| Media per schedule | 1 | 1 |
+
+The reveal key is AES-256-GCM, 32 bytes, with a 12-byte IV and the tag appended to `encPayload`. The server keeps reveal keys for 30 days, and answers `419` when a chat is over its limit.
+
+> [!WARNING]
+> Every gate for this feature is off by default in the client WhatsApp ships (`scheduled_messages_sender_enabled`, `scheduled_messages_receiver_enabled`, `channels_scheduling_updates_enabled`). These builders match the wire format the client uses, but until WhatsApp enables the feature for an account the server may reject or ignore the request. Treat it as experimental.
 
 ## 🧪 Modern WhatsApp Message APIs
 Elaina Baileys exposes helpers for newer protobuf message types already present in the bundled WAProto. These APIs are experimental because WhatsApp can gate rendering or server acceptance by account, platform, or rollout.
