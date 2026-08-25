@@ -676,6 +676,37 @@ const list = new Button(sock)
 await list.send(jid)
 ```
 
+> [!IMPORTANT]
+> `single_select` renders on **Android only**. WhatsApp Web and iOS have no code for it — the name does not exist in their native-flow list, so the message falls back to a plain text card and the list disappears. This is not something a library patch can fix. See [Native Flow Support](#native-flow-support) for what does render everywhere.
+
+### Native Flow Support
+
+WhatsApp Web keeps a fixed list of native-flow button names. Anything outside it is dropped and the message is downgraded to `phone_only_feature` — the text still arrives, the buttons do not.
+
+```js
+import { checkNativeFlowButtons, isWebSupportedButtonName, NATIVE_FLOW_BUTTON_LIMIT } from '@rexxhayanasi/elaina-baileys'
+
+checkNativeFlowButtons([{ name: 'single_select' }])
+// { ok: false, unsupported: ['single_select'], problems: ['"single_select" is not a native flow WhatsApp Web or iOS can render, only Android shows it'] }
+
+isWebSupportedButtonName('quick_reply')  // true
+```
+
+Rendered everywhere: `quick_reply`, `cta_url`, `cta_call`, `cta_copy`, `cta_catalog`, `catalog_message`, `galaxy_message`, `order_status`, `payment_reminder`, `booking_confirmation`, `payment_request`, `api_signup`, `inapp_signup`, `cta_app`, `form_message`.
+
+Android only: `single_select`, `send_location`, `address_message`, `cta_reminder`, `cta_cancel_reminder`.
+
+Two limits, read from the client rather than guessed:
+
+| First button | Maximum buttons |
+|---|---|
+| `quick_reply` | 10 |
+| anything else | 3 |
+
+Quick replies cannot be mixed with other button types in the same message — the client rejects the whole set, not just the odd button.
+
+If you need one menu that works on every platform, use up to 10 `addReply` buttons, or send the options as text and let the user answer. There is no protocol trick that makes a single-select list appear on Web.
+
 ---
 
 ## ButtonV2
