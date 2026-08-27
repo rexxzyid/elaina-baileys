@@ -596,6 +596,7 @@ export namespace proto {
     }
 
     interface IAIRichResponseMessage {
+        originalRecipientMetadata?: (proto.IAIRichResponseUnifiedResponse|null);
         messageType?: (proto.AIRichResponseMessageType|null);
         submessages?: (proto.IAIRichResponseSubMessage[]|null);
         unifiedResponse?: (proto.IAIRichResponseUnifiedResponse|null);
@@ -603,6 +604,7 @@ export namespace proto {
     }
 
     class AIRichResponseMessage implements IAIRichResponseMessage {
+        public originalRecipientMetadata?: (proto.IAIRichResponseUnifiedResponse|null);
         constructor(p?: proto.IAIRichResponseMessage);
         public messageType?: (proto.AIRichResponseMessageType|null);
         public submessages: proto.IAIRichResponseSubMessage[];
@@ -1712,6 +1714,7 @@ export namespace proto {
     }
 
     interface IBotMetadata {
+        responseStoppedByUser?: (boolean|null);
         botHistoryShareMetadata?: (proto.IBotHistoryShareMetadata|null);
         personaId?: (string|null);
         pluginMetadata?: (proto.IBotPluginMetadata|null);
@@ -1758,6 +1761,7 @@ export namespace proto {
     }
 
     class BotMetadata implements IBotMetadata {
+        public responseStoppedByUser?: (boolean|null);
         public botHistoryShareMetadata?: (proto.IBotHistoryShareMetadata|null);
         constructor(p?: proto.IBotMetadata);
         public personaId?: (string|null);
@@ -4412,6 +4416,7 @@ export namespace proto {
         }
 
         interface IBusinessBroadcast {
+            proCompanionSupportEnabled?: (boolean|null);
             importListEnabled?: (boolean|null);
             companionSupportEnabled?: (boolean|null);
             campaignSyncEnabled?: (boolean|null);
@@ -4420,6 +4425,7 @@ export namespace proto {
         }
 
         class BusinessBroadcast implements IBusinessBroadcast {
+            public proCompanionSupportEnabled?: (boolean|null);
             constructor(p?: proto.DeviceCapabilities.IBusinessBroadcast);
             public importListEnabled?: (boolean|null);
             public companionSupportEnabled?: (boolean|null);
@@ -10897,6 +10903,7 @@ export namespace proto {
         }
 
         interface IVideoMessage {
+            dashManifestUrl?: (string|null);
             url?: (string|null);
             mimetype?: (string|null);
             fileSha256?: (Uint8Array|null);
@@ -10930,6 +10937,7 @@ export namespace proto {
         }
 
         class VideoMessage implements IVideoMessage {
+            public dashManifestUrl?: (string|null);
             constructor(p?: proto.Message.IVideoMessage);
             public url?: (string|null);
             public mimetype?: (string|null);
