@@ -144,13 +144,12 @@ jobs:
         id: commit
         if: always() && steps.report.outcome == 'success' && steps.report.outputs.verdict != 'crashed' && steps.report.outputs.verdict != 'blocked' && steps.verify.outcome == 'success' && (env.APPLY_CHANGES != 'true' || (steps.version.outcome == 'success' && steps.sync.outcome == 'success'))
         run: |
-          git add -A -- . \
-            ':(exclude)node_modules' \
-            ':(exclude)node_modules/**' \
-            ':(exclude)package-lock.json' \
-            ':(exclude).wa-bundle' \
-            ':(exclude).wa-bundle/**' \
-            ':(exclude)proto-sync.txt'
+          git add -A
+
+          if git diff --cached --name-only | grep -Eq '^(node_modules/|\.wa-bundle/|proto-sync\.txt$|package-lock\.json$)'; then
+            echo "File terlarang terdeteksi pada staging."
+            exit 1
+          fi
 
           if git diff --staged --quiet; then
             echo "Tidak ada perubahan untuk di-commit."
