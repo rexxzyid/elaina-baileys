@@ -16,7 +16,8 @@
     "wa:diff": "node ./script/diffbundle.js",
     "verify:proto": "node ./script/verifyproto.js",
     "fetch:bundle": "node ./script/fetchbundle.js",
-    "test:pairing": "node ./script/testpairing.js"
+    "test:pairing": "node ./script/testpairing.js",
+   "proto:update": "npm run wa:update -- --apply --keep 2 && npm run update:version && npm run sync:proto && npm run verify:proto"    
   },
   "engines": {
     "node": ">=20.0.0"
