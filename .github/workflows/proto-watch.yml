@@ -102,7 +102,8 @@ jobs:
               `pinned=${report.pinned}`,
               `proto_gaps=${report.protoGaps}`,
               `verify_passed=${report.verifyPassed}`,
-              `protocol_touched=${report.protocolTouched}`
+              `protocol_touched=${report.protocolTouched}`,
+              `snapshot=${report.snapshot}`
             ].join("\n")
 
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `${output}\n`)
@@ -128,13 +129,26 @@ jobs:
         id: sync
         if: env.APPLY_CHANGES == 'true' && steps.report.outputs.verdict != 'crashed'
         continue-on-error: true
+        env:
+          PROTO_BUNDLE_DIR: ${{ steps.report.outputs.snapshot }}
         run: node ./script/syncproto.js | tee proto-sync.txt
 
       - name: Verify WAProto
         id: verify
-        if: always()
+        if: always() && steps.report.outputs.snapshot != ''
         continue-on-error: true
+        env:
+          PROTO_BUNDLE_DIR: ${{ steps.report.outputs.snapshot }}
         run: node ./script/verifyproto.js
+
+      - name: Show WAProto changes
+        if: always()
+        run: |
+          if git diff --quiet -- WAProto; then
+            echo "WAProto tidak berubah karena tidak ada field protobuf baru."
+          else
+            git diff --stat -- WAProto
+          fi
 
       - name: Roll back invalid WAProto changes
         if: always() && env.APPLY_CHANGES == 'true' && (steps.sync.outcome != 'success' || steps.verify.outcome != 'success')
