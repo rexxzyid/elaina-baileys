@@ -1221,14 +1221,19 @@ sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 | `trustedSources` | `[]` | origins rendered as the attribution under the card |
 | `id` | none | section id, so you can `replace` it later on the same builder |
 
-Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work:
+Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
 
-| Passed | Effect |
-|---|---|
-| *(default)* | relays **twice** — the real message, then an immediate edit carrying the same content |
-| `bypassDownload: false` | relays once; skips the follow-up edit |
-| `messageId: 'ABC123'` | uses your id instead of a generated one |
-| `forwarded: false` | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
+**Leave `bypassDownload` on.** It defaults to `true` and `sendHtmlApp` never overrides it, so every send relays **twice** — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content. Two relays per card is the intended behaviour, not a bug to optimise away; turn it off only when you are inspecting the raw first message.
+
+| Passed | Relays | Effect |
+|---|---|---|
+| *(default)* | 2 | message, then the follow-up edit — **keep this** |
+| `bypassDownload: false` | 1 | skips the follow-up edit |
+| `includesUnifiedResponse: false` | 1 | empties `unifiedResponse` — **your HTML is gone**, and it disables the edit too |
+| `messageId: 'ABC123'` | 2 | uses your id instead of a generated one |
+| `forwarded: false` | 2 | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
+
+The edit fires under `includesUnifiedResponse && bypassDownload`, so switching off the first one silently takes the second with it.
 
 These are filled in for you, matching what the client expects:
 
