@@ -1176,10 +1176,41 @@ rich.addSection(progressSection('Almost done', { inProgress: false }))
 
 Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is a Meta subscription upsell card, and `FOABloksPrimitive` renders a Bloks screen, neither of which a bot can populate.
 
+### HTML Mini App
+
+`htmlSection` carries a full HTML document that the WhatsApp Android client renders in a WebView, scripts included. There is a one-call shortcut so you never have to hand-assemble the `botForwardedMessage` envelope:
+
+```js
+import { sendHtmlApp } from '@rexxhayanasi/elaina-baileys'
+import { readFileSync } from 'node:fs'
+
+await sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
+  title: 'NIXEL DINO',
+  label: 'Dino Runner',
+  trustedSources: ['nixel.dev']
+})
+```
+
+That is the whole thing — `title`, `label` and `trustedSources` are optional, and the forward metadata, `botResponseId`, and verification block are filled in for you. Use the section builder directly when you want the HTML alongside other sections:
+
+```js
+import { htmlSection } from '@rexxhayanasi/elaina-baileys'
+
+rich.addSection(htmlSection('<body><h1>Halo</h1></body>'), { id: 'app' })
+```
+
+| Builder | Primitive | Fields |
+|---|---|---|
+| `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — the HTML document; `trusted_sources` — origins shown as the attribution |
+
+This primitive does not appear anywhere in the WhatsApp Web bundle, so it is kept out of `AI_RICH_PRIMITIVES` and listed in `AI_RICH_PRIMITIVES_ANDROID_ONLY` instead. Expect it to render on Android and to come through as an empty section on Web and Desktop.
+
+Two things to know before shipping a page this way. The HTML runs in a WebView that stays mounted while the bubble is in the chat list, so pause your animation loop on `visibilitychange` rather than letting `requestAnimationFrame` run forever. And a `\d` or `\s` written inside a JavaScript string literal loses its backslash before it ever reaches the page — write `\\d` and `\\s` when you build a regex into the payload, or read the HTML from a file as shown above and avoid the problem entirely.
+
 Enum values, read from the client rather than guessed:
 
 ```js
-import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES } from '@rexxhayanasi/elaina-baileys'
+import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES, AI_RICH_PRIMITIVES_ANDROID_ONLY, AI_RICH_HTML_PRIMITIVE } from '@rexxhayanasi/elaina-baileys'
 ```
 
 `AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.

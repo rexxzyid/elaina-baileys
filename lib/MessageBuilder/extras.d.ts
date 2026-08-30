@@ -1,5 +1,7 @@
 export declare const AI_RICH_LAYOUTS: readonly string[];
 export declare const AI_RICH_PRIMITIVES: readonly string[];
+export declare const AI_RICH_PRIMITIVES_ANDROID_ONLY: readonly string[];
+export declare const AI_RICH_HTML_PRIMITIVE: 'GenAIaeacdsnwHtmlPrimitive';
 
 export declare const DividerType: Readonly<{ DOT: 'DOT'; HORIZONTAL_LINE: 'HORIZONTAL_LINE' }>;
 export declare const ImagineType: Readonly<{ IMAGINE: 'IMAGINE'; ANIMATE: 'ANIMATE'; MEMU: 'MEMU' }>;
@@ -43,6 +45,18 @@ export declare function progressSection(title: string, options?: {
     targetScreenId?: string;
     targetScreenTabId?: string;
 }): any;
+
+export declare function htmlSection(html: string, options?: {
+    trustedSources?: string[];
+}): any;
+
+export declare function sendHtmlApp(sock: any, jid: string, html: string, options?: {
+    title?: string;
+    label?: string;
+    trustedSources?: string[];
+    id?: string;
+    [key: string]: any;
+}): Promise<any>;
 
 export declare function decodeAIRich(msg: any): {
     responseId?: string;
