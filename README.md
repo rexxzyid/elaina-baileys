@@ -1219,6 +1219,7 @@ sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 | `title` | `''` | bot disclaimer line above the card |
 | `label` | none | plain-text submessage; the only part Web and Desktop can show |
 | `trustedSources` | `[]` | origins rendered as the attribution under the card |
+| `height` | none | pin the page to this many pixels so the host stops re-measuring it |
 | `id` | none | section id, so you can `replace` it later on the same builder |
 
 Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
@@ -1264,7 +1265,7 @@ await rich.send(m.chat)
 ```
 
 ```
-htmlSection(html, { trustedSources? }) => section
+htmlSection(html, { trustedSources?, height? }) => section
 ```
 
 | Builder | Primitive | Fields |
@@ -1277,14 +1278,22 @@ It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSourc
 
 The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Five things that are harmless in a browser are not harmless here.
 
-**Give the page a fixed height.** This is the one that makes a card visibly shudder. If the content height depends on the width — a `<canvas>` at `width:100%; height:auto`, an image with no dimensions, anything with `aspect-ratio` — then the host measures the bubble from the content while the content measures itself from the width the host just handed it, and the two chase each other. A page measured across widths 300px to 460px should report the same height every time:
+**Give the page a fixed height.** This is the one that makes a card visibly shudder. If the content height depends on the width — a `<canvas>` at `width:100%; height:auto`, an image with no dimensions, anything with `aspect-ratio` — then the host measures the bubble from the content while the content measures itself from the width the host just handed it, and the two chase each other. A page measured across widths 300px to 460px should report the same height every time.
+
+Pass `height` and the library handles it, whatever the page does:
+
+```js
+await sendHtmlApp(sock, m.chat, html, { height: 300 })
+```
+
+It prepends `lockHeight(300)`, which pins `html`/`body` to that many pixels and moves the page's own content into a `#__wrap` scroll container on `DOMContentLoaded`. The container is what makes it work: pinning `body` alone is not enough, because `overflow:hidden` clips the view without shrinking `scrollHeight`, and the host still measures the overflow.
+
+To do it by hand instead, pin the outer height in pixels, give the canvas a fixed CSS size, and let anything longer scroll inside its own `overflow-y: auto` container rather than growing the page:
 
 ```css
 #wrap { width: 100%; height: 300px; overflow: hidden }
 #game { width: 312px; height: 106px }
 ```
-
-Pin the outer height in pixels, give the canvas a fixed CSS size, and let anything longer scroll inside its own `overflow-y: auto` container rather than growing the page.
 
 **Stop the animation loop.** A bare `requestAnimationFrame` chain keeps drawing while the bubble is mounted — after the game ends, after the user scrolls away, after the screen turns off. Gate it:
 
