@@ -38,6 +38,9 @@ assert.ok(sent.key.id);
 assert.equal(calls.length, 2);
 assert.equal(calls[0].jid, '2@s.whatsapp.net');
 
+assert.equal(calls[1].message.botForwardedMessage.message.protocolMessage.type, 14);
+assert.equal(calls[1].message.botForwardedMessage.message.protocolMessage.key.id, sent.key.id);
+
 const rich = calls[0].message.botForwardedMessage.message.richResponseMessage;
 assert.equal(rich.messageType, 1);
 assert.deepEqual(rich.submessages, [{ messageType: 2, messageText: 'Fiora Sylvie' }]);
@@ -60,6 +63,15 @@ await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>ringkas</b>');
 const bare = calls[0].message.botForwardedMessage.message.richResponseMessage;
 assert.deepEqual(bare.submessages, []);
 assert.ok(bare.unifiedResponse.data);
+
+calls.length = 0;
+await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { bypassDownload: false });
+assert.equal(calls.length, 1);
+
+calls.length = 0;
+await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { includesUnifiedResponse: false });
+assert.equal(calls.length, 1);
+assert.equal(calls[0].message.botForwardedMessage.message.richResponseMessage.unifiedResponse.data, '');
 
 await assert.rejects(() => sendHtmlApp(null, '2@s.whatsapp.net', '<b>a</b>'), TypeError);
 await assert.rejects(() => sendHtmlApp(sock, '', '<b>a</b>'), TypeError);
