@@ -29,3 +29,4 @@ export * from "./voice-recognition.js";
 export * from "./username.js";
 export * from "./scheduled-message.js";
 export * from "./native-flow.js";
+export * from "./optional-media.js";

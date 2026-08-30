@@ -153,6 +153,34 @@ Use the package directly under its own name:
 
 This package is ESM-first. Use `import` syntax instead of `require()`.
 
+### Optional Media Packages
+
+The base install carries no image or video processing library, which keeps it around 45 MB smaller and leaves the choice of `sharp` build to you — no clash with a version your project already pins.
+
+```bash
+npm i sharp            # thumbnails, resizing, MessageBuilder Toolkit.resize
+npm i fluent-ffmpeg    # video preview frames, MessageBuilder Toolkit.getMp4Preview
+```
+
+Media handling picks whichever image library it finds, in this order:
+
+| Package | Used for |
+|---|---|
+| `sharp` | preferred, fastest |
+| `@napi-rs/image` | fallback |
+| `jimp` | pure-JS fallback, no native build |
+
+Sending plain text, buttons, polls, newsletters and AI Rich messages needs none of them. Sending media without any of the three throws `No image processing library available`; calling `Toolkit.resize` or `Toolkit.getMp4Preview` without the relevant package throws a message naming what to install.
+
+Check at runtime before relying on either:
+
+```js
+import { hasOptionalMedia } from '@rexxhayanasi/elaina-baileys'
+
+await hasOptionalMedia('sharp')          // false when it is not installed
+await hasOptionalMedia('fluent-ffmpeg')
+```
+
 ---
 
 ## 📥 Import
