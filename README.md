@@ -92,6 +92,7 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
   - [ButtonV2](#buttonv2)
   - [Carousel](#carousel)
   - [AIRich](#airich)
+  - [HTML Mini App](#html-mini-app)
 - [Album Message](#-album-message)
 - [Newsletter / Channel](#-newsletter--channel)
   - [Creating and Editing a Channel](#creating-and-editing-a-channel)
@@ -1178,7 +1179,19 @@ Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is
 
 ### HTML Mini App
 
-`htmlSection` carries a full HTML document that the WhatsApp Android client renders in a WebView, scripts included. There is a one-call shortcut so you never have to hand-assemble the `botForwardedMessage` envelope:
+`htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp Android client renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything.
+
+**Platform support.** This primitive appears nowhere in the WhatsApp Web bundle, and the Web renderer maps unknown primitives to an empty string. So it is deliberately excluded from `AI_RICH_PRIMITIVES` and listed in `AI_RICH_PRIMITIVES_ANDROID_ONLY` instead.
+
+| Client | Result |
+|---|---|
+| Android | renders in a WebView, scripts run, taps and keys work |
+| Web / Desktop | section comes through empty; `label` still shows |
+| iOS | untested |
+
+#### sendHtmlApp
+
+One call, no envelope assembly.
 
 ```js
 import { sendHtmlApp } from '@rexxhayanasi/elaina-baileys'
@@ -1191,21 +1204,137 @@ await sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
 })
 ```
 
-That is the whole thing — `title`, `label` and `trustedSources` are optional, and the forward metadata, `botResponseId`, and verification block are filled in for you. Use the section builder directly when you want the HTML alongside other sections:
+```
+sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
+```
+
+| Argument | Required | Meaning |
+|---|---|---|
+| `sock` | yes | the socket returned by `makeWASocket` |
+| `jid` | yes | target chat |
+| `html` | yes | the HTML document; must be a non-empty string |
+
+| Option | Default | Meaning |
+|---|---|---|
+| `title` | `''` | bot disclaimer line above the card |
+| `label` | none | plain-text submessage; the only part Web and Desktop can show |
+| `trustedSources` | `[]` | origins rendered as the attribution under the card |
+| `id` | none | section id, so you can `replace` it later on the same builder |
+
+Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work:
+
+| Passed | Effect |
+|---|---|
+| *(default)* | relays **twice** — the real message, then an immediate edit carrying the same content |
+| `bypassDownload: false` | relays once; skips the follow-up edit |
+| `messageId: 'ABC123'` | uses your id instead of a generated one |
+| `forwarded: false` | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
+
+These are filled in for you, matching what the client expects:
 
 ```js
-import { htmlSection } from '@rexxhayanasi/elaina-baileys'
+contextInfo: {
+  forwardingScore: 1,
+  isForwarded: true,
+  forwardedAiBotMessageInfo: { botJid: '867051314767696@bot' },
+  forwardOrigin: 4
+}
+```
 
-rich.addSection(htmlSection('<body><h1>Halo</h1></body>'), { id: 'app' })
+plus `messageType: 1`, a fresh `botResponseId`, and the `verificationMetadata` block.
+
+#### htmlSection
+
+Use the section builder when the HTML sits alongside other sections on a builder you control.
+
+```js
+import { AIRich, htmlSection, dividerSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock)
+rich.setTitle('Dashboard')
+rich.addText('Penjualan hari ini')
+rich.addSection(dividerSection())
+rich.addSection(htmlSection(chartHtml, { trustedSources: ['nixel.dev'] }), { id: 'chart' })
+await rich.send(m.chat)
+```
+
+```
+htmlSection(html, { trustedSources? }) => section
 ```
 
 | Builder | Primitive | Fields |
 |---|---|---|
-| `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — the HTML document; `trusted_sources` — origins shown as the attribution |
+| `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — the HTML document; `trusted_sources` — attribution origins |
 
-This primitive does not appear anywhere in the WhatsApp Web bundle, so it is kept out of `AI_RICH_PRIMITIVES` and listed in `AI_RICH_PRIMITIVES_ANDROID_ONLY` instead. Expect it to render on Android and to come through as an empty section on Web and Desktop.
+It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSources` that is not an array, so a malformed card fails at build time instead of arriving blank.
 
-Two things to know before shipping a page this way. The HTML runs in a WebView that stays mounted while the bubble is in the chat list, so pause your animation loop on `visibilitychange` rather than letting `requestAnimationFrame` run forever. And a `\d` or `\s` written inside a JavaScript string literal loses its backslash before it ever reaches the page — write `\\d` and `\\s` when you build a regex into the payload, or read the HTML from a file as shown above and avoid the problem entirely.
+#### Writing HTML That Behaves in a WebView
+
+The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Four things that are harmless in a browser are not harmless here.
+
+**Stop the animation loop.** A bare `requestAnimationFrame` chain keeps drawing while the bubble is mounted — after the game ends, after the user scrolls away, after the screen turns off. Gate it:
+
+```js
+let rafId = null, running = true
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    running = false
+    if (rafId) cancelAnimationFrame(rafId)
+    rafId = null
+  } else if (!running) {
+    running = true
+    last = 0
+    rafId = requestAnimationFrame(loop)
+  }
+})
+```
+
+then end `loop()` with `if (running) rafId = requestAnimationFrame(loop)`.
+
+**Close IndexedDB.** `indexedDB.open` without a matching `close()` leaves a connection behind every single time. Save on a hot path and they pile up:
+
+```js
+rq.onsuccess = () => {
+  const db = rq.result
+  const tx = db.transaction('kv', 'readwrite')
+  tx.objectStore('kv').put(value, 'best')
+  tx.oncomplete = () => db.close()
+  tx.onerror = () => db.close()
+}
+```
+
+**Scale the canvas to the device.** A `<canvas width="560">` shown at 352 CSS px on a `devicePixelRatio: 3` phone needs 1056 real pixels and gets 560 — visibly soft. Size the backing store and keep your game coordinates in constants:
+
+```js
+const W = 560, H = 190
+const dpr = Math.min(devicePixelRatio || 1, 3)
+canvas.width = W * dpr
+canvas.height = H * dpr
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+```
+
+**Scope your input handler.** `document.addEventListener('pointerdown', e => e.preventDefault())` cancels the gesture for the whole document, including the padding around your app, so the host can lose the scroll it was about to start. Bind to the element that actually needs it:
+
+```js
+canvas.addEventListener('pointerdown', e => { e.preventDefault(); jump() })
+document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); jump() } })
+```
+
+**One escaping trap.** If you build the HTML as a JavaScript string literal, `"\d"` becomes `d` and `"\s"` becomes `s` before the page ever sees them — a regex like `/dino_best=(\d+)/` silently turns into one that matches literal `d` characters and never fires. Write `\\d` and `\\s`, or read the document from a file as in the first example and sidestep it.
+
+#### Reading One Back
+
+`decodeAIRich` handles the primitive like any other — there is no whitelist to update:
+
+```js
+const rich = decodeAIRich(msg)
+const section = rich?.sections.find(s => s.view_model?.primitive?.__typename === AI_RICH_HTML_PRIMITIVE)
+if (section) {
+  const html = section.view_model.primitive.payload
+}
+```
+
+Do not reach for `sections[0]` — the HTML lands wherever you added it, so a card with text and a divider in front of it puts the page at index 2.
 
 Enum values, read from the client rather than guessed:
 
