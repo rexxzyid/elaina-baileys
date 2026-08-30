@@ -46,14 +46,18 @@ export declare function progressSection(title: string, options?: {
     targetScreenTabId?: string;
 }): any;
 
+export declare function lockHeight(height: number): string;
+
 export declare function htmlSection(html: string, options?: {
     trustedSources?: string[];
+    height?: number;
 }): any;
 
 export declare function sendHtmlApp(sock: any, jid: string, html: string, options?: {
     title?: string;
     label?: string;
     trustedSources?: string[];
+    height?: number;
     id?: string;
     bypassDownload?: boolean;
     [key: string]: any;

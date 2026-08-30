@@ -5,6 +5,7 @@ import {
     AI_RICH_PRIMITIVES_ANDROID_ONLY,
     decodeAIRich,
     htmlSection,
+    lockHeight,
     sendHtmlApp
 } from '../lib/MessageBuilder/extras.js';
 
@@ -15,6 +16,20 @@ assert.equal(section.view_model.primitive.payload, '<body>halo</body>');
 assert.deepEqual(section.view_model.primitive.trusted_sources, ['nixel.dev']);
 
 assert.deepEqual(htmlSection('<b>x</b>').view_model.primitive.trusted_sources, []);
+
+assert.equal(htmlSection('<b>x</b>').view_model.primitive.payload, '<b>x</b>');
+
+const locked = htmlSection('<b>x</b>', { height: 300 }).view_model.primitive.payload;
+assert.ok(locked.endsWith('<b>x</b>'));
+assert.ok(locked.includes('height:300px'));
+assert.ok(locked.includes('max-height:300px'));
+assert.ok(locked.includes('__wrap'));
+assert.ok(locked.includes('<' + '/script>'));
+assert.equal(lockHeight(300) + '<b>x</b>', locked);
+
+assert.throws(() => htmlSection('<b>x</b>', { height: 0 }), TypeError);
+assert.throws(() => htmlSection('<b>x</b>', { height: -5 }), TypeError);
+assert.throws(() => htmlSection('<b>x</b>', { height: 'tall' }), TypeError);
 
 assert.throws(() => htmlSection(''), TypeError);
 assert.throws(() => htmlSection('   '), TypeError);
@@ -74,6 +89,12 @@ calls.length = 0;
 await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { includesUnifiedResponse: false });
 assert.equal(calls.length, 1);
 assert.equal(calls[0].message.botForwardedMessage.message.richResponseMessage.unifiedResponse.data, '');
+
+calls.length = 0;
+await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>tinggi</b>', { height: 300 });
+const dikunci = decodeAIRich({ message: calls[0].message }).sections[0].view_model.primitive.payload;
+assert.ok(dikunci.includes('height:300px'));
+assert.ok(dikunci.endsWith('<b>tinggi</b>'));
 
 await assert.rejects(() => sendHtmlApp(null, '2@s.whatsapp.net', '<b>a</b>'), TypeError);
 await assert.rejects(() => sendHtmlApp(sock, '', '<b>a</b>'), TypeError);
