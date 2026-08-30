@@ -1189,6 +1189,8 @@ Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is
 | Web / Desktop | section comes through empty; `label` still shows |
 | iOS | untested |
 
+The WebView it renders in is offline and has no storage — see [what it actually gives you](#what-the-webview-actually-gives-you) before designing around it.
+
 #### sendHtmlApp
 
 One call, no envelope assembly.
@@ -1273,6 +1275,40 @@ htmlSection(html, { trustedSources?, height? }) => section
 | `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — the HTML document; `trusted_sources` — attribution origins |
 
 It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSources` that is not an array, so a malformed card fails at build time instead of arriving blank.
+
+#### What the WebView Actually Gives You
+
+Measured on an Android device, not inferred. The page is injected into a blank frame, so it runs in an opaque origin with no network:
+
+| Signal | Value |
+|---|---|
+| `location.origin` | `null` |
+| `location.protocol` | `about:` |
+| `document.baseURI` | `about:blank` |
+| `window.isSecureContext` | `false` |
+| `navigator.onLine` | `true` — it lies, ignore it |
+
+Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them, so this is not a Content-Security-Policy you can work around — the network is simply unavailable to the page.
+
+The opaque origin then takes the storage with it. Every one of these throws `SecurityError`, `indexedDB.open()` included:
+
+```
+localStorage   THROW SecurityError
+sessionStorage THROW SecurityError
+cookie         THROW SecurityError
+indexedDB.open THROW SecurityError
+caches         undefined
+```
+
+So a mini app here is **self-contained, offline, and forgets everything**. Plan for that:
+
+- Embed media as `data:` URIs. A `data:` image loads fine; an `https:` one never will.
+- Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered.
+- There is no channel back to your bot. The page cannot report a score, a tap, or a result. If you need the outcome, the interaction has to happen in a native button instead.
+- No `crypto.subtle`, since it requires a secure context.
+- The whole app travels inside the message, so its size is your budget.
+
+What does work: `canvas` 2D, WebGL and WebGL2, `OffscreenCanvas`, WebAssembly, Web Audio, `requestAnimationFrame`, and video or audio decoded from a `data:` URI.
 
 #### Writing HTML That Behaves in a WebView
 
