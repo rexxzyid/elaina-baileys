@@ -79,8 +79,10 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Installation](#-installation)
 - [Import](#-import)
 - [Basic Connection](#-basic-connection)
+- [Session Storage](#-session-storage)
 - [Pairing Code](#-pairing-code)
 - [Receive Messages](#-receive-messages)
+- [Events](#-events)
 - [LID / PN / JID Addressing](#-lid--pn--jid-addressing)
 - [Send Messages](#-send-messages)
 - [External Ad Reply](#-external-ad-reply)
@@ -110,7 +112,9 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
 - [Account Health Signals](#-account-health-signals)
 - [Troubleshooting](#-troubleshooting)
+- [Found a Bug?](#-found-a-bug)
 - [Credits](#-credits)
+- [TQTO](#-tqto)
 - [License](#-license)
 
 ---
@@ -267,6 +271,158 @@ Beyond the usual Baileys options, these control how the socket handles undecrypt
 
 `maxRetryQueueSize` is a safety valve, not a throughput knob. A burst of undecryptable messages would otherwise queue without limit and grow the heap; past the cap the extras are acked without a retry. Raising it does not rescue more messages — `retryRequestDelayMs` is the setting that does, at the cost of pressing the sender harder.
 
+### Socket options
+
+Everything `makeWASocket` accepts, with its default:
+
+| Option | Default | What it does |
+|---|---|---|
+| `auth` | — | required; the auth state from one of the session stores below |
+| `logger` | pino instance | any pino-compatible logger |
+| `version` | pinned WA Web version | protocol version the socket claims |
+| `browser` | `['Mac OS', 'Chrome', '14.4.1']` | name shown under Linked Devices |
+| `markOnlineOnConnect` | `true` | set `false` to keep phone notifications working |
+| `syncFullHistory` | `true` | request the full history instead of the recent slice |
+| `shouldSyncHistoryMessage` | `() => true` | decide per history batch whether to keep it |
+| `shouldIgnoreJid` | `() => false` | drop events from matching jids before they are emitted |
+| `getMessage` | `async () => undefined` | supply an old message so the socket can answer a retry |
+| `cachedGroupMetadata` | `async () => undefined` | reuse your own group metadata cache |
+| `emitOwnEvents` | `true` | emit events for actions this device performed |
+| `fireInitQueries` | `true` | run the startup queries (props, blocklist, privacy) |
+| `generateHighQualityLinkPreview` | `true` | fetch a larger link preview thumbnail |
+| `linkPreviewImageThumbnailWidth` | `192` | link preview thumbnail width |
+| `connectTimeoutMs` | `20000` | give up on the socket handshake |
+| `keepAliveIntervalMs` | `15000` | ping interval |
+| `defaultQueryTimeoutMs` | `60000` | give up on an iq query |
+| `countryCode` | `'US'` | country hint sent at registration |
+| `patchMessageBeforeSending` | identity | last chance to rewrite a message before relay |
+| `enableAutoSessionRecreation` | `true` | rebuild a Signal session after repeated failures |
+| `enableRecentMessageCache` | `true` | keep recent outbound messages for retry answers |
+| `appStateMacVerification` | `{ patch: false, snapshot: false }` | verify app-state MACs |
+| `waWebSocketUrl` | WA Web endpoint | override the socket URL |
+| `customUploadHosts` | `[]` | extra media upload hosts |
+| `transactionOpts` | `{ maxCommitRetries: 10, delayBetweenTriesMs: 3000 }` | retry policy for app-state transactions |
+| `options` | `{}` | axios options for every HTTP request (proxy, timeout, headers) |
+| `makeSignalRepository` | built-in | swap the Signal protocol store implementation |
+
+`getMessage` matters more than its default suggests: without it, a recipient asking to re-receive a message gets nothing, and the message shows as "waiting for this message". Point it at whatever store you keep.
+
+---
+
+## 💾 Session Storage
+
+The auth state holds your credentials and Signal keys. Losing it means scanning the QR again; leaking it means someone else can use your account. Four stores ship with the package, all returning the same `{ state, saveCreds }` shape.
+
+Whichever you pick, wire `saveCreds` to the `creds.update` event — nothing is persisted otherwise:
+
+```js
+sock.ev.on('creds.update', saveCreds)
+```
+
+### Multi-file (default)
+
+One folder, one file per key. Simple, dependency-free, and the right choice for a single bot on one machine.
+
+```js
+import { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+```
+
+It writes many small files — a busy account produces thousands of pre-key files. That is normal; deleting them mid-session breaks the session.
+
+### Single file
+
+Everything in one JSON file. Easier to back up or move between hosts, slower once the key set grows because the whole file is rewritten on every change.
+
+```js
+import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSingleFileAuthState('./session.json')
+```
+
+### SQLite
+
+Keys in a real database, so concurrent reads and large key sets stay fast. Requires `better-sqlite3`.
+
+```bash
+npm i better-sqlite3
+```
+
+```js
+import { useSqliteAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSqliteAuthState({ dbPath: './session.db' })
+```
+
+Pass an existing connection instead when the rest of your bot already uses one:
+
+```js
+import Database from 'better-sqlite3'
+
+const database = new Database('./bot.db')
+const { state, saveCreds } = await useSqliteAuthState({ database })
+```
+
+Two tables are created on first use: `creds` and `signal_keys`.
+
+### NekoDB
+
+For a bot whose state already lives in NekoDB, so the session travels with the rest of your data.
+
+```js
+import { useNekoDBAuth } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useNekoDBAuth(db)
+const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')
+```
+
+The first argument must be a connected NekoDB instance; the collection defaults to `baileys_elaina_auth`.
+
+### Caching Signal Keys
+
+Every store reads keys from disk or database on each decrypt. Wrapping the key store in a cache removes that round trip:
+
+```js
+import makeWASocket, { makeCacheableSignalKeyStore, useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+const logger = pino({ level: 'silent' })
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+const sock = makeWASocket({
+  auth: {
+    creds: state.creds,
+    keys: makeCacheableSignalKeyStore(state.keys, logger)
+  },
+  logger
+})
+```
+
+Worth doing on every store, and close to required on the file-based ones for a busy group bot.
+
+### Keeping Chats and Messages
+
+The auth state stores keys, not conversations. For chats, contacts and message history, bind the in-memory store:
+
+```js
+import { makeInMemoryStore } from '@rexxhayanasi/elaina-baileys'
+
+const store = makeInMemoryStore({ logger })
+store.readFromFile('./store.json')
+setInterval(() => store.writeToFile('./store.json'), 10_000)
+
+const sock = makeWASocket({
+  auth: state,
+  logger,
+  getMessage: async (key) => (await store.loadMessage(key.remoteJid, key.id))?.message
+})
+
+store.bind(sock.ev)
+```
+
+`store.chats`, `store.contacts`, `store.messages` and `store.groupMetadata` stay in sync from there, and `loadMessage` is exactly what `getMessage` needs. It lives in memory, so size it against your traffic — a bot in large groups will grow it steadily.
+
 ---
 
 ## 🔐 Pairing Code
@@ -385,6 +541,91 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
   console.log(text)
 })
 ```
+
+---
+
+## 📡 Events
+
+Everything the socket emits, through `sock.ev`. Subscribe individually, or batch with `sock.ev.process`.
+
+```js
+sock.ev.process(async (events) => {
+  if (events['messages.upsert']) { /* ... */ }
+  if (events['connection.update']) { /* ... */ }
+})
+```
+
+`process` hands you one object per flush instead of one callback per event, which keeps a burst of history sync from thrashing your handler.
+
+### Connection and credentials
+
+| Event | Fires when |
+|---|---|
+| `connection.update` | connection state, QR, pairing code, reachout timelock |
+| `creds.update` | credentials changed — always wire this to `saveCreds` |
+
+### Messages
+
+| Event | Fires when |
+|---|---|
+| `messages.upsert` | new or appended messages, with `type: 'notify' \| 'append'` |
+| `messages.update` | status, edits, poll updates |
+| `messages.delete` | messages revoked |
+| `messages.reaction` | a reaction added or removed |
+| `messages.media-update` | media re-upload finished |
+| `message-receipt.update` | delivered / read receipts |
+| `message-capping.update` | the new-chat quota changed |
+| `messaging-history.set` | a history sync batch arrived |
+| `messaging-history.status` | history sync progress |
+
+### Chats and contacts
+
+| Event | Fires when |
+|---|---|
+| `chats.upsert` / `chats.update` / `chats.delete` | chat list changes |
+| `chats.lock` | a chat was locked or unlocked |
+| `contacts.upsert` / `contacts.update` | contact changes |
+| `presence.update` | typing, recording, online |
+| `blocklist.update` | blocklist changed |
+| `settings.update` | privacy or account settings changed |
+| `labels.edit` / `labels.association` | business labels |
+| `lid-mapping.update` | a phone number was mapped to a LID |
+
+### Groups and communities
+
+| Event | Fires when |
+|---|---|
+| `groups.upsert` / `groups.update` | group metadata |
+| `group-participants.update` | joins, leaves, promotes, demotes |
+| `group.join-request` | someone asked to join |
+| `group.member-tag.update` | a member label changed |
+
+### Newsletters
+
+| Event | Fires when |
+|---|---|
+| `newsletter.reaction` | a follower reacted |
+| `newsletter.view` | view counter moved |
+| `newsletter-settings.update` | channel settings changed |
+| `newsletter-participants.update` | admin promoted or demoted |
+| `newsletter-admin-profile.update` | an admin changed their channel profile |
+
+### Calls and voice
+
+| Event | Fires when |
+|---|---|
+| `call` | incoming or updated call |
+| `voice.transcription` | a voice note was transcribed |
+| `voice.command` | a transcription matched the wake phrase |
+
+### Other
+
+| Event | Fires when |
+|---|---|
+| `event` | event message created or updated |
+| `mex.notification` | a MEX notification this library does not model yet |
+
+`mex.notification` is the escape hatch: anything WhatsApp adds that the library has not modelled arrives there with its raw operation name and payload, so a new feature never goes silently missing.
 
 ---
 
@@ -1719,6 +1960,11 @@ Some commonly used exports include:
 import {
   makeWASocket,
   useMultiFileAuthState,
+  useSingleFileAuthState,
+  useSqliteAuthState,
+  useNekoDBAuth,
+  makeCacheableSignalKeyStore,
+  makeInMemoryStore,
   DisconnectReason,
   jidDecode,
   jidEncode,
