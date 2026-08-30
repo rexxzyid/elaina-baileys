@@ -1223,17 +1223,17 @@ sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 
 Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
 
-**Leave `bypassDownload` on.** It defaults to `true` and `sendHtmlApp` never overrides it, so every send relays **twice** — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content. Two relays per card is the intended behaviour, not a bug to optimise away; turn it off only when you are inspecting the raw first message.
+**`bypassDownload` defaults to `false` here**, unlike `AIRich.send` where it is `true`. With it on, every send relays twice — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content — and the client renders the card, then re-renders it. For a static card that is a flicker; for a page running an animation loop it restarts the whole WebView. So a mini app sends once by default. Turn it back on if a card fails to appear without it.
 
 | Passed | Relays | Effect |
 |---|---|---|
-| *(default)* | 2 | message, then the follow-up edit — **keep this** |
-| `bypassDownload: false` | 1 | skips the follow-up edit |
-| `includesUnifiedResponse: false` | 1 | empties `unifiedResponse` — **your HTML is gone**, and it disables the edit too |
-| `messageId: 'ABC123'` | 2 | uses your id instead of a generated one |
-| `forwarded: false` | 2 | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
+| *(default)* | 1 | one message, no follow-up edit |
+| `bypassDownload: true` | 2 | message, then the edit — re-renders the page |
+| `includesUnifiedResponse: false` | 1 | empties `unifiedResponse` — **your HTML is gone** |
+| `messageId: 'ABC123'` | 1 | uses your id instead of a generated one |
+| `forwarded: false` | 1 | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
 
-The edit fires under `includesUnifiedResponse && bypassDownload`, so switching off the first one silently takes the second with it.
+The edit only ever fires under `includesUnifiedResponse && bypassDownload`, so both have to be on for a second relay to happen.
 
 These are filled in for you, matching what the client expects:
 
@@ -1275,7 +1275,16 @@ It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSourc
 
 #### Writing HTML That Behaves in a WebView
 
-The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Four things that are harmless in a browser are not harmless here.
+The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Five things that are harmless in a browser are not harmless here.
+
+**Give the page a fixed height.** This is the one that makes a card visibly shudder. If the content height depends on the width — a `<canvas>` at `width:100%; height:auto`, an image with no dimensions, anything with `aspect-ratio` — then the host measures the bubble from the content while the content measures itself from the width the host just handed it, and the two chase each other. A page measured across widths 300px to 460px should report the same height every time:
+
+```css
+#wrap { width: 100%; height: 300px; overflow: hidden }
+#game { width: 312px; height: 106px }
+```
+
+Pin the outer height in pixels, give the canvas a fixed CSS size, and let anything longer scroll inside its own `overflow-y: auto` container rather than growing the page.
 
 **Stop the animation loop.** A bare `requestAnimationFrame` chain keeps drawing while the bubble is mounted — after the game ends, after the user scrolls away, after the screen turns off. Gate it:
 
