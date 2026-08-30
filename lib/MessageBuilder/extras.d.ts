@@ -55,6 +55,7 @@ export declare function sendHtmlApp(sock: any, jid: string, html: string, option
     label?: string;
     trustedSources?: string[];
     id?: string;
+    bypassDownload?: boolean;
     [key: string]: any;
 }): Promise<any>;
 
