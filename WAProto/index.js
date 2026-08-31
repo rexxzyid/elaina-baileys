@@ -19817,6 +19817,7 @@ export const proto = $root.proto = (() => {
         ClientPairingProps.prototype.isHsThumbnailSyncEnabled = null;
         ClientPairingProps.prototype.subscriptionSyncPayload = null;
 
+        ClientPairingProps.prototype.isBotJidDbMigrated = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -19849,6 +19850,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(ClientPairingProps.prototype, "_isBotJidDbMigrated", {
+            get: $util.oneOfGetter($oneOfFields = ["isBotJidDbMigrated"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         ClientPairingProps.create = function create(properties) {
             return new ClientPairingProps(properties);
         };
@@ -19866,6 +19872,8 @@ export const proto = $root.proto = (() => {
                 w.uint32(32).bool(m.isHsThumbnailSyncEnabled);
             if (m.subscriptionSyncPayload != null && Object.hasOwnProperty.call(m, "subscriptionSyncPayload"))
                 w.uint32(42).bytes(m.subscriptionSyncPayload);
+            if (m.isBotJidDbMigrated != null && Object.hasOwnProperty.call(m, "isBotJidDbMigrated"))
+                w.uint32(48).bool(m.isBotJidDbMigrated);
             return w;
         };
 
@@ -19902,6 +19910,10 @@ export const proto = $root.proto = (() => {
                         m.subscriptionSyncPayload = r.bytes();
                         break;
                     }
+                case 6: {
+                        m.isBotJidDbMigrated = r.bool();
+                        break;
+                    }
                 default:
                     r.skipType(t & 7, n);
                     break;
@@ -19936,6 +19948,9 @@ export const proto = $root.proto = (() => {
                 else if (d.subscriptionSyncPayload.length >= 0)
                     m.subscriptionSyncPayload = d.subscriptionSyncPayload;
             }
+            if (d.isBotJidDbMigrated != null) {
+                m.isBotJidDbMigrated = Boolean(d.isBotJidDbMigrated);
+            }
             return m;
         };
 
@@ -19967,6 +19982,11 @@ export const proto = $root.proto = (() => {
                 d.subscriptionSyncPayload = o.bytes === String ? $util.base64.encode(m.subscriptionSyncPayload, 0, m.subscriptionSyncPayload.length) : o.bytes === Array ? Array.prototype.slice.call(m.subscriptionSyncPayload) : m.subscriptionSyncPayload;
                 if (o.oneofs)
                     d._subscriptionSyncPayload = "subscriptionSyncPayload";
+            }
+            if (m.isBotJidDbMigrated != null && m.hasOwnProperty("isBotJidDbMigrated")) {
+                d.isBotJidDbMigrated = m.isBotJidDbMigrated;
+                if (o.oneofs)
+                    d._isBotJidDbMigrated = "isBotJidDbMigrated";
             }
             return d;
         };
@@ -31218,10 +31238,16 @@ export const proto = $root.proto = (() => {
 
             AiFbidMigration.prototype.chatDbMigrationTimestamp = null;
 
+            AiFbidMigration.prototype.supportVersion = null;
             let $oneOfFields;
 
             Object.defineProperty(AiFbidMigration.prototype, "_chatDbMigrationTimestamp", {
                 get: $util.oneOfGetter($oneOfFields = ["chatDbMigrationTimestamp"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            Object.defineProperty(AiFbidMigration.prototype, "_supportVersion", {
+                get: $util.oneOfGetter($oneOfFields = ["supportVersion"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
 
@@ -31234,6 +31260,8 @@ export const proto = $root.proto = (() => {
                     w = $Writer.create();
                 if (m.chatDbMigrationTimestamp != null && Object.hasOwnProperty.call(m, "chatDbMigrationTimestamp"))
                     w.uint32(8).uint64(m.chatDbMigrationTimestamp);
+                if (m.supportVersion != null && Object.hasOwnProperty.call(m, "supportVersion"))
+                    w.uint32(16).uint32(m.supportVersion);
                 return w;
             };
 
@@ -31252,6 +31280,10 @@ export const proto = $root.proto = (() => {
                     switch (t >>> 3) {
                     case 1: {
                             m.chatDbMigrationTimestamp = r.uint64();
+                            break;
+                        }
+                    case 2: {
+                            m.supportVersion = r.uint32();
                             break;
                         }
                     default:
@@ -31280,6 +31312,9 @@ export const proto = $root.proto = (() => {
                     else if (typeof d.chatDbMigrationTimestamp === "object")
                         m.chatDbMigrationTimestamp = new $util.LongBits(d.chatDbMigrationTimestamp.low >>> 0, d.chatDbMigrationTimestamp.high >>> 0).toNumber(true);
                 }
+                if (d.supportVersion != null) {
+                    m.supportVersion = d.supportVersion >>> 0;
+                }
                 return m;
             };
 
@@ -31294,6 +31329,11 @@ export const proto = $root.proto = (() => {
                         d.chatDbMigrationTimestamp = o.longs === String ? longToString(m.chatDbMigrationTimestamp, true) : o.longs === Number ? longToNumber(m.chatDbMigrationTimestamp, true) : m.chatDbMigrationTimestamp;
                     if (o.oneofs)
                         d._chatDbMigrationTimestamp = "chatDbMigrationTimestamp";
+                }
+                if (m.supportVersion != null && m.hasOwnProperty("supportVersion")) {
+                    d.supportVersion = m.supportVersion;
+                    if (o.oneofs)
+                        d._supportVersion = "supportVersion";
                 }
                 return d;
             };
