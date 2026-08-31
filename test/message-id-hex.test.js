@@ -24,6 +24,15 @@ assert.throws(() => generateMessageIDHex(0), TypeError);
 assert.throws(() => generateMessageIDHex(-4), TypeError);
 assert.throws(() => generateMessageIDHex(2.5), TypeError);
 assert.throws(() => generateMessageIDHex(2, 'A51'), TypeError);
-assert.throws(() => generateMessageIDHex(32, 'ZZ'), TypeError);
+const rexx = generateMessageIDHex(32, 'REXX-');
+assert.equal(rexx.length, 32);
+assert.ok(rexx.startsWith('REXX-'));
+assert.match(rexx.slice(5), /^[0-9A-F]{27}$/);
+
+const rexxUnik = new Set(Array.from({ length: 500 }, () => generateMessageIDHex(32, 'REXX-')));
+assert.equal(rexxUnik.size, 500);
+
+assert.equal(generateMessageIDHex(5, 'REXX-'), 'REXX-');
+assert.throws(() => generateMessageIDHex(4, 'REXX-'), TypeError);
 
 console.log('message id hex tests passed');
