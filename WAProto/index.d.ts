@@ -2941,6 +2941,7 @@ export namespace proto {
     }
 
     interface IClientPairingProps {
+        isBotJidDbMigrated?: (boolean|null);
         isChatDbLidMigrated?: (boolean|null);
         isSyncdPureLidSession?: (boolean|null);
         isSyncdSnapshotRecoveryEnabled?: (boolean|null);
@@ -2949,6 +2950,7 @@ export namespace proto {
     }
 
     class ClientPairingProps implements IClientPairingProps {
+        public isBotJidDbMigrated?: (boolean|null);
         constructor(p?: proto.IClientPairingProps);
         public isChatDbLidMigrated?: (boolean|null);
         public isSyncdPureLidSession?: (boolean|null);
@@ -4372,10 +4374,12 @@ export namespace proto {
 
 
         interface IAiFbidMigration {
+            supportVersion?: (number|null);
             chatDbMigrationTimestamp?: (number|Long|null);
         }
 
         class AiFbidMigration implements IAiFbidMigration {
+            public supportVersion?: (number|null);
             constructor(p?: proto.DeviceCapabilities.IAiFbidMigration);
             public chatDbMigrationTimestamp?: (number|Long|null);
             public _chatDbMigrationTimestamp?: "chatDbMigrationTimestamp";
