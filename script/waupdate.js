@@ -30,9 +30,19 @@ const reportDir = option('--out', join(root, '.wa-bundle'))
 mkdirSync(cacheDir, { recursive: true })
 mkdirSync(reportDir, { recursive: true })
 
+const chunkCount = path => {
+    try {
+        return readdirSync(path).filter(name => name.endsWith('.js')).length
+    }
+    catch {
+        return 0
+    }
+}
+
 const snapshotDirs = () => readdirSync(cacheDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory() && /^\d+$/.test(entry.name))
     .map(entry => ({ revision: Number.parseInt(entry.name, 10), path: join(cacheDir, entry.name) }))
+    .filter(entry => chunkCount(entry.path) > 0)
     .sort((a, b) => a.revision - b.revision)
 
 const step = message => console.log(`• ${message}`)
@@ -86,7 +96,13 @@ step(`Field yang belum ada di WAProto: ${protoGaps}`)
 let snapshotDiff
 if (previous) {
     step(`Membandingkan dengan snapshot revisi ${previous.revision}`)
-    snapshotDiff = await diffSnapshots(previous.path, current.path)
+    try {
+        snapshotDiff = await diffSnapshots(previous.path, current.path)
+    }
+    catch (error) {
+        step(`  snapshot ${previous.revision} tidak terbaca (${error.message}), diff antar-revisi dilewati`)
+        snapshotDiff = undefined
+    }
 }
 else {
     step('Belum ada snapshot lama, diff antar-revisi dilewati')
