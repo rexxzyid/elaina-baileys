@@ -302,6 +302,7 @@ Everything `makeWASocket` accepts, with its default:
 | `appStateMacVerification` | `{ patch: false, snapshot: false }` | verify app-state MACs |
 | `waWebSocketUrl` | WA Web endpoint | override the socket URL |
 | `customUploadHosts` | `[]` | extra media upload hosts |
+| `inlineSenderKeyDistribution` | `true` | carry the sender key distribution message inside each group message, the way the official clients do; set `false` to send it only as a separate message |
 | `transactionOpts` | `{ maxCommitRetries: 10, delayBetweenTriesMs: 3000 }` | retry policy for app-state transactions |
 | `options` | `{}` | axios options for every HTTP request (proxy, timeout, headers) |
 | `makeSignalRepository` | built-in | swap the Signal protocol store implementation |
