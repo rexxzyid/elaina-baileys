@@ -1699,11 +1699,17 @@ export const proto = $root.proto = (() => {
 
         AIMetadataOperation.prototype.hatchMetadataSync = null;
 
+        AIMetadataOperation.prototype.bizAiMetadataSync = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
         Object.defineProperty(AIMetadataOperation.prototype, "_hatchMetadataSync", {
             get: $util.oneOfGetter($oneOfFields = ["hatchMetadataSync"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(AIMetadataOperation.prototype, "_bizAiMetadataSync", {
+            get: $util.oneOfGetter($oneOfFields = ["bizAiMetadataSync"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -1716,6 +1722,8 @@ export const proto = $root.proto = (() => {
                 w = $Writer.create();
             if (m.hatchMetadataSync != null && Object.hasOwnProperty.call(m, "hatchMetadataSync"))
                 $root.proto.HatchMetadataSync.encode(m.hatchMetadataSync, w.uint32(10).fork()).ldelim();
+            if (m.bizAiMetadataSync != null && Object.hasOwnProperty.call(m, "bizAiMetadataSync"))
+                $root.proto.BizAIMetadataSync.encode(m.bizAiMetadataSync, w.uint32(18).fork()).ldelim();
             return w;
         };
 
@@ -1734,6 +1742,10 @@ export const proto = $root.proto = (() => {
                 switch (t >>> 3) {
                 case 1: {
                         m.hatchMetadataSync = $root.proto.HatchMetadataSync.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 2: {
+                        m.bizAiMetadataSync = $root.proto.BizAIMetadataSync.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -1757,6 +1769,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.AIMetadataOperation.hatchMetadataSync: object expected");
                 m.hatchMetadataSync = $root.proto.HatchMetadataSync.fromObject(d.hatchMetadataSync, n + 1);
             }
+            if (d.bizAiMetadataSync != null) {
+                if (typeof d.bizAiMetadataSync !== "object")
+                    throw TypeError(".proto.bizAiMetadataSync: object expected");
+                m.bizAiMetadataSync = $root.proto.BizAIMetadataSync.fromObject(d.bizAiMetadataSync, n + 1);
+            }
             return m;
         };
 
@@ -1768,6 +1785,11 @@ export const proto = $root.proto = (() => {
                 d.hatchMetadataSync = $root.proto.HatchMetadataSync.toObject(m.hatchMetadataSync, o);
                 if (o.oneofs)
                     d._hatchMetadataSync = "hatchMetadataSync";
+            }
+            if (m.bizAiMetadataSync != null && m.hasOwnProperty("bizAiMetadataSync")) {
+                d.bizAiMetadataSync = $root.proto.BizAIMetadataSync.toObject(m.bizAiMetadataSync, o);
+                if (o.oneofs)
+                    d._bizAiMetadataSync = "bizAiMetadataSync";
             }
             return d;
         };
@@ -80984,6 +81006,7 @@ export const proto = $root.proto = (() => {
 
         MessageContextInfo.prototype.accountEncryptionAttestation = null;
         MessageContextInfo.prototype.associatedPrimaryIdentityKey = null;
+        MessageContextInfo.prototype.teeContextAnchorMessageId = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -81092,6 +81115,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(MessageContextInfo.prototype, "_teeContextAnchorMessageId", {
+            get: $util.oneOfGetter($oneOfFields = ["teeContextAnchorMessageId"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         MessageContextInfo.create = function create(properties) {
             return new MessageContextInfo(properties);
         };
@@ -81139,6 +81167,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.NonE2EEAttestation.encode(m.accountEncryptionAttestation, w.uint32(146).fork()).ldelim();
             if (m.associatedPrimaryIdentityKey != null && Object.hasOwnProperty.call(m, "associatedPrimaryIdentityKey"))
                 w.uint32(154).bytes(m.associatedPrimaryIdentityKey);
+            if (m.teeContextAnchorMessageId != null && Object.hasOwnProperty.call(m, "teeContextAnchorMessageId"))
+                w.uint32(162).string(m.teeContextAnchorMessageId);
             return w;
         };
 
@@ -81231,6 +81261,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 19: {
                         m.associatedPrimaryIdentityKey = r.bytes();
+                        break;
+                    }
+                case 20: {
+                        m.teeContextAnchorMessageId = r.string();
                         break;
                     }
                 default:
@@ -81366,6 +81400,9 @@ export const proto = $root.proto = (() => {
                 else if (d.associatedPrimaryIdentityKey.length >= 0)
                     m.associatedPrimaryIdentityKey = d.associatedPrimaryIdentityKey;
             }
+            if (d.teeContextAnchorMessageId != null) {
+                m.teeContextAnchorMessageId = String(d.teeContextAnchorMessageId);
+            }
             return m;
         };
 
@@ -81471,6 +81508,11 @@ export const proto = $root.proto = (() => {
                 d.associatedPrimaryIdentityKey = o.bytes === String ? $util.base64.encode(m.associatedPrimaryIdentityKey, 0, m.associatedPrimaryIdentityKey.length) : o.bytes === Array ? Array.prototype.slice.call(m.associatedPrimaryIdentityKey) : m.associatedPrimaryIdentityKey;
                 if (o.oneofs)
                     d._associatedPrimaryIdentityKey = "associatedPrimaryIdentityKey";
+            }
+            if (m.teeContextAnchorMessageId != null && m.hasOwnProperty("teeContextAnchorMessageId")) {
+                d.teeContextAnchorMessageId = m.teeContextAnchorMessageId;
+                if (o.oneofs)
+                    d._teeContextAnchorMessageId = "teeContextAnchorMessageId";
             }
             return d;
         };
@@ -90843,6 +90885,325 @@ export const proto = $root.proto = (() => {
         };
 
         return NonE2EEAttestation;
+    })();
+
+    proto.BizAIMetadataSync = (function() {
+
+        function BizAIMetadataSync(p) {
+            if (p)
+                for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                    if (p[ks[i]] != null && ks[i] !== "__proto__")
+                        this[ks[i]] = p[ks[i]];
+        }
+
+        BizAIMetadataSync.prototype.serverEvent = null;
+
+        let $oneOfFields;
+
+        Object.defineProperty(BizAIMetadataSync.prototype, "_serverEvent", {
+            get: $util.oneOfGetter($oneOfFields = ["serverEvent"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        BizAIMetadataSync.create = function create(properties) {
+            return new BizAIMetadataSync(properties);
+        };
+
+        BizAIMetadataSync.encode = function encode(m, w) {
+            if (!w)
+                w = $Writer.create();
+            if (m.serverEvent != null && Object.hasOwnProperty.call(m, "serverEvent"))
+                $root.proto.BizAIMetadataSync.ServerEvent.encode(m.serverEvent, w.uint32(10).fork()).ldelim();
+            return w;
+        };
+
+        BizAIMetadataSync.decode = function decode(r, l, e, n) {
+            if (!(r instanceof $Reader))
+                r = $Reader.create(r);
+            if (n === undefined)
+                n = 0;
+            if (n > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.BizAIMetadataSync();
+            while (r.pos < c) {
+                var t = r.uint32();
+                if (t === e)
+                    break;
+                switch (t >>> 3) {
+                case 1: {
+                        m.serverEvent = $root.proto.BizAIMetadataSync.ServerEvent.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                default:
+                    r.skipType(t & 7, n);
+                    break;
+                }
+            }
+            return m;
+        };
+
+        BizAIMetadataSync.fromObject = function fromObject(d, n) {
+            if (d instanceof $root.proto.BizAIMetadataSync)
+                return d;
+            if (n === undefined)
+                n = 0;
+            if (n > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var m = new $root.proto.BizAIMetadataSync();
+            if (d.serverEvent != null) {
+                if (typeof d.serverEvent !== "object")
+                    throw TypeError(".proto.serverEvent: object expected");
+                m.serverEvent = $root.proto.BizAIMetadataSync.ServerEvent.fromObject(d.serverEvent, n + 1);
+            }
+            return m;
+        };
+
+        BizAIMetadataSync.toObject = function toObject(m, o) {
+            if (!o)
+                o = {};
+            var d = {};
+            if (m.serverEvent != null && m.hasOwnProperty("serverEvent")) {
+                d.serverEvent = $root.proto.BizAIMetadataSync.ServerEvent.toObject(m.serverEvent, o);
+                if (o.oneofs)
+                    d._serverEvent = "serverEvent";
+            }
+            return d;
+        };
+
+        BizAIMetadataSync.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        BizAIMetadataSync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.BizAIMetadataSync";
+        };
+
+        BizAIMetadataSync.ServerEvent = (function() {
+
+            function ServerEvent(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ServerEvent.prototype.protocolEvent = null;
+            ServerEvent.prototype.agentOnboardingStarted = null;
+
+            let $oneOfFields;
+
+            Object.defineProperty(ServerEvent.prototype, "_protocolEvent", {
+                get: $util.oneOfGetter($oneOfFields = ["protocolEvent"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            Object.defineProperty(ServerEvent.prototype, "_agentOnboardingStarted", {
+                get: $util.oneOfGetter($oneOfFields = ["agentOnboardingStarted"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ServerEvent.create = function create(properties) {
+                return new ServerEvent(properties);
+            };
+
+            ServerEvent.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.protocolEvent != null && Object.hasOwnProperty.call(m, "protocolEvent"))
+                    w.uint32(8).int32(m.protocolEvent);
+                if (m.agentOnboardingStarted != null && Object.hasOwnProperty.call(m, "agentOnboardingStarted"))
+                    $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted.encode(m.agentOnboardingStarted, w.uint32(18).fork()).ldelim();
+                return w;
+            };
+
+            ServerEvent.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.BizAIMetadataSync.ServerEvent();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.protocolEvent = r.int32();
+                            break;
+                        }
+                    case 2: {
+                            m.agentOnboardingStarted = $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ServerEvent.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.BizAIMetadataSync.ServerEvent)
+                    return d;
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.BizAIMetadataSync.ServerEvent();
+                if (d.protocolEvent != null) {
+                    m.protocolEvent = d.protocolEvent >>> 0;
+                }
+                if (d.agentOnboardingStarted != null) {
+                    if (typeof d.agentOnboardingStarted !== "object")
+                        throw TypeError(".proto.agentOnboardingStarted: object expected");
+                    m.agentOnboardingStarted = $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted.fromObject(d.agentOnboardingStarted, n + 1);
+                }
+                return m;
+            };
+
+            ServerEvent.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.protocolEvent != null && m.hasOwnProperty("protocolEvent")) {
+                    d.protocolEvent = m.protocolEvent;
+                    if (o.oneofs)
+                        d._protocolEvent = "protocolEvent";
+                }
+                if (m.agentOnboardingStarted != null && m.hasOwnProperty("agentOnboardingStarted")) {
+                    d.agentOnboardingStarted = $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted.toObject(m.agentOnboardingStarted, o);
+                    if (o.oneofs)
+                        d._agentOnboardingStarted = "agentOnboardingStarted";
+                }
+                return d;
+            };
+
+            ServerEvent.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ServerEvent.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.BizAIMetadataSync.ServerEvent";
+            };
+
+            ServerEvent.AgentOnboardingStarted = (function() {
+
+                function AgentOnboardingStarted(p) {
+                    if (p)
+                        for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                            if (p[ks[i]] != null && ks[i] !== "__proto__")
+                                this[ks[i]] = p[ks[i]];
+                }
+
+                AgentOnboardingStarted.prototype.composerBlockDurationSecs = null;
+
+                let $oneOfFields;
+
+                Object.defineProperty(AgentOnboardingStarted.prototype, "_composerBlockDurationSecs", {
+                    get: $util.oneOfGetter($oneOfFields = ["composerBlockDurationSecs"]),
+                    set: $util.oneOfSetter($oneOfFields)
+                });
+
+                AgentOnboardingStarted.create = function create(properties) {
+                    return new AgentOnboardingStarted(properties);
+                };
+
+                AgentOnboardingStarted.encode = function encode(m, w) {
+                    if (!w)
+                        w = $Writer.create();
+                    if (m.composerBlockDurationSecs != null && Object.hasOwnProperty.call(m, "composerBlockDurationSecs"))
+                        w.uint32(8).int64(m.composerBlockDurationSecs);
+                    return w;
+                };
+
+                AgentOnboardingStarted.decode = function decode(r, l, e, n) {
+                    if (!(r instanceof $Reader))
+                        r = $Reader.create(r);
+                    if (n === undefined)
+                        n = 0;
+                    if (n > $Reader.recursionLimit)
+                        throw Error("maximum nesting depth exceeded");
+                    var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted();
+                    while (r.pos < c) {
+                        var t = r.uint32();
+                        if (t === e)
+                            break;
+                        switch (t >>> 3) {
+                        case 1: {
+                                m.composerBlockDurationSecs = r.int64();
+                                break;
+                            }
+                        default:
+                            r.skipType(t & 7, n);
+                            break;
+                        }
+                    }
+                    return m;
+                };
+
+                AgentOnboardingStarted.fromObject = function fromObject(d, n) {
+                    if (d instanceof $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted)
+                        return d;
+                    if (n === undefined)
+                        n = 0;
+                    if (n > $util.recursionLimit)
+                        throw Error("maximum nesting depth exceeded");
+                    var m = new $root.proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted();
+                    if (d.composerBlockDurationSecs != null) {
+                        if ($util.Long)
+                            (m.composerBlockDurationSecs = $util.Long.fromValue(d.composerBlockDurationSecs)).unsigned = false;
+                        else if (typeof d.composerBlockDurationSecs === "string")
+                            m.composerBlockDurationSecs = parseInt(d.composerBlockDurationSecs, 10);
+                        else if (typeof d.composerBlockDurationSecs === "number")
+                            m.composerBlockDurationSecs = d.composerBlockDurationSecs;
+                        else if (typeof d.composerBlockDurationSecs === "object")
+                            m.composerBlockDurationSecs = new $util.LongBits(d.composerBlockDurationSecs.low >>> 0, d.composerBlockDurationSecs.high >>> 0).toNumber(false);
+                    }
+                    return m;
+                };
+
+                AgentOnboardingStarted.toObject = function toObject(m, o) {
+                    if (!o)
+                        o = {};
+                    var d = {};
+                    if (m.composerBlockDurationSecs != null && m.hasOwnProperty("composerBlockDurationSecs")) {
+                        if (typeof m.composerBlockDurationSecs === "number")
+                            d.composerBlockDurationSecs = o.longs === String ? String(m.composerBlockDurationSecs) : m.composerBlockDurationSecs;
+                        else
+                            d.composerBlockDurationSecs = o.longs === String ? longToString(m.composerBlockDurationSecs, false) : o.longs === Number ? longToNumber(m.composerBlockDurationSecs, false) : m.composerBlockDurationSecs;
+                        if (o.oneofs)
+                            d._composerBlockDurationSecs = "composerBlockDurationSecs";
+                    }
+                    return d;
+                };
+
+                AgentOnboardingStarted.prototype.toJSON = function toJSON() {
+                    return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                };
+
+                AgentOnboardingStarted.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                    if (typeUrlPrefix === undefined) {
+                        typeUrlPrefix = "type.googleapis.com";
+                    }
+                    return typeUrlPrefix + "/proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted";
+                };
+
+                return AgentOnboardingStarted;
+            })();
+
+            return ServerEvent;
+        })();
+
+        return BizAIMetadataSync;
     })();
 
     proto.ReportingTokenInfo = (function() {

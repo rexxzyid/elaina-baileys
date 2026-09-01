@@ -223,10 +223,12 @@ export namespace proto {
     }
 
     interface IAIMetadataOperation {
+        bizAiMetadataSync?: (proto.IBizAIMetadataSync|null);
         hatchMetadataSync?: (proto.IHatchMetadataSync|null);
     }
 
     class AIMetadataOperation implements IAIMetadataOperation {
+        public bizAiMetadataSync?: (proto.IBizAIMetadataSync|null);
         constructor(p?: proto.IAIMetadataOperation);
         public hatchMetadataSync?: (proto.IHatchMetadataSync|null);
         public static create(properties?: proto.IAIMetadataOperation): proto.AIMetadataOperation;
@@ -11105,6 +11107,7 @@ export namespace proto {
     }
 
     interface IMessageContextInfo {
+        teeContextAnchorMessageId?: (string|null);
         accountEncryptionAttestation?: (proto.INonE2EEAttestation|null);
         associatedPrimaryIdentityKey?: (Uint8Array|null);
         deviceListMetadata?: (proto.IDeviceListMetadata|null);
@@ -11127,6 +11130,7 @@ export namespace proto {
     }
 
     class MessageContextInfo implements IMessageContextInfo {
+        public teeContextAnchorMessageId?: (string|null);
         public accountEncryptionAttestation?: (proto.INonE2EEAttestation|null);
         public associatedPrimaryIdentityKey?: (Uint8Array|null);
         constructor(p?: proto.IMessageContextInfo);
@@ -12532,6 +12536,70 @@ export namespace proto {
         public toJSON(): { [k: string]: any };
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
+
+    interface IBizAIMetadataSync {
+        serverEvent?: (proto.BizAIMetadataSync.IServerEvent|null);
+    }
+
+    class BizAIMetadataSync implements IBizAIMetadataSync {
+        constructor(p?: proto.IBizAIMetadataSync);
+        public serverEvent?: (proto.BizAIMetadataSync.IServerEvent|null);
+        public _serverEvent?: "serverEvent";
+        public static create(properties?: proto.IBizAIMetadataSync): proto.BizAIMetadataSync;
+        public static encode(m: proto.IBizAIMetadataSync, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.BizAIMetadataSync;
+        public static fromObject(d: { [k: string]: any }): proto.BizAIMetadataSync;
+        public static toObject(m: proto.BizAIMetadataSync, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace BizAIMetadataSync {
+        interface IServerEvent {
+            protocolEvent?: (number|null);
+            agentOnboardingStarted?: (proto.BizAIMetadataSync.ServerEvent.IAgentOnboardingStarted|null);
+        }
+
+        class ServerEvent implements IServerEvent {
+            constructor(p?: proto.BizAIMetadataSync.IServerEvent);
+            public protocolEvent?: (number|null);
+            public agentOnboardingStarted?: (proto.BizAIMetadataSync.ServerEvent.IAgentOnboardingStarted|null);
+            public _protocolEvent?: "protocolEvent";
+            public _agentOnboardingStarted?: "agentOnboardingStarted";
+            public static create(properties?: proto.BizAIMetadataSync.IServerEvent): proto.BizAIMetadataSync.ServerEvent;
+            public static encode(m: proto.BizAIMetadataSync.IServerEvent, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.BizAIMetadataSync.ServerEvent;
+            public static fromObject(d: { [k: string]: any }): proto.BizAIMetadataSync.ServerEvent;
+            public static toObject(m: proto.BizAIMetadataSync.ServerEvent, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        namespace ServerEvent {
+            interface IAgentOnboardingStarted {
+                composerBlockDurationSecs?: (number|Long|null);
+            }
+
+            class AgentOnboardingStarted implements IAgentOnboardingStarted {
+                constructor(p?: proto.BizAIMetadataSync.ServerEvent.IAgentOnboardingStarted);
+                public composerBlockDurationSecs?: (number|Long|null);
+                public _composerBlockDurationSecs?: "composerBlockDurationSecs";
+                public static create(properties?: proto.BizAIMetadataSync.ServerEvent.IAgentOnboardingStarted): proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted;
+                public static encode(m: proto.BizAIMetadataSync.ServerEvent.IAgentOnboardingStarted, w?: $protobuf.Writer): $protobuf.Writer;
+                public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted;
+                public static fromObject(d: { [k: string]: any }): proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted;
+                public static toObject(m: proto.BizAIMetadataSync.ServerEvent.AgentOnboardingStarted, o?: $protobuf.IConversionOptions): { [k: string]: any };
+                public toJSON(): { [k: string]: any };
+                public static getTypeUrl(typeUrlPrefix?: string): string;
+            }
+
+
+        }
+
+
+
+    }
+
 
     interface IReportingTokenInfo {
         reportingTagTimestamp?: (number|Long|null);
