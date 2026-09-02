@@ -1,21 +1,17 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { liveRevision } from './protobundle.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const fetchVersion = async () => {
-    const response = await fetch('https://web.whatsapp.com/sw.js', {
-        headers: {
-            'sec-fetch-site': 'none',
-            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-        }
-    })
-    if (!response.ok) throw new Error(`Failed to fetch sw.js: ${response.status} ${response.statusText}`)
-    const match = (await response.text()).match(/\\?"client_revision\\?":\s*(\d+)/)
-    if (!match?.[1]) throw new Error('Could not find client revision in sw.js')
-    return [2, 3000, Number.parseInt(match[1], 10)]
-}
+/**
+ * web.whatsapp.com answers a plain fetch with 403 often enough that this script
+ * used to fail on its own, mid-way through `proto:update`, while the snapshot
+ * step right before it had already read the same file. `liveRevision` is that
+ * step's reader, curl fallback and all.
+ */
+const fetchVersion = async () => [2, 3000, await liveRevision()]
 
 const update = (file, pattern, replacement) => {
     const target = join(root, file)
