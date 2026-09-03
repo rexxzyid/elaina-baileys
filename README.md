@@ -1413,9 +1413,11 @@ default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-s
 
 That single line explains the whole table above. Inline `<script>` and `<style>` run because they are allowed by name; everything else falls to `default-src 'none'`. The host also turns on JavaScript, geolocation, the database and DOM storage on the `WebSettings` — the storage still throws, because an opaque origin has nowhere to put it, not because the setting is off.
 
-The `img-src` list is built, not fixed: the client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive. That is what the renderer does with the `trustedSources` you pass to `htmlSection` and `sendHtmlApp`. Whether it is enough to make a remote image load has **not** been confirmed on a device yet, so keep embedding images as `data:` URIs until it is.
+The `img-src` list is built, not fixed: the client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive. That is genuinely what the renderer does with the `trustedSources` you pass to `htmlSection` and `sendHtmlApp` — and it still does not get you a remote image. Tested on a device with one host listed and one not: **both failed**. So `trustedSources` does not widen what the page can load, and images stay `data:` URIs.
 
-`connect-src` is absent from the list, which should leave WebSocket to `default-src 'none'` — yet a `wss://` socket does connect on a device. Treat the CSP as the explanation for subresources and the measured behaviour as the authority for transports.
+The CSP is therefore not the binding constraint. The page arrives through `loadDataWithBaseURL` with an opaque base — `document.baseURI` measures as `about:blank` — and a WebView given no real base origin refuses remote subresource loads outright, whatever the policy says. That is one restriction explaining every dead row in the table above.
+
+It also explains the row that looked impossible. `connect-src` is absent from the CSP, so `default-src 'none'` should have killed WebSocket, yet a `wss://` socket connects. A WebSocket is not a subresource fetch and never goes through the resource loader that the opaque base disables — so the gate that blocks images has no say over it.
 
 What is blocked is the **resource loader**, not the network. Two transports that never touch it both get out, measured on the same device in the same bubble:
 
