@@ -48,6 +48,17 @@ export declare function lockHeight(height: number): string;
 
 export declare const HTML_APP_BRIDGE: 'AndroidBridge';
 
+export declare function dataUri(bytes: Buffer | Uint8Array, mimetype: string): string;
+
+export declare function htmlMedia(bytes: Buffer | Uint8Array, options: {
+    mimetype: string;
+    tag?: 'video' | 'audio' | 'img';
+    label?: string;
+    poster?: string;
+    id?: string;
+    attributes?: string;
+}): string;
+
 export interface AutoHeightOptions {
     min?: number;
     max?: number;

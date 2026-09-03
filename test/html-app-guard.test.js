@@ -43,8 +43,8 @@ const ratio = checkHtmlApp('<style>body{height:200px}.a{aspect-ratio:16/9}</styl
 assert.match(ratio.warnings.join(' '), /aspect-ratio/);
 
 const tooBig = checkHtmlApp('<style>body{height:100px}</style>' + 'x'.repeat(HTML_APP_BYTE_LIMIT + 1), { height: 100 });
-assert.equal(tooBig.ok, false);
-assert.match(tooBig.problems.join(' '), /over the .*KB budget/);
+assert.equal(tooBig.ok, true, 'size is a budget, not a limit');
+assert.match(tooBig.warnings.join(' '), /over the .*KB budget/);
 
 const inComment = checkHtmlApp('<style>body{height:100px}</style><!-- <img src="https://example.com/a.png"> -->', { height: 100 });
 assert.equal(inComment.ok, true);
