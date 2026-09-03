@@ -34,7 +34,7 @@ assert.equal(stoppable.ok, true);
 
 const noHeight = checkHtmlApp('<div>halo</div>');
 assert.equal(noHeight.ok, true);
-assert.match(noHeight.warnings.join(' '), /no fixed height/);
+assert.match(noHeight.warnings.join(' '), /no height settled/);
 
 const pinned = checkHtmlApp('<style>body{height:240px}</style><div>halo</div>');
 assert.equal(pinned.warnings.length, 0);

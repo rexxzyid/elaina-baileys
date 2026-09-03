@@ -46,6 +46,17 @@ export declare function progressSection(title: string, options?: {
 
 export declare function lockHeight(height: number): string;
 
+export declare const HTML_APP_BRIDGE: 'AndroidBridge';
+
+export interface AutoHeightOptions {
+    min?: number;
+    max?: number;
+    settleMs?: number;
+    maxReports?: number;
+}
+
+export declare function autoHeight(options?: AutoHeightOptions): string;
+
 export declare const AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS: 'FOAHtmlPrimitive';
 
 export declare function htmlSection(html: string, options?: {
@@ -59,6 +70,7 @@ export declare function sendHtmlApp(sock: any, jid: string, html: string, option
     label?: string;
     trustedSources?: string[];
     height?: number;
+    autoHeight?: boolean | AutoHeightOptions;
     typename?: string;
     id?: string;
     bypassDownload?: boolean;
