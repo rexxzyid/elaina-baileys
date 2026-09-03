@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import {
@@ -39,9 +39,29 @@ const chunkCount = path => {
     }
 }
 
+/**
+ * `sw.js` and the chunk CDN can disagree during a rollout, so a directory named
+ * after the advertised revision may hold an older bundle. `snapshot.json`
+ * records what the chunks actually said; trust that over the folder name, or a
+ * skewed capture sits in the cache forever pretending to be the new revision
+ * and the real one never gets downloaded.
+ */
+const capturedRevision = (path, fallback) => {
+    try {
+        const meta = JSON.parse(readFileSync(join(path, 'snapshot.json'), 'utf8'))
+        return Number.isInteger(meta.revision) ? meta.revision : fallback
+    }
+    catch {
+        return fallback
+    }
+}
+
 const snapshotDirs = () => readdirSync(cacheDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory() && /^\d+$/.test(entry.name))
-    .map(entry => ({ revision: Number.parseInt(entry.name, 10), path: join(cacheDir, entry.name) }))
+    .map(entry => {
+        const path = join(cacheDir, entry.name)
+        return { revision: capturedRevision(path, Number.parseInt(entry.name, 10)), path }
+    })
     .filter(entry => chunkCount(entry.path) > 0)
     .sort((a, b) => a.revision - b.revision)
 
@@ -81,7 +101,10 @@ else {
         }
     })
     if (meta.failed) step(`  ${meta.failed} chunk gagal diunduh`)
-    current = { revision: live, path: target }
+    if (meta.revision !== live) {
+        step(`  chunk yang dilayani ternyata revisi ${meta.revision}, bukan ${live}`)
+    }
+    current = { revision: meta.revision, path: target }
 }
 
 step('Membaca spesifikasi protobuf dari bundle')
