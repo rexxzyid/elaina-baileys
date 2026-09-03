@@ -1393,7 +1393,7 @@ It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSourc
 
 #### What the WebView Actually Gives You
 
-Measured on an Android device, not inferred. The page is injected into a blank frame, so it runs in an opaque origin with no network:
+Measured on an Android device, not inferred. The page is injected into a blank frame, so it runs in an opaque origin:
 
 | Signal | Value |
 |---|---|
@@ -1403,7 +1403,17 @@ Measured on an Android device, not inferred. The page is injected into a blank f
 | `window.isSecureContext` | `false` |
 | `navigator.onLine` | `true` — it lies, ignore it |
 
-Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them, so this is not a Content-Security-Policy you can work around — the network is simply unavailable to the page.
+Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them, so this is not a Content-Security-Policy you can work around.
+
+What is blocked is the **resource loader**, not the network. Two transports that never touch it both get out, measured on the same device in the same bubble:
+
+| Transport | Result |
+|---|---|
+| `new WebSocket('wss://…')` | **connects** — `onopen` fires |
+| `RTCPeerConnection` + STUN | **gathers an `srflx` candidate**, so outbound UDP and NAT reflection work |
+| `fetch` / `XMLHttpRequest` / `<img>` / `<script>` / `<iframe>` | dead |
+
+So a mini app is offline for anything it wants to *load*, and online for anything it wants to *talk to*. That is the whole difference, and it is what makes a networked mini app possible at all.
 
 The opaque origin then takes the storage with it. Every one of these throws `SecurityError`, `indexedDB.open()` included:
 
@@ -1415,12 +1425,12 @@ indexedDB.open THROW SecurityError
 caches         undefined
 ```
 
-So a mini app here is **self-contained, offline, and forgets everything**. Plan for that:
+So a mini app here **ships everything it needs and remembers nothing on its own**. Plan for that:
 
 - Embed media as `data:` URIs. A `data:` image loads fine; an `https:` one never will.
-- Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered.
-- There is no channel back to your bot. The page cannot report a score, a tap, or a result. If you need the outcome, the interaction has to happen in a native button instead.
-- No `crypto.subtle`, since it requires a secure context.
+- Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered on its own.
+- Persistence and any channel back to your bot go over a WebSocket to a server you run. There is no direct bridge from the page to WhatsApp, so the page talks to your server and your bot reads from the same place.
+- No `crypto.subtle`, since it requires a secure context. `wss://` is still encrypted by TLS; it is only the page that is not a secure context.
 - The whole app travels inside the message, so its size is your budget.
 
 What does work: `canvas` 2D, WebGL and WebGL2, `OffscreenCanvas`, WebAssembly, Web Audio, `requestAnimationFrame`, and video or audio decoded from a `data:` URI.

@@ -14,13 +14,9 @@ const network = checkHtmlApp('<script>fetch("/x").then(r => r.json())</script>',
 assert.equal(network.ok, false);
 assert.match(network.problems.join(' '), /HTTP stack/);
 
-const socket = checkHtmlApp('<style>body{height:100px}</style><script>const ws = new WebSocket("wss://x.example")</script>', { height: 100 });
+const socket = checkHtmlApp('<style>body{height:100px}</style><script>const ws = new WebSocket("wss://x.example"); addEventListener("visibilitychange", () => ws.close())</script>', { height: 100 });
 assert.equal(socket.ok, true);
-assert.match(socket.warnings.join(' '), /WebSocket rides a transport/);
-
-const rtc = checkHtmlApp('<style>body{height:100px}</style><script>const pc = new RTCPeerConnection(); const ws = new WebSocket("wss://x")</script>', { height: 100 });
-assert.equal(rtc.ok, true);
-assert.match(rtc.warnings.join(' '), /WebSocket and RTCPeerConnection ride/);
+assert.deepEqual(socket.warnings, []);
 
 const storage = checkHtmlApp('<script>try { localStorage.setItem("a", 1) } catch {}</script>', { height: 100 });
 assert.equal(storage.ok, false);
