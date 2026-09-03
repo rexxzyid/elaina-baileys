@@ -1413,7 +1413,9 @@ default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-s
 
 That single line explains the whole table above. Inline `<script>` and `<style>` run because they are allowed by name; everything else falls to `default-src 'none'`. The host also turns on JavaScript, geolocation, the database and DOM storage on the `WebSettings` — the storage still throws, because an opaque origin has nowhere to put it, not because the setting is off.
 
-The `img-src` list is not fixed. The client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive, so the `trustedSources` you pass to `htmlSection` and `sendHtmlApp` is what decides whether a remote image can load at all. `connect-src` is absent from the list, which should leave WebSocket to `default-src 'none'` — yet a `wss://` socket does connect on a device. Treat the CSP as the explanation for subresources and the measured behaviour as the authority for transports.
+The `img-src` list is built, not fixed: the client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive. That is what the renderer does with the `trustedSources` you pass to `htmlSection` and `sendHtmlApp`. Whether it is enough to make a remote image load has **not** been confirmed on a device yet, so keep embedding images as `data:` URIs until it is.
+
+`connect-src` is absent from the list, which should leave WebSocket to `default-src 'none'` — yet a `wss://` socket does connect on a device. Treat the CSP as the explanation for subresources and the measured behaviour as the authority for transports.
 
 What is blocked is the **resource loader**, not the network. Two transports that never touch it both get out, measured on the same device in the same bubble:
 
