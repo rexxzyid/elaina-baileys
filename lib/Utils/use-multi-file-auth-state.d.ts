@@ -9,3 +9,4 @@ export function useMultiFileAuthState(folder: any): Promise<{
     };
     saveCreds: () => Promise<any>;
 }>;
+export function countAuthFileLocks(): number;
