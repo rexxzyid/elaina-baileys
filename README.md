@@ -1464,6 +1464,25 @@ await sendHtmlApp(sock, m.chat, html, { height: 300 })
 
 It prepends `lockHeight(300)`, which pins `html`/`body` to that many pixels and moves the page's own content into a `#__wrap` scroll container on `DOMContentLoaded`. The container is what makes it work: pinning `body` alone is not enough, because `overflow:hidden` clips the view without shrinking `scrollHeight`, and the host still measures the overflow.
 
+**Or let the page say its own height.** The bridge the host injects carries exactly one method, and it works:
+
+```js
+window.AndroidBridge.updateSize(520)
+```
+
+The bubble resizes to that many pixels. Confirmed on a device — so a mini app does not have to be pinned from the outside at all. `autoHeight` wires it up for you: measure the content once it is laid out, report it, and keep reporting through a `ResizeObserver` as the content changes.
+
+```js
+await sendHtmlApp(sock, m.chat, html, { autoHeight: true })
+await sendHtmlApp(sock, m.chat, html, { autoHeight: { min: 120, max: 640 } })
+```
+
+`height` and `autoHeight` are mutually exclusive — passing both throws, since pinned CSS would defeat whatever the bridge reports.
+
+The reporter is deliberately suspicious of itself. It skips a height equal to the last one it sent, and if a height it already sent two reports ago comes back it stops entirely, because an alternating pair is the shudder loop starting: content height depending on the width the host just handed back. It also stops after `maxReports` (24 by default) and after the first thrown call, so a host that ignores the bridge costs one call, not a loop. Clamp with `min` and `max`.
+
+`checkHtmlApp` treats an `AndroidBridge.updateSize` call as settling the height, so a page that reports for itself no longer draws the "no height settled" warning.
+
 To do it by hand instead, pin the outer height in pixels, give the canvas a fixed CSS size, and let anything longer scroll inside its own `overflow-y: auto` container rather than growing the page:
 
 ```css
