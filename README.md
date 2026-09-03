@@ -1403,7 +1403,17 @@ Measured on an Android device, not inferred. The page is injected into a blank f
 | `window.isSecureContext` | `false` |
 | `navigator.onLine` | `true` — it lies, ignore it |
 
-Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them, so this is not a Content-Security-Policy you can work around.
+Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them.
+
+It **is** a Content-Security-Policy, though — the Android client injects one into the page's `<head>` before handing it to the WebView, and this is the directive list read straight out of the renderer:
+
+```
+default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob: <trusted hosts>; font-src data:;
+```
+
+That single line explains the whole table above. Inline `<script>` and `<style>` run because they are allowed by name; everything else falls to `default-src 'none'`. The host also turns on JavaScript, geolocation, the database and DOM storage on the `WebSettings` — the storage still throws, because an opaque origin has nowhere to put it, not because the setting is off.
+
+The `img-src` list is not fixed. The client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive, so the `trustedSources` you pass to `htmlSection` and `sendHtmlApp` is what decides whether a remote image can load at all. `connect-src` is absent from the list, which should leave WebSocket to `default-src 'none'` — yet a `wss://` socket does connect on a device. Treat the CSP as the explanation for subresources and the measured behaviour as the authority for transports.
 
 What is blocked is the **resource loader**, not the network. Two transports that never touch it both get out, measured on the same device in the same bubble:
 
@@ -1429,7 +1439,8 @@ So a mini app here **ships everything it needs and remembers nothing on its own*
 
 - Embed media as `data:` URIs. A `data:` image loads fine; an `https:` one never will.
 - Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered on its own.
-- Persistence and any channel back to your bot go over a WebSocket to a server you run. There is no direct bridge from the page to WhatsApp, so the page talks to your server and your bot reads from the same place.
+- Persistence and any channel back to your bot go over a WebSocket to a server you run. The page talks to your server and your bot reads from the same place.
+- The host does inject one bridge object, `window.AndroidBridge`, but it carries a single method — `updateSize(height)` — and nothing else. It cannot tell the page who is viewing it, so a mini app sent to a group has no way of identifying the reader; whatever identity you need has to be baked in per message or asked for on screen.
 - No `crypto.subtle`, since it requires a secure context. `wss://` is still encrypted by TLS; it is only the page that is not a secure context.
 - The whole app travels inside the message, so its size is your budget.
 
