@@ -53,6 +53,7 @@ export function initAuthCreds(): {
     registered: boolean;
     pairingCode: undefined;
     lastPropHash: undefined;
+    serverProps: undefined;
     routingInfo: undefined;
     additionalData: undefined;
 };
