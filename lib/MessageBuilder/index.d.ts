@@ -115,7 +115,12 @@ export declare class AIRich extends BaseBuilder {
   assignId(target: string | number, id: string): this;
   delete(target: string | number): this;
   addSubmessage(submessage: any, options?: AIRichItemOptions): this;
-  addSection(section: any, options?: AIRichItemOptions): this;
+  /**
+   * A section with no submessage travels as submessages: [], which every
+   * rendered AI Rich message has non-empty. Pass text for the plain-text
+   * twin, or submessage to shape it yourself.
+   */
+  addSection(section: any, options?: AIRichItemOptions & { text?: string; submessage?: any }): this;
   addFooterSection(section: any): this;
   addEmbeddedScreen(screen: any): this;
   setBotMetadata(extra: Record<string, any>): this;
