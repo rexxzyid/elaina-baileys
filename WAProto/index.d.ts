@@ -11239,6 +11239,7 @@ export namespace proto {
     }
 
     interface IMsgOpaqueData {
+        mediaPngThumbnail?: (string|null);
         body?: (string|null);
         caption?: (string|null);
         lng?: (number|null);
@@ -11297,6 +11298,7 @@ export namespace proto {
     }
 
     class MsgOpaqueData implements IMsgOpaqueData {
+        public mediaPngThumbnail?: (string|null);
         constructor(p?: proto.IMsgOpaqueData);
         public body?: (string|null);
         public caption?: (string|null);

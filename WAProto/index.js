@@ -82137,6 +82137,7 @@ export const proto = $root.proto = (() => {
         MsgOpaqueData.prototype.sharableEventInviteJpegThumbnail = null;
         MsgOpaqueData.prototype.sharableEventInviteCallLink = null;
 
+        MsgOpaqueData.prototype.mediaPngThumbnail = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -82463,6 +82464,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(MsgOpaqueData.prototype, "_mediaPngThumbnail", {
+            get: $util.oneOfGetter($oneOfFields = ["mediaPngThumbnail"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         MsgOpaqueData.create = function create(properties) {
             return new MsgOpaqueData(properties);
         };
@@ -82582,6 +82588,8 @@ export const proto = $root.proto = (() => {
                 w.uint32(474).bytes(m.sharableEventInviteJpegThumbnail);
             if (m.sharableEventInviteCallLink != null && Object.hasOwnProperty.call(m, "sharableEventInviteCallLink"))
                 w.uint32(482).string(m.sharableEventInviteCallLink);
+            if (m.mediaPngThumbnail != null && Object.hasOwnProperty.call(m, "mediaPngThumbnail"))
+                w.uint32(490).string(m.mediaPngThumbnail);
             return w;
         };
 
@@ -82818,6 +82826,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 60: {
                         m.sharableEventInviteCallLink = r.string();
+                        break;
+                    }
+                case 61: {
+                        m.mediaPngThumbnail = r.string();
                         break;
                     }
                 default:
@@ -83112,6 +83124,9 @@ export const proto = $root.proto = (() => {
             }
             if (d.sharableEventInviteCallLink != null) {
                 m.sharableEventInviteCallLink = String(d.sharableEventInviteCallLink);
+            }
+            if (d.mediaPngThumbnail != null) {
+                m.mediaPngThumbnail = String(d.mediaPngThumbnail);
             }
             return m;
         };
@@ -83416,6 +83431,11 @@ export const proto = $root.proto = (() => {
                 d.sharableEventInviteCallLink = m.sharableEventInviteCallLink;
                 if (o.oneofs)
                     d._sharableEventInviteCallLink = "sharableEventInviteCallLink";
+            }
+            if (m.mediaPngThumbnail != null && m.hasOwnProperty("mediaPngThumbnail")) {
+                d.mediaPngThumbnail = m.mediaPngThumbnail;
+                if (o.oneofs)
+                    d._mediaPngThumbnail = "mediaPngThumbnail";
             }
             return d;
         };
