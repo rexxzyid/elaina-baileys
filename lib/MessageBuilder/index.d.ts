@@ -103,6 +103,7 @@ export declare class Carousel extends BaseBuilder {
 export declare class AIRich extends BaseBuilder {
   constructor(client: any, options?: { dynamic?: boolean; unsupportedTypeAlert?: boolean });
   loadFrom(msg: any): this;
+  setResponseMeta(meta: Record<string, any>): this;
   setResponseId(id: string): this;
   refreshResponseId(): this;
   setBotResponseId(id: string): this;

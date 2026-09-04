@@ -25,19 +25,21 @@ assert.throws(() => botSourcesMetadata([['a']]), TypeError);
 
 const screen = embeddedScreen({ id: 's-1', content: [htmlSection('<b>x</b>')] });
 assert.equal(screen.id, 's-1');
-assert.equal('title' in screen, false);
+assert.equal('title' in screen, false, 'no title unless one is given');
 assert.equal(screen.content.length, 1);
 assert.equal('tabs' in screen, false);
 assert.match(embeddedScreen({}).id, /^[0-9a-f-]{36}$/);
 assert.equal(embeddedScreen({}).content, undefined);
 
-/** title was never a key the client parses; sending it silently did nothing. */
-assert.throws(() => embeddedScreen({ title: 'Rincian' }), TypeError);
+/** UnifiedResponseRepository reads title, so it belongs on the screen after all. */
+assert.equal(embeddedScreen({ title: 'Rincian' }).title, 'Rincian');
+assert.equal('title' in embeddedScreen({}), false, 'omitted rather than sent empty');
 
 assert.equal(EMBEDDED_SCREEN_PRESENTATION.HALF_HEIGHT, 'HALF_HEIGHT');
 assert.equal(EMBEDDED_SCREEN_PRESENTATION.FULL_HEIGHT, 'FULL_HEIGHT');
 
-const tab = embeddedTab({ id: 'slots', sections: [htmlSection('<b>slot</b>')] });
+const tab = embeddedTab({ id: 'slots', tabHeader: 'Slots', sections: [htmlSection('<b>slot</b>')] });
+assert.equal(tab.tab_header, 'Slots', 'the model names it tabHeader, the wire names it tab_header');
 assert.equal(tab.id, 'slots');
 assert.equal(tab.sections.length, 1);
 assert.equal('content' in tab, false, 'a tab carries sections, not content');

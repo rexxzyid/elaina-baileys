@@ -160,15 +160,24 @@ export declare const EMBEDDED_SCREEN_PRESENTATION: Readonly<{ HALF_HEIGHT: 'HALF
 export declare function embeddedTab(options?: {
     id?: string;
     header?: any;
+    tabHeader?: any;
     sections?: any[];
 }): any;
 
+export declare const AI_RICH_RESPONSE_KEYS: readonly string[];
+
 export declare function embeddedScreen(options?: {
     id?: string;
+    title?: string;
     content?: any[];
     tabs?: any[];
     header?: any;
     body?: any;
+    artifacts?: any[];
+    steps?: any[];
+    stepEntries?: any[];
+    sources?: any[];
+    pollId?: string;
 }): any;
 
 export declare function footerActionSection(actionType: string, options?: {
