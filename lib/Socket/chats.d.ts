@@ -19,6 +19,9 @@ export function makeChatsSocket(config: any): {
         /** AB prop 14303: issue tctokens to LID instead of PN. WA Web default: false. */
         lidTrustedTokenIssueToLid: boolean;
     };
+    /** Every AB prop the server pushed, keyed by both its number and its name. */
+    fetchProps: () => Promise<Record<string, string>>;
+    getServerProps: (options?: { refresh?: boolean }) => Promise<Record<string, string>>;
     createCallLink: (type: any, event: any, timeoutMs: any) => Promise<any>;
     getBotListV2: () => Promise<{
         jid: any;
