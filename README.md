@@ -1867,6 +1867,27 @@ They look the same to a viewer and are completely different on the wire.
 
 The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
 
+##### Where the Server Id Comes From
+
+The `<ack>` that answers a published status carries `from`, `class`, `id` and `t` — and no server id at all. That is not a failure; the id arrives a moment later, on the `<status>` stanza the server echoes back to the publisher, marked `is_sender="true"`.
+
+`sendNewsletterStatus` waits for that echo and fills it in, so the id you need to react to or revoke your own status is on the result:
+
+```js
+const posted = await sock.sendNewsletterStatus('123456789@newsletter', {
+  image: { url: 'https://example.com/drop.jpg' },
+  caption: 'New drop today'
+})
+
+posted.newsletterStatusServerId   // 175 — from the echo, not the ack
+posted.newsletterStatusAck        // the ack itself, which never has one
+posted.newsletterStatusDelivered  // the raw <status> node the id came from
+
+await sock.sendNewsletterStatusReaction('123456789@newsletter', posted.newsletterStatusServerId, '🔥')
+```
+
+The wait is capped and never blocks the send: if no echo arrives, `newsletterStatusServerId` is `undefined` and everything else is unchanged. Tune it with `serverIdTimeoutMs`, or skip it with `resolveServerId: false` when you only care that the status went out.
+
 ##### Check Whether the Channel May Post
 
 WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:

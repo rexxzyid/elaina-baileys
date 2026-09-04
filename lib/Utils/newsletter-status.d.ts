@@ -14,6 +14,8 @@ export interface NewsletterStatusSendOptions {
     aiContent?: boolean
     statusAttribution?: boolean
     ackTimeoutMs?: number
+    resolveServerId?: boolean
+    serverIdTimeoutMs?: number
     transport?: string
     [key: string]: any
 }
@@ -110,7 +112,14 @@ export type NewsletterStatusSendResult = proto.WebMessageInfo & {
     newsletterStatusServerId?: number
     newsletterStatusAck?: NewsletterStatusAck
     newsletterStatusResponse?: any
+    newsletterStatusDelivered?: any
 }
+
+export function waitForNewsletterStatusServerId(sock: any, options: {
+    jid?: string
+    messageId?: string
+    timeoutMs?: number
+}): Promise<{ serverId: number, node: any } | undefined>
 
 export interface NewsletterStatusStanzaResult {
     key: {
