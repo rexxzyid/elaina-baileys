@@ -155,9 +155,16 @@ export interface SourceInput {
 
 export declare function botSourcesMetadata(sources: SourceInput[]): { sources: any[] };
 
+export declare const EMBEDDED_SCREEN_PRESENTATION: Readonly<{ HALF_HEIGHT: 'HALF_HEIGHT'; FULL_HEIGHT: 'FULL_HEIGHT' }>;
+
+export declare function embeddedTab(options?: {
+    id?: string;
+    header?: any;
+    sections?: any[];
+}): any;
+
 export declare function embeddedScreen(options?: {
     id?: string;
-    title?: string;
     content?: any[];
     tabs?: any[];
     header?: any;
