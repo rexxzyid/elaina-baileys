@@ -43,8 +43,13 @@ const ratio = checkHtmlApp('<style>body{height:200px}.a{aspect-ratio:16/9}</styl
 assert.match(ratio.warnings.join(' '), /aspect-ratio/);
 
 const tooBig = checkHtmlApp('<style>body{height:100px}</style>' + 'x'.repeat(HTML_APP_BYTE_LIMIT + 1), { height: 100 });
-assert.equal(tooBig.ok, true, 'size is a budget, not a limit');
-assert.match(tooBig.warnings.join(' '), /over the .*KB budget/);
+assert.equal(tooBig.ok, false, 'past the budget the receiving client drops the message');
+assert.match(tooBig.problems.join(' '), /over the .*KB budget/);
+assert.match(tooBig.problems.join(' '), /dropped by the receiving client/);
+
+const emoji = checkHtmlApp('<style>body{height:100px}</style><div>' + '\u2b07\ufe0f'.repeat(200) + '</div>', { height: 100 });
+assert.ok(emoji.wireBytes > emoji.bytes, 'escaping is counted');
+assert.match(emoji.warnings.join(' '), /escaping inflates/);
 
 const inComment = checkHtmlApp('<style>body{height:100px}</style><!-- <img src="https://example.com/a.png"> -->', { height: 100 });
 assert.equal(inComment.ok, true);

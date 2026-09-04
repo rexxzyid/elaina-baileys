@@ -35,8 +35,10 @@ const page = '<style>body{height:300px}</style>' + clip;
 const report = checkHtmlApp(page, { height: 300 });
 assert.equal(report.ok, true, report.problems.join(' | '));
 
-/** Oversized pages are a cost to report, not a refusal -- a base64 clip is legitimately large. */
+/** Measured: a card renders at 896KB and is dropped at 1024KB, so the budget is a real refusal. */
 const heavy = checkHtmlApp('<style>body{height:100px}</style>' + 'x'.repeat(HTML_APP_BYTE_BUDGET + 1), { height: 100 });
-assert.equal(heavy.ok, true);
-assert.match(heavy.warnings.join(' '), /over the .*KB budget/);
-assert.deepEqual(heavy.problems, []);
+assert.equal(heavy.ok, false);
+assert.match(heavy.problems.join(' '), /over the .*KB budget/);
+
+const justUnder = checkHtmlApp('<style>body{height:100px}</style>' + 'x'.repeat(896 * 1024), { height: 100 });
+assert.equal(justUnder.ok, true, '896KB is measured to render');
