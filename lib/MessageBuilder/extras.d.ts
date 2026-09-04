@@ -68,6 +68,27 @@ export interface AutoHeightOptions {
 
 export declare function autoHeight(options?: AutoHeightOptions): string;
 
+export interface ScrollControlsOptions {
+    /** CSS selector for the pane to scroll. Defaults to the #__wrap that height creates. */
+    target?: string;
+    /** Pixels per tap, and per repeat while held. */
+    step?: number;
+    /** Repeat interval while a button is held down, at least 16. */
+    holdMs?: number;
+    /** Button edge length in pixels, at least 24. */
+    size?: number;
+    side?: 'right' | 'left';
+    inset?: number;
+}
+
+/**
+ * On-screen scroll buttons. Touch scrolling inside the bubble is taken by the
+ * chat list behind it, so a page taller than its bubble cannot be scrolled by
+ * dragging; these move the pane programmatically instead. Hidden when the
+ * content already fits.
+ */
+export declare function scrollControls(options?: ScrollControlsOptions): string;
+
 export declare const AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS: 'FOAHtmlPrimitive';
 
 export declare function htmlSection(html: string, options?: {
@@ -82,6 +103,7 @@ export declare function sendHtmlApp(sock: any, jid: string, html: string, option
     trustedSources?: string[];
     height?: number;
     autoHeight?: boolean | AutoHeightOptions;
+    scrollButtons?: boolean | ScrollControlsOptions;
     typename?: string;
     id?: string;
     bypassDownload?: boolean;
