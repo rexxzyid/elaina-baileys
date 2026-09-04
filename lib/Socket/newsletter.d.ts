@@ -75,7 +75,7 @@ export function makeNewsletterSocket(config: any): {
     newsletterUpdatePicture: (jid: any, content: any) => Promise<any>;
     newsletterRemovePicture: (jid: any) => Promise<any>;
     newsletterReactMessage: (jid: any, serverId: any, reaction: any) => Promise<void>;
-    newsletterFetchMessages: (type: any, key: any, count: any, after: any, before: any) => Promise<{
+    newsletterFetchMessages: (type: any, key: any, count?: number, after?: any, before?: any) => Promise<{
         [k: string]: any;
     }[]>;
     newsletterFetchMessageUpdates: (jid: string, options?: {

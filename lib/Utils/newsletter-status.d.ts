@@ -115,11 +115,16 @@ export type NewsletterStatusSendResult = proto.WebMessageInfo & {
     newsletterStatusDelivered?: any
 }
 
+export const NEWSLETTER_SERVER_ID_MIN: number
+export const NEWSLETTER_SERVER_ID_MAX: number
+
+export function toNewsletterServerId(value: string | number, label?: string): string
+
 export function waitForNewsletterStatusServerId(sock: any, options: {
     jid?: string
     messageId?: string
     timeoutMs?: number
-}): Promise<{ serverId: number, node: any } | undefined>
+}): Promise<{ serverId: number, node: any } | undefined> & { cancel(): void }
 
 export interface NewsletterStatusStanzaResult {
     key: {
