@@ -1,10 +1,10 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
 export const RetryReason: any;
 export class MessageRetryManager {
-    constructor(logger: any, maxMsgRetryCount: any);
+    constructor(logger: any, maxMsgRetryCount?: number);
     logger: any;
     recentMessagesMap: any;
-    messageKeyIndex: Map<any, any>;
+    messageKeyIndex: Map<string, Set<string>>;
     sessionRecreateHistory: any;
     retryCounters: any;
     baseKeys: any;
