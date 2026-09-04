@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -295,6 +295,9 @@ export const liveRevision = async () => readClientRevision(await fetchText('http
  */
 export const snapshotBundle = async ({ directory, concurrency = 12, onProgress } = {}) => {
     mkdirSync(directory, { recursive: true })
+    for (const name of readdirSync(directory)) {
+        if (name.endsWith('.js') || name === 'snapshot.json') rmSync(join(directory, name), { force: true })
+    }
     const revision = readClientRevision(await fetchText('https://web.whatsapp.com/sw.js'))
     const urls = collectChunkUrls(await fetchText('https://web.whatsapp.com/'))
     if (!urls.length) throw new Error('No bundle chunks found on the page')

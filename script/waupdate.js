@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import {
@@ -84,18 +84,17 @@ step(`Revisi live WhatsApp Web: ${live}`)
 if (spread.length > 1) step(`  beberapa revisi dilayani bersamaan: ${spread.join(', ')}`)
 if (live > Math.max(...samples)) step(`  sampel kali ini maksimum ${Math.max(...samples)}, memakai yang lebih tinggi dan pernah teramati`)
 
-const existing = snapshotDirs()
-const previous = existing.filter(entry => entry.revision !== live).pop()
-let current = existing.find(entry => entry.revision === live)
+let current = snapshotDirs().find(entry => entry.revision === live)
 
 if (current) {
     step(`Snapshot revisi ${live} sudah ada di ${current.path}, memakai ulang`)
 }
 else {
-    const target = join(cacheDir, String(live))
-    step(`Mengunduh bundle revisi ${live} ke ${target}`)
+    const staging = join(cacheDir, '.staging')
+    rmSync(staging, { recursive: true, force: true })
+    step(`Mengunduh bundle revisi ${live}`)
     const meta = await snapshotBundle({
-        directory: target,
+        directory: staging,
         onProgress: (done, total) => {
             if (done % 100 === 0 || done === total) step(`  ${done}/${total} chunk`)
         }
@@ -104,8 +103,16 @@ else {
     if (meta.revision !== live) {
         step(`  chunk yang dilayani ternyata revisi ${meta.revision}, bukan ${live}`)
     }
+    const target = join(cacheDir, String(meta.revision))
+    rmSync(target, { recursive: true, force: true })
+    renameSync(staging, target)
+    step(`  snapshot disimpan di ${target}`)
     current = { revision: meta.revision, path: target }
 }
+
+const analyzed = current.revision
+const previous = snapshotDirs().filter(entry => entry.path !== current.path && entry.revision !== analyzed).pop()
+if (analyzed !== live) step(`Revisi yang benar-benar dianalisis: ${analyzed}`)
 
 step('Membaca spesifikasi protobuf dari bundle')
 const bundle = await loadBundle({ directory: current.path })
@@ -157,7 +164,7 @@ const protocolTouched = snapshotDiff ? snapshotDiff.protocolTouched : protoGaps 
 let verdict
 if (protoGaps > 0) verdict = 'needs-work'
 else if (!verify.ok) verdict = 'blocked'
-else if (live !== pinned) verdict = protocolTouched ? 'bump-and-review' : 'bump-only'
+else if (analyzed !== pinned) verdict = protocolTouched ? 'bump-and-review' : 'bump-only'
 else verdict = 'no-change'
 
 const VERDICTS = {
@@ -173,12 +180,17 @@ lines.push('# Laporan update WhatsApp Web')
 lines.push('')
 lines.push(`- Revisi terpasang: \`${pinned}\``)
 lines.push(`- Revisi live: \`${live}\``)
+lines.push(`- Revisi yang dianalisis: \`${analyzed}\``)
 lines.push(`- Snapshot dipakai: \`${current.path}\``)
 lines.push(`- Snapshot pembanding: \`${previous ? previous.path : 'tidak ada'}\``)
 lines.push('')
 lines.push(`## Kesimpulan: \`${verdict}\``)
 lines.push('')
 lines.push(VERDICTS[verdict])
+if (analyzed !== live) {
+    lines.push('')
+    lines.push(`CDN masih melayani chunk revisi \`${analyzed}\` walau \`sw.js\` mengumumkan \`${live}\`, jadi bundle revisi \`${live}\` belum pernah dibaca dan angka itu tidak dipakai untuk kesimpulan apa pun.`)
+}
 lines.push('')
 lines.push('## Pemeriksaan protobuf')
 lines.push('')
@@ -214,6 +226,7 @@ writeFileSync(markdownPath, markdown + '\n')
 writeFileSync(jsonPath, JSON.stringify({
     pinned,
     live,
+    analyzed,
     verdict,
     protoGaps,
     missingMessage,
@@ -233,8 +246,8 @@ step(`Laporan ditulis ke ${markdownPath} dan ${jsonPath}`)
 
 if (apply) {
     if (verdict === 'bump-only' || verdict === 'bump-and-review') {
-        const touched = writePinnedRevision(live)
-        step(touched.length ? `Versi dibump ke ${live} di: ${touched.join(', ')}` : 'Tidak ada file versi yang berubah')
+        const touched = writePinnedRevision(analyzed)
+        step(touched.length ? `Versi dibump ke ${analyzed} di: ${touched.join(', ')}` : 'Tidak ada file versi yang berubah')
     }
     else {
         step(`--apply diabaikan: kesimpulannya \`${verdict}\`, bukan bump`)

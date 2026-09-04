@@ -91,6 +91,14 @@ Variabel lingkungan `PROTO_BUNDLE_DIR` membuat semua skrip membaca dari
 direktori lokal, dan `PROTO_OFFLINE=1` melewati pengambilan revisi live —
 berguna kalau jaringan diblokir.
 
+> **Catatan rollout.** `sw.js` dan CDN chunk bisa berbeda pendapat saat rilis
+> sedang digelar bertahap: `sw.js` sudah mengumumkan revisi baru sementara
+> chunk yang dilayani masih revisi lama. Laporan membedakan keduanya lewat
+> `Revisi live` (yang diumumkan) dan `Revisi yang dianalisis` (yang benar-benar
+> terunduh). Semua kesimpulan — termasuk `--apply` — memakai revisi yang
+> dianalisis, karena revisi yang bundle-nya belum pernah dibaca tidak boleh
+> ikut dibump.
+
 > **Catatan jaringan.** Di sebagian lingkungan, `fetch` bawaan Node ditolak
 > `403` oleh web.whatsapp.com sementara `curl` lolos. `script/protobundle.js`
 > sudah otomatis jatuh ke `curl` ketika itu terjadi, jadi kamu tidak perlu
