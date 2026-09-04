@@ -11239,6 +11239,7 @@ export namespace proto {
     }
 
     interface IMsgOpaqueData {
+        qrUrl?: (string|null);
         mediaPngThumbnail?: (string|null);
         body?: (string|null);
         caption?: (string|null);
@@ -11298,6 +11299,7 @@ export namespace proto {
     }
 
     class MsgOpaqueData implements IMsgOpaqueData {
+        public qrUrl?: (string|null);
         public mediaPngThumbnail?: (string|null);
         constructor(p?: proto.IMsgOpaqueData);
         public body?: (string|null);

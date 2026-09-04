@@ -82138,6 +82138,7 @@ export const proto = $root.proto = (() => {
         MsgOpaqueData.prototype.sharableEventInviteCallLink = null;
 
         MsgOpaqueData.prototype.mediaPngThumbnail = null;
+        MsgOpaqueData.prototype.qrUrl = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -82469,6 +82470,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(MsgOpaqueData.prototype, "_qrUrl", {
+            get: $util.oneOfGetter($oneOfFields = ["qrUrl"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         MsgOpaqueData.create = function create(properties) {
             return new MsgOpaqueData(properties);
         };
@@ -82590,6 +82596,8 @@ export const proto = $root.proto = (() => {
                 w.uint32(482).string(m.sharableEventInviteCallLink);
             if (m.mediaPngThumbnail != null && Object.hasOwnProperty.call(m, "mediaPngThumbnail"))
                 w.uint32(490).string(m.mediaPngThumbnail);
+            if (m.qrUrl != null && Object.hasOwnProperty.call(m, "qrUrl"))
+                w.uint32(498).string(m.qrUrl);
             return w;
         };
 
@@ -82830,6 +82838,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 61: {
                         m.mediaPngThumbnail = r.string();
+                        break;
+                    }
+                case 62: {
+                        m.qrUrl = r.string();
                         break;
                     }
                 default:
@@ -83127,6 +83139,9 @@ export const proto = $root.proto = (() => {
             }
             if (d.mediaPngThumbnail != null) {
                 m.mediaPngThumbnail = String(d.mediaPngThumbnail);
+            }
+            if (d.qrUrl != null) {
+                m.qrUrl = String(d.qrUrl);
             }
             return m;
         };
@@ -83436,6 +83451,11 @@ export const proto = $root.proto = (() => {
                 d.mediaPngThumbnail = m.mediaPngThumbnail;
                 if (o.oneofs)
                     d._mediaPngThumbnail = "mediaPngThumbnail";
+            }
+            if (m.qrUrl != null && m.hasOwnProperty("qrUrl")) {
+                d.qrUrl = m.qrUrl;
+                if (o.oneofs)
+                    d._qrUrl = "qrUrl";
             }
             return d;
         };
