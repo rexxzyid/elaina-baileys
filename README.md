@@ -1237,6 +1237,9 @@ It unwraps view-once and the other envelopes first, so a card inside `viewOnceMe
 
 `interactiveMessage.bloksWidget` with `type: "im_a2ui"` renders a card the client draws **from a declarative spec carried in the message**. No HTML, no hosting, and unlike the rest of Bloks nothing is fetched from Meta — the components travel in `data` and the client lays them out.
 
+> [!WARNING]
+> The payload shape below is confirmed: a hand-written `bloksWidget` of this form renders on Android, and the client answers a malformed one with a named `A2UIValidationException`. The `sendA2UI` helper is **not** confirmed — cards sent through it have not been seen to render, and the cause is still open. Until that is settled, build the `bloksWidget` by hand if you need this to work.
+
 ```js
 import { a2uiColumn, a2uiImage, a2uiText, sendA2UI } from '@rexxhayanasi/elaina-baileys'
 
@@ -1405,21 +1408,9 @@ Measured on an Android device, not inferred. The page is injected into a blank f
 
 Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them.
 
-It **is** a Content-Security-Policy, though — the Android client injects one into the page's `<head>` before handing it to the WebView, and this is the directive list read straight out of the renderer:
+`trustedSources` does not widen that. Tested on a device with one host listed in `trustedSources` and one absent: **both images failed**. Whatever the option does, it does not buy you a remote image, so images stay `data:` URIs.
 
-```
-default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob: <trusted hosts>; font-src data:;
-```
-
-That single line explains the whole table above. Inline `<script>` and `<style>` run because they are allowed by name; everything else falls to `default-src 'none'`. The host also turns on JavaScript, geolocation, the database and DOM storage on the `WebSettings` — the storage still throws, because an opaque origin has nowhere to put it, not because the setting is off.
-
-The `img-src` list is built, not fixed: the client parses every entry of `trusted_sources`, takes its host, and splices the hosts into that directive. That is genuinely what the renderer does with the `trustedSources` you pass to `htmlSection` and `sendHtmlApp` — and it still does not get you a remote image. Tested on a device with one host listed and one not: **both failed**. So `trustedSources` does not widen what the page can load, and images stay `data:` URIs.
-
-The CSP is therefore not the binding constraint. The page arrives through `loadDataWithBaseURL` with an opaque base — `document.baseURI` measures as `about:blank` — and a WebView given no real base origin refuses remote subresource loads outright, whatever the policy says. That is one restriction explaining every dead row in the table above.
-
-It also explains the row that looked impossible. `connect-src` is absent from the CSP, so `default-src 'none'` should have killed WebSocket, yet a `wss://` socket connects. A WebSocket is not a subresource fetch and never goes through the resource loader that the opaque base disables — so the gate that blocks images has no say over it.
-
-What is blocked is the **resource loader**, not the network. Two transports that never touch it both get out, measured on the same device in the same bubble:
+Loading is dead, but talking is not. Two transports were measured on the same device in the same bubble:
 
 | Transport | Result |
 |---|---|
@@ -1427,7 +1418,7 @@ What is blocked is the **resource loader**, not the network. Two transports that
 | `RTCPeerConnection` + STUN | **gathers an `srflx` candidate**, so outbound UDP and NAT reflection work |
 | `fetch` / `XMLHttpRequest` / `<img>` / `<script>` / `<iframe>` | dead |
 
-So a mini app is offline for anything it wants to *load*, and online for anything it wants to *talk to*. That is the whole difference, and it is what makes a networked mini app possible at all.
+So a mini app is offline for anything it wants to *load*, and online for anything it wants to *talk to*. That is the whole difference, and it is what makes a networked mini app possible at all. Why the two split that way has not been established, so do not reason from a mechanism here — go by the table.
 
 The opaque origin then takes the storage with it. Every one of these throws `SecurityError`, `indexedDB.open()` included:
 
@@ -1444,7 +1435,7 @@ So a mini app here **ships everything it needs and remembers nothing on its own*
 - Embed media as `data:` URIs. A `data:` image loads fine; an `https:` one never will.
 - Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered on its own.
 - Persistence and any channel back to your bot go over a WebSocket to a server you run. The page talks to your server and your bot reads from the same place.
-- The host does inject one bridge object, `window.AndroidBridge`, but it carries a single method — `updateSize(height)` — and nothing else. It cannot tell the page who is viewing it, so a mini app sent to a group has no way of identifying the reader; whatever identity you need has to be baked in per message or asked for on screen.
+- Nothing measured so far tells the page who is viewing it, and one message in a group is one page for everybody — so identity has to be baked in per message, or asked for on screen.
 - No `crypto.subtle`, since it requires a secure context. `wss://` is still encrypted by TLS; it is only the page that is not a secure context.
 - The whole app travels inside the message, so its size is your budget.
 
@@ -1470,16 +1461,7 @@ It prepends `lockHeight(300)`, which pins `html`/`body` to that many pixels and 
 window.AndroidBridge.updateSize(520)
 ```
 
-The bubble resizes to that many pixels. Confirmed on a device — so a mini app does not have to be pinned from the outside at all. `autoHeight` wires it up for you: measure the content once it is laid out, report it, and keep reporting through a `ResizeObserver` as the content changes.
-
-```js
-await sendHtmlApp(sock, m.chat, html, { autoHeight: true })
-await sendHtmlApp(sock, m.chat, html, { autoHeight: { min: 120, max: 640 } })
-```
-
-`height` and `autoHeight` are mutually exclusive — passing both throws, since pinned CSS would defeat whatever the bridge reports.
-
-The reporter is deliberately suspicious of itself. It skips a height equal to the last one it sent, and if a height it already sent two reports ago comes back it stops entirely, because an alternating pair is the shudder loop starting: content height depending on the width the host just handed back. It also stops after `maxReports` (24 by default) and after the first thrown call, so a host that ignores the bridge costs one call, not a loop. Clamp with `min` and `max`.
+The bubble resizes to that many pixels. Confirmed on a device by tapping a button that made the call — so a mini app does not have to be pinned from the outside at all. Note the page must not also pin `html`/`body` in CSS, or the frame grows while the content stays where the stylesheet put it.
 
 `checkHtmlApp` treats an `AndroidBridge.updateSize` call as settling the height, so a page that reports for itself no longer draws the "no height settled" warning.
 
