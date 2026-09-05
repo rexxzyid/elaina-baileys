@@ -1669,7 +1669,7 @@ await sock.newsletterUpdateUserSetting('123456789@newsletter', 'ADMIN_NOTIFICATI
 await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFICATIONS', false)
 ```
 
-`newsletterMute` and `newsletterUnmute` still work and still mute everything at once.
+`newsletterMute` and `newsletterUnmute` are shorthands for the same mutation with `ADMIN_NOTIFICATIONS`, which is exactly what the mute toggle in WhatsApp Web sends. They used to call a separate pair of operations that no longer exists in either client, so they now return the same `{ id, state }` the setting call returns.
 
 #### Fetch Subscribed Newsletters
 
