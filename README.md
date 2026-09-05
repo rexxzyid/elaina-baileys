@@ -1,6 +1,12 @@
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
 <div align="center">
+  <a href="https://github.com/rexxzyid/elaina-baileys">
+    <img src="docs/assets/social-preview.png" width="100%" alt="RexxHayanasi — @rexxhayanasi/elaina-baileys" />
+  </a>
+</div>
+
+<div align="center">
   <h1>💫 @rexxhayanasi/elaina-baileys</h1>
   <p><em>Custom WhatsApp library built upon Baileys — enhanced, modernized, and extended with an integrated message builder.</em></p>
 
