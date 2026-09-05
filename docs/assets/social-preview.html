@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>RexxHayanasi</title>
+<style>
+  @font-face {
+    font-family: "Anthropic Sans";
+    src: url("https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a00a3295036497e1a28_AnthropicSans-Roman-Web.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Anthropic Mono";
+    src: url("https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a2e55d24d61bc045b1a_AnthropicMono-Roman-Web.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+  }
+
+  :root {
+    --ink: #100F0E;
+    --bone: #F5F3EE;
+    --muted: #9B968C;
+    --violet: #9F7CF5;
+    --coral: #D97757;
+    --line: rgba(245, 243, 238, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1280px;
+    height: 640px;
+    overflow: hidden;
+    background: var(--ink);
+    font-family: "Anthropic Sans", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    position: relative;
+    width: 1280px;
+    height: 640px;
+    background:
+      radial-gradient(900px 520px at 88% 8%, rgba(159, 124, 245, 0.20), transparent 62%),
+      radial-gradient(700px 460px at 4% 96%, rgba(217, 119, 87, 0.14), transparent 60%),
+      linear-gradient(148deg, #17161B 0%, #100F0E 46%, #0C0C0B 100%);
+    overflow: hidden;
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245, 243, 238, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 243, 238, 0.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(760px 520px at 24% 42%, #000 0%, transparent 78%);
+  }
+
+  .frame {
+    position: absolute;
+    inset: 40px;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+  }
+
+  .content {
+    position: absolute;
+    inset: 40px;
+    display: grid;
+    grid-template-columns: 1fr 388px;
+    align-items: center;
+    padding: 56px 60px;
+    gap: 40px;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: "Anthropic Mono", monospace;
+    font-size: 17px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--violet);
+    box-shadow: 0 0 16px rgba(159, 124, 245, 0.9);
+  }
+
+  .name {
+    margin-top: 26px;
+    font-size: 96px;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+    color: var(--bone);
+  }
+
+  .package {
+    margin-top: 20px;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    color: var(--violet);
+    font-weight: 500;
+  }
+
+  .desc {
+    margin-top: 16px;
+    max-width: 640px;
+    font-size: 23px;
+    line-height: 1.42;
+    color: #A9A49A;
+  }
+
+  .link {
+    margin-top: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 26px 15px 22px;
+    border: 1px solid rgba(245, 243, 238, 0.18);
+    border-radius: 999px;
+    background: rgba(245, 243, 238, 0.05);
+    color: var(--bone);
+    font-size: 24px;
+    letter-spacing: -0.005em;
+    text-decoration: none;
+  }
+
+  .link svg { display: block; }
+
+  .link .slash { color: var(--muted); }
+
+  .art {
+    position: relative;
+    width: 388px;
+    height: 388px;
+    justify-self: end;
+  }
+
+  .art::before {
+    content: "";
+    position: absolute;
+    inset: -34px;
+    border-radius: 44px;
+    background: radial-gradient(circle at 50% 42%, rgba(159, 124, 245, 0.34), transparent 68%);
+  }
+
+  .art img {
+    position: relative;
+    width: 388px;
+    height: 388px;
+    object-fit: cover;
+    border-radius: 34px;
+    border: 1px solid rgba(245, 243, 238, 0.16);
+  }
+
+  .badges {
+    position: absolute;
+    left: 100px;
+    bottom: 96px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: "Anthropic Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .badges span {
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="grid"></div>
+    <div class="frame"></div>
+    <div class="content">
+      <div class="text">
+        <div class="eyebrow"><i class="dot"></i>WhatsApp Multi-Device Library</div>
+        <h1 class="name">RexxHayanasi</h1>
+        <div class="package">@rexxhayanasi/elaina-baileys</div>
+        <p class="desc">Baileys distribution with an integrated MessageBuilder, interactive messages, and carousel &amp; native-flow helpers.</p>
+        <a class="link" href="https://github.com/rexxzyid/elaina-baileys">
+          <svg width="27" height="27" viewBox="0 0 16 16" fill="#F5F3EE" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <span>github.com<span class="slash">/</span>rexxzyid<span class="slash">/</span>elaina-baileys</span>
+        </a>
+      </div>
+      <div class="art">
+        <img src="rexxhayanasi.jpg" alt="RexxHayanasi" />
+      </div>
+    </div>
+    <div class="badges">
+      <span>ESM</span>
+      <span>NODE &gt;= 20</span>
+      <span>MIT</span>
+    </div>
+  </div>
+</body>
+</html>
