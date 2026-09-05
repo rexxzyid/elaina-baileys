@@ -2464,6 +2464,21 @@ await sock.updateBlockStatus(jid, 'unblock')
 const blocked = await sock.fetchBlocklist()
 ```
 
+### Reporting Spam
+
+```js
+import { SPAM_FLOWS } from '@rexxhayanasi/elaina-baileys'
+
+await sock.reportSpam(jid)
+
+await sock.reportSpam(groupJid, {
+    flow: SPAM_FLOWS.GroupInfoReport,
+    source: senderJid
+})
+```
+
+`reportSpam` sends the chat-level report, the same one WhatsApp Web sends when you report a contact or a group without picking a message. `flow` tells the server where the report came from and defaults to `SPAM_FLOWS.OverflowMenuReport`; `SPAM_FLOWS` carries the values WhatsApp Web itself uses. `source` names the participant being reported inside a group, `subject` carries the entity name, and `isKnownChat` says whether the chat was already known to you. Reporting one specific message is not covered — that needs the franking tags the client derives when it receives the message.
+
 ---
 
 ## 👀 Presence and Read Receipts

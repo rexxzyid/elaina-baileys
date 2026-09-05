@@ -6,6 +6,15 @@ export function buildProfilePictureQueryContent(type: any, tcTokenContent: any):
         query: string;
     };
 }[];
+export function buildSpamListNode(jid: string, options?: {
+    flow?: string;
+    source?: string;
+    subject?: string;
+    isKnownChat?: boolean;
+}): {
+    tag: string;
+    attrs: Record<string, string>;
+};
 export function makeChatsSocket(config: any): {
     findUserId: (pnLid: any) => Promise<{
         lid: undefined;
@@ -107,6 +116,12 @@ export function makeChatsSocket(config: any): {
     fetchPushSettings: () => Promise<any>;
     updateProfileName: (name: any) => Promise<void>;
     updateBlockStatus: (jid: any, action: any) => Promise<void>;
+    reportSpam: (jid: string, options?: {
+        flow?: string;
+        source?: string;
+        subject?: string;
+        isKnownChat?: boolean;
+    }) => Promise<void>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
     updateCallPrivacy: (value: any) => Promise<void>;
     updateMessagesPrivacy: (value: any) => Promise<void>;
