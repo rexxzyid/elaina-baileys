@@ -354,7 +354,7 @@ const { state, saveCreds } = await useSingleFileAuthState('./session.json')
 
 ### SQLite
 
-Keys in a real database, so concurrent reads and large key sets stay fast. Requires `better-sqlite3`.
+Keys in a real database, so concurrent reads and large key sets stay fast. Requires `better-sqlite3` v11, v12 or v13.
 
 ```bash
 npm i better-sqlite3
