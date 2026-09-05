@@ -33,7 +33,7 @@
   </aside>
   <main id="content">
     <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#connection">Connection &amp; session</a><a href="#messaging">Sending &amp; receiving</a><a href="#newsletter">Newsletter / Channel</a><a href="#group">Groups</a><a href="#community">Communities</a><a href="#chats">Chats, profile &amp; presence</a><a href="#other">Everything else</a></nav>
-    <article class="prose"><p class="api-meta">229 anggota socket, dibangkitkan dari deklarasi tipe v1.3.8 pada 2026-09-05. Semua entri di bawah dibaca langsung dari kode, jadi tidak pernah melenceng dari yang benar-benar disediakan library.</p>
+    <article class="prose"><p class="api-meta">230 anggota socket, dibangkitkan dari deklarasi tipe v1.3.8 pada 2026-09-05. Semua entri di bawah dibaca langsung dari kode, jadi tidak pernah melenceng dari yang benar-benar disediakan library.</p>
 <div class="api-filter"><input type="search" id="api-search" placeholder="Saring method…" autocomplete="off"></div>
 <h2 id="connection">Connection &amp; session<a class="anchor" href="#connection">#</a></h2>
 <div class="api-list">
@@ -315,6 +315,7 @@
 <article class="api-entry" data-name="notificationmutex"><h3 id="notificationMutex"><code>notificationMutex: { mutex(code: any): any; }</code><a class="anchor" href="#notificationMutex">#</a></h3><p class="api-returns"><span>Tipe</span><code>{ mutex(code: any): any; }</code></p></article>
 <article class="api-entry" data-name="placeholderresendcache"><h3 id="placeholderResendCache"><code>placeholderResendCache: any</code><a class="anchor" href="#placeholderResendCache">#</a></h3><p class="api-returns"><span>Tipe</span><code>any</code></p></article>
 <article class="api-entry" data-name="receiptmutex"><h3 id="receiptMutex"><code>receiptMutex: { mutex(code: any): any; }</code><a class="anchor" href="#receiptMutex">#</a></h3><p class="api-returns"><span>Tipe</span><code>{ mutex(code: any): any; }</code></p></article>
+<article class="api-entry" data-name="reportspam"><h3 id="reportSpam"><code>reportSpam(jid, options?)</code><a class="anchor" href="#reportSpam">#</a></h3><ul class="api-params"><li><code>jid</code><span class="api-type">string</span></li><li><code>options</code><span class="api-type">{ flow?: string; source?: string; subject?: string; isKnownChat?: boolean; }</span><span class="api-flag">opsional</span></li></ul><p class="api-returns"><span>Mengembalikan</span><code>Promise&lt;void&gt;</code></p></article>
 <article class="api-entry" data-name="requestplaceholderresend"><h3 id="requestPlaceholderResend"><code>requestPlaceholderResend(messageKey, msgData)</code><a class="anchor" href="#requestPlaceholderResend">#</a></h3><ul class="api-params"><li><code>messageKey</code><span class="api-type">any</span></li><li><code>msgData</code><span class="api-type">any</span></li></ul><p class="api-returns"><span>Mengembalikan</span><code>Promise&lt;any&gt;</code></p></article>
 <article class="api-entry" data-name="revokenewsletterstatus"><h3 id="revokeNewsletterStatus"><code>revokeNewsletterStatus(jid, statusId, options?)</code><a class="anchor" href="#revokeNewsletterStatus">#</a></h3><ul class="api-params"><li><code>jid</code><span class="api-type">string</span></li><li><code>statusId</code><span class="api-type">string</span></li><li><code>options</code><span class="api-type">Pick&lt;NewsletterStatusSendOptions, 'ackTimeoutMs'&gt;</span><span class="api-flag">opsional</span></li></ul><p class="api-returns"><span>Mengembalikan</span><code>Promise&lt;NewsletterStatusStanzaResult&gt;</code></p></article>
 <article class="api-entry" data-name="rotatesignedprekey"><h3 id="rotateSignedPreKey"><code>rotateSignedPreKey()</code><a class="anchor" href="#rotateSignedPreKey">#</a></h3><p class="api-returns"><span>Mengembalikan</span><code>Promise&lt;void&gt;</code></p></article>
@@ -326,7 +327,7 @@
 <article class="api-entry" data-name="wambuffer"><h3 id="wamBuffer"><code>wamBuffer: BinaryInfo</code><a class="anchor" href="#wamBuffer">#</a></h3><p class="api-returns"><span>Tipe</span><code>BinaryInfo</code></p></article>
 </div>
 <h2 id="module-exports">Ekspor modul<a class="anchor" href="#module-exports">#</a></h2>
-<p class="api-meta">Ekspor yang paling perlu diketahui, dikelompokkan berdasarkan fungsinya. Paket ini mengekspor 377 nama secara keseluruhan, termasuk internal yang jarang kamu butuhkan.</p>
+<p class="api-meta">Ekspor yang paling perlu diketahui, dikelompokkan berdasarkan fungsinya. Paket ini mengekspor 378 nama secara keseluruhan, termasuk internal yang jarang kamu butuhkan.</p>
 <h3 id="exports-auth-state">Auth state<a class="anchor" href="#exports-auth-state">#</a></h3>
 <div class="pill-list"><code>useMultiFileAuthState</code><code>useSingleFileAuthState</code><code>useSqliteAuthState</code><code>useNekoDBAuth</code></div>
 <h3 id="exports-jid-helpers">JID helpers<a class="anchor" href="#exports-jid-helpers">#</a></h3>
