@@ -65,8 +65,12 @@
     "audio-decode": "^2.2.3",
     "better-sqlite3": "^11.0.0 || ^12.0.0 || ^13.0.0",
     "fluent-ffmpeg": "*",
+    "ioredis": "^5.0.0",
     "jimp": "^1.6.1",
     "link-preview-js": "^3.0.0",
+    "mongodb": "^6.0.0",
+    "mysql2": "^3.0.0",
+    "pg": "^8.0.0",
     "sharp": "^0.35.0"
   },
   "peerDependenciesMeta": {
@@ -85,10 +89,22 @@
     "fluent-ffmpeg": {
       "optional": true
     },
+    "ioredis": {
+      "optional": true
+    },
     "jimp": {
       "optional": true
     },
     "link-preview-js": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     },
     "sharp": {

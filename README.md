@@ -377,6 +377,65 @@ const { state, saveCreds } = await useSqliteAuthState({ database })
 
 Two tables are created on first use: `creds` and `signal_keys`.
 
+### PostgreSQL, MySQL, MongoDB, Redis
+
+For a bot that already runs a database, or several bots that share one. Each takes either a connection you already have or the details to open its own, and each keeps its rows under a `session` name so one database can hold many accounts.
+
+```bash
+npm i pg        # PostgreSQL
+npm i mysql2    # MySQL or MariaDB
+npm i mongodb   # MongoDB
+npm i ioredis   # Redis (node-redis works too)
+```
+
+```js
+import {
+    usePostgresAuthState,
+    useMySQLAuthState,
+    useMongoAuthState,
+    useRedisAuthState
+} from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await usePostgresAuthState({
+    connectionString: 'postgres://user:pass@localhost:5432/bot'
+})
+
+const { state, saveCreds } = await useMySQLAuthState({
+    uri: 'mysql://user:pass@localhost:3306/bot'
+})
+
+const { state, saveCreds } = await useMongoAuthState({
+    uri: 'mongodb://localhost:27017',
+    dbName: 'bot'
+})
+
+const { state, saveCreds } = await useRedisAuthState({
+    uri: 'redis://localhost:6379'
+})
+```
+
+Hand over your own connection when the rest of the bot already has one, and name the session when several accounts share the database:
+
+```js
+import { Pool } from 'pg'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const { state, saveCreds } = await usePostgresAuthState({ pool, session: 'sales-bot' })
+```
+
+`useMySQLAuthState` takes `pool`, `useMongoAuthState` takes `db` or `collection`, and `useRedisAuthState` takes `client` — node-redis and ioredis are both accepted, the command names are detected at startup.
+
+All four return `clearAuth()` to wipe the session and `close()` to release a connection they opened themselves; a connection you passed in is left alone. `useSqliteAuthState` returns them too.
+
+| Backend | Where keys live | Table or key |
+|---|---|---|
+| PostgreSQL | one table | `baileys_auth (session, type, id, value)` |
+| MySQL | one table | `baileys_auth (session, type, id, value)` |
+| MongoDB | one collection | `baileys_auth`, indexed on session + type + id |
+| Redis | one hash per key type | `baileys_auth:<session>:<type>` |
+
+Rename them with `table`, `collectionName` or `prefix`. The SQL backends write a batch of keys inside a transaction, MongoDB uses one `bulkWrite`, and Redis pipelines through `MULTI`, so a decrypt that stores thirty pre-keys costs one round trip, not thirty.
+
 ### NekoDB
 
 For a bot whose state already lives in NekoDB, so the session travels with the rest of your data.
@@ -2685,6 +2744,10 @@ import {
   useMultiFileAuthState,
   useSingleFileAuthState,
   useSqliteAuthState,
+  usePostgresAuthState,
+  useMySQLAuthState,
+  useMongoAuthState,
+  useRedisAuthState,
   useNekoDBAuth,
   makeCacheableSignalKeyStore,
   makeInMemoryStore,

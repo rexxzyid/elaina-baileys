@@ -1,5 +1,12 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
-export function useSqliteAuthState(opts: any): Promise<{
+export interface RedisAuthStateOptions {
+    client?: any;
+    uri?: string;
+    config?: any;
+    prefix?: string;
+    session?: string;
+}
+export function useRedisAuthState(opts?: RedisAuthStateOptions): Promise<{
     state: {
         creds: any;
         keys: {

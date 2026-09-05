@@ -1,5 +1,12 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
-export function useSqliteAuthState(opts: any): Promise<{
+export interface MySQLAuthStateOptions {
+    pool?: any;
+    uri?: string;
+    config?: any;
+    table?: string;
+    session?: string;
+}
+export function useMySQLAuthState(opts?: MySQLAuthStateOptions): Promise<{
     state: {
         creds: any;
         keys: {
