@@ -65,6 +65,15 @@ assert.equal(second.listenerCount('CB:call'), 1, 'rebinding replaces rather than
 
 await assert.rejects(() => client.attach(null), /attach needs the reconnected socket/);
 
+/**
+ * worker-bootstrap.js is only ever loaded by a Worker at call time, so an ESM
+ * slip in it -- a bare require, __dirname, __filename -- would not surface
+ * until someone placed a real call. Importing every file keeps that honest.
+ */
+for (const { name } of sources) {
+    await import(`../lib/Voip/${name}`);
+}
+
 assert.equal(typeof makeVoipClient, 'function');
 assert.equal(CallState.Active, 6);
 assert.equal(Object.isFrozen(CallState), true);

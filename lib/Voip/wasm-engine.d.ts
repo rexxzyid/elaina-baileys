@@ -4,6 +4,7 @@ export declare class WasmEngine {
         wasmPath?: string;
         wasmBinary?: Uint8Array | Buffer;
         resourcesPath?: string;
+        storageDir?: string;
         loaderCode?: string;
         workerModulesCode?: string;
         enableLogs?: boolean;

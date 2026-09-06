@@ -33,6 +33,7 @@ export interface VoipClientOptions {
     wasmPath?: string;
     wasmBinary?: Uint8Array | Buffer;
     resourcesPath?: string;
+    storageDir?: string;
 }
 export interface VoipCallOptions {
     durationMs?: number;
