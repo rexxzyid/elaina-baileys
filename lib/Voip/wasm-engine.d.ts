@@ -18,6 +18,8 @@ export declare class WasmEngine {
     startGroupCall(options: Record<string, unknown>): unknown;
     joinOngoingCall(options: Record<string, unknown>): unknown;
     acceptCall(isMicEnabled?: boolean, isCameraEnabled?: boolean): unknown;
+    sendVideoFrame(frame: Uint8Array, width: number, height: number, fps: number, format?: number, orientation?: number): boolean;
+    releaseVideoFrameBuffer(): void;
     destroy(): void;
 }
 export default WasmEngine;

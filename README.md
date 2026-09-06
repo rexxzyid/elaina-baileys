@@ -2780,6 +2780,40 @@ await call.waitForEnd()
 
 `enqueue` also takes an array, `skip()` drops the current track, `play()` replaces the queue with one track now, and `queued()` and `nowPlaying()` report what is left and what is running. Audio buffered from a finished track is played out before the next one starts, so a song is never cut off mid-tail by the queue advancing.
 
+### Video Calls
+
+Both one to one and group calls take video. The frames come from ffmpeg the same way the audio does, so a video source is a file, a URL, a still image, or an `lavfi:` generator.
+
+```js
+const call = await voip.call('628123456789', {
+    video: true,
+    videoPlaylist: ['klip.mp4'],
+    playlist: ['lagu.mp3'],
+    durationMs: 0
+})
+
+call.on('videotrack', track => console.log('now showing', track))
+```
+
+```js
+const call = await voip.callGroup('12345-67890@g.us', {
+    video: true,
+    videoPlaylist: ['klip.mp4']
+})
+```
+
+Video has its own queue, separate from the audio one: `playVideo`, `enqueueVideo`, `skipVideo`, `queuedVideo` and `nowPlayingVideo`, with `videotrack` and `videotrackend` events. The hang-up rules stay tied to the audio queue, so a call ends when the audio runs out rather than when the picture does.
+
+A still image is looped rather than shown for a single frame, which is the easy way to send a fixed card:
+
+```js
+await voip.call('628123456789', { video: true, videoSource: './poster.jpg', playlist: ['lagu.mp3'] })
+```
+
+The engine picks the resolution and frame rate when the call connects and the feeder scales to fit, padding to keep the aspect ratio. Frames go out as I420 straight into the WASM encoder — there is no WebCodecs in Node, so the browser encode path is not used. When the queue runs dry the last frame is held rather than cutting to black, so a stall reads as a freeze instead of a flash.
+
+Audio and video are two ffmpeg processes with two clocks. Playing the same file through both will drift; if you need them locked together, pass the same file only to `playlist` and leave the picture on a still image.
+
 ### Group Calls
 
 ```js
@@ -2805,7 +2839,7 @@ const call = await voip.joinGroupCall({
 
 The queue behaves the same on a group call as on a one-to-one call.
 
-The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build, and `storageDir` moves the engine's scratch directory off the default under the system temp dir. It needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
+The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build, and `storageDir` moves the engine's scratch directory off the default under the system temp dir. It needs `ffmpeg` for the outgoing media; set `ffmpegPath` on the client or `FFMPEG_PATH` in the environment when the binary is not on `PATH`.
 
 Those three files are WhatsApp Web's own, vendored byte for byte. A supply-chain scanner will call them obfuscated code and a large binary, so `lib/assets/wasm/README.md` records their checksums, what they can and cannot reach, and why they are not reformatted; `npm run verify:assets` re-checks all of it in one command.
 

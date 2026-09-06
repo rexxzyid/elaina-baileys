@@ -19,6 +19,12 @@ export declare class ActiveCall extends EventEmitter {
     mute(muted: boolean): void;
     waitForEnd(): Promise<string>;
     play(source: string): boolean;
+    playVideo(source: string): boolean;
+    enqueueVideo(source: string | string[]): number;
+    skipVideo(): boolean;
+    queuedVideo(): number;
+    nowPlayingVideo(): string | null;
+    isVideo(): boolean;
     enqueue(source: string | string[]): number;
     skip(): boolean;
     queued(): number;
@@ -34,6 +40,7 @@ export interface VoipClientOptions {
     wasmBinary?: Uint8Array | Buffer;
     resourcesPath?: string;
     storageDir?: string;
+    ffmpegPath?: string;
 }
 export interface VoipCallOptions {
     durationMs?: number;
@@ -42,6 +49,10 @@ export interface VoipCallOptions {
     endWhenQueueEmpty?: boolean;
     idleGraceMs?: number;
     audioStartDelayMs?: number;
+    video?: boolean;
+    isVideo?: boolean;
+    videoSource?: string;
+    videoPlaylist?: string[];
 }
 export interface VoipGroupCallOptions extends VoipCallOptions {
     participants?: string[];
@@ -68,5 +79,7 @@ export declare class VoipClient {
     disconnect(): void;
     resetCallState(): void;
 }
+export { VideoFeeder, VIDEO_FORMAT_I420 } from './video-feeder.js';
+export { AudioFeeder } from './audio-feeder.js';
 export declare function makeVoipClient(socket: any, options?: VoipClientOptions): Promise<VoipClient>;
 export default VoipClient;
