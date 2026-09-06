@@ -179,12 +179,21 @@ export declare function botSourcesMetadata(sources: SourceInput[]): { sources: a
 
 export declare const EMBEDDED_SCREEN_PRESENTATION: Readonly<{ HALF_HEIGHT: 'HALF_HEIGHT'; FULL_HEIGHT: 'FULL_HEIGHT' }>;
 
+export declare const EMBEDDED_SCREEN_TYPENAME: string;
+export declare const EMBEDDED_SCREEN_TABBED_TYPENAME: string;
+export declare const EMBEDDED_SCREEN_TAB_TYPENAME: string;
+export declare const AI_RICH_SECTION_TYPENAME: string;
+export declare const AI_RICH_UNIFIED_RESPONSE_TYPENAME: string;
+
 export declare function embeddedTab(options?: {
     id?: string;
     header?: any;
     tabHeader?: any;
     sections?: any[];
+    typename?: string;
 }): any;
+
+export declare function embeddedTabbedContent(tabs: any[], options?: { typename?: string }): any;
 
 export declare const AI_RICH_RESPONSE_KEYS: readonly string[];
 
@@ -193,6 +202,8 @@ export declare function embeddedScreen(options?: {
     title?: string;
     content?: any[];
     tabs?: any[];
+    tabsTypename?: string;
+    typename?: string;
     header?: any;
     body?: any;
     artifacts?: any[];
@@ -201,6 +212,10 @@ export declare function embeddedScreen(options?: {
     sources?: any[];
     pollId?: string;
 }): any;
+
+export declare function readEmbeddedTabs(screen: any): any[];
+
+export declare function readEmbeddedSections(screen: any): any[];
 
 export declare function footerActionSection(actionType: string, options?: {
     buttonText?: string;
@@ -299,6 +314,7 @@ export interface RichMessageRead {
     sections: any[];
     footerSections: any[];
     embeddedScreens: any[];
+    embeddedTabs: any[];
     submessages: any[];
     responseId?: string;
     a2ui?: { surfaceId: string; catalogId: string; version: string; components: A2UIComponent[] };
@@ -315,6 +331,8 @@ export declare function decodeAIRich(msg: any): {
     sections: any[];
     footerSections: any[];
     embeddedScreens: any[];
+    embeddedTabs: any[];
+    embeddedSections: any[];
     submessages: any[];
     unified: any;
 } | null;

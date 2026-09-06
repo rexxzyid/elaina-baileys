@@ -1,6 +1,20 @@
 import assert from 'node:assert/strict';
 import { AIRich, ContentValidationError } from '../lib/MessageBuilder/index.js';
-import { EMBEDDED_SCREEN_PRESENTATION, SourceProvider, botSourcesMetadata, decodeAIRich, embeddedScreen, embeddedTab, htmlSection } from '../lib/MessageBuilder/extras.js';
+import {
+    AI_RICH_SECTION_TYPENAME,
+    EMBEDDED_SCREEN_PRESENTATION,
+    EMBEDDED_SCREEN_TABBED_TYPENAME,
+    SourceProvider,
+    botSourcesMetadata,
+    decodeAIRich,
+    embeddedScreen,
+    embeddedTab,
+    embeddedTabbedContent,
+    htmlSection,
+    readEmbeddedSections,
+    readEmbeddedTabs,
+    readRichMessage
+} from '../lib/MessageBuilder/extras.js';
 
 const meta = botSourcesMetadata([
     { url: 'https://a.test', title: 'A', favicon: 'https://a.test/f.ico' },
@@ -46,9 +60,47 @@ assert.equal('content' in tab, false, 'a tab carries sections, not content');
 assert.match(embeddedTab({}).id, /^[0-9a-f-]{36}$/);
 assert.throws(() => embeddedTab({ sections: 'x' }), TypeError);
 
+/** A tab is untyped on the wire unless the caller names one. */
+assert.equal('__typename' in tab, false);
+assert.equal(embeddedTab({ typename: 'FOAUnifiedResponseTab' }).__typename, 'FOAUnifiedResponseTab');
+assert.throws(() => embeddedTab({ typename: '  ' }), TypeError);
+
+/** Every section carries the section typename the client parses against. */
+assert.equal(tab.sections[0].__typename, AI_RICH_SECTION_TYPENAME);
+assert.equal(AI_RICH_SECTION_TYPENAME, 'GenAIUnifiedResponseSection');
+assert.equal(tab.sections[0].view_model.__typename, 'GenAISingleLayoutViewModel');
+
+/**
+ * Tabs ride inside a typed content entry, not as a sibling of content. That is
+ * the shape the native client walks: screen -> content[] -> tabs[] -> sections[].
+ */
 const tabbed = embeddedScreen({ id: 'arcade', tabs: [tab] });
-assert.equal(tabbed.tabs.length, 1);
+assert.equal('tabs' in tabbed, false, 'tabs are nested, never left at screen level');
+assert.equal(tabbed.content.length, 1);
+assert.equal(tabbed.content[0].__typename, EMBEDDED_SCREEN_TABBED_TYPENAME);
+assert.equal(EMBEDDED_SCREEN_TABBED_TYPENAME, 'FOAEmbeddedScreenContentTabbed');
+assert.deepEqual(tabbed.content[0].tabs, [tab]);
 assert.equal('title' in tabbed, false);
+assert.equal('__typename' in tabbed, false, 'the screen itself stays untyped unless asked');
+assert.equal(embeddedScreen({ typename: 'FOAUnifiedResponseEmbeddedScreen' }).__typename, 'FOAUnifiedResponseEmbeddedScreen');
+
+/** A build that expects a different container name can say so. */
+assert.equal(embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' }).content[0].__typename, 'FOAIDButtonSheets');
+assert.deepEqual(embeddedTabbedContent([tab]), { __typename: EMBEDDED_SCREEN_TABBED_TYPENAME, tabs: [tab] });
+assert.throws(() => embeddedTabbedContent('x'), TypeError);
+
+/** Sections and tabs come back out of either shape. */
+assert.deepEqual(readEmbeddedTabs(tabbed), [tab]);
+assert.deepEqual(readEmbeddedSections(tabbed), tab.sections);
+assert.deepEqual(readEmbeddedTabs({ tabs: [tab] }), [tab], 'a hand-built screen with top level tabs still reads');
+assert.deepEqual(readEmbeddedSections({ content: [htmlSection('<b>flat</b>')] }).length, 1);
+
+/** Content and tabs can coexist: the tab container is appended after the plain sections. */
+const mixed = embeddedScreen({ content: [htmlSection('<b>intro</b>')], tabs: [tab] });
+assert.equal(mixed.content.length, 2);
+assert.equal(mixed.content[0].__typename, AI_RICH_SECTION_TYPENAME);
+assert.equal(mixed.content[1].__typename, EMBEDDED_SCREEN_TABBED_TYPENAME);
+
 assert.throws(() => embeddedScreen({ content: 'x' }), TypeError);
 assert.throws(() => embeddedScreen({ tabs: 'x' }), TypeError);
 
@@ -65,10 +117,31 @@ const decoded = decodeAIRich({ message: calls[0].message });
 assert.equal(decoded.embeddedScreens.length, 1);
 assert.equal(decoded.unified.embedded_screens[0].id, 'layar');
 assert.equal(decoded.unified.embedded_screens[0].content[0].view_model.primitive.payload, '<b>dalam</b>');
+assert.equal(decoded.unified.sections[0].__typename, AI_RICH_SECTION_TYPENAME, 'the typename survives the base64 round trip');
+assert.equal(decoded.unified.embedded_screens[0].content[0].__typename, AI_RICH_SECTION_TYPENAME);
+assert.equal(decoded.embeddedSections.length, 1);
+assert.deepEqual(decoded.embeddedTabs, []);
 assert.equal(
     calls[0].message.messageContextInfo.botMetadata.richResponseSourcesMetadata.sources[1].citationNumber,
     7
 );
+
+calls.length = 0;
+const arcade = new AIRich(sock);
+arcade.addSection(htmlSection('<b>utama</b>'));
+arcade.addEmbeddedScreen(embeddedScreen({ title: 'Preview', tabs: [embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [htmlSection('<b>dino</b>')] })] }));
+await arcade.send('2@s.whatsapp.net');
+
+const nested = decodeAIRich({ message: calls[0].message });
+const screenWire = nested.unified.embedded_screens[0];
+assert.equal(screenWire.title, 'Preview');
+assert.equal(screenWire.content[0].__typename, EMBEDDED_SCREEN_TABBED_TYPENAME);
+assert.equal(screenWire.content[0].tabs[0].tab_header, 'Dino Runner');
+assert.equal(screenWire.content[0].tabs[0].sections[0].__typename, AI_RICH_SECTION_TYPENAME);
+assert.equal(screenWire.content[0].tabs[0].sections[0].view_model.__typename, 'GenAISingleLayoutViewModel');
+assert.equal(nested.embeddedTabs.length, 1);
+assert.equal(nested.embeddedSections.length, 1);
+assert.equal(readRichMessage({ message: calls[0].message }).html.includes('<b>dino</b>'), true, 'html inside a tab is still readable');
 
 calls.length = 0;
 const polos = new AIRich(sock);

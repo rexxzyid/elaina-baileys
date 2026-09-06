@@ -148,6 +148,8 @@ export declare class AIRich extends BaseBuilder {
   readonly items: any[];
   static tokenizer(code: string, lang?: string): any;
   static toTableMetadata(arr: string[][], options?: Record<string, any>): any;
+  static readonly SECTION_TYPENAME: 'GenAIUnifiedResponseSection';
+  static readonly UNIFIED_RESPONSE_TYPENAME: 'XMSGGenAIUnifiedResponse';
   static newLayout(name: string, data: any, extra?: Record<string, any>): any;
   static generateVerificationMetadata(): any;
 }

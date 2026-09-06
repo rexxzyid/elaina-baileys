@@ -137,6 +137,7 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [Reading Rich Messages Back](#reading-rich-messages-back)
   - [A2UI Cards](#a2ui-cards)
   - [HTML Mini App](#html-mini-app)
+  - [Embedded Screens](#embedded-screens)
 - [Album Message](#-album-message)
 - [Newsletter / Channel](#-newsletter--channel)
   - [Creating and Editing a Channel](#creating-and-editing-a-channel)
@@ -1337,10 +1338,10 @@ It returns `null` for anything that is not one of these, so it is safe to call o
 | `text` | every readable string joined by newlines — AI Rich text primitives, A2UI `Text` components, and the interactive body and footer |
 | `title` | `botMetadata.messageDisclaimerText`, falling back to the interactive header title |
 | `buttons` | native flow buttons with `buttonParamsJson` already parsed; `params` is `null` when it will not parse |
-| `html` | payloads of any HTML primitives |
+| `html` | payloads of any HTML primitives, including ones inside an embedded screen |
 | `a2ui` | `surfaceId`, `catalogId`, `version` and the component list |
 | `bloks` | `type`, `uuid`, `fallback` and the parsed `params` |
-| `typenames`, `sections`, `footerSections`, `embeddedScreens`, `submessages`, `responseId` | the AI Rich parts, empty when absent |
+| `typenames`, `sections`, `footerSections`, `embeddedScreens`, `embeddedTabs`, `submessages`, `responseId` | the AI Rich parts, empty when absent |
 
 It unwraps view-once and the other envelopes first, so a card inside `viewOnceMessageV2` reads the same as a bare one.
 
@@ -1654,6 +1655,101 @@ import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, Foot
 ```
 
 `AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
+
+### Embedded Screens
+
+An embedded screen is a second surface attached to the same rich response. The bubble in the chat stays small; tapping it opens a full sheet that can hold its own sections, or several tabs of them. WhatsApp Web does not render it at all — its parser writes `CometComposedTextV2UnsupportedURType typename="embedded_screens"` and stops — so this is an Android and iOS surface.
+
+```js
+import { AIRich, embeddedScreen, embeddedTab, htmlSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock)
+  .addSection(htmlSection('<b>Preview</b>'))
+
+rich.addEmbeddedScreen(embeddedScreen({
+  title: 'Preview',
+  tabs: [
+    embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [htmlSection(gameHtml)] }),
+    embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [htmlSection(scoreHtml)] })
+  ]
+}))
+
+await rich.send(m.chat)
+```
+
+#### The typenames on the wire
+
+Every piece the client walks past carries a `__typename`, and the builder fills them in:
+
+```jsonc
+{
+  "embedded_screens": [
+    {
+      "title": "Preview",
+      "content": [
+        {
+          "__typename": "FOAEmbeddedScreenContentTabbed",
+          "tabs": [
+            {
+              "id": "tab_0",
+              "tab_header": "Dino Runner",
+              "sections": [
+                {
+                  "__typename": "GenAIUnifiedResponseSection",
+                  "view_model": {
+                    "__typename": "GenAISingleLayoutViewModel",
+                    "primitive": { "__typename": "GenAIaeacdsnwHtmlPrimitive", "payload": "<html…>" }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+Note the nesting: **tabs live inside a `content` entry, not beside it**. The screen holds `content[]`; an entry is either a section (it has `view_model`) or a tab container (it has `tabs`). Passing `tabs` to `embeddedScreen` wraps them in that container for you, and appends it after any plain `content` you also passed.
+
+| Constant | Value | Where it goes |
+| --- | --- | --- |
+| `AI_RICH_SECTION_TYPENAME` | `GenAIUnifiedResponseSection` | every section, top level or nested |
+| `AI_RICH_UNIFIED_RESPONSE_TYPENAME` | `XMSGGenAIUnifiedResponse` | the unified response root |
+| `EMBEDDED_SCREEN_TABBED_TYPENAME` | `FOAEmbeddedScreenContentTabbed` | the `content` entry that holds tabs |
+| `EMBEDDED_SCREEN_TAB_TYPENAME` | `FOAUnifiedResponseTab` | a tab, when you want it named |
+| `EMBEDDED_SCREEN_TYPENAME` | `FOAUnifiedResponseEmbeddedScreen` | the screen itself, when you want it named |
+
+`GenAIUnifiedResponseSection` and `XMSGGenAIUnifiedResponse` come straight out of the WhatsApp Web bundle, which builds exactly that shape in its own `injectRichResponseTestMessage` debug command. The three `FOA…` names come from the Android client's Kotlin models — `FOAEmbeddedScreenContentTabbedImpl.kt`, `FOAUnifiedResponseTabImpl.kt`, `FOAUnifiedResponseEmbeddedScreenImpl.kt`.
+
+Sections always get their typename. The screen and the tabs do not, unless you ask:
+
+```js
+embeddedScreen({ typename: EMBEDDED_SCREEN_TYPENAME, tabs: [...] })
+embeddedTab({ typename: EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
+embeddedScreen({ tabs: [...], tabsTypename: 'FOAIDButtonSheets' })
+```
+
+That last one matters because, as with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape. Payloads in the wild carry all sorts of container names and still render. `tabsTypename` is there so you can match whatever a build expects instead of being locked to one string.
+
+Everything else `embeddedScreen` accepts maps to a snake_case wire field: `content`, `header`, `body`, `artifacts`, `steps`, `stepEntries` → `step_entries`, `sources`, `pollId` → `poll_id`. An `id` is generated when you leave it out, and empty values are dropped rather than sent as `null`.
+
+#### Reading one back
+
+```js
+import { decodeAIRich, readEmbeddedSections, readEmbeddedTabs } from '@rexxhayanasi/elaina-baileys'
+
+const info = decodeAIRich(m.message)
+info.embeddedScreens   // the raw screens
+info.embeddedTabs      // every tab, from both nesting shapes
+info.embeddedSections  // every section inside those screens
+
+readEmbeddedTabs(info.embeddedScreens[0])
+readEmbeddedSections(info.embeddedScreens[0])
+```
+
+`readRichMessage(m).html` now also collects HTML that sits inside an embedded screen, so a page delivered through a tab is no longer invisible to it.
 
 ### Inspecting a Received AI Rich Message
 
