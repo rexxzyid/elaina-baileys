@@ -3661,6 +3661,144 @@ await sock.sendMessage(userJid, {
 })
 ```
 
+### Custom Status Audience (Close Friends)
+
+This is the status that shows a badge with an emoji and a list name, and opens a dialog reading **"You're in {name}'s custom audience"** — *"Anda ada di audiens kustom {nama}"*. The emoji and the name are yours to pick, which is where the "custom emoji" part comes from.
+
+It is **not** `groupStatusMessageV2`. Two different features get mixed up here, so before the code:
+
+| | Field | What the viewer sees |
+| --- | --- | --- |
+| **Custom audience** | `contextInfo.statusAudienceMetadata` | a purple ring on the status, a badge with your emoji and list name, and the "custom audience" dialog |
+| **Group status** | `groupStatusMessageV2` wrapper + `contextInfo.isGroupStatus` | "Added by {name}" under the poster's name |
+
+They are independent. A status can be one, the other, or both.
+
+#### The custom audience
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'Halo besties 💜',
+  statusAudience: {
+    listName: 'Besties',
+    listEmoji: '💜'
+  }
+}, {
+  statusJidList: bestiesJids
+})
+```
+
+A bare string is shorthand for the list name:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  image: { url: './foto.jpg' },
+  caption: 'buat kalian aja',
+  statusAudience: 'Besties'
+}, { statusJidList: bestiesJids })
+```
+
+Leave a field out and you get the client's own fallback — `⭐` and `Close friends`, exported as `STATUS_AUDIENCE_DEFAULT_EMOJI` and `STATUS_AUDIENCE_DEFAULT_LIST_NAME`:
+
+```js
+await sock.sendMessage('status@broadcast', { text: 'halo', statusAudience: {} }, { statusJidList })
+// → { audienceType: 1, listName: 'Close friends', listEmoji: '⭐' }
+```
+
+> [!IMPORTANT]
+> `statusAudience` is the **label**, not the lock. Who actually receives the status is decided by `statusJidList` — the people you fan it out to. Setting the metadata without narrowing that list posts to everyone with a "Besties" badge on it.
+
+#### The group status
+
+`groupStatus: true` wraps whatever you send in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer add the `is_group_status` meta node:
+
+```js
+await sock.sendMessage(groupJid, {
+  text: 'halo grup',
+  groupStatus: true
+})
+```
+
+Both together, which is the payload the question was really about:
+
+```js
+await sock.sendMessage(groupJid, {
+  text: 'halo grup',
+  groupStatus: true,
+  statusAudience: { listName: 'Besties', listEmoji: '💜' }
+})
+```
+
+produces:
+
+```jsonc
+{
+  "groupStatusMessageV2": {
+    "message": {
+      "extendedTextMessage": {
+        "text": "halo grup",
+        "contextInfo": {
+          "statusAudienceMetadata": {
+            "audienceType": 1,
+            "listName": "Besties",
+            "listEmoji": "💜"
+          },
+          "isGroupStatus": true
+        }
+      }
+    }
+  }
+}
+```
+
+Note that `message.conversation` is `undefined` there — the text is two layers down. Run it through `normalizeMessageContent` first, as with every other wrapper (see [Every Message Type](#-every-message-type)).
+
+#### Fields
+
+`contextInfo.statusAudienceMetadata` is field **69** of `ContextInfo`:
+
+| Field | Tag | Values |
+| --- | --- | --- |
+| `audienceType` | 1 | `UNKNOWN` = 0, `CLOSE_FRIENDS` = 1 — defaults to `CLOSE_FRIENDS` |
+| `listName` | 2 | free text, defaults to `Close friends` |
+| `listEmoji` | 3 | free text, defaults to `⭐` |
+
+`audienceType` accepts the enum name or the number:
+
+```js
+import { makeStatusAudienceMetadata, proto } from '@rexxhayanasi/elaina-baileys'
+
+makeStatusAudienceMetadata({ listName: 'Kerja', listEmoji: '💼', audienceType: 'CLOSE_FRIENDS' })
+makeStatusAudienceMetadata({ listName: 'Kerja', audienceType: proto.ContextInfo.StatusAudienceMetadata.AudienceType.CLOSE_FRIENDS })
+```
+
+Or write the contextInfo yourself, if you are relaying rather than sending:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'Halo besties',
+  contextInfo: {
+    statusAudienceMetadata: makeStatusAudienceMetadata({ listName: 'Besties', listEmoji: '💜' })
+  }
+}, { statusJidList: bestiesJids })
+```
+
+#### Reading one you received
+
+```js
+import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
+
+const content = normalizeMessageContent(m.message)
+const audience = content?.[getContentType(content)]?.contextInfo?.statusAudienceMetadata
+
+if (audience) {
+  console.log(audience.listEmoji, audience.listName)   // 💜 Besties
+}
+```
+
+> [!NOTE]
+> On WhatsApp Web the badge is behind a viewer-side rollout gate (`isStatusCloseFriendsViewerSideEnabled`), and Web has no sender-side path for it at all — it only reads the field. Android and iOS are where you will see it. As with everything in this chapter, WhatsApp can gate rendering per account.
+
 ### Group Status Reaction
 
 ```js
@@ -3769,7 +3907,8 @@ import {
   makeScheduledCallEditMessage,
   makeGroupStatusReactionMessage,
   makeNewsletterStatusAttribution,
-  makeGroupStatusAttribution
+  makeGroupStatusAttribution,
+  makeStatusAudienceMetadata
 } from '@rexxhayanasi/elaina-baileys'
 ```
 

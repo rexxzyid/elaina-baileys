@@ -115,4 +115,13 @@ export declare function makeGroupStatusAttribution(input: {
     actionUrl?: string
 }): proto.IStatusAttribution
 
+export declare const STATUS_AUDIENCE_DEFAULT_LIST_NAME: string
+export declare const STATUS_AUDIENCE_DEFAULT_EMOJI: string
+
+export declare function makeStatusAudienceMetadata(input: string | {
+    listName?: string
+    listEmoji?: string
+    audienceType?: number | string
+}): proto.ContextInfo.IStatusAudienceMetadata
+
 export declare function prepareModernMessageContent(content: any): any
