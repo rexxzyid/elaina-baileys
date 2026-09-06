@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { ActiveCall } from '../lib/Voip/index.js';
+import { ActiveCall, VoipClient } from '../lib/Voip/index.js';
 import { VideoFeeder, VIDEO_FORMAT_I420 } from '../lib/Voip/video-feeder.js';
 
 const FFMPEG = process.env.FFMPEG_PATH || 'ffmpeg';
@@ -93,6 +93,30 @@ const hasFfmpeg = spawnSync(FFMPEG, ['-version']).status === 0;
     call.end();
 }
 
+/** Screen share is the same feeder on a different wasm entry point. */
+{
+    const seen = [];
+    const engine = { endCall() {}, startScreenShare() { seen.push('start'); }, stopScreenShare() { seen.push('stop'); } };
+    const call = new ActiveCall('S1', engine, 0);
+
+    assert.throws(() => call.startScreenShare(), /needs a video call/, 'sharing a screen on an audio call is refused up front');
+
+    call._video = true;
+    call.startScreenShare();
+    assert.equal(call.isScreenShare(), true);
+    assert.deepEqual(seen, ['start']);
+
+    call.stopScreenShare();
+    assert.equal(call.isScreenShare(), false);
+    assert.deepEqual(seen, ['start', 'stop']);
+
+    /** A call opened with screenShare starts sharing the moment it connects. */
+    call._screenShare = true;
+    call._updateState(6);
+    assert.deepEqual(seen, ['start', 'stop', 'start'], 'connecting kicks the share off');
+    call.end();
+}
+
 if (!hasFfmpeg) {
     console.log('voip video tests passed (ffmpeg absent, decode test skipped)');
 }
@@ -107,5 +131,42 @@ else {
     assert.ok(frames.length >= 24 && frames.length <= 36, `expected roughly 30 frames in two seconds at 15 fps, got ${frames.length}`);
     assert.deepEqual([...new Set(frames)], [320 * 240 * 1.5], 'every frame is exactly one I420 image');
     assert.equal(feeder.underflowFrames, 0, 'a source that outruns the clock never starves');
+
+    /**
+     * The camera and the screen share differ in exactly one thing once the
+     * frames exist: useDesktopCapture, which picks onDesktopCaptureDataFromJs
+     * over onVideoDataFromJs inside the worker. Drive the client's own capture
+     * handler so the flag is read from the wiring rather than restated here.
+     */
+    const runCapture = async useDesktop => {
+        const sent = [];
+        const client = new VoipClient({ socket: { ws: {} }, ffmpegPath: FFMPEG });
+        const call = new ActiveCall('C1', { endCall() {} }, 0);
+        call._video = true;
+        call._videoPlaylist = ['lavfi:testsrc=size=160x120:rate=10:duration=5'];
+        client._activeCall = call;
+        client._engine = {
+            isInitialized: () => true,
+            sendVideoFrame: (frame, w, h, rate, format, orientation, desktop) => sent.push({ len: frame.length, w, h, format, desktop }),
+            releaseVideoFrameBuffer() {}
+        };
+        client._startVideoFeeder({ width: 160, height: 120, fps: 10 }, useDesktop);
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        client._stopVideoFeeder('TEST');
+        call.end();
+        return sent;
+    };
+
+    const camera = await runCapture(false);
+    assert.ok(camera.length > 0, 'the camera path produced frames');
+    assert.equal(camera.every(f => f.desktop === false), true, 'camera frames are not flagged as desktop');
+    assert.equal(camera[0].len, 160 * 120 * 1.5);
+    assert.equal(camera[0].format, VIDEO_FORMAT_I420);
+
+    const screen = await runCapture(true);
+    assert.ok(screen.length > 0, 'the screen share path produced frames');
+    assert.equal(screen.every(f => f.desktop === true), true, 'screen frames take the desktop entry point');
+    assert.equal(screen[0].len, camera[0].len, 'the pixels are identical either way');
+
     console.log('voip video tests passed');
 }

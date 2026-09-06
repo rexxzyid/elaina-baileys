@@ -18,7 +18,9 @@ export declare class WasmEngine {
     startGroupCall(options: Record<string, unknown>): unknown;
     joinOngoingCall(options: Record<string, unknown>): unknown;
     acceptCall(isMicEnabled?: boolean, isCameraEnabled?: boolean): unknown;
-    sendVideoFrame(frame: Uint8Array, width: number, height: number, fps: number, format?: number, orientation?: number): boolean;
+    sendVideoFrame(frame: Uint8Array, width: number, height: number, fps: number, format?: number, orientation?: number, useDesktopCapture?: boolean): boolean;
+    startScreenShare(): unknown;
+    stopScreenShare(): unknown;
     releaseVideoFrameBuffer(): void;
     destroy(): void;
 }

@@ -25,6 +25,9 @@ export declare class ActiveCall extends EventEmitter {
     queuedVideo(): number;
     nowPlayingVideo(): string | null;
     isVideo(): boolean;
+    startScreenShare(): unknown;
+    stopScreenShare(): unknown;
+    isScreenShare(): boolean;
     enqueue(source: string | string[]): number;
     skip(): boolean;
     queued(): number;
@@ -53,6 +56,7 @@ export interface VoipCallOptions {
     isVideo?: boolean;
     videoSource?: string;
     videoPlaylist?: string[];
+    screenShare?: boolean;
 }
 export interface VoipGroupCallOptions extends VoipCallOptions {
     participants?: string[];

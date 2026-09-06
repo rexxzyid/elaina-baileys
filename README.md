@@ -2814,6 +2814,25 @@ The engine picks the resolution and frame rate when the call connects and the fe
 
 Audio and video are two ffmpeg processes with two clocks. Playing the same file through both will drift; if you need them locked together, pass the same file only to `playlist` and leave the picture on a still image.
 
+### Screen Share
+
+The same video, sent as a screen share instead of a camera. It is a separate wasm entry point, so the recipient sees it labelled as a shared screen rather than as the bot turning its camera on.
+
+```js
+const call = await voip.call('628123456789', {
+    screenShare: true,
+    videoPlaylist: ['slide.png'],
+    playlist: ['narasi.mp3']
+})
+```
+
+`screenShare: true` implies `video: true`. Turn it on and off mid-call with `call.startScreenShare()` and `call.stopScreenShare()`; `call.isScreenShare()` reports which one is live.
+
+Which to prefer depends on what you are sending, and it is worth testing both on a real call:
+
+- **Screen share** suits still content — slides, lyrics, a card. The encoder favours sharpness over motion, and a 16:9 source is not padded into a portrait camera frame.
+- **The camera path** suits moving pictures, and reaches everyone. Screen share is gated by `calling_screen_share_milestone_version`: a recipient on an older WhatsApp gets a "please update" dialog instead of your content. In a group there is also a participant cap for sharing, and typically only one participant may share at a time.
+
 ### Group Calls
 
 ```js
