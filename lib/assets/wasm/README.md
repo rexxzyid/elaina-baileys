@@ -11,7 +11,30 @@ project.
 | `loader.js` | 155 436 B | `f26ed41f30313d790b3022476b7e88c6d99941909c30d0a35c15619d98826bad` |
 | `worker-modules.js` | 826 071 B | `4f52cd02c8310a19820176362d292687b02c4a9cf81cc78fbf8e5cc4a28f4e99` |
 
-Verify with `sha256sum lib/assets/wasm/*`.
+Verify with `npm run verify:assets`, which checks every file against the table
+above and re-runs the scan below. It exits non-zero if a byte changed.
+
+## Minified, not obfuscated
+
+The two bundles are the output of Meta's production minifier, not a packer.
+The difference is checkable: formatting either file with a JavaScript printer
+is a faithful reprint — the token count comes back identical (26 006 for
+`loader.js`, 134 964 for `worker-modules.js`) and the result is idempotent.
+Packed or encrypted code does not survive that, because there is nothing to
+parse until it unpacks itself at runtime.
+
+What formatting does not recover is the identifier names, which the minifier
+discarded at build time:
+
+```js
+if (i >= a) return ((this.$1 = t), { value: t, done: !0 });
+if (((this.$3 = i + 1), l === n)) return { value: i, done: !1 };
+```
+
+That is why these files are vendored as served rather than reformatted. A
+reprint would double their size, still read as machine-generated, and cost the
+one thing that actually settles the question — that the bytes here are the
+bytes WhatsApp Web ships, which anyone can confirm against the checksums.
 
 ## Why a scanner may flag them
 

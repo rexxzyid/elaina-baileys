@@ -2805,7 +2805,9 @@ const call = await voip.joinGroupCall({
 
 The queue behaves the same on a group call as on a one-to-one call.
 
-The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build. It needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
+The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build, and `storageDir` moves the engine's scratch directory off the default under the system temp dir. It needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
+
+Those three files are WhatsApp Web's own, vendored byte for byte. A supply-chain scanner will call them obfuscated code and a large binary, so `lib/assets/wasm/README.md` records their checksums, what they can and cannot reach, and why they are not reformatted; `npm run verify:assets` re-checks all of it in one command.
 
 Nothing is written to stdout unless you ask: pass `debug: true` for the built-in tracing, or `logger: (...args) => …` to route it into your own logger.
 
@@ -2921,6 +2923,7 @@ Supporting commands:
 | `npm run check:proto` | protobuf gap check only |
 | `npm run sync:proto` | add missing protobuf fields to `WAProto` |
 | `npm run verify:proto` | round-trip encoder only |
+| `npm run verify:assets` | checksum and scan the vendored VoIP resources |
 | `npm run fetch:bundle -- <dir>` | download the raw bundle |
 | `npm run update:version` | bump the pinned revision without any of the checks |
 | `npm run audit:apk -- <dir>` | diff `WAProto` against an extracted Android APK |
