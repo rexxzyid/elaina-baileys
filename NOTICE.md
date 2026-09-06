@@ -6,4 +6,6 @@ The upstream copyright and permission notice are preserved in `LICENSE`. Portion
 
 The integrated MessageBuilder retains its original author/watermark notice in `lib/MessageBuilder/index.js`.
 
+The VoIP calling stack in `lib/Voip/` derives from work by ShellTear, whose `baileys-caller` project first showed the WhatsApp Web VoIP WASM engine could be driven from Node. It has been ported to ESM, reworked to run on the caller's existing socket, and maintained here since.
+
 Elaina-specific maintenance, packaging, compatibility changes, integrations, and ongoing development are maintained under the `@rexxhayanasi/elaina-baileys` package identity.

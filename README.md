@@ -2699,6 +2699,52 @@ await sock.rejectCall(callId, callFrom)
 
 `createCallLink` takes `audio` or `video` and returns just the token. The two prefixes are exported because they do not match the media name — video links live under `/video/` but audio links under `/voice/`. Pass an `event` with a `startTime` in unix seconds to schedule the call instead of opening it now.
 
+### Placing a Voice Call
+
+The VoIP stack runs the WhatsApp Web calling engine in-process and rides **the socket you are already logged in with**. There is no second pairing and no second QR: pair once, and the same session places calls.
+
+```js
+import { makeVoipClient } from '@rexxhayanasi/elaina-baileys'
+
+sock.ev.on('connection.update', async ({ connection }) => {
+    if (connection !== 'open') {
+        return
+    }
+
+    const voip = await makeVoipClient(sock, { wasmPath: './assets/wasm/whatsapp.wasm' })
+    const call = await voip.call('628123456789', {
+        durationMs: 60000,
+        audioSource: './halo.mp3'
+    })
+
+    call.on('ringing', () => console.log('ringing'))
+    call.on('connected', () => console.log('answered'))
+    call.on('ended', reason => console.log('ended:', reason))
+
+    await call.waitForEnd()
+})
+```
+
+`audioSource` is anything ffmpeg can read — a file, a URL, or `lavfi:sine=frequency=440` for a tone. Leave it out and the call carries silence. `durationMs` hangs up on its own; pass `0` to stay on until someone ends it. `call.mute(true)` and `call.end()` do what they say, and `call.on('audio', pcm)` hands you the far end as 16 kHz mono `Float32Array` frames.
+
+Audio is Opus at 16 kHz wideband. 48 kHz needs native audio device hooks the JS-only WASM build does not have.
+
+When the socket reconnects, hand the new one over instead of building a second client:
+
+```js
+const voip = await makeVoipClient(sock)
+
+sock.ev.on('connection.update', async ({ connection }) => {
+    if (connection === 'open') {
+        await voip.attach(sock)
+    }
+})
+```
+
+The stack needs three files from WhatsApp Web — `whatsapp.wasm`, `loader.js` and `worker-modules.js` — which are not shipped with the package. Point `wasmPath` at the binary, or set `resourcesPath` to a directory holding `assets/wasm/`, or hand the bytes over as `wasmBinary`. It also needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
+
+Nothing is written to stdout unless you ask: pass `debug: true` for the built-in tracing, or `logger: (...args) => …` to route it into your own logger.
+
 ### Logging Out
 
 ```js
