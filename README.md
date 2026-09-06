@@ -104,6 +104,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 | Keep up with WhatsApp Web changes | `npm run wa:update` | [Update WhatsApp Web Version](#-update-whatsapp-web-version) |
 | Know if my number is in trouble | account health signals | [Account Health Signals](#-account-health-signals) |
 | Understand LID vs PN jids | addressing helpers | [LID / PN / JID Addressing](#-lid--pn--jid-addressing) |
+| Know why `conversation` is empty | `normalizeMessageContent` | [Every Message Type](#-every-message-type) |
 | Fix something that broke | — | [Troubleshooting](#-troubleshooting) |
 
 ---
@@ -153,6 +154,9 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Privacy Settings](#-privacy-settings)
   - [Blocking](#blocking)
   - [Reporting Spam](#reporting-spam)
+- [Every Message Type](#-every-message-type)
+  - [Why conversation is sometimes empty](#why-conversation-is-sometimes-empty)
+  - [The other 88](#the-other-88)
 - [Presence and Read Receipts](#-presence-and-read-receipts)
 - [Chat State](#-chat-state)
 - [Labels](#-labels)
@@ -2585,6 +2589,84 @@ await sock.reportSpam(groupJid, {
 ```
 
 `reportSpam` sends the chat-level report, the same one WhatsApp Web sends when you report a contact or a group without picking a message. `flow` tells the server where the report came from and defaults to `SPAM_FLOWS.OverflowMenuReport`; `SPAM_FLOWS` carries the values WhatsApp Web itself uses. `source` names the participant being reported inside a group, `subject` carries the entity name, and `isKnownChat` says whether the chat was already known to you. Reporting one specific message is not covered — that needs the franking tags the client derives when it receives the message.
+
+---
+
+## 📨 Every Message Type
+
+`message.message` is a box with exactly one key set, and the key names the
+kind. There are **117** of them. Two things trip up almost everyone starting
+out, so read this part before hunting for a bug that is not there.
+
+### Why `conversation` is sometimes empty
+
+**29 of the 117 are wrappers.** They carry no content of their own — they hold
+another message inside. A view-once photo is not `imageMessage`, it is
+`viewOnceMessageV2` containing an `imageMessage`. A group status reply is
+`groupStatusMessageV2` containing whatever was actually said. Read the outer
+key and you find nothing:
+
+```js
+const m = messages[0]
+console.log(m.message.conversation)          // undefined
+console.log(Object.keys(m.message))          // [ 'groupStatusMessageV2' ]
+```
+
+`normalizeMessageContent` peels them off for you, up to five layers deep,
+because wrappers nest — an edited view-once photo inside an ephemeral chat is
+three of them stacked:
+
+```js
+import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
+
+const content = normalizeMessageContent(m.message)
+const type = getContentType(content)        // 'imageMessage'
+const text = content?.conversation || content?.extendedTextMessage?.text
+```
+
+Always normalise before you look. The full list of wrappers, so you can
+recognise one when you see it:
+
+| Group | Wrappers |
+|---|---|
+| Disappearing and view-once | `ephemeralMessage`, `viewOnceMessage`, `viewOnceMessageV2`, `viewOnceMessageV2Extension`, `limitSharingMessage` |
+| Edits and replies | `editedMessage`, `associatedChildMessage`, `questionMessage`, `questionReplyMessage` |
+| Status | `statusMentionMessage`, `statusAddYours`, `groupStatusMessage`, `groupStatusMessageV2`, `groupStatusMentionMessage` |
+| Groups | `groupMentionedMessage` |
+| Bots | `botInvokeMessage`, `botTaskMessage`, `botForwardedMessage`, `botPlatformRegistrationSuccessMessage` |
+| Newsletter | `newsletterAdminProfileMessage`, `newsletterAdminProfileMessageV2`, `newsletterAdminProfileStatusMessage`, `newsletterScheduledMessage` |
+| Polls and media | `pollCreationMessageV4`, `pollCreationOptionImageMessage`, `documentWithCaptionMessage`, `lottieStickerMessage`, `eventCoverImage`, `spoilerMessage` |
+
+### The other 88
+
+These carry the content. You will use a handful constantly and never touch
+most of the rest, but knowing they exist saves you from assuming a message is
+malformed when it is simply a kind you have not met.
+
+| Group | Types |
+|---|---|
+| Text and location | `conversation`, `extendedTextMessage`, `locationMessage`, `liveLocationMessage`, `contactMessage`, `contactsArrayMessage`, `groupInviteMessage`, `albumMessage`, `musicMessage`, `conditionalRevealMessage` |
+| Media | `imageMessage`, `videoMessage`, `audioMessage`, `documentMessage`, `stickerMessage`, `stickerPackMessage`, `stickerSyncRmrMessage`, `ptvMessage` |
+| Buttons and lists | `buttonsMessage`, `buttonsResponseMessage`, `listMessage`, `listResponseMessage`, `templateMessage`, `templateButtonReplyMessage`, `interactiveMessage`, `interactiveResponseMessage`, `highlyStructuredMessage` |
+| Polls and events | `pollCreationMessage` … `pollCreationMessageV6`, `pollUpdateMessage`, `pollAddOptionMessage`, `pollResultSnapshotMessage`, `pollResultSnapshotMessageV3`, `eventMessage`, `eventInviteMessage`, `questionResponseMessage`, `keepInChatMessage` |
+| Status | `statusNotificationMessage`, `statusQuestionAnswerMessage`, `statusQuotedMessage`, `statusStickerInteractionMessage`, `statusLinkPreviewMetadata` |
+| Newsletter | `newsletterFollowerInviteMessage`, `newsletterFollowerInviteMessageV2`, `newsletterAdminInviteMessage` |
+| Calls | `call`, `bcallMessage`, `callLogMesssage`, `scheduledCallCreationMessage`, `scheduledCallEditMessage` |
+| Payments and shop | `sendPaymentMessage`, `requestPaymentMessage`, `declinePaymentRequestMessage`, `cancelPaymentRequestMessage`, `paymentInviteMessage`, `paymentReminderMessage`, `splitPaymentMessage`, `splitPaymentUpdateMessage`, `productMessage`, `orderMessage`, `invoiceMessage` |
+| Reactions and comments | `reactionMessage`, `encReactionMessage`, `commentMessage`, `encCommentMessage`, `pinInChatMessage`, `encEventResponseMessage` |
+| Bots and AI | `richResponseMessage`, `placeholderMessage` |
+| Protocol and sync | `protocolMessage`, `deviceSentMessage`, `senderKeyDistributionMessage`, `fastRatchetKeySenderKeyDistributionMessage`, `messageContextInfo`, `messageHistoryBundle`, `messageHistoryNotice`, `secretEncryptedMessage`, `requestPhoneNumberMessage`, `groupRootKeyShare`, `rootSecretDistributeMessage` |
+
+`protocolMessage` is worth singling out: deletions, edits, ephemeral-timer
+changes and app-state syncs all arrive as one, distinguished by its `type`.
+A bot that ignores it will look like it never notices a deleted message.
+
+### Reading a rich message
+
+A message from another bot — AI Rich, A2UI, Bloks — leaves `conversation`
+empty and `getContentType` reporting only the wrapper. `readRichMessage`
+normalises all of them into one shape; see
+[Reading Rich Messages Back](#reading-rich-messages-back).
 
 ---
 
