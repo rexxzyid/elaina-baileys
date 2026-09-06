@@ -7,4 +7,3 @@ proto-sync.txt
 site/
 site-api.json
 .wa-bundle/
-lib/assets/wasm/

@@ -8,7 +8,12 @@ const CHUNK_BYTES = FRAMES * Float32Array.BYTES_PER_ELEMENT;
 const makeFeeder = () => {
     const emitted = [];
     const feeder = new AudioFeeder(SAMPLE_RATE, 1, FRAMES, chunk => emitted.push(chunk));
-    feeder._proc = { kill() {}, stdout: { isPaused: () => false, pause() {}, resume() {} } };
+    feeder._running = true;
+    feeder._proc = {
+        kill() {},
+        removeAllListeners() {},
+        stdout: { isPaused: () => false, pause() {}, resume() {}, removeAllListeners() {} }
+    };
     return { feeder, emitted };
 };
 

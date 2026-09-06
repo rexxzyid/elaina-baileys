@@ -2711,7 +2711,7 @@ sock.ev.on('connection.update', async ({ connection }) => {
         return
     }
 
-    const voip = await makeVoipClient(sock, { wasmPath: './assets/wasm/whatsapp.wasm' })
+    const voip = await makeVoipClient(sock)
     const call = await voip.call('628123456789', {
         durationMs: 60000,
         audioSource: './halo.mp3'
@@ -2741,7 +2741,71 @@ sock.ev.on('connection.update', async ({ connection }) => {
 })
 ```
 
-The stack needs three files from WhatsApp Web — `whatsapp.wasm`, `loader.js` and `worker-modules.js` — which are not shipped with the package. Point `wasmPath` at the binary, or set `resourcesPath` to a directory holding `assets/wasm/`, or hand the bytes over as `wasmBinary`. It also needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
+### Playing a Queue
+
+Every call takes a playlist, and the queue drives the call rather than the other way round: play a song, hang up when it ends; or play, wait while the next track is being found, play that one, then hang up.
+
+```js
+const call = await voip.call('628123456789', {
+    playlist: ['satu.mp3'],
+    durationMs: 0
+})
+```
+
+One track, then the call ends by itself — `endWhenQueueEmpty` is on by default and `durationMs: 0` takes the hard timeout out of the way.
+
+For a queue where the next track has to be looked up, give the gap a grace window and fill it while the call stays up:
+
+```js
+const call = await voip.call('628123456789', {
+    playlist: [await findTrack('lagu pertama')],
+    idleGraceMs: 30000,
+    durationMs: 0
+})
+
+call.on('track', track => console.log('playing', track))
+call.on('trackend', track => console.log('finished', track))
+
+call.on('idle', async () => {
+    const next = await findTrack(queue.shift())
+    if (next) {
+        call.enqueue(next)
+    }
+})
+
+await call.waitForEnd()
+```
+
+`idle` fires the moment the queue empties. Anything enqueued before the grace window closes cancels the hang up and plays straight away; if nothing arrives, the call ends. Set `endWhenQueueEmpty: false` to stay on the call indefinitely and hang up yourself.
+
+`enqueue` also takes an array, `skip()` drops the current track, `play()` replaces the queue with one track now, and `queued()` and `nowPlaying()` report what is left and what is running. Audio buffered from a finished track is played out before the next one starts, so a song is never cut off mid-tail by the queue advancing.
+
+### Group Calls
+
+```js
+const call = await voip.callGroup('12345-67890@g.us', {
+    playlist: ['satu.mp3', 'dua.mp3'],
+    idleGraceMs: 30000,
+    durationMs: 0
+})
+```
+
+`callGroup` reads the participant list from the group metadata, resolves each member's LID and devices, and rings them all. Pass `participants` to ring only some of them, or `metadata` if you already have it and want to skip the fetch.
+
+To join a call someone else started, hand `joinGroupCall` what the incoming offer told you:
+
+```js
+const call = await voip.joinGroupCall({
+    callId,
+    callCreatorJid,
+    groupJid,
+    playlist: ['satu.mp3']
+})
+```
+
+The queue behaves the same on a group call as on a one-to-one call.
+
+The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build. It needs `ffmpeg` on `PATH` for the outgoing audio, and it is audio-only; video is not implemented.
 
 Nothing is written to stdout unless you ask: pass `debug: true` for the built-in tracing, or `logger: (...args) => …` to route it into your own logger.
 

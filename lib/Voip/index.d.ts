@@ -14,9 +14,15 @@ export declare const CallState: Readonly<{
 export declare class ActiveCall extends EventEmitter {
     readonly callId: string;
     readonly state: number;
+    groupJid?: string;
     end(): void;
     mute(muted: boolean): void;
     waitForEnd(): Promise<string>;
+    play(source: string): boolean;
+    enqueue(source: string | string[]): number;
+    skip(): boolean;
+    queued(): number;
+    nowPlaying(): string | null;
 }
 export interface VoipClientOptions {
     socket?: any;
@@ -31,12 +37,33 @@ export interface VoipClientOptions {
 export interface VoipCallOptions {
     durationMs?: number;
     audioSource?: string;
+    playlist?: string[];
+    endWhenQueueEmpty?: boolean;
+    idleGraceMs?: number;
+    audioStartDelayMs?: number;
+}
+export interface VoipGroupCallOptions extends VoipCallOptions {
+    participants?: string[];
+    metadata?: any;
+}
+export interface VoipCallInvite {
+    callId: string;
+    callCreatorJid: string;
+    groupJid?: string;
+    initialPeerJid?: string;
+    pnUserJids?: string[];
+    lidUserJids?: string[];
+    deviceJidsCsv?: string[];
+    chatName?: string;
 }
 export declare class VoipClient {
     constructor(options?: VoipClientOptions);
     connect(): Promise<void>;
     attach(socket: any): Promise<void>;
     call(phoneNumber: string, options?: VoipCallOptions): Promise<ActiveCall>;
+    callGroup(groupJid: string, options?: VoipGroupCallOptions): Promise<ActiveCall>;
+    joinGroupCall(invite: VoipCallInvite, options?: VoipCallOptions): Promise<ActiveCall>;
+    acceptCall(isMicEnabled?: boolean): void;
     disconnect(): void;
     resetCallState(): void;
 }

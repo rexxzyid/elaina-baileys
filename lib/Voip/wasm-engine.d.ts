@@ -14,6 +14,9 @@ export declare class WasmEngine {
     isInitialized(): boolean;
     initVoipStack(selfPnJid: string, selfJid: string, selfLidJid: string): void;
     waitForVoipStackReady(): Promise<void>;
+    startGroupCall(options: Record<string, unknown>): unknown;
+    joinOngoingCall(options: Record<string, unknown>): unknown;
+    acceptCall(isMicEnabled?: boolean, isCameraEnabled?: boolean): unknown;
     destroy(): void;
 }
 export default WasmEngine;
