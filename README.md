@@ -3796,6 +3796,33 @@ if (audience) {
 }
 ```
 
+#### When the name stays "Close friends"
+
+The emoji and the name travel in the same submessage, so if one of them arrives the other did too. Check what you actually put on the wire before blaming the phone — `sendMessage` returns the message it sent:
+
+```js
+const sent = await sock.sendMessage('status@broadcast', {
+  text: 'Halo besties',
+  statusAudience: { listName: 'Besties', listEmoji: '💜' }
+}, { statusJidList })
+
+console.log(sent.message.extendedTextMessage.contextInfo.statusAudienceMetadata)
+// StatusAudienceMetadata { audienceType: 1, listName: 'Besties', listEmoji: '💜' }
+```
+
+If that prints your name, the payload is right. `listName` is tag 2 and `listEmoji` tag 3 of `ContextInfo.StatusAudienceMetadata`, matching the WhatsApp Web spec exactly, and both are plain strings with no length or character rules on our side.
+
+If it prints `Close friends`, one of these is happening:
+
+| Cause | Fix |
+| --- | --- |
+| The key was never read | `statusAudience` is resolved by `sock.sendMessage`. Going straight to `generateWAMessageFromContent` and `relayMessage` skips it — set `contextInfo.statusAudienceMetadata` yourself there. |
+| It was spelled `listname` or `name` | The key is `listName`. An unknown key is not an error, it just leaves the default in place. |
+| Only the emoji was given | `{ listEmoji: '💜' }` keeps the default name, the same way `{ listName: 'Besties' }` keeps the default star. |
+| It rode along with a modern builder | `statusAudience` next to `groupStatusReaction`, `question`, `comment` and friends now throws instead of disappearing — those builders replace the whole content and have no contextInfo. |
+
+And if the payload is right but the phone still shows the default, that is the client, not the message: the badge is a rollout-gated feature, and WhatsApp may fall back to the default label on a build that has the parser but not the UI. Try a viewer on a current Android build before changing the code.
+
 > [!NOTE]
 > On WhatsApp Web the badge is behind a viewer-side rollout gate (`isStatusCloseFriendsViewerSideEnabled`), and Web has no sender-side path for it at all — it only reads the field. Android and iOS are where you will see it. As with everything in this chapter, WhatsApp can gate rendering per account.
 

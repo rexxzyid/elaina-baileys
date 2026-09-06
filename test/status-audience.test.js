@@ -104,4 +104,21 @@ const build = (jid, content) => generateWAMessage(jid, prepareModernMessageConte
     assert.equal(contextInfo.statusAttributions.length, 1);
 }
 
+/**
+ * The modern builders replace the whole content and none of them has a
+ * contextInfo slot, so an audience passed alongside one would vanish without a
+ * trace. Say so instead.
+ */
+{
+    assert.throws(
+        () => prepareModernMessageContent({
+            groupStatusReaction: { key: { id: 'X', remoteJid: 'a@g.us' }, text: '❤️' },
+            statusAudience: { listName: 'Besties' }
+        }),
+        /statusAudience cannot be combined with groupStatusReaction/
+    );
+    const ok = prepareModernMessageContent({ groupStatusReaction: { key: { id: 'X', remoteJid: 'a@g.us' }, text: '❤️' } });
+    assert.equal(ok.raw, true, 'the builder path still works on its own');
+}
+
 console.log('status audience tests passed');
