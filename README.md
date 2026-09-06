@@ -69,7 +69,42 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 | 🪪 LID / PN Addressing | Supports modern LID addressing while exposing the PN/JID alternatives supplied by WhatsApp when available. |
 | 📷 Profile Picture | Fetch, update, and remove profile pictures. |
 | 🤖 AI Rich | Experimental rich-response builder for text, code, tables, media, suggestions, and other layouts. |
+| 📞 Voice & Video Calls | Place audio, video and screen-share calls on the session the bot already has, with a playlist that drives the call. |
+| 🗄️ Database Sessions | Keep the session in SQLite, PostgreSQL, MySQL, MongoDB, Redis or NekoDB instead of files. |
 | 📦 ESM | ESM-first package requiring Node.js 20+; Node.js 22 or newer is recommended. |
+
+### 🗺️ What Can It Do?
+
+New here? This is the whole library at a glance. Each row links to the section that shows the code.
+
+| I want to… | Use | Read |
+|---|---|---|
+| Log in and stay logged in | `useMultiFileAuthState`, `usePostgresAuthState`, … | [Session Storage](#-session-storage) |
+| Log in without scanning a QR | pairing code | [Pairing Code](#-pairing-code) |
+| React to incoming messages | `messages.upsert` | [Receive Messages](#-receive-messages), [Events](#-events) |
+| Send text, images, video, files, location, polls | `sock.sendMessage` | [Send Messages](#-send-messages) |
+| Send buttons, lists, carousels | `Button`, `ButtonV2`, `Carousel` | [Integrated MessageBuilder](#-integrated-messagebuilder) |
+| Send a rich AI-style card | `AIRich`, A2UI | [AIRich](#airich), [A2UI Cards](#a2ui-cards) |
+| Read a rich message a bot sent me | `readRichMessage` | [Reading Rich Messages Back](#reading-rich-messages-back) |
+| Send several photos as one post | album message | [Album Message](#-album-message) |
+| Run a channel | newsletter helpers | [Newsletter / Channel](#-newsletter--channel) |
+| Manage a group | `groupCreate`, `groupParticipantsUpdate`, … | [Group Management](#-group-management) |
+| Manage a community | community helpers | [Communities](#-communities) |
+| Block, unblock, report spam | `updateBlockStatus`, `reportSpam` | [Privacy Settings](#-privacy-settings) |
+| Show typing, read receipts, presence | `sendPresenceUpdate`, `readMessages` | [Presence and Read Receipts](#-presence-and-read-receipts) |
+| Pin, archive, mute, star a chat | `chatModify` | [Chat State](#-chat-state) |
+| Use business labels and a catalog | label and catalog helpers | [Labels](#-labels), [Business and Catalog](#-business-and-catalog) |
+| Make a call link, reject a call | `createCallLink`, `rejectCall` | [Calls](#-calls) |
+| Ring someone and play audio | `makeVoipClient`, `voip.call` | [Placing a Voice Call](#placing-a-voice-call) |
+| Play a queue of songs on a call | `playlist`, `enqueue`, `idle` | [Playing a Queue](#playing-a-queue) |
+| Send video or share a screen on a call | `video: true`, `screenShare: true` | [Video Calls](#video-calls), [Screen Share](#screen-share) |
+| Call a whole group | `voip.callGroup` | [Group Calls](#group-calls) |
+| Change or read a profile picture | profile picture helpers | [Profile Picture](#-profile-picture) |
+| Schedule a message for later | scheduled messages | [Scheduled Messages](#-scheduled-messages) |
+| Keep up with WhatsApp Web changes | `npm run wa:update` | [Update WhatsApp Web Version](#-update-whatsapp-web-version) |
+| Know if my number is in trouble | account health signals | [Account Health Signals](#-account-health-signals) |
+| Understand LID vs PN jids | addressing helpers | [LID / PN / JID Addressing](#-lid--pn--jid-addressing) |
+| Fix something that broke | — | [Troubleshooting](#-troubleshooting) |
 
 ---
 
@@ -80,6 +115,12 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Import](#-import)
 - [Basic Connection](#-basic-connection)
 - [Session Storage](#-session-storage)
+  - [Multi-file (default)](#multi-file-default)
+  - [Single file](#single-file)
+  - [SQLite](#sqlite)
+  - [PostgreSQL, MySQL, MongoDB, Redis](#postgresql-mysql-mongodb-redis)
+  - [NekoDB](#nekodb)
+  - [Caching Signal Keys](#caching-signal-keys)
 - [Pairing Code](#-pairing-code)
 - [Receive Messages](#-receive-messages)
 - [Events](#-events)
@@ -110,11 +151,18 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 - [Group Management](#-group-management)
 - [Communities](#-communities)
 - [Privacy Settings](#-privacy-settings)
+  - [Blocking](#blocking)
+  - [Reporting Spam](#reporting-spam)
 - [Presence and Read Receipts](#-presence-and-read-receipts)
 - [Chat State](#-chat-state)
 - [Labels](#-labels)
 - [Business and Catalog](#-business-and-catalog)
 - [Calls](#-calls)
+  - [Placing a Voice Call](#placing-a-voice-call)
+  - [Playing a Queue](#playing-a-queue)
+  - [Video Calls](#video-calls)
+  - [Screen Share](#screen-share)
+  - [Group Calls](#group-calls)
 - [Profile Picture](#-profile-picture)
 - [Useful Exports](#-useful-exports)
 - [Update WhatsApp Web Version](#-update-whatsapp-web-version)
