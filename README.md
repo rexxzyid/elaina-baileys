@@ -1658,13 +1658,32 @@ import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, Foot
 
 ### Embedded Screens
 
-An embedded screen is a second surface attached to the same rich response. The bubble in the chat stays small; tapping it opens a full sheet that can hold its own sections, or several tabs of them. WhatsApp Web does not render it at all — its parser writes `CometComposedTextV2UnsupportedURType typename="embedded_screens"` and stops — so this is an Android and iOS surface.
+An embedded screen is a **second surface carried by the same message**. The bubble in the chat stays small — a line of text, a preview card — and tapping it opens a full sheet that has its own sections, or several tabs of them. It is how one message can be both a short answer and a whole mini app.
+
+Two things to know before you build one:
+
+- **WhatsApp Web does not render it.** Its parser hits the field and gives up, logging `CometComposedTextV2UnsupportedURType typename="embedded_screens"`. This is an Android and iOS surface. Test it on a phone.
+- **Tabs are nested inside `content`, not beside it.** The screen holds `content[]`; each entry is either a section (it has `view_model`) or a tab container (it has `tabs`). Getting this backwards is the single most common reason a screen opens blank.
+
+#### A complete example
 
 ```js
 import { AIRich, embeddedScreen, embeddedTab, htmlSection } from '@rexxhayanasi/elaina-baileys'
 
+const gameHtml = `
+<body style="margin:0;background:transparent;color:#eee;font-family:Arial">
+  <canvas id="game" width="560" height="190" style="width:100%;height:auto"></canvas>
+  <script>
+    const x = document.getElementById('game').getContext('2d')
+    x.fillStyle = '#6c5ce7'
+    x.fillRect(20, 120, 27, 30)
+  <\/script>
+</body>`
+
+const scoreHtml = '<body style="margin:0;color:#eee;font-family:Arial"><h3>Best: 00000</h3></body>'
+
 const rich = new AIRich(sock)
-  .addSection(htmlSection('<b>Preview</b>'))
+  .addSection(htmlSection('<b>Dino Runner</b> — tap to play'))
 
 rich.addEmbeddedScreen(embeddedScreen({
   title: 'Preview',
@@ -1677,14 +1696,40 @@ rich.addEmbeddedScreen(embeddedScreen({
 await rich.send(m.chat)
 ```
 
-#### The typenames on the wire
+A screen without tabs is just as valid — pass `content` instead, and the sheet shows one page:
 
-Every piece the client walks past carries a `__typename`, and the builder fills them in:
+```js
+rich.addEmbeddedScreen(embeddedScreen({
+  title: 'Rincian',
+  content: [htmlSection(detailHtml)]
+}))
+```
+
+You can pass both. The tab container is appended **after** whatever plain `content` you gave, so the flat sections render first and the tab strip below them.
+
+#### What goes on the wire
+
+`AIRich.send` base64-encodes all of this into `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. The example above produces:
 
 ```jsonc
 {
+  "response_id": "183d0aee-fb35-4349-8bc5-7793b11859db",
+  "sections": [
+    {
+      "__typename": "GenAIUnifiedResponseSection",
+      "view_model": {
+        "__typename": "GenAISingleLayoutViewModel",
+        "primitive": {
+          "__typename": "GenAIaeacdsnwHtmlPrimitive",
+          "payload": "<b>Dino Runner</b> — tap to play",
+          "trusted_sources": []
+        }
+      }
+    }
+  ],
   "embedded_screens": [
     {
+      "id": "0f2c…",
       "title": "Preview",
       "content": [
         {
@@ -1698,11 +1743,12 @@ Every piece the client walks past carries a `__typename`, and the builder fills 
                   "__typename": "GenAIUnifiedResponseSection",
                   "view_model": {
                     "__typename": "GenAISingleLayoutViewModel",
-                    "primitive": { "__typename": "GenAIaeacdsnwHtmlPrimitive", "payload": "<html…>" }
+                    "primitive": { "__typename": "GenAIaeacdsnwHtmlPrimitive", "payload": "<body…>" }
                   }
                 }
               ]
-            }
+            },
+            { "id": "tab_1", "tab_header": "Scores", "sections": [ /* … */ ] }
           ]
         }
       ]
@@ -1711,7 +1757,88 @@ Every piece the client walks past carries a `__typename`, and the builder fills 
 }
 ```
 
-Note the nesting: **tabs live inside a `content` entry, not beside it**. The screen holds `content[]`; an entry is either a section (it has `view_model`) or a tab container (it has `tabs`). Passing `tabs` to `embeddedScreen` wraps them in that container for you, and appends it after any plain `content` you also passed.
+Read the nesting from the outside in: **screen → `content[]` → `tabs[]` → `sections[]` → `view_model` → `primitive`**. Every level except the tab and the screen itself carries a `__typename`, and the builder fills all of them in.
+
+#### The same thing without the builder
+
+If you would rather assemble the payload by hand — or you are porting one you received from another bot — this is the equivalent `relayMessage` call. Nothing here is magic; it is exactly what `AIRich` produces:
+
+```js
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+await sock.relayMessage(m.chat, {
+  messageContextInfo: {
+    deviceListMetadata: {},
+    deviceListMetadataVersion: 2,
+    botMetadata: {
+      messageDisclaimerText: '',
+      botResponseId: 'f090cd0f-bad1-4a4a-b0c3-b8f8e852c197',
+      verificationMetadata: AIRich.generateVerificationMetadata()
+    }
+  },
+  botForwardedMessage: {
+    message: {
+      richResponseMessage: {
+        messageType: 1,
+        submessages: [{ messageType: 2, messageText: '> Dino Runner' }],
+        unifiedResponse: {
+          data: Buffer.from(JSON.stringify({
+            response_id: '183d0aee-fb35-4349-8bc5-7793b11859db',
+            sections: [
+              {
+                __typename: 'GenAIUnifiedResponseSection',
+                view_model: {
+                  __typename: 'GenAISingleLayoutViewModel',
+                  primitive: { __typename: 'GenAIMarkdownTextUXPrimitive', text: '> Dino Runner' }
+                }
+              }
+            ],
+            embedded_screens: [
+              {
+                title: 'Preview',
+                content: [
+                  {
+                    __typename: 'FOAEmbeddedScreenContentTabbed',
+                    tabs: [
+                      {
+                        id: 'tab_0',
+                        tab_header: 'Dino Runner',
+                        sections: [
+                          {
+                            __typename: 'GenAIUnifiedResponseSection',
+                            view_model: {
+                              __typename: 'GenAISingleLayoutViewModel',
+                              primitive: {
+                                __typename: 'GenAIaeacdsnwHtmlPrimitive',
+                                payload: gameHtml,
+                                trusted_sources: ['nixel.dev']
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          })).toString('base64')
+        },
+        contextInfo: {
+          forwardingScore: 1,
+          isForwarded: true,
+          forwardedAiBotMessageInfo: { botJid: '867051314767696@bot' },
+          forwardOrigin: 4
+        }
+      }
+    }
+  }
+}, {})
+```
+
+The builder is worth using anyway — it generates the ids, drops empty fields instead of sending `null`, and keeps the typenames in one place — but the payload is plain JSON and there is nothing stopping you from writing it out.
+
+#### The typenames
 
 | Constant | Value | Where it goes |
 | --- | --- | --- |
@@ -1721,35 +1848,89 @@ Note the nesting: **tabs live inside a `content` entry, not beside it**. The scr
 | `EMBEDDED_SCREEN_TAB_TYPENAME` | `FOAUnifiedResponseTab` | a tab, when you want it named |
 | `EMBEDDED_SCREEN_TYPENAME` | `FOAUnifiedResponseEmbeddedScreen` | the screen itself, when you want it named |
 
-`GenAIUnifiedResponseSection` and `XMSGGenAIUnifiedResponse` come straight out of the WhatsApp Web bundle, which builds exactly that shape in its own `injectRichResponseTestMessage` debug command. The three `FOA…` names come from the Android client's Kotlin models — `FOAEmbeddedScreenContentTabbedImpl.kt`, `FOAUnifiedResponseTabImpl.kt`, `FOAUnifiedResponseEmbeddedScreenImpl.kt`.
+Where these come from, so you can check them yourself:
 
-Sections always get their typename. The screen and the tabs do not, unless you ask:
+- `GenAIUnifiedResponseSection` and `XMSGGenAIUnifiedResponse` are in the WhatsApp Web bundle, in the `injectRichResponseTestMessage` debug command, which builds that exact section shape.
+- The three `FOA…` names are the Android client's Kotlin models: `FOAEmbeddedScreenContentTabbedImpl.kt`, `FOAUnifiedResponseTabImpl.kt`, `FOAUnifiedResponseEmbeddedScreenImpl.kt`. The field names `embedded_screens`, `tab_header`, `step_entries` and `poll_id` are in the same dex.
+
+Sections always get their typename. The screen and the tabs stay untyped unless you ask for it:
 
 ```js
-embeddedScreen({ typename: EMBEDDED_SCREEN_TYPENAME, tabs: [...] })
+import { EMBEDDED_SCREEN_TAB_TYPENAME, EMBEDDED_SCREEN_TYPENAME } from '@rexxhayanasi/elaina-baileys'
+
+embeddedScreen({ typename: EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
 embeddedTab({ typename: EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
-embeddedScreen({ tabs: [...], tabsTypename: 'FOAIDButtonSheets' })
+
+// a build that expects a different container name
+embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
 ```
 
-That last one matters because, as with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape. Payloads in the wild carry all sorts of container names and still render. `tabsTypename` is there so you can match whatever a build expects instead of being locked to one string.
+That last line matters. As with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape, so payloads in the wild carry all sorts of container names and still render. `tabsTypename` exists so you can match whatever a given build expects instead of being locked to one string.
 
-Everything else `embeddedScreen` accepts maps to a snake_case wire field: `content`, `header`, `body`, `artifacts`, `steps`, `stepEntries` → `step_entries`, `sources`, `pollId` → `poll_id`. An `id` is generated when you leave it out, and empty values are dropped rather than sent as `null`.
+#### Options
+
+`embeddedScreen({ … })`:
+
+| Option | Wire field | Notes |
+| --- | --- | --- |
+| `id` | `id` | a UUID is generated when omitted |
+| `title` | `title` | the sheet header |
+| `content` | `content` | array of sections, or hand-built content entries |
+| `tabs` | `content[n].tabs` | wrapped in a tab container and appended to `content` |
+| `tabsTypename` | `content[n].__typename` | defaults to `FOAEmbeddedScreenContentTabbed` |
+| `typename` | `__typename` | omitted unless given |
+| `header`, `body` | `header`, `body` | passed through as-is |
+| `artifacts`, `steps`, `sources` | same names | must be arrays |
+| `stepEntries` | `step_entries` | must be an array |
+| `pollId` | `poll_id` | |
+
+`embeddedTab({ … })`:
+
+| Option | Wire field | Notes |
+| --- | --- | --- |
+| `id` | `id` | a UUID is generated when omitted |
+| `tabHeader` | `tab_header` | the label on the tab strip |
+| `header` | `header` | passed through as-is |
+| `sections` | `sections` | each one gets `GenAIUnifiedResponseSection` |
+| `typename` | `__typename` | omitted unless given |
+
+`embeddedTabbedContent(tabs, { typename })` builds the container on its own, for when you want to place it inside `content` yourself.
+
+Anything left `undefined` is dropped, never sent as `null`. Passing a non-array where an array belongs throws a `TypeError` at build time rather than producing a payload the phone silently ignores.
+
+`EMBEDDED_SCREEN_PRESENTATION` (`HALF_HEIGHT`, `FULL_HEIGHT`) is exported too. Both values and the field `overwrite_first_screen_presentation` are in the Android client, but which object carries that field is not determinable from the client alone, so the builder does not set it — add it yourself if you know where a given build wants it.
 
 #### Reading one back
 
 ```js
-import { decodeAIRich, readEmbeddedSections, readEmbeddedTabs } from '@rexxhayanasi/elaina-baileys'
+import { decodeAIRich, readEmbeddedSections, readEmbeddedTabs, readRichMessage } from '@rexxhayanasi/elaina-baileys'
 
 const info = decodeAIRich(m.message)
-info.embeddedScreens   // the raw screens
-info.embeddedTabs      // every tab, from both nesting shapes
+
+info.embeddedScreens   // the raw screens, exactly as they arrived
+info.embeddedTabs      // every tab, flattened, from either nesting shape
 info.embeddedSections  // every section inside those screens
 
+// or per screen
 readEmbeddedTabs(info.embeddedScreens[0])
 readEmbeddedSections(info.embeddedScreens[0])
+
+// pull the HTML a tab is carrying
+const html = readEmbeddedSections(info.embeddedScreens[0])
+  .map(section => section.view_model?.primitive?.payload)
+  .filter(Boolean)
 ```
 
-`readRichMessage(m).html` now also collects HTML that sits inside an embedded screen, so a page delivered through a tab is no longer invisible to it.
+`readRichMessage(m).html` also collects HTML that sits inside an embedded screen, so a page delivered through a tab is no longer invisible to it. `readEmbeddedTabs` reads both shapes — nested under `content`, and the older flat `tabs` at screen level — so a payload from another bot parses either way.
+
+#### When the sheet comes up blank
+
+| Symptom | Cause |
+| --- | --- |
+| Nothing opens at all | You are looking at WhatsApp Web. It does not render embedded screens; use a phone. |
+| The sheet opens empty | Tabs were placed beside `content` instead of inside it. Pass them to `embeddedScreen({ tabs })` and let it nest them. |
+| The tab strip shows, pages are blank | A section is missing its `view_model`, or the primitive is missing `payload`. Log `readEmbeddedSections(screen)` and look at the shape. |
+| Text renders, HTML does not | `htmlSection` is Android-only. See [HTML Mini App](#html-mini-app) for the primitive and its `trusted_sources`. |
 
 ### Inspecting a Received AI Rich Message
 
