@@ -142,6 +142,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Status Updates](#-status-updates)
   - [Background, Text Color and Font](#background-text-color-and-font)
   - [Image, Video and Voice Status](#image-video-and-voice-status)
+  - [Group Status](#group-status)
 - [Newsletter / Channel](#-newsletter--channel)
   - [Creating and Editing a Channel](#creating-and-editing-a-channel)
   - [Following a Channel](#following-a-channel)
@@ -2078,6 +2079,68 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
+### Group Status
+
+A group status is the same message with `groupStatus: true` on it. That wraps the finished message in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer attach the `<meta is_group_status="true">` node the client looks for:
+
+```js
+await sock.sendMessage(groupJid, {
+  text: 'halo grup',
+  groupStatus: true
+})
+```
+
+**The styling works here too, and there is nothing extra to pass.** The wrap happens after the message is built, so `backgroundColor`, `textColor` and `font` land on the `extendedTextMessage` inside the wrapper exactly as they would on a normal status:
+
+```js
+import { StatusFont } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage(groupJid, {
+  text: 'halo grup',
+  groupStatus: true,
+  statusAudience: { listName: 'Besties', listEmoji: '💜' }
+}, {
+  backgroundColor: '#7C3AED',
+  textColor: '#FFEE58',
+  font: StatusFont.EXO2_EXTRABOLD
+})
+```
+
+```jsonc
+{
+  "groupStatusMessageV2": {
+    "message": {
+      "extendedTextMessage": {
+        "text": "halo grup",
+        "backgroundArgb": 4286331629,
+        "textArgb": 4294962776,
+        "font": 9,
+        "contextInfo": {
+          "statusAudienceMetadata": { "audienceType": 1, "listName": "Besties", "listEmoji": "💜" },
+          "isGroupStatus": true
+        }
+      }
+    }
+  }
+}
+```
+
+Media works the same way — `groupStatus: true` alongside an `image`, `video` or voice note wraps whichever message got built, and a voice note keeps its background colour:
+
+```js
+await sock.sendMessage(groupJid, {
+  audio: { url: './suara.ogg' },
+  mimetype: 'audio/ogg; codecs=opus',
+  ptt: true,
+  groupStatus: true
+}, { backgroundColor: '#7C3AED' })
+```
+
+Because the payload is wrapped, `message.conversation` is `undefined` on the receiving end and the real content sits a layer down. Run it through `normalizeMessageContent` before reading it, the same as any other wrapper — see [Every Message Type](#-every-message-type).
+
+> [!NOTE]
+> `groupStatusMessageV2` is `Message` field 103; the older `groupStatusMessage` is field 96. Both are `FutureProofMessage` wrappers and the relay layer adds the meta node for either, but `groupStatus: true` always builds V2. WhatsApp Web only ever *parses* these — it has no send path for a group status at all, so this is posted from a phone in the official client.
+
 ### What Can Actually Be Styled
 
 Worth being blunt about, because it is the most common wrong assumption:
@@ -2089,6 +2152,8 @@ Worth being blunt about, because it is the most common wrong assumption:
 | Image | ❌ | ❌ | ❌ | ✅ |
 | Video | ❌ | ❌ | ❌ | ✅ |
 | Audio without `ptt` | ❌ | ❌ | ❌ | ❌ |
+
+A group status is not a separate row: `groupStatus: true` wraps whichever of those you built, and the wrapped message keeps whatever styling it already had.
 
 `ImageMessage` and `VideoMessage` have **no color or font fields in the protobuf** — not in the WhatsApp Web spec, not in the Android one. The colored text you see over a photo in the app is burned into the image by the media editor before it is uploaded, so if you want that from a bot, draw it into the picture yourself and send a plain image.
 
