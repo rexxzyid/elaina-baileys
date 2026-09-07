@@ -124,4 +124,32 @@ const key = { remoteJid: 'status@broadcast', fromMe: false, id: 'ABC123', partic
     assert.equal(addYours.message.statusNotificationMessage.type, STATUS_NOTIFICATION_TYPES.STATUS_ADD_YOURS);
 }
 
+/**
+ * The README tells people to read myStatus.key off what sendMessage returns and
+ * to take the prompt key off messages.upsert. Lock the two shapes it describes.
+ */
+{
+    const withUser = { ...base, userJid: '628999:12@s.whatsapp.net' };
+    const own = await generateWAMessage('status@broadcast', { text: 'halo semua' }, withUser);
+    assert.equal(own.key.remoteJid, 'status@broadcast');
+    assert.equal(own.key.fromMe, true);
+    assert.equal(own.key.participant, null, 'your own status names no participant');
+    assert.ok(own.message && own.messageTimestamp, 'the whole WebMessageInfo comes back, not just a key');
+
+    const group = await generateWAMessage('120363000000000000@g.us', { text: 'halo grup', groupStatus: true }, withUser);
+    assert.equal(group.key.remoteJid, '120363000000000000@g.us');
+    assert.equal(group.key.fromMe, true);
+}
+
+/** A half-built key is refused by name, at build time. */
+{
+    assert.throws(() => prepareModernMessageContent({ addYours: {} }), /addYours\.key must be an object/);
+    assert.throws(() => prepareModernMessageContent({ addYours: { key: { remoteJid: 'x' } } }), /addYours\.key\.id is required/);
+    assert.throws(() => makeStatusMentionMessage({ key: { remoteJid: 'x' } }), /statusMention\.key\.id is required/);
+    assert.throws(
+        () => prepareModernMessageContent({ messageAssociation: { parentMessageKey: { remoteJid: 'x' } } }),
+        /messageAssociation\.parentMessageKey\.id is required/
+    );
+}
+
 console.log('status add yours tests passed');

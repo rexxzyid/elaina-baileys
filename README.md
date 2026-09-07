@@ -177,6 +177,9 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Update WhatsApp Web Version](#-update-whatsapp-web-version)
 - [Scheduled Messages](#-scheduled-messages)
 - [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
+  - [Message Keys](#message-keys)
+  - [Add Yours](#add-yours)
+  - [Status Mentions](#status-mentions)
 - [Account Health Signals](#-account-health-signals)
 - [Troubleshooting](#-troubleshooting)
 - [Found a Bug?](#-found-a-bug)
@@ -2034,18 +2037,40 @@ Leave an option out and nothing is written to the message at all — the client 
 
 #### Fonts
 
-`StatusFont` is `ExtendedTextMessage.FontType`, and these eight are the entire accepted set. WhatsApp Web validates against exactly this list and drops anything else:
+`StatusFont` is `ExtendedTextMessage.FontType`. These eight are the entire accepted set — WhatsApp Web validates against exactly this list and drops anything else, so a ninth value is the same as sending no font at all.
 
-| Constant | Value | Font file in the Android client |
-| --- | --- | --- |
-| `SYSTEM` | 0 | the system face |
-| `SYSTEM_TEXT` | 1 | the system face |
-| `FB_SCRIPT` | 2 | `FacebookScriptWA-Regular.otf` |
-| `SYSTEM_BOLD` | 6 | the system face, bold |
-| `MORNINGBREEZE_REGULAR` | 7 | `MorningBreeze-Regular.ttf` |
-| `CALISTOGA_REGULAR` | 8 | `Calistoga-Regular.ttf` |
-| `EXO2_EXTRABOLD` | 9 | `Exo2-ExtraBold.ttf` |
-| `COURIERPRIME_BOLD` | 10 | `CourierPrime-Bold.ttf` |
+| Constant | Value | Looks like | Font file in the Android client |
+| --- | --- | --- | --- |
+| `SYSTEM` | 0 | the plain default — what you get with no `font` at all | the platform face |
+| `SYSTEM_TEXT` | 1 | the same plain face, kept as its own value | the platform face |
+| `FB_SCRIPT` | 2 | flowing handwritten script, Meta's own cursive | `FacebookScriptWA-Regular.otf` |
+| `SYSTEM_BOLD` | 6 | the plain face, heavy | the platform face, bold |
+| `MORNINGBREEZE_REGULAR` | 7 | casual marker-pen handwriting, loose and informal | `MorningBreeze-Regular.ttf` |
+| `CALISTOGA_REGULAR` | 8 | chunky rounded display serif, warm and poster-like | `Calistoga-Regular.ttf` |
+| `EXO2_EXTRABOLD` | 9 | geometric sans at its heaviest weight, loud and modern | `Exo2-ExtraBold.ttf` |
+| `COURIERPRIME_BOLD` | 10 | monospace typewriter, every character the same width | `CourierPrime-Bold.ttf` |
+
+Picking one:
+
+- **Plain text** → leave `font` out, or `SYSTEM`. `SYSTEM_TEXT` is the same face; the client keeps both values, so there is no visible reason to prefer one.
+- **Loud and short** → `EXO2_EXTRABOLD` for a heavy modern shout, `CALISTOGA_REGULAR` for something rounder and friendlier. Both are display faces: they carry a few words well and a paragraph badly.
+- **Personal or handwritten** → `FB_SCRIPT` for neat cursive, `MORNINGBREEZE_REGULAR` for scrawled marker. Script faces suffer at small sizes and with long text.
+- **Code, numbers, ASCII art** → `COURIERPRIME_BOLD`. It is the only monospace one, so it is the only one where columns line up.
+
+Two things worth knowing before you commit to a face:
+
+- **Only these three names are certain from the file list alone.** `FB_SCRIPT`, `MORNINGBREEZE_REGULAR`, `CALISTOGA_REGULAR`, `EXO2_EXTRABOLD` and `COURIERPRIME_BOLD` each match a bundled file one-for-one by name. The APK also ships `Roboto-Medium.ttf` and `RobotoMono-Regular.ttf`, which are almost certainly what the three `SYSTEM*` values resolve to, but the dex does not spell out which goes with which — so the table says "the platform face" rather than guessing.
+- **The gap in the numbering is real.** The values jump 2 → 6, so 3, 4 and 5 are retired or unused. Do not send them; they are not in the accepted list and will be dropped like any other unknown value.
+
+```js
+import { StatusFont } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage('status@broadcast', {
+  text: 'PENGUMUMAN'
+}, { statusJidList, backgroundColor: '#7C3AED', textColor: '#FFFFFF', font: StatusFont.EXO2_EXTRABOLD })
+```
+
+`font` also takes the raw number if you would rather not import anything — `font: 8` is `CALISTOGA_REGULAR`.
 
 > [!NOTE]
 > The fonts ship inside the Android APK, under `assets/fonts/`. The WhatsApp Web bundle parses the field and validates the eight values but has **no font-family mapping for any of them** — so a status you style will look styled on a phone and plain on Web. That is the client, not the message.
@@ -3684,6 +3709,113 @@ import {
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
+### Message Keys
+
+Almost everything in this chapter takes a **message key** — `addYours`, `statusMention`, `statusNotification`, `groupStatusReaction`, `statusQuoted`, `pollAddOption`, and so on. The examples write `myStatus.key` or `promptStatus.key` and that is easy to skim past, so here is where those actually come from.
+
+A key is four fields, and it identifies one message anywhere on the account:
+
+```js
+{
+  remoteJid: 'status@broadcast',        // the chat it lives in
+  fromMe: false,                        // did this account send it
+  id: '3EB03AC13066A48D44FF59',         // the message id
+  participant: '628000@s.whatsapp.net'  // who sent it, in a group or on status
+}
+```
+
+#### A message you sent
+
+`sendMessage` returns the message it sent. Keep it and read `.key`:
+
+```js
+const myStatus = await sock.sendMessage('status@broadcast', {
+  image: { url: './foto.jpg' },
+  caption: 'halo semua'
+}, { statusJidList })
+
+console.log(myStatus.key)
+// { remoteJid: 'status@broadcast', fromMe: true, id: '3EB03AC13066A48D44FF59' }
+```
+
+Your own status key has **no `participant`** — you are the sender, so there is nothing to disambiguate. A group status keeps the group jid instead:
+
+```js
+const myGroupStatus = await sock.sendMessage(groupJid, { text: 'halo grup', groupStatus: true })
+// key: { remoteJid: '120363000000000000@g.us', fromMe: true, id: '…' }
+```
+
+That return value is the whole `WebMessageInfo`, so `myStatus.message` and `myStatus.messageTimestamp` are there too if you need them.
+
+#### A message you received
+
+Every incoming message arrives with its key already attached, on the `messages.upsert` event:
+
+```js
+sock.ev.on('messages.upsert', async ({ messages }) => {
+  for (const m of messages) {
+    if (m.key.remoteJid !== 'status@broadcast') continue
+
+    console.log(m.key)
+    // { remoteJid: 'status@broadcast', fromMe: false, id: '…', participant: '628000@s.whatsapp.net' }
+  }
+})
+```
+
+Here `participant` **is** set, and it is the person who posted the status — that is the piece that tells one poster's status from another's, since `remoteJid` is `status@broadcast` for all of them.
+
+To answer a specific prompt you have to hold onto its key when it arrives, because you cannot rebuild one later:
+
+```js
+const prompts = new Map()
+
+sock.ev.on('messages.upsert', ({ messages }) => {
+  for (const m of messages) {
+    if (m.key.remoteJid === 'status@broadcast' && !m.key.fromMe) {
+      prompts.set(m.key.id, m.key)
+    }
+  }
+})
+
+// …later
+await sock.sendMessage('status@broadcast', {
+  text: 'ikutan!',
+  addYours: prompts.get(chosenId)
+}, { statusJidList })
+```
+
+A key you kept stays valid — it is just four strings, so storing it in a database or a JSON file works fine. Nothing here needs the original message body.
+
+#### A message someone replied to
+
+When a message quotes another one, the quoted key is in its `contextInfo`:
+
+```js
+const context = m.message?.extendedTextMessage?.contextInfo
+const quotedKey = context && {
+  remoteJid: m.key.remoteJid,
+  fromMe: context.participant === sock.user.id,
+  id: context.stanzaId,
+  participant: context.participant
+}
+```
+
+#### Which key goes where
+
+The mistake that costs the most time is passing your own key where the other person's belongs, or the reverse. This is who owns each one:
+
+| Field | Whose key |
+| --- | --- |
+| `addYours` | **theirs** — the prompt status you are answering |
+| `messageAssociation.parentMessageKey` | **theirs** — the status, poll or question being answered |
+| `statusMention.key` | **yours** — the status you just posted and are announcing |
+| `statusNotification.responseMessageKey` | **yours** — your answer |
+| `statusNotification.originalMessageKey` | **theirs** — the prompt |
+| `groupStatusReaction.key` | **theirs** — the group status you are reacting to |
+| `statusQuoted.originalStatusId` | **theirs** — the status id, not a whole key |
+
+Every maker checks the key before building anything, and throws a `TypeError` naming the exact field — `addYours.key must be an object` when it is missing, `addYours.key.id is required` when it is there but half-built. Either way it fails at build time rather than going out and being quietly ignored.
+
 ### Photo Poll
 
 Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
@@ -4018,6 +4150,8 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
+`promptStatus` is **their** status — the one carrying the prompt, as it arrived on `messages.upsert`. You have to keep its key when it comes in; see [Message Keys](#message-keys).
+
 That writes `messageContextInfo.messageAssociation` (tag 10) with `associationType: STATUS_ADD_YOURS` (8) and your `parentMessageKey`:
 
 ```jsonc
@@ -4112,9 +4246,13 @@ That posts the status once — expanding any group in the list into its particip
 To send the pointer on its own, against a status you already posted:
 
 ```js
+const myStatus = await sock.sendMessage('status@broadcast', { text: 'halo semua' }, { statusJidList })
+
 await sock.sendMessage(userJid, { statusMention: { key: myStatus.key } })
 await sock.sendMessage(groupJid, { statusMention: { key: myStatus.key, group: true } })
 ```
+
+`myStatus.key` is **yours** — `sendMessage` hands back the message it just sent, so keep that return value. See [Message Keys](#message-keys).
 
 Or build it without sending, for a custom relay:
 
