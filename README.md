@@ -4445,6 +4445,37 @@ Check it before a run and again every batch — `SECOND_WARNING` is the last sta
 
 ## 🐞 Troubleshooting
 
+### The bot answers in every group but one
+
+A group where nothing gets through — not one reply, while every other group is fine — is almost always a **sender key** problem, not your handler. Group messages are encrypted once with a group sender key and fanned out; that key has to reach each member device separately, and the library remembers who already has it in `sender-key-memory`, keyed **per group**. That is why the symptom is one group and not the account.
+
+Until this release there was a way for that memory to lie. Encryption is attempted per device and a single device failing is swallowed — the send still goes out to everyone else — but every device was marked as holding the key regardless. A device that never received it was recorded as done, so it was never sent one again, and it could not read anything the bot said in that group from then on. It recovered only if that device happened to send a retry receipt for that exact group.
+
+Now a device is marked only once its key node is actually in the stanza, and the rest are logged and retried on the next send:
+
+```
+WARN  sender key did not reach every device, leaving them unmarked so the next send retries
+      jid: "120363000000000000@g.us"
+      skipped: [ "628000:12@s.whatsapp.net" ]
+```
+
+If a group is already stuck from before the fix, clear its memory once and the next message redistributes the key to everyone:
+
+```js
+await sock.resetGroupSenderKey('120363000000000000@g.us')
+await sock.sendMessage('120363000000000000@g.us', { text: 'halo' })
+```
+
+It only accepts a group jid, and it does not delete sessions or keys — it just forgets who was told, so the next send tells everyone again. Safe to run on any group at any time; the cost is one larger stanza.
+
+Before blaming the sender key, rule out the two cheaper causes:
+
+| Check | What it means |
+| --- | --- |
+| Do the group's messages reach `messages.upsert` at all? | If nothing arrives, it is inbound decryption, not sending. Look for `failed to decrypt message` in the log — the library answers those with a retry request on its own. |
+| Does `messageStubType` say `CIPHERTEXT`? | The message arrived but could not be read. Same as above; it usually clears itself within a message or two. |
+| Does `sendMessage` throw for that jid? | Then it is the group metadata fetch, not encryption — check the error rather than the key. |
+
 ### Pairing code must be exactly 8 characters
 
 When using a custom pairing code:
