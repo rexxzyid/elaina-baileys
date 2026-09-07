@@ -1,5 +1,6 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
-export function makeEventBuffer(logger: any): {
+export const DEFAULT_MAX_EVENT_LISTENERS: number;
+export function makeEventBuffer(logger: any, maxListeners?: number): {
     process(handler: any): () => void;
     emit(event: any, evData: any): any;
     isBuffering(): boolean;
@@ -9,5 +10,8 @@ export function makeEventBuffer(logger: any): {
     on: (...args: any[]) => any;
     off: (...args: any[]) => any;
     removeAllListeners: (...args: any[]) => any;
+    setMaxListeners: (count: number) => any;
+    getMaxListeners: () => number;
+    listenerCount: (...args: any[]) => number;
     destroy(): void;
 };
