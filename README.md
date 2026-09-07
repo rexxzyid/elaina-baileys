@@ -134,6 +134,7 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [ButtonV2](#buttonv2)
   - [Carousel](#carousel)
   - [AIRich](#airich)
+    - [Inline Entities in Text](#inline-entities-in-text)
   - [Reading Rich Messages Back](#reading-rich-messages-back)
   - [A2UI Cards](#a2ui-cards)
   - [HTML Mini App](#html-mini-app)
@@ -1222,6 +1223,47 @@ Other available AIRich helpers include:
 .addFooterAction(data, options)
 .addSection(section)
 .addSubmessage(submessage)
+```
+
+### Inline Entities in Text
+
+`addText` and `addTable` scan the string for four markdown-ish shapes and turn them into **inline entities** — the pieces the client renders as links, citations and formulas inside a paragraph rather than as separate sections.
+
+| You write | Becomes | `__typename` |
+| --- | --- | --- |
+| `[label](https://x.test)` | a tappable link | `GenAIInlineLinkItem` |
+| `[label](!https://x.test)` | the same, marked untrusted | `GenAIInlineLinkItem` |
+| `[label](>whatsapp://settings)` | a deeplink into an app | `GenAIDeeplinkItem` |
+| `[](https://x.test)` | a numbered source citation | `GenAISearchCitationItem` |
+| `[x^2]<https://img.test>` | a rendered formula | `GenAILatexItem` |
+
+```js
+rich.addText('buka [Setelan](>whatsapp://settings), atau lihat [situsnya](https://nixel.dev)')
+```
+
+The two prefixes are markers on the **target**, not the label, and they are stripped before sending:
+
+- `!` — the link is not trusted, so `is_trusted: false` goes out with it.
+- `>` — this is a deeplink, so it goes out as `deeplink_url` on a `GenAIDeeplinkItem` instead of `url` on a `GenAIInlineLinkItem`.
+
+A deeplink is for a scheme the phone hands to an app (`whatsapp://`, `fb://`, `instagram://`) rather than a web page. The client parses the two into different node types, so sending an app scheme as an ordinary link is not the same thing.
+
+Each kind can be switched off on its own, and they are independent:
+
+```js
+rich.addText(text, { deeplink: false })
+rich.addText(text, { hyperlink: false, citation: false, latex: false })
+rich.addText(text, { extract: false })
+```
+
+`AI_RICH_INLINE_ENTITIES` lists all four. The list is closed on purpose — the Web parser dispatches on `__typename` and **throws** `inline entity <name>` on anything outside it, so a fifth invented name breaks the whole message rather than degrading.
+
+```js
+import { AI_RICH_INLINE_ENTITIES, decodeAIRich } from '@rexxhayanasi/elaina-baileys'
+
+const info = decodeAIRich(m.message)
+const inline = info.sections.flatMap(s => s.view_model?.primitive?.inline_entities ?? [])
+console.log(inline.map(e => e.metadata.__typename))
 ```
 
 ### Editing a Live Message

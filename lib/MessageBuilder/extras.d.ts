@@ -1,5 +1,6 @@
 export declare const AI_RICH_LAYOUTS: readonly string[];
 export declare const AI_RICH_PRIMITIVES: readonly string[];
+export declare const AI_RICH_INLINE_ENTITIES: readonly string[];
 export declare const AI_RICH_PRIMITIVES_ANDROID_ONLY: readonly string[];
 export declare const AI_RICH_HTML_PRIMITIVE: 'GenAIaeacdsnwHtmlPrimitive';
 
