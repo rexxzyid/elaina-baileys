@@ -4445,6 +4445,44 @@ Check it before a run and again every batch — `SECOND_WARNING` is the last sta
 
 ## 🐞 Troubleshooting
 
+### `Cannot read properties of undefined (reading 'undefined')` when replying
+
+The full trace looks like this:
+
+```
+TypeError: Cannot read properties of undefined (reading 'undefined')
+    at generateWAMessageFromContent (.../lib/Utils/messages.js:1443:64)
+    at generateWAMessage (.../lib/Utils/messages.js:1507:12)
+    at async Object.sendMessage (.../lib/Socket/messages-send.js:1300:33)
+    at async Object.before (.../plugins/system/_firstchat.js:18:9)
+```
+
+You passed `quoted` a message with **no readable content**. The quote path normalised it, got nothing back, and indexed `undefined` with `undefined`. Three ways to end up there, all common:
+
+| What you quoted | Why it has no content |
+| --- | --- |
+| A message that did not decrypt | `messageStubType` is `CIPHERTEXT`; the key is real but `message` is not there |
+| A message read back from a store | Some stores keep the key and drop the body |
+| A hand-built `{ key }` | No `message` field at all |
+
+It is guarded now — the send goes out **without** the quote and logs once:
+
+```
+WARN  nothing quotable here, sending without the quote
+      jid: "120363000000000000@g.us"  quotedId: "3EB0…"  quotedContentType: undefined
+```
+
+That matters more than it sounds. A bot that quotes the message it is replying to, in a chat where messages are not decrypting, used to throw on **every single send** — so it went completely silent in that one chat while every other chat looked fine. The failure was in building the reply, not in the group.
+
+If you would rather not send at all than send unquoted, check before you call:
+
+```js
+import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
+
+const quotable = !!getContentType(normalizeMessageContent(m.message))
+await sock.sendMessage(m.key.remoteJid, { text: 'halo' }, quotable ? { quoted: m } : {})
+```
+
 ### The bot answers in every group but one
 
 A group where nothing gets through — not one reply, while every other group is fine — is almost always a **sender key** problem, not your handler. Group messages are encrypted once with a group sender key and fanned out; that key has to reach each member device separately, and the library remembers who already has it in `sender-key-memory`, keyed **per group**. That is why the symptom is one group and not the account.
