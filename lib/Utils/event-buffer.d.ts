@@ -10,6 +10,12 @@ export function makeEventBuffer(logger: any, maxListeners?: number): {
     on: (...args: any[]) => any;
     off: (...args: any[]) => any;
     removeAllListeners: (...args: any[]) => any;
+    once: (...args: any[]) => any;
+    addListener: (...args: any[]) => any;
+    removeListener: (...args: any[]) => any;
+    listeners: (...args: any[]) => Function[];
+    rawListeners: (...args: any[]) => Function[];
+    eventNames: () => (string | symbol)[];
     setMaxListeners: (count: number) => any;
     getMaxListeners: () => number;
     listenerCount: (...args: any[]) => number;

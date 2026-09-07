@@ -49,4 +49,48 @@ const logger = { info() {}, debug() {}, warn() {}, error() {}, trace() {}, child
     assert.equal(makeEventBuffer(logger, 'lots').getMaxListeners(), DEFAULT_MAX_EVENT_LISTENERS);
 }
 
+/**
+ * The buffer forwarded on, off and removeAllListeners and nothing else, so a bot
+ * could add listeners but never inspect them — and cleaning up duplicates left
+ * behind by a hot reload meant dropping the library's own handler with them.
+ */
+{
+    const ev = makeEventBuffer(logger);
+    const first = () => {};
+    const second = () => {};
+    ev.on('call', first);
+    ev.addListener('call', second);
+    ev.once('call', () => {});
+
+    assert.equal(ev.listenerCount('call'), 3);
+    assert.equal(ev.listeners('call').length, 3);
+    assert.equal(ev.rawListeners('call').length, 3);
+    assert.equal(ev.listeners('call')[0], first, 'in registration order, so the oldest is index 0');
+
+    ev.removeListener('call', first);
+    assert.equal(ev.listenerCount('call'), 2);
+    assert.equal(ev.listeners('call')[0], second);
+
+    assert.ok(ev.eventNames().includes('call'));
+    ev.removeAllListeners('call');
+    assert.equal(ev.listenerCount('call'), 0);
+}
+
+/** Duplicates from a reload share their source, which is what makes them removable. */
+{
+    const ev = makeEventBuffer(logger);
+    const make = () => function onCall(node) { return node };
+    ev.on('call', make());
+    ev.on('call', make());
+    ev.on('call', () => 'different');
+
+    const seen = new Set();
+    for (const listener of ev.listeners('call')) {
+        const source = listener.toString();
+        if (seen.has(source)) ev.off('call', listener);
+        else seen.add(source);
+    }
+    assert.equal(ev.listenerCount('call'), 2, 'one of each distinct listener survives');
+}
+
 console.log('event listener limit tests passed');
