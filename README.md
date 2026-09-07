@@ -139,6 +139,9 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [HTML Mini App](#html-mini-app)
   - [Embedded Screens](#embedded-screens)
 - [Album Message](#-album-message)
+- [Status Updates](#-status-updates)
+  - [Background, Text Color and Font](#background-text-color-and-font)
+  - [Image, Video and Voice Status](#image-video-and-voice-status)
 - [Newsletter / Channel](#-newsletter--channel)
   - [Creating and Editing a Channel](#creating-and-editing-a-channel)
   - [Following a Channel](#following-a-channel)
@@ -1979,6 +1982,117 @@ The per-item `caption` rides on each image or video. The `caption` beside `album
 **It is an Android-only field, so it is opt-in on purpose.** The WhatsApp Web protobuf has no `caption` on `AlbumMessage` at all; the field was found by auditing the Android APK. This library links as a Web device, so sending a field the real Web client cannot even express is a fingerprint. Leave the key out — as every existing caller already does — and nothing is written. Set it only when you have decided that trade is worth it.
 
 An album requires at least two image/video media items.
+
+---
+
+## 📸 Status Updates
+
+A status goes to the special jid `status@broadcast`, and the people who receive it are the ones you list in `statusJidList`. That list is the whole audience mechanism — there is no separate privacy setting to flip from here.
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'Halo semua'
+}, {
+  statusJidList: ['628xxxx@s.whatsapp.net', '628yyyy@s.whatsapp.net']
+})
+```
+
+### Background, Text Color and Font
+
+A **text** status is an `extendedTextMessage` with three styling fields, and all three are options on the third argument, not part of the content:
+
+```js
+import { StatusFont } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage('status@broadcast', { text: 'Halo semua' }, {
+  statusJidList,
+  backgroundColor: '#7C3AED',
+  textColor: '#FFFFFF',
+  font: StatusFont.CALISTOGA_REGULAR
+})
+```
+
+| Option | Wire field | Tag |
+| --- | --- | --- |
+| `backgroundColor` | `backgroundArgb` | 8, `FIXED32` |
+| `textColor` | `textArgb` | 7, `FIXED32` |
+| `font` | `font` | 9, enum |
+
+#### Colors
+
+Both colors take the same shapes:
+
+| You pass | Result |
+| --- | --- |
+| `'#7C3AED'` or `'7C3AED'` | `0xFF7C3AED` — the hash is optional, six digits are made opaque |
+| `'807C3AED'` | `0x807C3AED` — eight digits keep your alpha |
+| `0xFF7C3AED` | used as-is |
+| `-1` | wrapped into the unsigned range, so `0xFFFFFFFF` |
+
+Leave an option out and nothing is written to the message at all — the client picks its own.
+
+#### Fonts
+
+`StatusFont` is `ExtendedTextMessage.FontType`, and these eight are the entire accepted set. WhatsApp Web validates against exactly this list and drops anything else:
+
+| Constant | Value | Font file in the Android client |
+| --- | --- | --- |
+| `SYSTEM` | 0 | the system face |
+| `SYSTEM_TEXT` | 1 | the system face |
+| `FB_SCRIPT` | 2 | `FacebookScriptWA-Regular.otf` |
+| `SYSTEM_BOLD` | 6 | the system face, bold |
+| `MORNINGBREEZE_REGULAR` | 7 | `MorningBreeze-Regular.ttf` |
+| `CALISTOGA_REGULAR` | 8 | `Calistoga-Regular.ttf` |
+| `EXO2_EXTRABOLD` | 9 | `Exo2-ExtraBold.ttf` |
+| `COURIERPRIME_BOLD` | 10 | `CourierPrime-Bold.ttf` |
+
+> [!NOTE]
+> The fonts ship inside the Android APK, under `assets/fonts/`. The WhatsApp Web bundle parses the field and validates the eight values but has **no font-family mapping for any of them** — so a status you style will look styled on a phone and plain on Web. That is the client, not the message.
+
+### Image, Video and Voice Status
+
+Media statuses are ordinary media messages sent to `status@broadcast`:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  image: { url: './foto.jpg' },
+  caption: 'Halo semua'
+}, { statusJidList })
+
+await sock.sendMessage('status@broadcast', {
+  video: { url: './klip.mp4' },
+  caption: 'Halo semua'
+}, { statusJidList })
+```
+
+A **voice note** status is the one media kind that also takes a background color — `AudioMessage.backgroundArgb`, tag 20 — and only when `ptt` is on:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  audio: { url: './suara.ogg' },
+  mimetype: 'audio/ogg; codecs=opus',
+  ptt: true
+}, {
+  statusJidList,
+  backgroundColor: '#7C3AED'
+})
+```
+
+### What Can Actually Be Styled
+
+Worth being blunt about, because it is the most common wrong assumption:
+
+| Status kind | Background | Text color | Font | Caption |
+| --- | --- | --- | --- | --- |
+| Text | ✅ | ✅ | ✅ | — |
+| Voice note (`ptt: true`) | ✅ | ❌ | ❌ | ❌ |
+| Image | ❌ | ❌ | ❌ | ✅ |
+| Video | ❌ | ❌ | ❌ | ✅ |
+| Audio without `ptt` | ❌ | ❌ | ❌ | ❌ |
+
+`ImageMessage` and `VideoMessage` have **no color or font fields in the protobuf** — not in the WhatsApp Web spec, not in the Android one. The colored text you see over a photo in the app is burned into the image by the media editor before it is uploaded, so if you want that from a bot, draw it into the picture yourself and send a plain image.
+
+To put a custom audience badge on any of these, see [Custom Status Audience](#custom-status-audience-close-friends).
 
 ---
 
