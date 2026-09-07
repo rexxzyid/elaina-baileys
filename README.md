@@ -3801,7 +3801,9 @@ await sock.sendMessage(jid, {
 
 ### Status Notification
 
-Supported notification types are `UNKNOWN`, `STATUS_ADD_YOURS`, `STATUS_RESHARE`, and `STATUS_QUESTION_ANSWER_RESHARE`.
+Supported notification types are `UNKNOWN` 0, `STATUS_ADD_YOURS` 1, `STATUS_RESHARE` 2, `STATUS_QUESTION_ANSWER_RESHARE` 3 and `STATUS_GROUP_STATUS_REPLY` 4, exported as `StatusNotificationType`.
+
+`STATUS_GROUP_STATUS_REPLY` is in the WhatsApp Web bundle but not in the generated `WAProto` enum, which only carries the first four — the sync tooling reads message fields, not enum values. `StatusNotificationType` and `statusNotification` both resolve against the bundle's list, so the name works here even though `proto.Message.StatusNotificationMessage.StatusNotificationType.STATUS_GROUP_STATUS_REPLY` is `undefined`.
 
 ```js
 await sock.sendMessage(jid, {
@@ -4004,6 +4006,126 @@ And if the payload is right but the phone still shows the default, that is the c
 
 > [!NOTE]
 > On WhatsApp Web the badge is behind a viewer-side rollout gate (`isStatusCloseFriendsViewerSideEnabled`), and Web has no sender-side path for it at all — it only reads the field. Android and iOS are where you will see it. As with everything in this chapter, WhatsApp can gate rendering per account.
+
+### Add Yours
+
+"Add Yours" is not a message type — it is an **association**. Someone posts a status carrying an Add Yours prompt; when you post your own answer, your status carries a `messageAssociation` pointing back at theirs, and that is what threads the two together.
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'ikutan!',
+  addYours: promptStatus.key
+}, { statusJidList })
+```
+
+That writes `messageContextInfo.messageAssociation` (tag 10) with `associationType: STATUS_ADD_YOURS` (8) and your `parentMessageKey`:
+
+```jsonc
+{
+  "messageContextInfo": {
+    "messageAssociation": {
+      "associationType": 8,
+      "parentMessageKey": { "remoteJid": "status@broadcast", "id": "ABC123", "participant": "628000@s.whatsapp.net" }
+    }
+  },
+  "extendedTextMessage": { "text": "ikutan!" }
+}
+```
+
+It works on any status content, media included, because the association sits beside the message rather than inside it:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  image: { url: './jawaban.jpg' },
+  caption: 'ikutan!',
+  addYours: promptStatus.key
+}, { statusJidList })
+```
+
+There are three Add Yours flavours, and you can name the one you want:
+
+| `type` | Value | Prompt it answers |
+| --- | --- | --- |
+| `STATUS_ADD_YOURS` | 8 | the ordinary Add Yours sticker (default) |
+| `STATUS_ADD_YOURS_AI_IMAGINE` | 15 | the AI image prompt |
+| `STATUS_ADD_YOURS_DIWALI` | 17 | the seasonal Diwali prompt |
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'ikutan!',
+  addYours: { key: promptStatus.key, type: 'STATUS_ADD_YOURS_AI_IMAGINE' }
+}, { statusJidList })
+```
+
+#### Any other association
+
+`addYours` is a shorthand over the general mechanism, which is worth knowing because the same field threads status polls, questions, reactions and album items:
+
+```js
+import { AssociationType } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage('status@broadcast', {
+  text: 'jawaban',
+  messageAssociation: {
+    type: AssociationType.STATUS_QUESTION,
+    parentMessageKey: questionStatus.key,
+    messageIndex: 0
+  }
+}, { statusJidList })
+```
+
+`AssociationType` is the client's own enum: `MEDIA_ALBUM` 1, `STATUS_POLL` 4, `STATUS_EXTERNAL_RESHARE` 6, `MEDIA_POLL` 7, `STATUS_ADD_YOURS` 8, `STATUS_NOTIFICATION` 9, `STICKER_ANNOTATION` 11, `STATUS_LINK_ACTION` 13, `STATUS_ADD_YOURS_AI_IMAGINE` 15, `STATUS_QUESTION` 16, `STATUS_ADD_YOURS_DIWALI` 17, `STATUS_REACTION` 18, `POLL_ADD_OPTION` 20, among others. Unlike `addYours`, the general form defaults to `UNKNOWN` rather than guessing for you.
+
+#### Telling the original poster
+
+Posting the answer does not by itself notify whoever wrote the prompt. That is a separate `statusNotification`, and `STATUS_ADD_YOURS` is one of its types:
+
+```js
+await sock.sendMessage(promptAuthorJid, {
+  statusNotification: {
+    responseMessageKey: myStatus.key,
+    originalMessageKey: promptStatus.key,
+    type: 'STATUS_ADD_YOURS'
+  }
+})
+```
+
+> [!NOTE]
+> The Add Yours **sticker** — the prompt itself, with its own text — is composed on Android and its wire layout is not expressed anywhere in the WhatsApp Web bundle. Only the association is, so that is all this library builds. Answering an existing prompt works; authoring a new prompt from a bot does not, and nothing here guesses at the tags for it.
+
+### Status Mentions
+
+Mentioning people in a status is two messages: the status itself goes to `status@broadcast` with a `mentioned_users` meta node, and each mentioned chat gets a small pointer message so the mention surfaces there — `statusMentionMessage` for a person, `groupStatusMentionMessage` for a group, both wrapping a `protocolMessage` of type `STATUS_MENTION_MESSAGE` (25).
+
+**Pass an array of jids as the target and the whole flow is done for you:**
+
+```js
+await sock.sendMessage(
+  ['628000@s.whatsapp.net', '120363000000000000@g.us'],
+  { image: { url: './foto.jpg' }, caption: 'halo semua' },
+  { delayMs: 1500 }
+)
+```
+
+That posts the status once — expanding any group in the list into its participants for the audience — then sends one mention pointer per jid, picking the group or the personal wrapper for each and attaching the right meta attribute (`is_group_status_mention` or `is_status_mention`). `delayMs` spaces the pointers out and defaults to 1500 ms.
+
+To send the pointer on its own, against a status you already posted:
+
+```js
+await sock.sendMessage(userJid, { statusMention: { key: myStatus.key } })
+await sock.sendMessage(groupJid, { statusMention: { key: myStatus.key, group: true } })
+```
+
+Or build it without sending, for a custom relay:
+
+```js
+import { makeStatusMentionMessage } from '@rexxhayanasi/elaina-baileys'
+
+const content = makeStatusMentionMessage({ key: myStatus.key, group: false })
+// { statusMentionMessage: { message: { protocolMessage: { key, type: 25 } } } }
+```
+
+Both wrappers are `FutureProofMessage`s — `statusMentionMessage` is `Message` field 87, `groupStatusMentionMessage` field 92 — so a received one needs `normalizeMessageContent` like any other wrapper.
 
 ### Group Status Reaction
 

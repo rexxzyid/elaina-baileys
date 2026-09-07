@@ -6,6 +6,7 @@ export const ButtonType: typeof proto.Message.ButtonsMessage.Button.Type;
 export const CarouselCardType: typeof proto.Message.InteractiveMessage.CarouselMessage.CarouselCardType;
 export const ListType: typeof proto.Message.ListMessage.ListType;
 export const StatusFont: typeof proto.Message.ExtendedTextMessage.FontType;
+export const StatusNotificationType: Readonly<Record<string, number>>;
 export const ProtocolType: typeof proto.Message.ProtocolMessage.Type;
 export const WAMessageStubType: typeof proto.WebMessageInfo.StubType;
 export const WAMessageStatus: typeof proto.WebMessageInfo.Status;

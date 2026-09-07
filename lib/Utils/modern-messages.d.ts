@@ -124,4 +124,27 @@ export declare function makeStatusAudienceMetadata(input: string | {
     audienceType?: number | string
 }): proto.ContextInfo.IStatusAudienceMetadata
 
+export declare const STATUS_NOTIFICATION_TYPES: Readonly<Record<string, number>>
+
+export declare function makeMessageAssociation(input: {
+    parentMessageKey?: proto.IMessageKey
+    key?: proto.IMessageKey
+    associationType?: number | string
+    type?: number | string
+    messageIndex?: number
+}): proto.IMessageAssociation
+
+export declare function makeStatusAddYoursAssociation(input: proto.IMessageKey | {
+    key?: proto.IMessageKey
+    parentMessageKey?: proto.IMessageKey
+    type?: number | string
+    associationType?: number | string
+    messageIndex?: number
+}): proto.IMessageAssociation
+
+export declare function makeStatusMentionMessage(input: {
+    key: proto.IMessageKey
+    group?: boolean
+}): any
+
 export declare function prepareModernMessageContent(content: any): any
