@@ -9,6 +9,7 @@ export * from "./WAM/index.js";
 export * from "./WAUSync/index.js";
 export * from "./MessageBuilder/index.js";
 export * from "./MessageBuilder/extras.js";
+export * from "./MessageBuilder/metaai.js";
 export * from "./Voip/index.js";
 import baseMakeWASocket from './Socket/index.js';
 import type { NewsletterStatusFetchOptions, NewsletterStatusList, NewsletterStatusSendOptions, NewsletterStatusSendResult, NewsletterStatusStanzaResult, NewsletterStatusUpdatesFetchOptions } from './Utils/newsletter-status.js';

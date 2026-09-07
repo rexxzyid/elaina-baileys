@@ -1,7 +1,9 @@
 export declare const AI_RICH_LAYOUTS: readonly string[];
 export declare const AI_RICH_PRIMITIVES: readonly string[];
 export declare const AI_RICH_INLINE_ENTITIES: readonly string[];
+export declare const AI_RICH_ITEMS: readonly string[];
 export declare const AI_RICH_PRIMITIVES_ANDROID_ONLY: readonly string[];
+export declare const AI_RICH_LAYOUTS_ANDROID_ONLY: readonly string[];
 export declare const AI_RICH_HTML_PRIMITIVE: 'GenAIaeacdsnwHtmlPrimitive';
 
 export declare const DividerType: Readonly<{ DOT: 'DOT'; HORIZONTAL_LINE: 'HORIZONTAL_LINE' }>;

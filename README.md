@@ -135,6 +135,7 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [Carousel](#carousel)
   - [AIRich](#airich)
     - [Inline Entities in Text](#inline-entities-in-text)
+    - [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog)
   - [Reading Rich Messages Back](#reading-rich-messages-back)
   - [A2UI Cards](#a2ui-cards)
   - [HTML Mini App](#html-mini-app)
@@ -1327,7 +1328,7 @@ const buttonV2 = new ButtonV2(sock).loadFrom(m.message)
 
 ### Primitives MessageBuilder Has No Helper For
 
-MessageBuilder 4.7 covers 11 of the 20 AI Rich primitives the WhatsApp client knows. The rest are exposed here as plain section builders you drop into `addSection`.
+MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog).
 
 ```js
 import {
@@ -1362,6 +1363,127 @@ rich.addSection(progressSection('Almost done', { inProgress: false }))
 | `progressSection` | `GenAIBotProgressStatusPrimitive` | same fields as thinking |
 
 Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is a Meta subscription upsell card, and `FOABloksPrimitive` names a Bloks screen the client fetches from Meta's servers rather than reading out of the message — neither of which a bot can populate.
+
+### The Rest of the Meta AI Catalog
+
+An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp Android client parses roughly forty primitives, and WA Web ships parsers for about half of them. Everything the client knows is now exported.
+
+The split matters when you decide what to send:
+
+- Primitives listed in `AI_RICH_PRIMITIVES` but **not** in `AI_RICH_PRIMITIVES_ANDROID_ONLY` render on phones and on WA Web.
+- Primitives in `AI_RICH_PRIMITIVES_ANDROID_ONLY` render on phones; WA Web has no parser and falls through to its unsupported-node renderer, which draws nothing. The message still arrives and the rest of the sections still render.
+- Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
+
+```js
+import {
+  mapSection,
+  placeItem,
+  sportsSection,
+  videoSection,
+  reminderSection,
+  actionListSection,
+  actionListRow,
+  searchPlannerSection,
+  plannerStep,
+  SportsLeague,
+  SportsGameStatus,
+  SearchPlannerStepStatus
+} from '@rexxhayanasi/elaina-baileys'
+
+rich.addSection(mapSection({
+  staticMapUrl: 'https://example.com/static-map.png',
+  motivation: 'Tempat makan dekat kamu',
+  items: [
+    placeItem({
+      id: '1',
+      name: 'Warung Sederhana',
+      rating: 4.6,
+      latitude: -6.2,
+      longitude: 106.8,
+      categoryName: 'Rumah makan'
+    })
+  ]
+}))
+
+rich.addSection(sportsSection({
+  gameId: 'g-1',
+  league: SportsLeague.EURO,
+  status: SportsGameStatus.LIVE,
+  statusDetail: "72'",
+  homeTeam: { name: 'Indonesia', abbreviation: 'IDN' },
+  awayTeam: { name: 'Vietnam', abbreviation: 'VIE' },
+  homeScore: 2,
+  awayScore: 1
+}))
+
+rich.addSection(actionListSection([
+  actionListRow({ title: 'Buka peta', url: 'https://maps.example.com' }),
+  actionListRow({ title: 'Telepon', action: 'tel:+62800000000' })
+]))
+
+rich.addSection(searchPlannerSection({
+  queryUrl: 'https://search.example.com?q=cuaca',
+  steps: [
+    plannerStep({ title: 'Cari cuaca', status: SearchPlannerStepStatus.COMPLETED }),
+    plannerStep({ title: 'Ringkas hasil', status: SearchPlannerStepStatus.IN_PROGRESS })
+  ]
+}))
+```
+
+| Builder | Primitive | Key fields |
+|---|---|---|
+| `mapSection` | `GenAIMapPrimitive` | `map_query_status`, `static_map`, `items`, `motivation` |
+| `placeItem` | `GenAIPlaceDetailsItem` | `id`, `name`, `image_url`, `item_type`, `category`, `price_level`, `opening_status`, `opening_hours`, `rating`, `address`, `marketplace_metadata` |
+| `sportsSection` | `GenAISportsWidgetPrimitive` | `game_id`, `league`, `status`, `status_detail`, `start_time_utc_seconds`, `venue`, `group`, `content` |
+| `videoSection` | `GenAIVideoPrimitive` | `post_id`, `reels_url`, `reels_title`, `creator`, `video_delivery_response` |
+| `reminderSection` | `GenAIReminderPrimitive` | `reminder_id`, `title`, `trigger_type`, `trigger_time`, `thumbnail_url` |
+| `commentSection` | `GenAICommentPrimitive` | `comment_text`, `comment_url`, `actor_name`, `likes_count`, `replies_count` |
+| `compactEntitySection` | `GenAICompactEntityPrimitive` | `title`, `subtitle`, `entity_id`, `entity_type`, `action_type` |
+| `actionListSection` / `actionListRow` | `GenAIActionListPrimitive` | `rows` of `title`, `subtitle`, `action`, `icon`, `url`, `row_type` |
+| `searchPlannerSection` / `plannerStep` | `GenAISearchPlannerStepsPrimitive` | `sources`, `steps`, `query_url`, `search_engine`, `facepile_favicons` |
+| `searchResultV2Section` | `GenAISearchResultV2Primitive` | same fields plus `response_id` |
+| `plannerSnippetSection` | `GenAISearchPlannerStepSnippetPrimitive` | `header`, `current_step`, `total_steps`, `status` |
+| `chainOfThoughtSection` | `GenAIChainOfThoughtStepPrimitive` | `header`, `subtitle`, `markdown_text` |
+| `searchAdSection` | `GenAISearchAdPrimitive` | `story_id`, `actor_name`, `actor_image_url`, `image_url`, `message` |
+| `chainingSuggestionSection` | `GenAIChainingSuggestionPrimitive` | `prompt_text`, `image_uri`, `external_conversation_id`, `topic`, `card_id` |
+| `locationPermissionSection` | `GenAILocationPermissionPrimitive` | `placeholder` |
+| `timestampPlaceholderSection` | `GenAITimestampPlaceholderPrimitive` | `placeholder` |
+| `transparencySection` / `transparencySignal` | `GenAIP13NTransparencyPrimitive` | `annotation`, `signals`, `response_id` |
+| `professionalConsentSection` | `GenAIProfessionalConsentPrimitive` | `title`, `body`, `status`, `provider_label`, `cta_label` |
+| `accountLinkingSection` / `accountLinkingApp` | `GenAI3PAccountLinkingUpsellPrimitive` | `integration_type`, `integration_status`, `cta_url`, `bottomsheet.apps` |
+| `calendarWidgetSection` / `calendarEvent` | `GenAI3PExtWidgetPrimitive` | `header`, `sections` of dates and events, `ctas`, `toast` |
+
+Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
+
+```js
+import { mediaGridSection, mediaItem, socialEntityItem, contextualSourcesSection } from '@rexxhayanasi/elaina-baileys'
+
+rich.addSection(mediaGridSection([
+  mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
+  mediaItem({ previewUrl: 'https://example.com/2-small.jpg', fullUrl: 'https://example.com/2.jpg' })
+]))
+
+rich.addSection(contextualSourcesSection([
+  { url: 'https://example.com/a', title: 'Sumber A', favicon: 'https://example.com/a.ico' }
+]))
+```
+
+`mediaItem`, `placeEntityItem`, `socialEntityItem`, `productEntityItem`, `threadSurfingItem`, `sideBySideSurveyItem`, `accountLinkingApp`, `calendarEvent`, `actionListRow`, `plannerStep` and `transparencySignal` all return item nodes.
+
+Two layouts join the eight already supported: `multipleResponseSection(responses, { layoutType })` builds `GenAIMultipleResponseLayoutViewModel`, and `bloomCardSection(primitives)` builds `GenAIIGSuggestedBloomCardLayoutViewModel`. Both are Android-only. `addonActionSection(primitives, { actionType, alignment })` fills in the `addon_action_alignment` field the earlier addon helper did not set.
+
+For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
+
+```js
+import { customSection } from '@rexxhayanasi/elaina-baileys'
+
+rich.addSection(customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
+rich.addSection(customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
+```
+
+Enums for all of the above ship alongside the builders: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType` and `UnifiedResponseMessageGroupKind`.
+
+`FooterActionType` also gained `COPY_LINK`, `REMIX_MEDIA` and `USE_TEMPLATE`.
 
 ### Reading Rich Messages Back
 
