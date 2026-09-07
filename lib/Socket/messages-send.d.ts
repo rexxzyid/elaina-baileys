@@ -43,7 +43,7 @@ export function makeMessagesSocket(config: any): {
     }>;
     getUSyncDevices: (jids: any, useCache: any, ignoreZeroDevices: any) => Promise<any[]>;
     messageRetryManager: MessageRetryManager | null;
-    resetGroupSenderKey: (jid: string) => Promise<void>;
+    resetGroupSenderKey: (jid: string) => Promise<{ jid: string; cleared: number; devices: string[] }>;
     updateMemberLabel: (jid: any, memberLabel: any) => Promise<any>;
     updateMediaMessage: (message: any) => Promise<any>;
     sendMessage: (jid: any, content: any, options?: {}) => Promise<proto.WebMessageInfo | undefined>;

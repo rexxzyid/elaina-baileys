@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { commitSenderKeyDelivery, deliveredSenderKeyJids, pickSenderKeyRecipients } from '../lib/Utils/sender-key-memory.js';
+import { commitSenderKeyDelivery, deliveredSenderKeyJids, pickSenderKeyRecipients, senderKeyResetSummary } from '../lib/Utils/sender-key-memory.js';
 
 const node = jid => ({ tag: 'to', attrs: { jid }, content: [] });
 
@@ -84,6 +84,23 @@ const node = jid => ({ tag: 'to', attrs: { jid }, content: [] });
     const senderKeyMap = {};
     commitSenderKeyDelivery(senderKeyMap, ['a@s.whatsapp.net'], [node('a@s.whatsapp.net'), node('z@s.whatsapp.net')]);
     assert.deepEqual(senderKeyMap, { 'a@s.whatsapp.net': true });
+}
+
+/**
+ * resetGroupSenderKey reports what it forgot, because a bare undefined leaves
+ * you unable to tell "cleared four devices" from "there was nothing stored, so
+ * your problem is somewhere else".
+ */
+{
+    const stored = { 'g@g.us': { 'a@s.whatsapp.net': true, 'b@s.whatsapp.net': true } };
+    assert.deepEqual(senderKeyResetSummary(stored, 'g@g.us'), {
+        jid: 'g@g.us',
+        cleared: 2,
+        devices: ['a@s.whatsapp.net', 'b@s.whatsapp.net']
+    });
+    assert.deepEqual(senderKeyResetSummary({}, 'g@g.us'), { jid: 'g@g.us', cleared: 0, devices: [] });
+    assert.deepEqual(senderKeyResetSummary(undefined, 'g@g.us'), { jid: 'g@g.us', cleared: 0, devices: [] });
+    assert.deepEqual(senderKeyResetSummary({ 'g@g.us': null }, 'g@g.us'), { jid: 'g@g.us', cleared: 0, devices: [] });
 }
 
 console.log('sender key memory tests passed');

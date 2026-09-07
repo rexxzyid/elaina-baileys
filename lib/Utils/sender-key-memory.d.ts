@@ -8,6 +8,11 @@ export declare function pickSenderKeyRecipients(
 
 export declare function deliveredSenderKeyJids(nodes: { attrs?: { jid?: string } }[]): Set<string>
 
+export declare function senderKeyResetSummary(
+    stored: Record<string, Record<string, boolean> | null | undefined> | undefined,
+    jid: string
+): { jid: string, cleared: number, devices: string[] }
+
 export declare function commitSenderKeyDelivery(
     senderKeyMap: Record<string, boolean>,
     recipients: string[],

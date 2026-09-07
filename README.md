@@ -4462,11 +4462,16 @@ WARN  sender key did not reach every device, leaving them unmarked so the next s
 If a group is already stuck from before the fix, clear its memory once and the next message redistributes the key to everyone:
 
 ```js
-await sock.resetGroupSenderKey('120363000000000000@g.us')
+const reset = await sock.resetGroupSenderKey('120363000000000000@g.us')
+console.log(reset)
+// { jid: '120363000000000000@g.us', cleared: 4, devices: [ '628000:12@s.whatsapp.net', … ] }
+
 await sock.sendMessage('120363000000000000@g.us', { text: 'halo' })
 ```
 
 It only accepts a group jid, and it does not delete sessions or keys — it just forgets who was told, so the next send tells everyone again. Safe to run on any group at any time; the cost is one larger stanza.
+
+**Read the `cleared` count, it is the diagnosis.** A number above zero means there really was a stale record and the next send should fix the group. `cleared: 0` means nothing was stored for that jid at all — so the sender key was never the problem, and the cause is one of the three below. Clearing again will not help.
 
 Before blaming the sender key, rule out the two cheaper causes:
 
