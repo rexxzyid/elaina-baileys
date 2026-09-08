@@ -5,9 +5,7 @@ import {
     AI_RICH_INLINE_ENTITIES,
     AI_RICH_ITEMS,
     AI_RICH_LAYOUTS,
-    AI_RICH_LAYOUTS_ANDROID_ONLY,
     AI_RICH_PRIMITIVES,
-    AI_RICH_PRIMITIVES_ANDROID_ONLY,
     FooterActionType
 } from '../lib/MessageBuilder/extras.js';
 import {
@@ -58,22 +56,16 @@ const primitive = section => section.view_model.primitive;
 
 /**
  * An AIRichMessage is what Meta AI forwards, so the builder speaks the whole
- * catalog the WhatsApp client parses, not only the subset WA Web renders. The
- * names below come from the client itself; the ones WA Web has no parser for
- * are listed separately so a caller knows what degrades on desktop.
+ * catalog the WhatsApp client parses rather than only the subset WA Web has
+ * renderers for. Every name below comes from the client itself.
  */
 {
-    for (const name of AI_RICH_PRIMITIVES_ANDROID_ONLY) {
-        if (name === AI_RICH_HTML_PRIMITIVE) {
-            continue;
-        }
-        assert.ok(AI_RICH_PRIMITIVES.includes(name), name + ' must be in the primitive catalog');
-    }
-    for (const name of AI_RICH_LAYOUTS_ANDROID_ONLY) {
-        assert.ok(AI_RICH_LAYOUTS.includes(name), name + ' must be in the layout catalog');
-    }
+    assert.ok(AI_RICH_LAYOUTS.includes('MultipleResponse'));
+    assert.ok(AI_RICH_LAYOUTS.includes('IGSuggestedBloomCard'));
     assert.ok(AI_RICH_ITEMS.includes('GenAIMediaItem'));
     assert.equal(new Set(AI_RICH_PRIMITIVES).size, AI_RICH_PRIMITIVES.length, 'no duplicate primitives');
+    assert.equal(new Set(AI_RICH_LAYOUTS).size, AI_RICH_LAYOUTS.length, 'no duplicate layouts');
+    assert.equal(AI_RICH_PRIMITIVES.includes(AI_RICH_HTML_PRIMITIVE), false, 'the html primitive keeps its own export');
 }
 
 /**

@@ -1366,13 +1366,11 @@ Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is
 
 ### The Rest of the Meta AI Catalog
 
-An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp Android client parses roughly forty primitives, and WA Web ships parsers for about half of them. Everything the client knows is now exported.
+An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp client parses roughly forty primitives, and `AI_RICH_PRIMITIVES` now lists all of them, with `AI_RICH_ITEMS` for the item nodes a layout carries.
 
-The split matters when you decide what to send:
+One caveat worth knowing before you build a card around any of them: WA Web ships renderers for about half the catalog, so the newer surfaces draw on phones and come out blank on desktop. The message still arrives either way and the rest of the sections still render, because an unknown primitive falls through to the unsupported-node renderer.
 
-- Primitives listed in `AI_RICH_PRIMITIVES` but **not** in `AI_RICH_PRIMITIVES_ANDROID_ONLY` render on phones and on WA Web.
-- Primitives in `AI_RICH_PRIMITIVES_ANDROID_ONLY` render on phones; WA Web has no parser and falls through to its unsupported-node renderer, which draws nothing. The message still arrives and the rest of the sections still render.
-- Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
+Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
 ```js
 import {
@@ -1470,7 +1468,7 @@ rich.addSection(contextualSourcesSection([
 
 `mediaItem`, `placeEntityItem`, `socialEntityItem`, `productEntityItem`, `threadSurfingItem`, `sideBySideSurveyItem`, `accountLinkingApp`, `calendarEvent`, `actionListRow`, `plannerStep` and `transparencySignal` all return item nodes.
 
-Two layouts join the eight already supported: `multipleResponseSection(responses, { layoutType })` builds `GenAIMultipleResponseLayoutViewModel`, and `bloomCardSection(primitives)` builds `GenAIIGSuggestedBloomCardLayoutViewModel`. Both are Android-only. `addonActionSection(primitives, { actionType, alignment })` fills in the `addon_action_alignment` field the earlier addon helper did not set.
+Two layouts join the eight already supported: `multipleResponseSection(responses, { layoutType })` builds `GenAIMultipleResponseLayoutViewModel`, and `bloomCardSection(primitives)` builds `GenAIIGSuggestedBloomCardLayoutViewModel`. `addonActionSection(primitives, { actionType, alignment })` fills in the `addon_action_alignment` field the earlier addon helper did not set.
 
 For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
 
