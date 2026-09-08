@@ -72289,6 +72289,7 @@ export const proto = $root.proto = (() => {
 
             ProtocolMessage.prototype.markAsVerifiedAction = null;
             ProtocolMessage.prototype.coexStateSync = null;
+            ProtocolMessage.prototype.acp2Setting = null;
             let $oneOfFields;
 
             // Virtual OneOf for proto3 optional field
@@ -72469,6 +72470,11 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            Object.defineProperty(ProtocolMessage.prototype, "_acp2Setting", {
+                get: $util.oneOfGetter($oneOfFields = ["acp2Setting"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             ProtocolMessage.create = function create(properties) {
                 return new ProtocolMessage(properties);
             };
@@ -72536,6 +72542,8 @@ export const proto = $root.proto = (() => {
                     $root.proto.Message.MarkAsVerifiedAction.encode(m.markAsVerifiedAction, w.uint32(258).fork()).ldelim();
                 if (m.coexStateSync != null && Object.hasOwnProperty.call(m, "coexStateSync"))
                     $root.proto.CoexStateSync.encode(m.coexStateSync, w.uint32(266).fork()).ldelim();
+                if (m.acp2Setting != null && Object.hasOwnProperty.call(m, "acp2Setting"))
+                    $root.proto.ACP2Setting.encode(m.acp2Setting, w.uint32(282).fork()).ldelim();
                 return w;
             };
 
@@ -72670,6 +72678,10 @@ export const proto = $root.proto = (() => {
                         }
                     case 33: {
                             m.coexStateSync = $root.proto.CoexStateSync.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 35: {
+                            m.acp2Setting = $root.proto.ACP2Setting.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     default:
@@ -72966,6 +72978,11 @@ export const proto = $root.proto = (() => {
                         throw TypeError(".proto.coexStateSync: object expected");
                     m.coexStateSync = $root.proto.CoexStateSync.fromObject(d.coexStateSync, n + 1);
                 }
+                if (d.acp2Setting != null) {
+                    if (typeof d.acp2Setting !== "object")
+                        throw TypeError(".proto.acp2Setting: object expected");
+                    m.acp2Setting = $root.proto.ACP2Setting.fromObject(d.acp2Setting, n + 1);
+                }
                 return m;
             };
 
@@ -73128,6 +73145,11 @@ export const proto = $root.proto = (() => {
                     d.coexStateSync = $root.proto.CoexStateSync.toObject(m.coexStateSync, o);
                     if (o.oneofs)
                         d._coexStateSync = "coexStateSync";
+                }
+                if (m.acp2Setting != null && m.hasOwnProperty("acp2Setting")) {
+                    d.acp2Setting = $root.proto.ACP2Setting.toObject(m.acp2Setting, o);
+                    if (o.oneofs)
+                        d._acp2Setting = "acp2Setting";
                 }
                 return d;
             };
@@ -81089,6 +81111,7 @@ export const proto = $root.proto = (() => {
         MessageContextInfo.prototype.accountEncryptionAttestation = null;
         MessageContextInfo.prototype.associatedPrimaryIdentityKey = null;
         MessageContextInfo.prototype.teeContextAnchorMessageId = null;
+        MessageContextInfo.prototype.acp2Setting = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -81202,6 +81225,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(MessageContextInfo.prototype, "_acp2Setting", {
+            get: $util.oneOfGetter($oneOfFields = ["acp2Setting"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         MessageContextInfo.create = function create(properties) {
             return new MessageContextInfo(properties);
         };
@@ -81251,6 +81279,8 @@ export const proto = $root.proto = (() => {
                 w.uint32(154).bytes(m.associatedPrimaryIdentityKey);
             if (m.teeContextAnchorMessageId != null && Object.hasOwnProperty.call(m, "teeContextAnchorMessageId"))
                 w.uint32(162).string(m.teeContextAnchorMessageId);
+            if (m.acp2Setting != null && Object.hasOwnProperty.call(m, "acp2Setting"))
+                $root.proto.ACP2Setting.encode(m.acp2Setting, w.uint32(170).fork()).ldelim();
             return w;
         };
 
@@ -81347,6 +81377,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 20: {
                         m.teeContextAnchorMessageId = r.string();
+                        break;
+                    }
+                case 21: {
+                        m.acp2Setting = $root.proto.ACP2Setting.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -81485,6 +81519,11 @@ export const proto = $root.proto = (() => {
             if (d.teeContextAnchorMessageId != null) {
                 m.teeContextAnchorMessageId = String(d.teeContextAnchorMessageId);
             }
+            if (d.acp2Setting != null) {
+                if (typeof d.acp2Setting !== "object")
+                    throw TypeError(".proto.acp2Setting: object expected");
+                m.acp2Setting = $root.proto.ACP2Setting.fromObject(d.acp2Setting, n + 1);
+            }
             return m;
         };
 
@@ -81595,6 +81634,11 @@ export const proto = $root.proto = (() => {
                 d.teeContextAnchorMessageId = m.teeContextAnchorMessageId;
                 if (o.oneofs)
                     d._teeContextAnchorMessageId = "teeContextAnchorMessageId";
+            }
+            if (m.acp2Setting != null && m.hasOwnProperty("acp2Setting")) {
+                d.acp2Setting = $root.proto.ACP2Setting.toObject(m.acp2Setting, o);
+                if (o.oneofs)
+                    d._acp2Setting = "acp2Setting";
             }
             return d;
         };
@@ -91326,6 +91370,171 @@ export const proto = $root.proto = (() => {
         })();
 
         return BizAIMetadataSync;
+    })();
+
+    proto.ACP2Setting = (function() {
+
+        function ACP2Setting(p) {
+            if (p)
+                for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                    if (p[ks[i]] != null && ks[i] !== "__proto__")
+                        this[ks[i]] = p[ks[i]];
+        }
+
+        ACP2Setting.prototype.enabled = null;
+        ACP2Setting.prototype.trigger = null;
+        ACP2Setting.prototype.settingTimestamp = null;
+        ACP2Setting.prototype.initiatedByMe = null;
+
+        let $oneOfFields;
+
+        Object.defineProperty(ACP2Setting.prototype, "_enabled", {
+            get: $util.oneOfGetter($oneOfFields = ["enabled"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(ACP2Setting.prototype, "_trigger", {
+            get: $util.oneOfGetter($oneOfFields = ["trigger"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(ACP2Setting.prototype, "_settingTimestamp", {
+            get: $util.oneOfGetter($oneOfFields = ["settingTimestamp"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(ACP2Setting.prototype, "_initiatedByMe", {
+            get: $util.oneOfGetter($oneOfFields = ["initiatedByMe"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        ACP2Setting.create = function create(properties) {
+            return new ACP2Setting(properties);
+        };
+
+        ACP2Setting.encode = function encode(m, w) {
+            if (!w)
+                w = $Writer.create();
+            if (m.enabled != null && Object.hasOwnProperty.call(m, "enabled"))
+                w.uint32(8).bool(m.enabled);
+            if (m.trigger != null && Object.hasOwnProperty.call(m, "trigger"))
+                w.uint32(16).int32(m.trigger);
+            if (m.settingTimestamp != null && Object.hasOwnProperty.call(m, "settingTimestamp"))
+                w.uint32(24).int64(m.settingTimestamp);
+            if (m.initiatedByMe != null && Object.hasOwnProperty.call(m, "initiatedByMe"))
+                w.uint32(32).bool(m.initiatedByMe);
+            return w;
+        };
+
+        ACP2Setting.decode = function decode(r, l, e, n) {
+            if (!(r instanceof $Reader))
+                r = $Reader.create(r);
+            if (n === undefined)
+                n = 0;
+            if (n > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.ACP2Setting();
+            while (r.pos < c) {
+                var t = r.uint32();
+                if (t === e)
+                    break;
+                switch (t >>> 3) {
+                case 1: {
+                        m.enabled = r.bool();
+                        break;
+                    }
+                case 2: {
+                        m.trigger = r.int32();
+                        break;
+                    }
+                case 3: {
+                        m.settingTimestamp = r.int64();
+                        break;
+                    }
+                case 4: {
+                        m.initiatedByMe = r.bool();
+                        break;
+                    }
+                default:
+                    r.skipType(t & 7, n);
+                    break;
+                }
+            }
+            return m;
+        };
+
+        ACP2Setting.fromObject = function fromObject(d, n) {
+            if (d instanceof $root.proto.ACP2Setting)
+                return d;
+            if (n === undefined)
+                n = 0;
+            if (n > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var m = new $root.proto.ACP2Setting();
+            if (d.enabled != null) {
+                m.enabled = Boolean(d.enabled);
+            }
+            if (d.trigger != null) {
+                m.trigger = d.trigger >>> 0;
+            }
+            if (d.settingTimestamp != null) {
+                if ($util.Long)
+                    (m.settingTimestamp = $util.Long.fromValue(d.settingTimestamp)).unsigned = false;
+                else if (typeof d.settingTimestamp === "string")
+                    m.settingTimestamp = parseInt(d.settingTimestamp, 10);
+                else if (typeof d.settingTimestamp === "number")
+                    m.settingTimestamp = d.settingTimestamp;
+                else if (typeof d.settingTimestamp === "object")
+                    m.settingTimestamp = new $util.LongBits(d.settingTimestamp.low >>> 0, d.settingTimestamp.high >>> 0).toNumber(false);
+            }
+            if (d.initiatedByMe != null) {
+                m.initiatedByMe = Boolean(d.initiatedByMe);
+            }
+            return m;
+        };
+
+        ACP2Setting.toObject = function toObject(m, o) {
+            if (!o)
+                o = {};
+            var d = {};
+            if (m.enabled != null && m.hasOwnProperty("enabled")) {
+                d.enabled = m.enabled;
+                if (o.oneofs)
+                    d._enabled = "enabled";
+            }
+            if (m.trigger != null && m.hasOwnProperty("trigger")) {
+                d.trigger = m.trigger;
+                if (o.oneofs)
+                    d._trigger = "trigger";
+            }
+            if (m.settingTimestamp != null && m.hasOwnProperty("settingTimestamp")) {
+                if (typeof m.settingTimestamp === "number")
+                    d.settingTimestamp = o.longs === String ? String(m.settingTimestamp) : m.settingTimestamp;
+                else
+                    d.settingTimestamp = o.longs === String ? longToString(m.settingTimestamp, false) : o.longs === Number ? longToNumber(m.settingTimestamp, false) : m.settingTimestamp;
+                if (o.oneofs)
+                    d._settingTimestamp = "settingTimestamp";
+            }
+            if (m.initiatedByMe != null && m.hasOwnProperty("initiatedByMe")) {
+                d.initiatedByMe = m.initiatedByMe;
+                if (o.oneofs)
+                    d._initiatedByMe = "initiatedByMe";
+            }
+            return d;
+        };
+
+        ACP2Setting.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        ACP2Setting.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.ACP2Setting";
+        };
+
+        return ACP2Setting;
     })();
 
     proto.ReportingTokenInfo = (function() {

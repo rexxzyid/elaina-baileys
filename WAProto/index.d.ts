@@ -9993,6 +9993,7 @@ export namespace proto {
         }
 
         interface IProtocolMessage {
+            acp2Setting?: (proto.IACP2Setting|null);
             markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
             coexStateSync?: (proto.ICoexStateSync|null);
             key?: (proto.IMessageKey|null);
@@ -10026,6 +10027,7 @@ export namespace proto {
         }
 
         class ProtocolMessage implements IProtocolMessage {
+            public acp2Setting?: (proto.IACP2Setting|null);
             public markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
             public coexStateSync?: (proto.ICoexStateSync|null);
             constructor(p?: proto.Message.IProtocolMessage);
@@ -11115,6 +11117,7 @@ export namespace proto {
     }
 
     interface IMessageContextInfo {
+        acp2Setting?: (proto.IACP2Setting|null);
         teeContextAnchorMessageId?: (string|null);
         accountEncryptionAttestation?: (proto.INonE2EEAttestation|null);
         associatedPrimaryIdentityKey?: (Uint8Array|null);
@@ -11138,6 +11141,7 @@ export namespace proto {
     }
 
     class MessageContextInfo implements IMessageContextInfo {
+        public acp2Setting?: (proto.IACP2Setting|null);
         public teeContextAnchorMessageId?: (string|null);
         public accountEncryptionAttestation?: (proto.INonE2EEAttestation|null);
         public associatedPrimaryIdentityKey?: (Uint8Array|null);
@@ -12612,6 +12616,32 @@ export namespace proto {
 
     }
 
+
+    interface IACP2Setting {
+        enabled?: (boolean|null);
+        trigger?: (number|null);
+        settingTimestamp?: (number|Long|null);
+        initiatedByMe?: (boolean|null);
+    }
+
+    class ACP2Setting implements IACP2Setting {
+        constructor(p?: proto.IACP2Setting);
+        public enabled?: (boolean|null);
+        public trigger?: (number|null);
+        public settingTimestamp?: (number|Long|null);
+        public initiatedByMe?: (boolean|null);
+        public _enabled?: "enabled";
+        public _trigger?: "trigger";
+        public _settingTimestamp?: "settingTimestamp";
+        public _initiatedByMe?: "initiatedByMe";
+        public static create(properties?: proto.IACP2Setting): proto.ACP2Setting;
+        public static encode(m: proto.IACP2Setting, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.ACP2Setting;
+        public static fromObject(d: { [k: string]: any }): proto.ACP2Setting;
+        public static toObject(m: proto.ACP2Setting, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
 
     interface IReportingTokenInfo {
         reportingTagTimestamp?: (number|Long|null);
