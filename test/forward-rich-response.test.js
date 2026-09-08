@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { proto } from '../WAProto/index.js';
 import { AIRich } from '../lib/MessageBuilder/index.js';
 import { forwardRichResponse, readSignedRichResponse, verifyRichResponseSignature } from '../lib/MessageBuilder/metaai.js';
+import { BOT_SIGNATURE_ROOT_CERTIFICATE } from '../lib/MessageBuilder/bot-signature.js';
+import { X509Certificate } from 'node:crypto';
+
+/** A real, parsable certificate stands in for the chain; it will not verify. */
+const realDer = Buffer.from(new X509Certificate(BOT_SIGNATURE_ROOT_CERTIFICATE).raw);
 
 const unifiedBytes = Buffer.from(JSON.stringify({
     response_id: 'r-1',
@@ -19,7 +24,7 @@ const source = {
                     version: 1,
                     useCase: 1,
                     signature: Buffer.alloc(64, 9),
-                    certificateChain: [Buffer.alloc(48, 3), Buffer.alloc(48, 4)]
+                    certificateChain: [realDer, realDer]
                 }]
             }
         }
@@ -73,6 +78,7 @@ const incoming = () => proto.Message.decode(proto.Message.encode(proto.Message.f
     assert.equal(proof.useCase, 1);
     assert.deepEqual(Buffer.from(proof.signature), Buffer.alloc(64, 9), 'the proof travels verbatim');
     assert.equal(proof.certificateChain.length, 2);
+    assert.deepEqual(Buffer.from(proof.certificateChain[0]), realDer);
     assert.equal(rich.submessages[0].messageText, 'halo');
 }
 
@@ -114,7 +120,7 @@ const incoming = () => proto.Message.decode(proto.Message.encode(proto.Message.f
 {
     const verdict = verifyRichResponseSignature({ message: incoming() });
     assert.equal(verdict.status, 'failed');
-    assert.match(verdict.reason, /did not parse|chain/);
+    assert.match(verdict.reason, /chain broken|validity window|does not match/);
 }
 
 /** Anything that is not a rich response is refused rather than half-relayed. */
@@ -122,6 +128,68 @@ const incoming = () => proto.Message.decode(proto.Message.encode(proto.Message.f
     const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async () => {} };
     assert.equal(readSignedRichResponse({ message: { conversation: 'halo' } }), null);
     await assert.rejects(forwardRichResponse(sock, '120363@g.us', { message: { conversation: 'halo' } }), TypeError);
+}
+
+/**
+ * Loading and rebuilding used to re-serialise the JSON and swap in placeholder
+ * metadata, so a copy could never verify even when nothing was touched. As long
+ * as nothing is edited the original bytes and the original proof go back out.
+ */
+{
+    const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async () => ({ key: { id: 'x' } }) };
+    const rich = new AIRich(sock);
+    rich.loadFrom({ message: incoming() });
+    assert.equal(rich.isSignaturePreserved, true);
+
+    const built = await rich.build('120363@g.us');
+    const out = built.message.botForwardedMessage.message.richResponseMessage;
+    assert.deepEqual(Buffer.from(out.unifiedResponse.data), unifiedBytes, 'byte for byte, not re-serialised');
+    assert.deepEqual(
+        Buffer.from(built.message.messageContextInfo.botMetadata.verificationMetadata.proofs[0].signature),
+        Buffer.alloc(64, 9),
+        'the real proof, not the placeholder'
+    );
+}
+
+/** Every mutation drops it, because the bytes it covers no longer match. */
+{
+    const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async () => ({ key: { id: 'x' } }) };
+    const mutations = [
+        rich => rich.addText('tambahan'),
+        rich => rich.addSection({ __typename: 'GenAIUnifiedResponseSection', view_model: { primitive: { text: 'x', __typename: 'GenAIMarkdownTextUXPrimitive' }, __typename: 'GenAISingleLayoutViewModel' } }),
+        rich => { rich.assignId(0, 'n0'); rich.delete('n0'); },
+        rich => rich.addFooterSection({ __typename: 'GenAIUnifiedResponseSection' }),
+        rich => rich.clearFooterSections(),
+        rich => rich.addEmbeddedScreen({ id: 's1' }),
+        rich => rich.setResponseId('r-2'),
+        rich => rich.refreshResponseId(),
+        rich => rich.setResponseMeta({ surface: 'x' })
+    ];
+    for (const mutate of mutations) {
+        const rich = new AIRich(sock);
+        rich.loadFrom({ message: incoming() });
+        mutate(rich);
+        assert.equal(rich.isSignaturePreserved, false, mutate.toString());
+    }
+
+    const edited = new AIRich(sock);
+    edited.loadFrom({ message: incoming() });
+    edited.addText('tambahan');
+    const built = await edited.build('120363@g.us');
+    const data = built.message.botForwardedMessage.message.richResponseMessage.unifiedResponse.data;
+    assert.notDeepEqual(Buffer.from(String(data), 'base64'), unifiedBytes);
+}
+
+/** A message that never carried a proof has nothing to preserve. */
+{
+    const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async () => ({ key: { id: 'x' } }) };
+    const plain = new AIRich(sock);
+    plain.addText('halo');
+    const built = await plain.build('120363@g.us');
+
+    const reloaded = new AIRich(sock);
+    reloaded.loadFrom(built);
+    assert.equal(reloaded.isSignaturePreserved, false, 'placeholder metadata is not a proof to carry over');
 }
 
 console.log('forward rich response tests passed');

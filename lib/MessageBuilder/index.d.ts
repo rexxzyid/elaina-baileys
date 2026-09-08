@@ -102,6 +102,8 @@ export declare class Carousel extends BaseBuilder {
 
 export declare class AIRich extends BaseBuilder {
   constructor(client: any, options?: { dynamic?: boolean; unsupportedTypeAlert?: boolean });
+  /** True while the loaded proof and its signed bytes are still going out untouched. */
+  readonly isSignaturePreserved: boolean;
   loadFrom(msg: any): this;
   setResponseMeta(meta: Record<string, any>): this;
   setResponseId(id: string): this;

@@ -18,3 +18,5 @@ export declare function verifyBotSignature(options: {
     at?: number;
     root?: import('crypto').X509Certificate;
 }): { status: 'passed' | 'failed'; reason?: string };
+
+export declare function isParsableCertificateChain(chain?: unknown): boolean;

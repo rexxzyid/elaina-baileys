@@ -1528,7 +1528,11 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 
 `contextInfo` is not part of the signed payload, so quoting, mentions and the rest are free to change. The unified response bytes, the proof and `forwardedAiBotMessageInfo.botJid` are not.
 
-The corollary matters more than the feature: **any edit voids the signature.** Loading a Meta AI message into `AIRich` and re-building it re-serialises the JSON and replaces the verification metadata, so the result can never verify — even if you changed nothing. Use `forwardRichResponse` when you want the proof to survive, and `AIRich` when you are authoring your own content and do not need one.
+`AIRich.loadFrom` keeps the proof too. When the incoming message carries a real certificate chain, the original bytes and the original verification metadata go straight back out on `build` — no re-serialising, no placeholder. `rich.isSignaturePreserved` says whether that is still true.
+
+The corollary matters more than the feature: **any edit voids it.** `addText`, `addSection`, `delete`, `addFooterSection`, `clearFooterSections`, `addEmbeddedScreen`, `setResponseId`, `refreshResponseId` and `setResponseMeta` all drop the preserved signature, because the bytes it covers no longer match. After any of them the build falls back to freshly serialised JSON and placeholder metadata, exactly as it did before.
+
+So: relay or load-and-resend when you want the proof to survive, and treat `AIRich` as an authoring tool the moment you change anything.
 
 | Function | Answers |
 |---|---|
