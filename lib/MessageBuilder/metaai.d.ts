@@ -336,3 +336,28 @@ export declare function addonActionSection(primitives?: any[], options?: {
     actionType?: string;
     alignment?: string;
 }): any;
+
+export interface SignedRichResponse {
+    richResponseMessage: any;
+    botMetadata?: any;
+    botJid?: string;
+    unifiedResponseBytes?: Buffer;
+    proof?: any;
+    /** The proof fields are populated. Says nothing about whether it verifies. */
+    hasProof: boolean;
+}
+
+export declare function readSignedRichResponse(msg: any): SignedRichResponse | null;
+
+export declare function verifyRichResponseSignature(
+    msg: any,
+    options?: { at?: number }
+): { status: 'passed' | 'failed'; reason?: string };
+
+export declare function forwardRichResponse(sock: any, jid: string, msg: any, options?: {
+    quoted?: any;
+    contextInfo?: any;
+    messageId?: string;
+    additionalNodes?: any[];
+    [key: string]: any;
+}): Promise<any>;

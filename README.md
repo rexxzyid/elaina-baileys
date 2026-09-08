@@ -136,6 +136,7 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [AIRich](#airich)
     - [Inline Entities in Text](#inline-entities-in-text)
     - [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog)
+    - [Forwarding a Real Meta AI Answer](#forwarding-a-real-meta-ai-answer)
   - [Reading Rich Messages Back](#reading-rich-messages-back)
   - [A2UI Cards](#a2ui-cards)
   - [HTML Mini App](#html-mini-app)
@@ -1499,6 +1500,57 @@ rich.addSection(customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout:
 Enums for all of the above ship alongside the builders: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType` and `UnifiedResponseMessageGroupKind`.
 
 `FooterActionType` also gained `COPY_LINK`, `REMIX_MEDIA` and `USE_TEMPLATE`.
+
+### Forwarding a Real Meta AI Answer
+
+Everything above builds a rich response from scratch. There is a second path that behaves differently in one important way: relaying a message that genuinely came from Meta AI.
+
+The client verifies forwarded bot messages against a root certificate it ships itself — `CN=Meta WA Feature Root CA`, ECDSA P-256, exported here as `BOT_SIGNATURE_ROOT_CERTIFICATE`. The payload that gets signed is short:
+
+```
+version ("1")  ||  bot fbid  ||  unified response bytes
+```
+
+Nothing about the sender, the message id, the timestamp or the recipient is in it. That is what makes forwarding work at all: relay those three things unchanged and the proof still verifies, no matter who sends it on.
+
+`forwardRichResponse` relays without touching any of them:
+
+```js
+import { forwardRichResponse, verifyRichResponseSignature } from '@rexxhayanasi/elaina-baileys'
+
+sock.ev.on('messages.upsert', async ({ messages }) => {
+  for (const msg of messages) {
+    if (verifyRichResponseSignature(msg).status !== 'passed') continue
+    await forwardRichResponse(sock, '120363xxxx@g.us', msg, { quoted: msg })
+  }
+})
+```
+
+`contextInfo` is not part of the signed payload, so quoting, mentions and the rest are free to change. The unified response bytes, the proof and `forwardedAiBotMessageInfo.botJid` are not.
+
+The corollary matters more than the feature: **any edit voids the signature.** Loading a Meta AI message into `AIRich` and re-building it re-serialises the JSON and replaces the verification metadata, so the result can never verify — even if you changed nothing. Use `forwardRichResponse` when you want the proof to survive, and `AIRich` when you are authoring your own content and do not need one.
+
+| Function | Answers |
+|---|---|
+| `readSignedRichResponse(msg)` | the parts a proof covers: `unifiedResponseBytes`, `botJid`, `proof`, and `hasProof` for whether the fields are merely populated |
+| `verifyRichResponseSignature(msg)` | `{ status: 'passed' \| 'failed', reason }` — the real check: chain to Meta's root, validity windows, then Ed25519 over the payload above |
+| `verifyBotSignature({ botJid, unifiedResponseBytes, proof })` | the same check with the pieces supplied by hand |
+| `constructSignaturePayload({ botFbid, messageDigest })` | the exact bytes that get signed |
+
+Certificate revocation is not checked. The client fetches a CRL from Meta and treats an unavailable or stale list as revoked; `verifyRichResponseSignature` skips that step, so a `passed` here means the chain and signature are good, not that the certificate is still live.
+
+#### What a self-built response cannot have
+
+A signature over content Meta did not produce is not something a bot can mint — it needs a leaf certificate issued under that root. `AIRich` fills `verificationMetadata` with placeholder bytes so the field is present and well-formed; `verifyRichResponseSignature` on your own output returns `failed`, correctly.
+
+Whether that costs you anything depends on server-side switches you cannot see:
+
+- `ai_rich_response_forwarding_verification_enabled_v1` — `none`, `log_only` or `enforce_blocking`. Only the last one acts on a failure.
+- `ai_rich_response_unknown_sender_verification_masking_enabled` — when a failed message gets replaced by a fallback bubble instead of rendering.
+- `ai_rich_response_unknown_sender_preview_enabled` — collapses a rich response carrying media when the sender is not in the recipient's contacts, whether or not verification ran.
+- `ai_unified_response_receiver_web_timestamp_v2` — WA Web only renders a unified response when the message timestamp is at or after this value.
+
+All four are set per account by the server. A response can be structurally perfect and still come out as a fallback bubble, and there is no way to tell from the sending side.
 
 ### Reading Rich Messages Back
 
