@@ -144,6 +144,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Status Updates](#-status-updates)
   - [Background, Text Color and Font](#background-text-color-and-font)
   - [Image, Video and Voice Status](#image-video-and-voice-status)
+  - [Status Stickers](#status-stickers)
   - [Group Status](#group-status)
 - [Newsletter / Channel](#-newsletter--channel)
   - [Creating and Editing a Channel](#creating-and-editing-a-channel)
@@ -2281,6 +2282,66 @@ await sock.sendMessage('status@broadcast', {
   backgroundColor: '#7C3AED'
 })
 ```
+
+### Status Stickers
+
+An image or video status can carry tappable stickers — a place, a channel, a link, a song. They ride on the media message as `interactiveAnnotations`, and each one is positioned by a rectangle given in **fractions of the media**, not pixels: the client multiplies every coordinate by the rendered width and height.
+
+```js
+import {
+  locationSticker,
+  channelSticker,
+  linkSticker,
+  musicSticker,
+  StatusLinkType
+} from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage('status@broadcast', {
+  image: { url: './liburan.jpg' },
+  caption: 'Weekend',
+  statusStickers: [
+    locationSticker({
+      latitude: -6.2088,
+      longitude: 106.8456,
+      name: 'Jakarta',
+      area: { x: 0.1, y: 0.72, width: 0.5, height: 0.1 }
+    }),
+    linkSticker({
+      url: 'https://example.com/blog',
+      title: 'Baca ceritanya',
+      linkType: StatusLinkType.RASTERIZED_LINK_FULL_URL,
+      area: { x: 0.1, y: 0.06, width: 0.8, height: 0.09 }
+    })
+  ]
+})
+```
+
+The option is `statusStickers`, not `stickers` — that key already builds a sticker pack. A single sticker does not need an array. Anything other than an image or a video is refused, because the field exists nowhere else.
+
+| Builder | Puts | Needs |
+|---|---|---|
+| `locationSticker` | `location` | numeric `latitude` and `longitude`, optional `name` |
+| `channelSticker` | `newsletter` | `jid` ending in `@newsletter`, optional `name`, `serverMessageId` |
+| `linkSticker` | `tapAction` + `statusLinkType` | `url`, optional `title` |
+| `musicSticker` | `embeddedContent.embeddedMusic` | `songId` or `mediaId`, plus `title`, `author`, `startTimeMs`, `durationMs`, artwork fields |
+| `messageSticker` | `embeddedContent.embeddedMessage` | the `message` to embed, optional `stanzaId` |
+
+`location`, `newsletter`, `embeddedAction` and `tapAction` are one `oneof` in the protobuf, so a sticker carries exactly one of them — passing two throws instead of silently dropping one. Music and embedded messages sit outside that group and can pair with an action.
+
+`stickerArea({ x, y, width, height })` builds the four corners by hand if you want them; every value is between 0 and 1 and an area running off the edge is refused. Left out, a sticker lands on `STICKER_DEFAULT_AREA` in the middle.
+
+Reading them back:
+
+```js
+import { readStickers } from '@rexxhayanasi/elaina-baileys'
+
+for (const sticker of readStickers(msg.message)) {
+  if (sticker.kind === 'location') console.log(sticker.location.degreesLatitude)
+  if (sticker.kind === 'music') console.log(sticker.music.title)
+}
+```
+
+`readStickers` returns `[]` for anything without annotations, so it is safe on every message. Each entry has `kind` (`location`, `channel`, `link`, `music`, `message` or `unknown`), the `area` back in fraction form, the decoded payload, and `annotation` for the raw node.
 
 ### Group Status
 
