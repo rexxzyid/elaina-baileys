@@ -129,6 +129,29 @@ export declare class AIRich extends BaseBuilder {
   addFOAText(text: string, options?: AIRichItemOptions): this;
   addCode(language: string, code: string, options?: AIRichItemOptions): this;
   addTable(table: string[][], options?: AIRichItemOptions & { hyperlink?: boolean; citation?: boolean; latex?: boolean }): this;
+  addMap(
+    places: {
+      latitude: number;
+      longitude: number;
+      title?: string;
+      name?: string;
+      body?: string;
+      description?: string;
+      address?: string;
+      id?: string | number;
+      imageUrl?: string;
+      itemType?: string;
+    }[],
+    options?: AIRichItemOptions & {
+      center?: { latitude: number; longitude: number };
+      latitudeDelta?: number;
+      longitudeDelta?: number;
+      showInfoList?: boolean;
+      motivation?: string;
+      staticMapUrl?: string;
+      staticMapDarkUrl?: string;
+    }
+  ): this;
   addSource(sources?: any[], options?: AIRichItemOptions): this;
   addReels(reelsItems?: any, options?: AIRichItemOptions): this;
   addImage(imageUrl: any, options?: AIRichItemOptions & { width?: number; height?: number; status?: string; update_text?: string; resolveUrl?: boolean }): this;

@@ -1430,7 +1430,7 @@ rich.addSection(searchPlannerSection({
 
 | Builder | Primitive | Key fields |
 |---|---|---|
-| `mapSection` | `GenAIMapPrimitive` | `map_query_status`, `static_map`, `items`, `motivation` |
+| `mapSection` | `GenAIMapPrimitive` | `map_query_status`, `static_map`, `items`, `motivation` — for a map that actually draws use `rich.addMap`, see below |
 | `placeItem` | `GenAIPlaceDetailsItem` | `id`, `name`, `image_url`, `item_type`, `category`, `price_level`, `opening_status`, `opening_hours`, `rating`, `address`, `marketplace_metadata` |
 | `sportsSection` | `GenAISportsWidgetPrimitive` | `game_id`, `league`, `status`, `status_detail`, `start_time_utc_seconds`, `venue`, `group`, `content` |
 | `videoSection` | `GenAIVideoPrimitive` | `post_id`, `reels_url`, `reels_title`, `creator`, `video_delivery_response` |
@@ -1450,6 +1450,22 @@ rich.addSection(searchPlannerSection({
 | `professionalConsentSection` | `GenAIProfessionalConsentPrimitive` | `title`, `body`, `status`, `provider_label`, `cta_label` |
 | `accountLinkingSection` / `accountLinkingApp` | `GenAI3PAccountLinkingUpsellPrimitive` | `integration_type`, `integration_status`, `cta_url`, `bottomsheet.apps` |
 | `calendarWidgetSection` / `calendarEvent` | `GenAI3PExtWidgetPrimitive` | `header`, `sections` of dates and events, `ctas`, `toast` |
+
+#### Maps draw from the submessage, not the section
+
+`GenAIMapPrimitive` is the Meta AI app's own map node. The WhatsApp client reads a map somewhere else entirely: out of the protobuf submessage list, as `AIRichResponseSubMessageType.AI_RICH_RESPONSE_MAP` (7) carrying `mapMetadata`. A section on its own arrives and renders nothing.
+
+`rich.addMap` emits both halves at once, the same way `addTable` and `addCode` pair a section with their metadata:
+
+```js
+rich.addText('*Tempat makan dekat kamu*')
+rich.addMap([
+  { latitude: -6.2088, longitude: 106.8456, title: 'Warung Sederhana', body: 'Rumah makan padang' },
+  { latitude: -6.2150, longitude: 106.8500, title: 'Bakso Pak Kumis', body: 'Bakso urat' }
+])
+```
+
+Each place needs a numeric `latitude` and `longitude` — anything else throws rather than dropping a pin at 0,0. Pins are numbered from one in the order you pass them. The map centres on the average of the places unless you pass `center`, and `latitudeDelta` / `longitudeDelta` (both `0.05` by default) set how much ground the frame covers. `showInfoList` draws the list under the map, `motivation` is the line above it, and `staticMapUrl` fills in the section half for clients reading that instead.
 
 Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
 
