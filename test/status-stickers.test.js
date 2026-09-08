@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { proto } from '../WAProto/index.js';
 import {
+    MusicMessageStyle,
     STICKER_DEFAULT_AREA,
     StatusLinkType,
     channelSticker,
@@ -10,6 +11,8 @@ import {
     musicSticker,
     normalizeStickers,
     readStickers,
+    buildMusicMessage,
+    readMusicMessage,
     stickerArea
 } from '../lib/Utils/status-stickers.js';
 
@@ -180,6 +183,50 @@ import {
         error => !/image or a video/.test(error.message),
         'the sticker pack keeps the stickers key, status stickers must not intercept it'
     );
+}
+
+/**
+ * A standalone musicMessage is the other place EmbeddedMusic travels. WA Web
+ * parses it only as a futureproof placeholder ("Music can only be played on
+ * your phone"), so this is a phone surface, but the shape is the same.
+ */
+{
+    const content = buildMusicMessage({
+        songId: '123',
+        title: 'Lagu',
+        author: 'Penyanyi',
+        durationMs: 30000,
+        songUri: 'https://cdn.test/song.m4a',
+        artworkUri: 'https://cdn.test/art.jpg'
+    });
+    assert.equal(content.embeddedMusic.songId, '123');
+    assert.equal(content.songUri, 'https://cdn.test/song.m4a');
+    assert.equal(content.style, MusicMessageStyle.VINYL);
+    assert.equal('contextInfo' in content, false, 'empty fields are dropped');
+
+    const decoded = proto.Message.decode(proto.Message.encode(proto.Message.fromObject({ musicMessage: content })).finish());
+    const read = readMusicMessage(decoded);
+    assert.equal(read.songId, '123');
+    assert.equal(read.title, 'Lagu');
+    assert.equal(read.author, 'Penyanyi');
+    assert.equal(Number(read.durationMs), 30000);
+    assert.equal(read.artworkUri, 'https://cdn.test/art.jpg');
+    assert.equal(read.style, MusicMessageStyle.VINYL);
+
+    assert.equal(readMusicMessage({ message: { conversation: 'halo' } }), null);
+    assert.equal(readMusicMessage(undefined), null);
+    assert.throws(() => buildMusicMessage({ title: 'Lagu' }), TypeError, 'still needs a songId or mediaId');
+}
+
+/** sendMessage takes it as music, next to the other content keys. */
+{
+    const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
+    const content = await generateWAMessageContent(
+        { music: { songId: '123', title: 'Lagu', songUri: 'https://cdn.test/song.m4a' } },
+        { upload: async () => ({}), logger: { debug() {}, warn() {}, info() {} } }
+    );
+    assert.equal(content.musicMessage.embeddedMusic.songId, '123');
+    assert.equal(content.musicMessage.songUri, 'https://cdn.test/song.m4a');
 }
 
 console.log('status sticker tests passed');

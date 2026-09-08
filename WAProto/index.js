@@ -42976,6 +42976,7 @@ export const proto = $root.proto = (() => {
         Message.prototype.newsletterScheduledMessage = null;
 
         Message.prototype.newsletterFollowerInviteMessage = null;
+        Message.prototype.acp2SettingMessage = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -43653,6 +43654,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(Message.prototype, "_acp2SettingMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["acp2SettingMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         Message.create = function create(properties) {
             return new Message(properties);
         };
@@ -43886,6 +43892,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.Message.FutureProofMessage.encode(m.newsletterScheduledMessage, w.uint32(1058).fork()).ldelim();
             if (m.newsletterFollowerInviteMessage != null && Object.hasOwnProperty.call(m, "newsletterFollowerInviteMessage"))
                 $root.proto.Message.NewsletterFollowerInviteMessage.encode(m.newsletterFollowerInviteMessage, w.uint32(866).fork()).ldelim();
+            if (m.acp2SettingMessage != null && Object.hasOwnProperty.call(m, "acp2SettingMessage"))
+                $root.proto.Message.FutureProofMessage.encode(m.acp2SettingMessage, w.uint32(1066).fork()).ldelim();
             return w;
         };
 
@@ -44352,6 +44360,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 108: {
                         m.newsletterFollowerInviteMessage = $root.proto.Message.NewsletterFollowerInviteMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 133: {
+                        m.acp2SettingMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -44933,6 +44945,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.newsletterFollowerInviteMessage: object expected");
                 m.newsletterFollowerInviteMessage = $root.proto.Message.NewsletterFollowerInviteMessage.fromObject(d.newsletterFollowerInviteMessage, n + 1);
             }
+            if (d.acp2SettingMessage != null) {
+                if (typeof d.acp2SettingMessage !== "object")
+                    throw TypeError(".proto.acp2SettingMessage: object expected");
+                m.acp2SettingMessage = $root.proto.Message.FutureProofMessage.fromObject(d.acp2SettingMessage, n + 1);
+            }
             return m;
         };
 
@@ -45504,6 +45521,11 @@ export const proto = $root.proto = (() => {
                 d.newsletterFollowerInviteMessage = $root.proto.Message.NewsletterFollowerInviteMessage.toObject(m.newsletterFollowerInviteMessage, o);
                 if (o.oneofs)
                     d._newsletterFollowerInviteMessage = "newsletterFollowerInviteMessage";
+            }
+            if (m.acp2SettingMessage != null && m.hasOwnProperty("acp2SettingMessage")) {
+                d.acp2SettingMessage = $root.proto.Message.FutureProofMessage.toObject(m.acp2SettingMessage, o);
+                if (o.oneofs)
+                    d._acp2SettingMessage = "acp2SettingMessage";
             }
             return d;
         };

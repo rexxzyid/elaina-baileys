@@ -2397,7 +2397,36 @@ for (const sticker of readStickers(msg.message)) {
 }
 ```
 
-`readStickers` returns `[]` for anything without annotations, so it is safe on every message. Each entry has `kind` (`location`, `channel`, `link`, `music`, `message` or `unknown`), the `area` back in fraction form, the decoded payload, and `annotation` for the raw node.
+`readStickers` returns `[]` for anything without annotations, so it is safe on every message.
+
+#### Music as its own message
+
+`EmbeddedMusic` also travels as a standalone `musicMessage`, with a CDN link for the audio and the artwork next to it:
+
+```js
+import { buildMusicMessage, readMusicMessage, MusicMessageStyle } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage(jid, {
+  music: {
+    songId: '123456',
+    title: 'Judul Lagu',
+    author: 'Penyanyi',
+    durationMs: 30000,
+    songUri: 'https://cdn.example.com/song.m4a',
+    artworkUri: 'https://cdn.example.com/art.jpg',
+    style: MusicMessageStyle.VINYL
+  }
+})
+
+const music = readMusicMessage(msg.message)
+if (music) console.log(music.title, music.author, music.songUri)
+```
+
+`readMusicMessage` returns `null` for anything else. `buildMusicMessage` returns the content on its own if you would rather relay it yourself.
+
+WA Web does not render this one. Its parser maps `musicMessage` to a futureproof placeholder and shows *"Music can only be played on your phone."* — so treat it as a phone surface.
+
+A `songId` comes from Meta's music catalog, which a bot cannot query: the catalog lives behind an HTTPS GraphQL endpoint that requires an ACS token, and that token is issued through a blind-signature exchange this library does not implement. What does work is reusing an id you already have — `readStickers` and `readMusicMessage` both hand you the `embeddedMusic` off a message you received. Each entry has `kind` (`location`, `channel`, `link`, `music`, `message` or `unknown`), the `area` back in fraction form, the decoded payload, and `annotation` for the raw node.
 
 ### Group Status
 

@@ -6020,6 +6020,7 @@ export namespace proto {
     }
 
     interface IMessage {
+        acp2SettingMessage?: (proto.Message.IFutureProofMessage|null);
         newsletterFollowerInviteMessage?: (proto.Message.INewsletterFollowerInviteMessage|null);
         conversation?: (string|null);
         senderKeyDistributionMessage?: (proto.Message.ISenderKeyDistributionMessage|null);
@@ -6136,6 +6137,7 @@ export namespace proto {
     }
 
     class Message implements IMessage {
+        public acp2SettingMessage?: (proto.Message.IFutureProofMessage|null);
         public newsletterFollowerInviteMessage?: (proto.Message.INewsletterFollowerInviteMessage|null);
         constructor(p?: proto.IMessage);
         public conversation?: (string|null);

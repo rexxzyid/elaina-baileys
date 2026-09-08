@@ -374,10 +374,32 @@ const load = async () => {
 const { specs, missingMessage, gaps, needed } = await load()
 const bundle = { specs }
 
+/**
+ * A Message field is reported as a bare name and id, without the kind or the
+ * type it points at, so it cannot be generated from that alone. The bundle spec
+ * for Message carries the rest, and every member of Message is a proto3
+ * optional — a synthetic one-member oneof, exactly the shape addFields already
+ * emits for every other type. Resolve them and let the same codegen run.
+ */
 if (missingMessage.length) {
-    console.error('Message oneof is behind the bundle; regenerate WAProto rather than patching:')
-    for (const [name, id] of missingMessage) console.error(`  - ${name} (field ${id})`)
-    process.exit(2)
+    const spec = specs.get('Message') ?? []
+    const byName = new Map(spec.map(field => [field.name, field]))
+    const resolved = []
+    const unresolved = []
+
+    for (const [name, id] of missingMessage) {
+        const field = byName.get(name)
+        if (field && field.id === id) resolved.push(field)
+        else unresolved.push([name, id])
+    }
+
+    if (unresolved.length) {
+        console.error('Message fields the bundle spec does not describe; cannot generate:')
+        for (const [name, id] of unresolved) console.error(`  - ${name} (field ${id})`)
+        process.exit(2)
+    }
+
+    gaps.unshift({ type: 'Message', fields: resolved })
 }
 
 if (!gaps.length) {

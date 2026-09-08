@@ -82,3 +82,43 @@ export interface ReadSticker {
 }
 
 export declare function readStickers(message: any): ReadSticker[];
+
+export declare const MusicMessageStyle: Readonly<{ UNKNOWN: 0; VINYL: 1 }>;
+
+export interface MusicMessageOptions {
+    songId?: string;
+    mediaId?: string;
+    title?: string;
+    author?: string;
+    artistAttribution?: string;
+    artworkDirectPath?: string;
+    artworkSha256?: Buffer | string;
+    artworkEncSha256?: Buffer | string;
+    artworkMediaKey?: Buffer | string;
+    countryBlocklist?: Buffer | string;
+    isExplicit?: boolean;
+    startTimeMs?: number;
+    derivedStartTimeMs?: number;
+    durationMs?: number;
+    songUri?: string;
+    artworkUri?: string;
+    style?: number;
+    contextInfo?: proto.IContextInfo;
+}
+
+export declare function buildMusicMessage(options?: MusicMessageOptions): proto.Message.IMusicMessage;
+
+export declare function readMusicMessage(msg: any): {
+    songId?: string;
+    mediaId?: string;
+    title?: string;
+    author?: string;
+    artistAttribution?: string;
+    isExplicit?: boolean;
+    startTimeMs?: number | string;
+    durationMs?: number | string;
+    songUri?: string;
+    artworkUri?: string;
+    style?: number;
+    embeddedMusic: proto.IEmbeddedMusic;
+} | null;

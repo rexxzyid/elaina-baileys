@@ -31,7 +31,13 @@ Langgar salah satu dari ini dan hasil kerjamu tidak bisa dipakai.
 4. **Jangan menambah field protobuf secara manual.** Pakai `npm run sync:proto`.
    Skrip itu aditif dan idempoten; tangan manusia pernah membuat field ganda
    (`faviconMmsMetadata` vs `faviconMMSMetadata` di field 33) yang hanya
-   ketahuan karena round-trip test.
+   ketahuan karena round-trip test. Sejak revisi `1047020237` skrip ini juga
+   membangkitkan anggota baru `Message` — dulu ia menyerah di situ dan menyuruh
+   regenerasi manual. Setiap anggota `Message` adalah proto3 optional, yaitu
+   oneof sintetis beranggota satu, bentuk yang sama persis dengan field
+   opsional di tipe lain; yang dulu kurang cuma spec-nya, karena `diffBundle`
+   melaporkan field `Message` hanya sebagai nama dan nomor. Sekarang spec itu
+   diambil dari `bundle.specs.get('Message')` lalu masuk ke codegen yang sama.
 5. **Kode yang kamu tulis tidak boleh memakai komentar `//` atau `/** */`**
    kecuali komentar itu menjelaskan sesuatu yang benar-benar tidak terbaca dari
    kodenya. Dokumen markdown berbahasa Indonesia bebas dari aturan ini.
@@ -116,7 +122,7 @@ berguna kalau jaringan diblokir.
 | `no-change` | Revisi live sama dengan yang terpasang | Tidak ada. Laporkan saja. |
 | `bump-only` | Revisi naik, tidak ada permukaan protokol yang berubah | Bump versi, commit `chore: WA update, client revision <n>` |
 | `bump-and-review` | Revisi naik **dan** ada permukaan protokol yang berubah | Baca diff-nya dulu. Putuskan apa yang perlu diterapkan ke fork, baru bump. |
-| `needs-work` | Ada field protobuf yang belum ada di WAProto | `npm run sync:proto`, lalu `npm run verify:proto`, lalu ulangi `wa:update` |
+| `needs-work` | Ada field protobuf yang belum ada di WAProto | `npm run sync:proto`, lalu `npm run verify:proto`, lalu ulangi `wa:update`. Kalau skrip menolak karena spec sebuah field tidak ada di bundle, itu bug ekstraktor — jangan tambal tangan. |
 | `blocked` | Round-trip encoder gagal | **Jangan bump.** Cari tahu field mana yang rusak dari output verifikasi. |
 
 ---
