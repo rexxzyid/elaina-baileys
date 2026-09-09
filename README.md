@@ -1041,9 +1041,20 @@ await sock.sendMessage(jid, {
 | `jpegThumbnail` | a 192px inline copy, shown while the download runs |
 | `thumbnailDirectPath`, `mediaKey`, `mediaKeyTimestamp` | the upload |
 | `thumbnailSha256`, `thumbnailEncSha256` | the upload |
-| `thumbnailWidth`, `thumbnailHeight` | the picture, scaled to 640px wide |
+| `thumbnailWidth`, `thumbnailHeight` | the size of the picture that was actually encoded |
 
-Pass `large: false` to skip the upload and send only the inline thumbnail, which is the small square card. `thumbnailWidth` changes the 640; `previewType` takes a `proto.Message.ExtendedTextMessage.PreviewType` if you want `VIDEO` for a link that plays inline. Any other key is passed through to the message, so `contextInfo` works as usual.
+Those last two are not decoration. The client's own guard is:
+
+```js
+var n = !!(e.thumbnailDirectPath || e.thumbnailHQ) && e.thumbnailHeight != null && e.thumbnailWidth != null;
+if (!n) return false;
+```
+
+With either dimension missing it draws the small card and never downloads the blob, and the ratio of the two picks the portrait or landscape bubble. So the dimensions here are measured from the encoded bytes rather than the source: a picture wider than the target is scaled down to it, a picture already narrower is left alone rather than being stretched up to 640 and going blurry. If no image library is installed, nothing can be measured, so no upload happens at all and you get the small card — an upload with no dimensions beside it is one the client would refuse to use.
+
+Pass `large: false` for the small card on purpose; it skips the upload too. `thumbnailWidth` changes the 640; `previewType` takes a `proto.Message.ExtendedTextMessage.PreviewType` if you want `VIDEO` for a link that plays inline. Any other key is passed through to the message, so `contextInfo` works as usual.
+
+One case where the large card is refused no matter what you send: on a status, the client also requires `thumbnailWidth / thumbnailHeight >= 1.4`, so a portrait or square cover falls back to the small card there.
 
 If you already have your own preview pipeline, `linkPreview` accepts the same `image` and uploads it the same way:
 
@@ -1059,7 +1070,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-An `upload` function has to be available, since the thumbnail really is uploaded — sending through a socket gives you that for free. And a picture that no image library can read is uploaded whole rather than downscaled, so `sharp`, `@img/image` or `jimp` is worth having.
+An `upload` function has to be available for the large card, since the thumbnail really is uploaded — sending through a socket gives you that for free. An image library (`sharp`, `@napi-rs/image` or `jimp`) is what measures and scales the cover, and without one the card is always the small one.
 
 ---
 

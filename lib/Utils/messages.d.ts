@@ -20,9 +20,12 @@ export function getAggregateResponsesInEventMessage({ eventResponses }: {
 }, meId: any): any[];
 export function extractUrlFromText(text: any): any;
 export function generateLinkPreviewIfRequired(text: any, getUrlInfo: any, logger: any): Promise<any>;
-export function prepareLinkThumbnail(image: any, options: any, thumbnailWidth?: number): Promise<{
+export function prepareLinkThumbnail(image: any, options: any, opts?: {
+    thumbnailWidth?: number;
+    upload?: boolean;
+}): Promise<{
     jpegThumbnail: Buffer;
-    highQualityThumbnail: {
+    highQualityThumbnail?: {
         directPath: string;
         mediaKey: Buffer;
         mediaKeyTimestamp: number;

@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { getImageProcessingLibrary } from '../lib/Utils/messages-media.js';
 import assert from 'node:assert/strict';
 import { generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType } from '../lib/Utils/messages.js';
 import { promises as fs, readFileSync } from 'node:fs';
@@ -13,6 +14,8 @@ import { SCHEDULED_MSG_META_TYPE, SCHEDULED_MSG_REVEAL_KEY_BYTES, SCHEDULED_MSG_
 import { getMessageReportingToken, shouldIncludeReportingToken } from '../lib/Utils/reporting-utils.js';
 import { buildSpamListNode } from '../lib/Socket/chats.js';
 import { SPAM_FLOWS } from '../lib/Types/index.js';
+
+const JPEG_320x200_BASE64 = '/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCADIAUADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAIF/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AmAQ2gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/2Q==';
 
 test('external-ad-reply', async () => {
     const collect = () => {
@@ -91,7 +94,14 @@ test('rich-link', async () => {
         }
     };
 
-    const cover = Buffer.alloc(4096, 3);
+    const cover = Buffer.from(JPEG_320x200_BASE64, 'base64');
+    let hasImageLibrary = true;
+    try {
+        await getImageProcessingLibrary();
+    }
+    catch {
+        hasImageLibrary = false;
+    }
 
     {
         const content = await generateWAMessageContent({
@@ -111,13 +121,17 @@ test('rich-link', async () => {
         assert.ok(text.text.includes('https://example.com/track'), 'the link has to be in the body or nothing renders');
         assert.ok(text.text.startsWith('dengerin ini'), 'and the caller keeps their own words');
         assert.equal(text.contextInfo?.externalAdReply, undefined, 'nothing here goes through the suppressed field');
-
-        assert.equal(text.thumbnailDirectPath, '/v/t62.7118-24/link_thumb.enc');
-        assert.equal(text.mediaKey.length, 32);
-        assert.equal(text.thumbnailSha256.length, 32);
-        assert.equal(text.thumbnailEncSha256.length, 32);
         assert.ok(text.jpegThumbnail.length > 0, 'the inline copy is what shows before the download finishes');
-        assert.equal(uploads.at(-1).mediaType, 'thumbnail-link');
+
+        if (hasImageLibrary) {
+            assert.equal(text.thumbnailDirectPath, '/v/t62.7118-24/link_thumb.enc');
+            assert.equal(text.mediaKey.length, 32);
+            assert.equal(text.thumbnailSha256.length, 32);
+            assert.equal(text.thumbnailEncSha256.length, 32);
+            assert.equal(uploads.at(-1).mediaType, 'thumbnail-link');
+            assert.equal(text.thumbnailWidth, 320, 'a cover narrower than the target is not enlarged to it');
+            assert.equal(text.thumbnailHeight, 200, 'and the declared size is what was actually encoded');
+        }
     }
 
     {
@@ -131,6 +145,7 @@ test('rich-link', async () => {
         assert.ok(text.jpegThumbnail.length > 0);
         assert.equal(text.thumbnailDirectPath, undefined, 'a small card carries no encrypted thumbnail');
         assert.equal(text.mediaKey, undefined);
+        assert.equal(uploads.length, 0, 'and pays for no upload it will not use');
     }
 
     {
@@ -141,6 +156,19 @@ test('rich-link', async () => {
     }
 
     {
+        uploads.length = 0;
+        const content = await generateWAMessageContent({
+            richLink: { url: 'https://example.com/c', title: 'Rusak', image: Buffer.alloc(4096, 3) }
+        }, options);
+        const text = content.extendedTextMessage;
+
+        assert.equal(text.thumbnailDirectPath, undefined,
+            'the client hides the large preview unless both dimensions are set, so an unmeasurable image uploads nothing');
+        assert.equal(uploads.length, 0);
+        assert.ok(text.jpegThumbnail.length > 0, 'it still gets the small card');
+    }
+
+    if (hasImageLibrary) {
         uploads.length = 0;
         const content = await generateWAMessageContent({
             text: 'lihat https://example.com/b',
