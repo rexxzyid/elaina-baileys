@@ -322,6 +322,27 @@ import {
     assert.equal(asVideo.audioMessage.contextInfo.externalAdReply.mediaType, 2, 'and it can still be overridden');
 
     await assert.rejects(generateWAMessageContent({ song: { title: 'x' } }, options), /song needs audio/);
+
+    const asVoiceNote = async song => {
+        const warnings = [];
+        const content = await generateWAMessageContent({ song }, {
+            upload: async () => ({ directPath: '/v/x.enc' }),
+            logger: { debug() {}, info() {}, warn: (_, message) => warnings.push(message) }
+        });
+        return { audio: content.audioMessage, warnings };
+    };
+
+    const asMp3 = await asVoiceNote({ audio: Buffer.alloc(4096, 1), artwork, title: 'Judul', ptt: true });
+    assert.equal(asMp3.audio.ptt, true, 'ptt falls through to the audio upload');
+    assert.ok(asMp3.audio.contextInfo.externalAdReply.thumbnail.length > 0, 'and the card survives');
+    assert.ok(asMp3.warnings.some(message => /not opus/.test(message)), 'but mp3 is not what a voice note is made of');
+
+    const asOpus = await asVoiceNote({ audio: Buffer.alloc(4096, 1), ptt: true, mimetype: 'audio/ogg; codecs=opus' });
+    assert.equal(asOpus.audio.mimetype, 'audio/ogg; codecs=opus');
+    assert.equal(asOpus.warnings.some(message => /not opus/.test(message)), false);
+
+    const plain = await asVoiceNote({ audio: Buffer.alloc(4096, 1) });
+    assert.equal(plain.warnings.some(message => /not opus/.test(message)), false, 'nothing to warn about without ptt');
 }
 
 console.log('status sticker tests passed');

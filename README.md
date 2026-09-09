@@ -2419,6 +2419,22 @@ await sock.sendMessage(jid, {
 
 `mediaType` stays on `1` (IMAGE) unless you change it. `2` is VIDEO, and with that the client waits for a video and draws no thumbnail at all — the cover bytes are simply ignored.
 
+`ptt: true` turns it into a voice note and keeps the card:
+
+```js
+await sock.sendMessage(jid, {
+  song: {
+    audio: { url: './pesan.opus' },
+    mimetype: 'audio/ogg; codecs=opus',
+    ptt: true,
+    artwork: { url: './sampul.jpg' },
+    title: 'Judul'
+  }
+})
+```
+
+Set the mimetype yourself when you do. A voice note is opus in an ogg container, the default here is `audio/mpeg`, and nothing in this library transcodes — handing an mp3 to `ptt: true` gets you a warning in the log and a bubble that may not play. The waveform is still computed for you when ffmpeg is around.
+
 Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 
 ### Group Status
