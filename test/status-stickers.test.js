@@ -258,40 +258,30 @@ import {
 }
 
 /**
- * audio and artwork are uploaded so the urls come back on a host that passes.
- * The upload usually answers with direct_path and no url at all, so reading url
- * alone left both fields empty and the bubble never drew.
+ * The music bubble is bound to Meta's catalog, so a bot cannot make one render
+ * from its own audio: MusicChatsConsumptionRefresher asks the consumption API
+ * with musicContentMediaId and overwrites song_uri and artwork_uri from the
+ * answer, and MusicChatsPlaybackCoordinator gates on that verdict. What the
+ * library can still do is carry a real entry across unchanged.
  */
 {
     const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
-    const logger = { debug() {}, warn() {}, info() {} };
-    const music = { songId: '123456', title: 'Judul', audio: Buffer.alloc(2048, 3), artwork: Buffer.alloc(2048, 4) };
+    const options = { upload: async () => ({ directPath: '/v/x' }), logger: { debug() {}, warn() {}, info() {} } };
 
-    const fromDirectPath = await generateWAMessageContent({ music }, {
-        upload: async () => ({ directPath: '/v/t62.7114-24/12345_n.enc' }),
-        logger
-    });
-    assert.equal(fromDirectPath.musicMessage.songUri, 'https://mmg.whatsapp.net/v/t62.7114-24/12345_n.enc');
-    assert.equal(fromDirectPath.musicMessage.artworkUri, 'https://mmg.whatsapp.net/v/t62.7114-24/12345_n.enc');
-    assert.equal(fromDirectPath.musicMessage.embeddedMusic.songId, '123456');
-
-    const fromUrl = await generateWAMessageContent({ music }, {
-        upload: async () => ({ mediaUrl: 'https://mmg.whatsapp.net/v/t62.99/abc', directPath: '/v/t62.99/abc' }),
-        logger
-    });
-    assert.equal(fromUrl.musicMessage.songUri, 'https://mmg.whatsapp.net/v/t62.99/abc', 'a url wins when there is one');
+    const relayed = await generateWAMessageContent({
+        music: {
+            songId: '123456',
+            mediaId: '987654321',
+            title: 'Judul',
+            songUri: 'https://mmg.whatsapp.net/v/song.m4a',
+            artworkUri: 'https://mmg.whatsapp.net/v/art.jpg'
+        }
+    }, options);
+    assert.equal(relayed.musicMessage.songUri, 'https://mmg.whatsapp.net/v/song.m4a');
+    assert.equal(relayed.musicMessage.embeddedMusic.musicContentMediaId, '987654321');
 
     await assert.rejects(
-        generateWAMessageContent({ music }, { upload: async () => ({}), logger }),
-        /neither a url nor a directPath/,
-        'an upload that yields nothing usable fails loudly'
-    );
-
-    await assert.rejects(
-        generateWAMessageContent({ music: { songId: '1', songUri: 'https://files.catbox.moe/a.mp3' } }, {
-            upload: async () => ({ directPath: '/v/x' }),
-            logger
-        }),
+        generateWAMessageContent({ music: { songId: '1', songUri: 'https://files.catbox.moe/a.mp3' } }, options),
         /songUri must be hosted on/
     );
 }

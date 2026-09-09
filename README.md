@@ -2404,37 +2404,28 @@ for (const sticker of readStickers(msg.message)) {
 `EmbeddedMusic` also travels as a standalone `musicMessage`, with a CDN link for the audio and the artwork next to it:
 
 ```js
-import { buildMusicMessage, readMusicMessage, MusicMessageStyle } from '@rexxhayanasi/elaina-baileys'
-
-await sock.sendMessage(jid, {
-  music: {
-    songId: '123456',
-    title: 'Judul Lagu',
-    author: 'Penyanyi',
-    durationMs: 30000,
-    audio: { url: './lagu.mp3' },
-    artwork: { url: './sampul.jpg' },
-    style: MusicMessageStyle.VINYL
-  }
-})
+import { readMusicMessage, buildMusicMessage, isMusicHostAllowed } from '@rexxhayanasi/elaina-baileys'
 
 const music = readMusicMessage(msg.message)
 if (music) console.log(music.title, music.author, music.songUri)
 ```
 
-`readMusicMessage` returns `null` for anything else. `buildMusicMessage` returns the content on its own if you would rather relay it yourself.
+`readMusicMessage` returns `null` for anything else.
 
-**The two urls have to be on WhatsApp's own CDN.** `ConversationRowMusic` checks the host of each against a fixed list and logs *"song host not allowed"* / *"artwork host not allowed"* before it builds anything — the message arrives, and the bubble simply never draws. Nothing tells you; there is no error and no placeholder. The list is exported as `MUSIC_ALLOWED_HOSTS`:
+**A bot cannot make this bubble render from its own audio.** The message is only a reference into Meta's music catalog, and the client resolves it against the server before drawing anything:
+
+- `MusicChatsConsumptionRefresher` calls the consumption API with `musicContentMediaId` and **overwrites** `song_uri` and `artwork_uri` in its own database from the response, so whatever urls the message carried are replaced.
+- The response decides `isAvailableForConsumption` and `hasAudioMetadata`; `MusicChatsPlaybackCoordinator` then gates on that verdict.
+- `ConversationRowMusic` wants a numeric `musicContentMediaId` and logs *"non-numeric media id, not reporting"* otherwise.
+- Both urls are host-checked against a fixed list — `MUSIC_ALLOWED_HOSTS`, exported, and `isMusicHostAllowed(url)` checks one:
 
 ```
 .whatsapp.net  .whatsapp.com  .fbcdn.net  .facebook.com  .instagram.com  .cdninstagram.com
 ```
 
-So a link from catbox, telegra.ph, Cloudinary or your own server will not render. Pass `audio` and `artwork` instead and they are uploaded through the normal media pipeline first, which puts them on `mmg.whatsapp.net` — the upload usually answers with a `direct_path` and no url, so the url is built from that, and an upload that yields neither fails rather than sending a message with the fields missing. Setting `songUri` or `artworkUri` by hand still works, but anything off the list is now refused at build time rather than sent into the void. `isMusicHostAllowed(url)` checks one without building.
+Uploading your own mp3 gets you past the host check and no further: the uri points at an encrypted `.enc` blob, the music path has no field for a key to decrypt one, and the consumption answer would replace it anyway. `buildMusicMessage` refuses an off-list host at build time so this fails loudly rather than sending a message that arrives and draws nothing.
 
-Passing the host check is necessary, not sufficient: the renderer also asks a playback gate about consumption availability, keyed on a numeric `musicContentMediaId` from Meta's catalog. Whether an arbitrary uploaded track clears that gate is not something I could establish from the client alone.
-
-WA Web does not render this one. Its parser maps `musicMessage` to a futureproof placeholder and shows *"Music can only be played on your phone."* — so treat it as a phone surface.
+What does work is carrying a real entry across unchanged — `readMusicMessage` and `readStickers` both hand you the `embeddedMusic` off a message you received, and `buildMusicMessage` puts it back together.
 
 A `songId` comes from Meta's music catalog, which a bot cannot query: the catalog lives behind an HTTPS GraphQL endpoint that requires an ACS token, and that token is issued through a blind-signature exchange this library does not implement. What does work is reusing an id you already have — `readStickers` and `readMusicMessage` both hand you the `embeddedMusic` off a message you received. Each entry has `kind` (`location`, `channel`, `link`, `music`, `message` or `unknown`), the `area` back in fraction form, the decoded payload, and `annotation` for the raw node.
 
