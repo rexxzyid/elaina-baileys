@@ -1844,6 +1844,7 @@ The layout is a flat list addressed by id: exactly one component must be `root`,
 | `a2uiRow(id, children)` | `Row` |
 | `a2uiText(id, text, { variant })` | `Text` — `variant` is `h1`, `body`, and so on |
 | `a2uiImage(id, url, { variant, fit })` | `Image` — defaults `header` and `cover` |
+| `a2uiCard(id, child)` | `Card` — takes one child id, not an array |
 
 The wrapper `a2uiSurface` builds the payload itself if you want to hand-write components the helpers do not cover:
 
@@ -1859,7 +1860,7 @@ The wrapper `a2uiSurface` builds the payload itself if you want to hand-write co
 }
 ```
 
-`catalogId` names the component vocabulary, so components outside the basic catalog will not render. Only `Column`, `Row`, `Text` and `Image` have been confirmed on a device; the catalog lists more, and `a2uiSurface` will carry any object you give it, but treat the rest as untested.
+`catalogId` names the component vocabulary, so components outside the basic catalog will not render. `Column`, `Row`, `Text`, `Image` and `Card` have been confirmed on a device — `Card` wraps exactly one child and uses the singular `child` field, which is why `a2uiCard` refuses an array; the catalog lists more, and `a2uiSurface` will carry any object you give it, but treat the rest as untested.
 
 The A2UI card and the native-flow buttons live in the same `interactiveMessage`, which is how the card gets a button row beneath it. `decodeBloksWidget(msg)` reads one back, with `params` already parsed.
 
