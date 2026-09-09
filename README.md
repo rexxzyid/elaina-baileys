@@ -128,6 +128,8 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [LID / PN / JID Addressing](#-lid--pn--jid-addressing)
 - [Send Messages](#-send-messages)
 - [External Ad Reply](#-external-ad-reply)
+- [Split Payment and Reminders](#-split-payment-and-reminders)
+- [Status Link Style](#-status-link-style)
 - [Social Link Preview](#-social-link-preview)
 - [Integrated MessageBuilder](#-integrated-messagebuilder)
   - [Button](#button)
@@ -1006,6 +1008,61 @@ const carousel = new MB.Carousel(sock)
 ```
 
 ---
+
+## 💸 Split Payment and Reminders
+
+Both render on Android as their own bubbles. Amounts are the human number — the wire value is scaled by `offset` (1000 by default), and passing the scaled figure by hand overcharges by a thousand.
+
+```js
+import { SplitPaymentStatus, ReminderFrequency } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage(jid, {
+  splitPayment: {
+    splitId: 'makan-01',
+    total: 150000,
+    currency: 'IDR',
+    description: 'Makan bareng',
+    requesterJid: '628xxxx@s.whatsapp.net',
+    participants: [
+      { jid: '6281xxxx@s.whatsapp.net', amount: 50000 },
+      { jid: '6282xxxx@s.whatsapp.net', amount: 100000, status: SplitPaymentStatus.PAID }
+    ]
+  }
+})
+
+await sock.sendMessage(jid, {
+  splitPaymentUpdate: { splitId: 'makan-01', participantJid: '6281xxxx@s.whatsapp.net' }
+})
+
+await sock.sendMessage(jid, {
+  paymentReminder: {
+    reminderId: 'sewa-01',
+    description: 'Sewa bulanan',
+    amount: 500000,
+    currency: 'IDR',
+    frequency: ReminderFrequency.MONTHLY
+  }
+})
+```
+
+`splitId` is required and is what the update message names later. Participants default to `PENDING` and `createdAt` is stamped for you. The reminder defaults to `ACTIVE` and takes `WEEKLY`, `BI_WEEKLY`, `MONTHLY` or `QUARTERLY`; `payeeVpa`, `payeeJid` and `payerJid` are there for the UPI flow.
+
+Read them back with `readSplitPayment(msg)` and `readPaymentReminder(msg)`, which return `null` for anything else and hand amounts back as human numbers. `money(amount, code)` and `readMoney(value)` do the scaling on their own if you need it elsewhere.
+
+These are ordinary messages your own account sends, shown under your own name — they do not move money and they are not a payment request the network acts on. Treat a split card as the note it is.
+
+## 📊 Status Link Style
+
+`statusLinkPreviewMetadata` sits at the top of the message, next to the text, and tells a status which link-preview card to draw:
+
+```js
+await sock.sendMessage('status@broadcast', {
+  text: 'baca ini https://example.com/artikel',
+  statusLinkPreview: { style: 1 }
+})
+```
+
+The client publishes no names for these values, so this passes the number through unchanged rather than inventing an enum — `statusLinkPreview: 1` on its own works the same. A negative or non-integer style is refused.
 
 ## 🎬 Social Link Preview
 
