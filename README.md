@@ -1070,6 +1070,22 @@ await sock.sendMessage(jid, {
 })
 ```
 
+`linkPreview` also takes `large: false` for the small card, and it does not need the link to be in your text at all:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'tidak ada tautan di sini',
+  linkPreview: {
+    'matched-text': 'https://example.com',
+    title: 'Judul',
+    description: 'Keterangan',
+    image: { url: './gambar.jpg' }
+  }
+})
+```
+
+The client decides a message carries a preview with `isUrlExtendedTextMessage`, which is `!!matchedText || !!description || !!title` — the body is never consulted. So the card draws, tapping it opens `matchedText`, and the chat shows only your words. `richLink` appends the link because a link preview normally belongs to a link the reader can see; when you want the card without it, use `linkPreview` directly.
+
 An `upload` function has to be available for the large card, since the thumbnail really is uploaded — sending through a socket gives you that for free. An image library (`sharp`, `@napi-rs/image` or `jimp`) is what measures and scales the cover, and without one the card is always the small one.
 
 ---

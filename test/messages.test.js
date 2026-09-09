@@ -178,6 +178,27 @@ test('rich-link', async () => {
 
         assert.equal(text.thumbnailDirectPath, '/v/t62.7118-24/link_thumb.enc', 'linkPreview takes an image too');
         assert.equal(uploads.at(-1).mediaType, 'thumbnail-link');
+
+        uploads.length = 0;
+        const compact = await generateWAMessageContent({
+            text: 'lihat https://example.com/b',
+            linkPreview: { 'matched-text': 'https://example.com/b', title: 'Judul', image: cover, large: false }
+        }, options);
+        assert.equal(compact.extendedTextMessage.thumbnailDirectPath, undefined, 'and honours the small card there too');
+        assert.equal(uploads.length, 0);
+    }
+
+    {
+        const content = await generateWAMessageContent({
+            text: 'tanpa tautan di badan pesan',
+            linkPreview: { 'matched-text': 'https://example.com/d', title: 'Judul', description: 'Keterangan' }
+        }, options);
+        const text = content.extendedTextMessage;
+
+        assert.equal(text.text, 'tanpa tautan di badan pesan', 'the body is left exactly as written');
+        assert.ok(!text.text.includes('https://'), 'so no link is pasted into the chat');
+        assert.equal(text.matchedText, 'https://example.com/d',
+            'while isUrlExtendedTextMessage only needs matchedText, description or title to draw the card');
     }
 });
 
