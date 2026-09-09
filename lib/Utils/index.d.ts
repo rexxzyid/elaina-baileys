@@ -36,6 +36,7 @@ export * from "./voice-recognition.js";
 export * from "./username.js";
 export * from "./scheduled-message.js";
 export * from "./status-stickers.js";
+export * from "./link-preview-metadata.js";
 export * from "./native-flow.js";
 export * from "./html-app.js";
 export * from "./html-multiplayer.js";

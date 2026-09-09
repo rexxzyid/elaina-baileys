@@ -128,6 +128,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [LID / PN / JID Addressing](#-lid--pn--jid-addressing)
 - [Send Messages](#-send-messages)
 - [External Ad Reply](#-external-ad-reply)
+- [Social Link Preview](#-social-link-preview)
 - [Integrated MessageBuilder](#-integrated-messagebuilder)
   - [Button](#button)
   - [Selection / List](#selection--list)
@@ -1005,6 +1006,46 @@ const carousel = new MB.Carousel(sock)
 ```
 
 ---
+
+## 🎬 Social Link Preview
+
+The rich half of a modern link preview lives in `linkPreviewMetadata` on the extended text message, next to the ordinary title and thumbnail. It marks what kind of post the link is, carries an inline video, and can stack tiles under it.
+
+```js
+import { SocialMediaPostType, videoEndCard } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage(jid, {
+  text: 'lihat ini https://instagram.com/reel/xxxx',
+  socialPreview: {
+    postType: SocialMediaPostType.REEL,
+    videoUrl: 'https://cdn.example.com/reel.mp4',
+    videoCaption: 'Judul reel',
+    muted: true,
+    durationSeconds: 30,
+    endCards: [
+      videoEndCard({ username: 'rexx', caption: 'Berikutnya', thumbnailUrl: 'https://cdn.example.com/1.jpg' })
+    ]
+  }
+})
+```
+
+| Option | Goes to |
+|---|---|
+| `postType` | `socialMediaPostType` — `NONE`, `REEL`, `LIVE_VIDEO`, `LONG_VIDEO`, `SINGLE_IMAGE`, `CAROUSEL` |
+| `videoUrl`, `videoCaption`, `muted` | the inline video the preview plays |
+| `durationSeconds` | `linkMediaDuration` — **seconds**, the client stores `link_media_duration_seconds` |
+| `endCards` | `endCardTiles`, built with `videoEndCard` |
+| `music` | `musicMetadata`, an `EmbeddedMusic` node |
+| `experimentId` | `fbExperimentId` |
+
+It rides on a link preview, so send it with a message that actually contains a link — without a matched link you get a warning and a preview with nothing to attach to.
+
+`videoUrl` and `music` are written twice, nested inside `linkPreviewMetadata` and again directly on the extended text message. Both places exist in the current protocol and the client does not say which one it reads, so both carry the same value.
+
+Reading it back is `readSocialPreview(msg)`, which returns `null` for a message that carries none of it.
+
+This is an Android surface. Nothing in the WhatsApp Web bundle reads these fields — they appear in its protobuf spec and nowhere else — so expect the card to stay plain on desktop.
+
 
 ## Button
 
