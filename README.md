@@ -2399,35 +2399,25 @@ for (const sticker of readStickers(msg.message)) {
 
 `readStickers` returns `[]` for anything without annotations, so it is safe on every message.
 
-#### Music as its own message
+#### Sending a Track
 
-`EmbeddedMusic` also travels as a standalone `musicMessage`, with a CDN link for the audio and the artwork next to it:
+An ordinary audio message with the cover art, title and artist in `externalAdReply`. Nothing here depends on Meta's music catalog, so it renders for any file you have:
 
 ```js
-import { readMusicMessage, buildMusicMessage, isMusicHostAllowed } from '@rexxhayanasi/elaina-baileys'
-
-const music = readMusicMessage(msg.message)
-if (music) console.log(music.title, music.author, music.songUri)
+await sock.sendMessage(jid, {
+  song: {
+    audio: { url: './lagu.mp3' },
+    artwork: { url: './sampul.jpg' },
+    title: 'Judul Lagu',
+    author: 'Penyanyi',
+    url: 'https://example.com/track'
+  }
+})
 ```
 
-`readMusicMessage` returns `null` for anything else.
+`audio` is required; everything else is optional. The artwork is downscaled to a 320px jpeg before it goes in, because a full cover is far past what a thumbnail may weigh — pass `thumbnailWidth` to change that, and if no image library is installed the file is sent through untouched. `largeThumbnail` defaults to `true` for the big card; set it `false` for the compact one. `url` fills both `sourceUrl` and `mediaUrl`, so tapping the card opens it. Any other key is handed to the audio upload, so `ptt`, `seconds` and `waveform` work as usual.
 
-**A bot cannot make this bubble render from its own audio.** The message is only a reference into Meta's music catalog, and the client resolves it against the server before drawing anything:
-
-- `MusicChatsConsumptionRefresher` calls the consumption API with `musicContentMediaId` and **overwrites** `song_uri` and `artwork_uri` in its own database from the response, so whatever urls the message carried are replaced.
-- The response decides `isAvailableForConsumption` and `hasAudioMetadata`; `MusicChatsPlaybackCoordinator` then gates on that verdict.
-- `ConversationRowMusic` wants a numeric `musicContentMediaId` and logs *"non-numeric media id, not reporting"* otherwise.
-- Both urls are host-checked against a fixed list — `MUSIC_ALLOWED_HOSTS`, exported, and `isMusicHostAllowed(url)` checks one:
-
-```
-.whatsapp.net  .whatsapp.com  .fbcdn.net  .facebook.com  .instagram.com  .cdninstagram.com
-```
-
-Uploading your own mp3 gets you past the host check and no further: the uri points at an encrypted `.enc` blob, the music path has no field for a key to decrypt one, and the consumption answer would replace it anyway. `buildMusicMessage` refuses an off-list host at build time so this fails loudly rather than sending a message that arrives and draws nothing.
-
-What does work is carrying a real entry across unchanged — `readMusicMessage` and `readStickers` both hand you the `embeddedMusic` off a message you received, and `buildMusicMessage` puts it back together.
-
-A `songId` comes from Meta's music catalog, which a bot cannot query: the catalog lives behind an HTTPS GraphQL endpoint that requires an ACS token, and that token is issued through a blind-signature exchange this library does not implement. What does work is reusing an id you already have — `readStickers` and `readMusicMessage` both hand you the `embeddedMusic` off a message you received. Each entry has `kind` (`location`, `channel`, `link`, `music`, `message` or `unknown`), the `area` back in fraction form, the decoded payload, and `annotation` for the raw node.
+Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 
 ### Group Status
 

@@ -286,4 +286,39 @@ import {
     );
 }
 
+/**
+ * The bubble that does render for an arbitrary track: an ordinary audio message
+ * with the cover, the title and the artist in externalAdReply. No catalog, no
+ * consumption gate.
+ */
+{
+    const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
+    const options = { upload: async () => ({ directPath: '/v/t62.7/abc.enc' }), logger: { debug() {}, warn() {}, info() {} } };
+    const artwork = Buffer.from(
+        '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/'
+        + 'wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==',
+        'base64'
+    );
+
+    const content = await generateWAMessageContent({
+        song: { audio: Buffer.alloc(4096, 1), artwork, title: 'Judul Lagu', author: 'Penyanyi', url: 'https://example.com/track' }
+    }, options);
+
+    assert.ok(content.audioMessage, 'it is an audio message, not a musicMessage');
+    const card = content.audioMessage.contextInfo.externalAdReply;
+    assert.equal(card.title, 'Judul Lagu');
+    assert.equal(card.body, 'Penyanyi');
+    assert.equal(card.mediaType, 2);
+    assert.equal(card.renderLargerThumbnail, true);
+    assert.equal(card.showAdAttribution, false);
+    assert.equal(card.sourceUrl, 'https://example.com/track');
+    assert.ok(card.thumbnail.length > 0 && card.thumbnail.length < artwork.length * 40, 'the cover is downscaled, not passed whole');
+
+    const bare = await generateWAMessageContent({ song: { audio: Buffer.alloc(4096, 1), title: 'Tanpa sampul' } }, options);
+    assert.equal(bare.audioMessage.contextInfo.externalAdReply.thumbnail, undefined, 'artwork is optional');
+    assert.equal('body' in bare.audioMessage.contextInfo.externalAdReply, false, 'so is the artist');
+
+    await assert.rejects(generateWAMessageContent({ song: { title: 'x' } }, options), /song needs audio/);
+}
+
 console.log('status sticker tests passed');
