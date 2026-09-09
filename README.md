@@ -128,6 +128,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [LID / PN / JID Addressing](#-lid--pn--jid-addressing)
 - [Send Messages](#-send-messages)
 - [External Ad Reply](#-external-ad-reply)
+- [Rich Link Card](#-rich-link-card)
 - [Split Payment and Reminders](#-split-payment-and-reminders)
 - [Status Link Style](#-status-link-style)
 - [Social Link Preview](#-social-link-preview)
@@ -1010,6 +1011,55 @@ Read the three conditions:
 - the AB prop — server-controlled per account, so the same payload can work for one recipient and vanish for another, and can start failing without anything in your code changing.
 
 Nothing in the payload changes this. It is not a matter of the right `mediaType`, a valid thumbnail, or `showAdAttribution`; the message is discarded after decryption, before render. If the card is what carries your content, send that content in the message body as well so the message survives on its own.
+
+The prop's default in the client table is `false`, so this is not on everywhere — it is switched on per account from the server. Rule it in or out before assuming it: send the same card to a WhatsApp Business number. If the Business copy shows the card and the consumer copy shows no message at all, that is this gate. If neither shows a card but both show the message, the card itself is malformed and [Rich Link Card](#-rich-link-card) is not what you need — check the thumbnail first.
+
+---
+
+## 🖼️ Rich Link Card
+
+The card WhatsApp itself draws for a link. Same big picture, title and subtitle as `externalAdReply`, but built out of `extendedTextMessage`, which is the ordinary link preview every user sends all day — no ad fields, so the suppression above cannot touch it.
+
+```js
+await sock.sendMessage(jid, {
+  richLink: {
+    text: 'dengerin ini',
+    url: 'https://example.com/track',
+    title: 'Judul Lagu',
+    description: 'Penyanyi',
+    image: { url: './sampul.jpg' }
+  }
+})
+```
+
+`url` is required. `text` is your message; the link is appended to it when it is not already in there, because the client only draws a preview for a link that is in the body. Leave `text` out and the link becomes the body.
+
+`image` is the part that does the work. WhatsApp's own composer does not put the picture in the message — it uploads it to the media servers as a `thumbnail-link` blob and sends the key, so the recipient downloads and decrypts a full-size cover. That is what makes the preview large instead of a small square, and it is what this does:
+
+| what goes on the wire | from |
+| --- | --- |
+| `jpegThumbnail` | a 192px inline copy, shown while the download runs |
+| `thumbnailDirectPath`, `mediaKey`, `mediaKeyTimestamp` | the upload |
+| `thumbnailSha256`, `thumbnailEncSha256` | the upload |
+| `thumbnailWidth`, `thumbnailHeight` | the picture, scaled to 640px wide |
+
+Pass `large: false` to skip the upload and send only the inline thumbnail, which is the small square card. `thumbnailWidth` changes the 640; `previewType` takes a `proto.Message.ExtendedTextMessage.PreviewType` if you want `VIDEO` for a link that plays inline. Any other key is passed through to the message, so `contextInfo` works as usual.
+
+If you already have your own preview pipeline, `linkPreview` accepts the same `image` and uploads it the same way:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'lihat https://example.com/a',
+  linkPreview: {
+    'matched-text': 'https://example.com/a',
+    title: 'Judul',
+    description: 'Keterangan',
+    image: { url: './gambar.jpg' }
+  }
+})
+```
+
+An `upload` function has to be available, since the thumbnail really is uploaded — sending through a socket gives you that for free. And a picture that no image library can read is uploaded whole rather than downscaled, so `sharp`, `@img/image` or `jimp` is worth having.
 
 ---
 
@@ -2570,7 +2620,7 @@ await sock.sendMessage(jid, {
 
 Set the mimetype yourself when you do. A voice note is opus in an ogg container, the default here is `audio/mpeg`, and nothing in this library transcodes — handing an mp3 to `ptt: true` gets you a warning in the log and a bubble that may not play. The waveform is still computed for you when ffmpeg is around.
 
-The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition. Send the title and artist as text too if the recipient must not lose the message.
+The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition, and [Rich Link Card](#-rich-link-card) for a cover that renders with no ad field involved — as its own message beside the audio, since a preview belongs to text and an audio bubble has no room for one.
 
 Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 

@@ -20,6 +20,18 @@ export function getAggregateResponsesInEventMessage({ eventResponses }: {
 }, meId: any): any[];
 export function extractUrlFromText(text: any): any;
 export function generateLinkPreviewIfRequired(text: any, getUrlInfo: any, logger: any): Promise<any>;
+export function prepareLinkThumbnail(image: any, options: any, thumbnailWidth?: number): Promise<{
+    jpegThumbnail: Buffer;
+    highQualityThumbnail: {
+        directPath: string;
+        mediaKey: Buffer;
+        mediaKeyTimestamp: number;
+        fileSha256: Buffer;
+        fileEncSha256: Buffer;
+        width?: number;
+        height?: number;
+    };
+}>;
 export function prepareWAMessageMedia(message: any, options: any): Promise<proto.Message>;
 export function prepareDisappearingMessageSettingContent(ephemeralExpiration: any): proto.Message;
 export function generateForwardMessageContent(message: any, forceForward: any): any;
