@@ -2415,7 +2415,9 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`audio` is required; everything else is optional. The artwork is downscaled to a 320px jpeg before it goes in, because a full cover is far past what a thumbnail may weigh — pass `thumbnailWidth` to change that, and if no image library is installed the file is sent through untouched. `largeThumbnail` defaults to `true` for the big card; set it `false` for the compact one. `url` fills both `sourceUrl` and `mediaUrl`, so tapping the card opens it. Any other key is handed to the audio upload, so `ptt`, `seconds` and `waveform` work as usual.
+`audio` is required; everything else is optional. The artwork is downscaled to a 640px jpeg before it goes in, because a full cover is far past what a thumbnail may weigh — pass `thumbnailWidth` to change that, and if no image library is installed the file is sent through untouched. `largeThumbnail` defaults to `true` for the big card; set it `false` for the compact one. `url` fills both `sourceUrl` and `mediaUrl`, so tapping the card opens it. Any other key is handed to the audio upload, so `ptt`, `seconds` and `waveform` work as usual.
+
+`mediaType` stays on `1` (IMAGE) unless you change it. `2` is VIDEO, and with that the client waits for a video and draws no thumbnail at all — the cover bytes are simply ignored.
 
 Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 

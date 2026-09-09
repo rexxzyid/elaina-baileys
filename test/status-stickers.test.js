@@ -308,7 +308,7 @@ import {
     const card = content.audioMessage.contextInfo.externalAdReply;
     assert.equal(card.title, 'Judul Lagu');
     assert.equal(card.body, 'Penyanyi');
-    assert.equal(card.mediaType, 2);
+    assert.equal(card.mediaType, 1, 'IMAGE — VIDEO makes the client wait for a video and draw no thumbnail');
     assert.equal(card.renderLargerThumbnail, true);
     assert.equal(card.showAdAttribution, false);
     assert.equal(card.sourceUrl, 'https://example.com/track');
@@ -317,6 +317,9 @@ import {
     const bare = await generateWAMessageContent({ song: { audio: Buffer.alloc(4096, 1), title: 'Tanpa sampul' } }, options);
     assert.equal(bare.audioMessage.contextInfo.externalAdReply.thumbnail, undefined, 'artwork is optional');
     assert.equal('body' in bare.audioMessage.contextInfo.externalAdReply, false, 'so is the artist');
+
+    const asVideo = await generateWAMessageContent({ song: { audio: Buffer.alloc(4096, 1), artwork, mediaType: 2 } }, options);
+    assert.equal(asVideo.audioMessage.contextInfo.externalAdReply.mediaType, 2, 'and it can still be overridden');
 
     await assert.rejects(generateWAMessageContent({ song: { title: 'x' } }, options), /song needs audio/);
 }
