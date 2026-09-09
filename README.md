@@ -2412,8 +2412,8 @@ await sock.sendMessage(jid, {
     title: 'Judul Lagu',
     author: 'Penyanyi',
     durationMs: 30000,
-    songUri: 'https://cdn.example.com/song.m4a',
-    artworkUri: 'https://cdn.example.com/art.jpg',
+    audio: { url: './lagu.mp3' },
+    artwork: { url: './sampul.jpg' },
     style: MusicMessageStyle.VINYL
   }
 })
@@ -2423,6 +2423,16 @@ if (music) console.log(music.title, music.author, music.songUri)
 ```
 
 `readMusicMessage` returns `null` for anything else. `buildMusicMessage` returns the content on its own if you would rather relay it yourself.
+
+**The two urls have to be on WhatsApp's own CDN.** `ConversationRowMusic` checks the host of each against a fixed list and logs *"song host not allowed"* / *"artwork host not allowed"* before it builds anything — the message arrives, and the bubble simply never draws. Nothing tells you; there is no error and no placeholder. The list is exported as `MUSIC_ALLOWED_HOSTS`:
+
+```
+.whatsapp.net  .whatsapp.com  .fbcdn.net  .facebook.com  .instagram.com  .cdninstagram.com
+```
+
+So a link from catbox, telegra.ph, Cloudinary or your own server will not render. Pass `audio` and `artwork` instead and they are uploaded through the normal media pipeline first, which puts them on `mmg.whatsapp.net`. Setting `songUri` or `artworkUri` by hand still works, but anything off the list is now refused at build time rather than sent into the void. `isMusicHostAllowed(url)` checks one without building.
+
+Passing the host check is necessary, not sufficient: the renderer also asks a playback gate about consumption availability, keyed on a numeric `musicContentMediaId` from Meta's catalog. Whether an arbitrary uploaded track clears that gate is not something I could establish from the client alone.
 
 WA Web does not render this one. Its parser maps `musicMessage` to a futureproof placeholder and shows *"Music can only be played on your phone."* — so treat it as a phone surface.
 

@@ -12,6 +12,8 @@ import {
     normalizeStickers,
     readStickers,
     buildMusicMessage,
+    isMusicHostAllowed,
+    MUSIC_ALLOWED_HOSTS,
     readMusicMessage,
     stickerArea
 } from '../lib/Utils/status-stickers.js';
@@ -196,11 +198,11 @@ import {
         title: 'Lagu',
         author: 'Penyanyi',
         durationMs: 30000,
-        songUri: 'https://cdn.test/song.m4a',
-        artworkUri: 'https://cdn.test/art.jpg'
+        songUri: 'https://mmg.whatsapp.net/v/song.m4a',
+        artworkUri: 'https://mmg.whatsapp.net/v/art.jpg'
     });
     assert.equal(content.embeddedMusic.songId, '123');
-    assert.equal(content.songUri, 'https://cdn.test/song.m4a');
+    assert.equal(content.songUri, 'https://mmg.whatsapp.net/v/song.m4a');
     assert.equal(content.style, MusicMessageStyle.VINYL);
     assert.equal('contextInfo' in content, false, 'empty fields are dropped');
 
@@ -210,7 +212,7 @@ import {
     assert.equal(read.title, 'Lagu');
     assert.equal(read.author, 'Penyanyi');
     assert.equal(Number(read.durationMs), 30000);
-    assert.equal(read.artworkUri, 'https://cdn.test/art.jpg');
+    assert.equal(read.artworkUri, 'https://mmg.whatsapp.net/v/art.jpg');
     assert.equal(read.style, MusicMessageStyle.VINYL);
 
     assert.equal(readMusicMessage({ message: { conversation: 'halo' } }), null);
@@ -222,11 +224,59 @@ import {
 {
     const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
     const content = await generateWAMessageContent(
-        { music: { songId: '123', title: 'Lagu', songUri: 'https://cdn.test/song.m4a' } },
+        { music: { songId: '123', title: 'Lagu', songUri: 'https://mmg.whatsapp.net/v/song.m4a' } },
         { upload: async () => ({}), logger: { debug() {}, warn() {}, info() {} } }
     );
     assert.equal(content.musicMessage.embeddedMusic.songId, '123');
-    assert.equal(content.musicMessage.songUri, 'https://cdn.test/song.m4a');
+    assert.equal(content.musicMessage.songUri, 'https://mmg.whatsapp.net/v/song.m4a');
+}
+
+/**
+ * ConversationRowMusic checks the host of both uris against a fixed allowlist
+ * and logs "song host not allowed" / "artwork host not allowed" before it ever
+ * builds the track — the message arrives and simply draws nothing. Refuse at
+ * build time instead of shipping something invisible.
+ */
+{
+    assert.deepEqual([...MUSIC_ALLOWED_HOSTS], [
+        '.whatsapp.net', '.whatsapp.com', '.fbcdn.net', '.facebook.com', '.instagram.com', '.cdninstagram.com'
+    ]);
+
+    assert.equal(isMusicHostAllowed('https://mmg.whatsapp.net/v/t62.1/abc'), true);
+    assert.equal(isMusicHostAllowed('https://scontent.fbcdn.net/v/x.jpg'), true);
+    assert.equal(isMusicHostAllowed('https://whatsapp.net/x'), true, 'the bare domain counts too');
+
+    assert.equal(isMusicHostAllowed('https://files.catbox.moe/x.mp3'), false);
+    assert.equal(isMusicHostAllowed('https://telegra.ph/file/x.jpg'), false);
+    assert.equal(isMusicHostAllowed('https://evil-whatsapp.net.example.com/x'), false, 'suffix, not substring');
+    assert.equal(isMusicHostAllowed('not a url'), false);
+    assert.equal(isMusicHostAllowed(undefined), false);
+
+    assert.throws(() => buildMusicMessage({ songId: '1', songUri: 'https://files.catbox.moe/a.mp3' }), /songUri must be hosted on/);
+    assert.throws(() => buildMusicMessage({ songId: '1', artworkUri: 'https://telegra.ph/x.jpg' }), /artworkUri must be hosted on/);
+    assert.doesNotThrow(() => buildMusicMessage({ songId: '1', songUri: 'https://mmg.whatsapp.net/v/a', artworkUri: 'https://mmg.whatsapp.net/v/b' }));
+}
+
+/** audio and artwork are uploaded, so the urls come back on a host that passes. */
+{
+    const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
+    const options = {
+        upload: async () => ({ mediaUrl: 'https://mmg.whatsapp.net/v/t62.99/abc', directPath: '/v/t62.99/abc' }),
+        logger: { debug() {}, warn() {}, info() {} }
+    };
+
+    const content = await generateWAMessageContent({
+        music: { songId: '123456', title: 'Judul', audio: Buffer.alloc(2048, 3), artwork: Buffer.alloc(2048, 4) }
+    }, options);
+
+    assert.equal(content.musicMessage.songUri, 'https://mmg.whatsapp.net/v/t62.99/abc');
+    assert.equal(content.musicMessage.artworkUri, 'https://mmg.whatsapp.net/v/t62.99/abc');
+    assert.equal(content.musicMessage.embeddedMusic.songId, '123456');
+
+    await assert.rejects(
+        generateWAMessageContent({ music: { songId: '1', songUri: 'https://files.catbox.moe/a.mp3' } }, options),
+        /songUri must be hosted on/
+    );
 }
 
 console.log('status sticker tests passed');

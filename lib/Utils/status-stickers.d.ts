@@ -87,6 +87,10 @@ export declare const MusicMessageStyle: Readonly<{ UNKNOWN: 0; VINYL: 1 }>;
 
 export interface MusicMessageOptions {
     songId?: string;
+    /** Uploaded through the media pipeline, so songUri lands on a host the client accepts. */
+    audio?: any;
+    /** Same, for artworkUri. */
+    artwork?: any;
     mediaId?: string;
     title?: string;
     author?: string;
@@ -122,3 +126,6 @@ export declare function readMusicMessage(msg: any): {
     style?: number;
     embeddedMusic: proto.IEmbeddedMusic;
 } | null;
+
+export declare const MUSIC_ALLOWED_HOSTS: readonly string[];
+export declare function isMusicHostAllowed(value?: unknown): boolean;
