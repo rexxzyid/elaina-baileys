@@ -974,6 +974,43 @@ await sock.sendMessage(jid, {
 
 The payload can also be passed to a builder using `.setContextInfo(...)` when the builder supports context information.
 
+There is also a shorthand that lives beside the content instead of inside `contextInfo`:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Elaina Baileys',
+  externalAdReply: {
+    title: 'Elaina Baileys',
+    body: 'Modern WhatsApp Multi-Device library',
+    thumbnail: await fs.promises.readFile('./cover.jpg'),
+    url: 'https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys',
+    largeThumbnail: true
+  }
+})
+```
+
+`url` there fills `sourceUrl`, which is the link the card opens. It is not an image, so it is no longer copied into `thumbnailUrl` or `mediaUrl` — those are separate keys you set yourself when the picture really is fetched over the network. Give the card either an inline `thumbnail` buffer or a `thumbnailUrl`; with neither, the card draws without a picture and a warning goes to the logger.
+
+### Why the card may not appear at all
+
+The field is alive — current WhatsApp builds still parse `externalAdReply` and still walk it in validation. What changed is on the receiving side. Both clients drop the **whole message**, not just the card, when it arrives at a consumer account. WA Web:
+
+```js
+if (!isSMB() && !getIsSentByMe(t) && r != null
+    && getABPropConfigValue("ctwa_suppress_message_with_external_ad_reply_consumer_db_level_enabled"))
+  throw new MessageValidationError("This is a spam message sent to consumer number with externalAdReply", INVALID_MESSAGE)
+```
+
+Android has the same gate, logged as `ctwa-message-suppressed-external-ad-reply` next to "message suppressed due to ExternalAdReply, mitigation enabled" in `CoreMessageStore`, right before the message is dropped with a placeholder.
+
+Read the three conditions:
+
+- `!isSMB()` — a WhatsApp Business recipient still shows the card. Only consumer WhatsApp drops it.
+- `!getIsSentByMe` — your own copy on your own device is exempt, which is why a card can look perfect on the sending phone while nobody else receives the message.
+- the AB prop — server-controlled per account, so the same payload can work for one recipient and vanish for another, and can start failing without anything in your code changing.
+
+Nothing in the payload changes this. It is not a matter of the right `mediaType`, a valid thumbnail, or `showAdAttribution`; the message is discarded after decryption, before render. If the card is what carries your content, send that content in the message body as well so the message survives on its own.
+
 ---
 
 # 🧱 Integrated MessageBuilder
@@ -2532,6 +2569,8 @@ await sock.sendMessage(jid, {
 ```
 
 Set the mimetype yourself when you do. A voice note is opus in an ogg container, the default here is `audio/mpeg`, and nothing in this library transcodes — handing an mp3 to `ptt: true` gets you a warning in the log and a bubble that may not play. The waveform is still computed for you when ffmpeg is around.
+
+The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition. Send the title and artist as text too if the recipient must not lose the message.
 
 Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 
