@@ -2430,7 +2430,7 @@ if (music) console.log(music.title, music.author, music.songUri)
 .whatsapp.net  .whatsapp.com  .fbcdn.net  .facebook.com  .instagram.com  .cdninstagram.com
 ```
 
-So a link from catbox, telegra.ph, Cloudinary or your own server will not render. Pass `audio` and `artwork` instead and they are uploaded through the normal media pipeline first, which puts them on `mmg.whatsapp.net`. Setting `songUri` or `artworkUri` by hand still works, but anything off the list is now refused at build time rather than sent into the void. `isMusicHostAllowed(url)` checks one without building.
+So a link from catbox, telegra.ph, Cloudinary or your own server will not render. Pass `audio` and `artwork` instead and they are uploaded through the normal media pipeline first, which puts them on `mmg.whatsapp.net` — the upload usually answers with a `direct_path` and no url, so the url is built from that, and an upload that yields neither fails rather than sending a message with the fields missing. Setting `songUri` or `artworkUri` by hand still works, but anything off the list is now refused at build time rather than sent into the void. `isMusicHostAllowed(url)` checks one without building.
 
 Passing the host check is necessary, not sufficient: the renderer also asks a playback gate about consumption availability, keyed on a numeric `musicContentMediaId` from Meta's catalog. Whether an arbitrary uploaded track clears that gate is not something I could establish from the client alone.
 
