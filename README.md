@@ -1418,6 +1418,20 @@ const rich = new AIRich(sock)
 await rich.send(jid)
 ```
 
+### Why it may not appear at all
+
+An AI Rich message used to go out wrapped in `botForwardedMessage`, the way a real Meta AI forward does. The receiving client only unwraps that wrapper behind a gate:
+
+```js
+: n && o("WAWebBotBaseGating").isRichResponseForwardReceivingEnabled() ? n : u || null
+```
+
+where `n` is `botForwardedMessage`. That gate is the AB prop `ai_rich_response_forward_receiving_enabled` (id 16682), and its default in the client table is **false**. With it off the wrapper is never opened, so the message is not parsed as a rich response and nothing is drawn — not an unsupported placeholder, nothing.
+
+So `build` and `send` now put `richResponseMessage` at the top level instead. The type mapper accepts it with no gate at all (`e === "richResponseMessage" ? MSG_TYPE.RICH_RESPONSE`), and the parse path runs normally; the same prop then only decides whether the forward attribution in `contextInfo` is carried, which is cosmetic.
+
+Pass `forwardWrapper: true` to `build`, `send`, `buildEdit` or `forwardRichResponse` to get the old wrapped shape back — worth doing only when you know the recipient has that prop switched on.
+
 Other available AIRich helpers include:
 
 ```js
