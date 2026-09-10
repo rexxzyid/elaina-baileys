@@ -3875,6 +3875,7 @@ export namespace proto {
         }
 
         interface IExternalAdReplyInfo {
+            containsCtwaFlowsAutoLabel?: (boolean|null);
             title?: (string|null);
             body?: (string|null);
             mediaType?: (proto.ContextInfo.ExternalAdReplyInfo.MediaType|null);
@@ -3910,6 +3911,7 @@ export namespace proto {
         }
 
         class ExternalAdReplyInfo implements IExternalAdReplyInfo {
+            public containsCtwaFlowsAutoLabel?: (boolean|null);
             constructor(p?: proto.ContextInfo.IExternalAdReplyInfo);
             public title?: (string|null);
             public body?: (string|null);
@@ -4152,6 +4154,7 @@ export namespace proto {
     }
 
     interface IConversation {
+        acp2Setting?: (proto.IACP2Setting|null);
         identityVerification?: (proto.IIdentityVerificationState|null);
         id?: (string|null);
         messages?: (proto.IHistorySyncMsg[]|null);
@@ -4218,6 +4221,7 @@ export namespace proto {
     }
 
     class Conversation implements IConversation {
+        public acp2Setting?: (proto.IACP2Setting|null);
         public identityVerification?: (proto.IIdentityVerificationState|null);
         constructor(p?: proto.IConversation);
         public id: string;
@@ -6262,6 +6266,86 @@ export namespace proto {
     }
 
     namespace Message {
+        interface ISharedDeviceContactHashKeyRequest {
+            knownEpoch?: (number|null);
+        }
+
+        class SharedDeviceContactHashKeyRequest implements ISharedDeviceContactHashKeyRequest {
+            constructor(p?: proto.Message.ISharedDeviceContactHashKeyRequest);
+            public knownEpoch?: (number|null);
+            public _knownEpoch?: "knownEpoch";
+            public static create(properties?: proto.Message.ISharedDeviceContactHashKeyRequest): proto.Message.SharedDeviceContactHashKeyRequest;
+            public static encode(m: proto.Message.ISharedDeviceContactHashKeyRequest, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.SharedDeviceContactHashKeyRequest;
+            public static fromObject(d: { [k: string]: any }): proto.Message.SharedDeviceContactHashKeyRequest;
+            public static toObject(m: proto.Message.SharedDeviceContactHashKeyRequest, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
+        interface ISharedDeviceContactHashKey {
+            epoch?: (number|null);
+            kind?: (number|null);
+            keyData?: (Uint8Array|null);
+        }
+
+        class SharedDeviceContactHashKey implements ISharedDeviceContactHashKey {
+            constructor(p?: proto.Message.ISharedDeviceContactHashKey);
+            public epoch?: (number|null);
+            public kind?: (number|null);
+            public keyData?: (Uint8Array|null);
+            public _epoch?: "epoch";
+            public _kind?: "kind";
+            public _keyData?: "keyData";
+            public static create(properties?: proto.Message.ISharedDeviceContactHashKey): proto.Message.SharedDeviceContactHashKey;
+            public static encode(m: proto.Message.ISharedDeviceContactHashKey, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.SharedDeviceContactHashKey;
+            public static fromObject(d: { [k: string]: any }): proto.Message.SharedDeviceContactHashKey;
+            public static toObject(m: proto.Message.SharedDeviceContactHashKey, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
+        interface ISharedDeviceContactHashKeyShare {
+            keys?: (proto.Message.ISharedDeviceContactHashKey[]|null);
+        }
+
+        class SharedDeviceContactHashKeyShare implements ISharedDeviceContactHashKeyShare {
+            constructor(p?: proto.Message.ISharedDeviceContactHashKeyShare);
+            public keys?: (proto.Message.ISharedDeviceContactHashKey[]|null);
+            public static create(properties?: proto.Message.ISharedDeviceContactHashKeyShare): proto.Message.SharedDeviceContactHashKeyShare;
+            public static encode(m: proto.Message.ISharedDeviceContactHashKeyShare, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.SharedDeviceContactHashKeyShare;
+            public static fromObject(d: { [k: string]: any }): proto.Message.SharedDeviceContactHashKeyShare;
+            public static toObject(m: proto.Message.SharedDeviceContactHashKeyShare, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
+        interface IChatAnimatedWallpaper {
+            animatedWallpaperId?: (string|null);
+            dimLevel?: (number|null);
+        }
+
+        class ChatAnimatedWallpaper implements IChatAnimatedWallpaper {
+            constructor(p?: proto.Message.IChatAnimatedWallpaper);
+            public animatedWallpaperId?: (string|null);
+            public dimLevel?: (number|null);
+            public _animatedWallpaperId?: "animatedWallpaperId";
+            public _dimLevel?: "dimLevel";
+            public static create(properties?: proto.Message.IChatAnimatedWallpaper): proto.Message.ChatAnimatedWallpaper;
+            public static encode(m: proto.Message.IChatAnimatedWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatAnimatedWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatAnimatedWallpaper;
+            public static toObject(m: proto.Message.ChatAnimatedWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
         interface IMarkAsVerifiedAction {
             userJidString?: (string|null);
             verified?: (boolean|null);
@@ -6914,6 +6998,7 @@ export namespace proto {
         }
 
         interface IChatThemeSetting {
+            animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
             settingTimestampMs?: (number|Long|null);
             clearTheme?: (boolean|null);
             colorSchemeId?: (string|null);
@@ -6924,6 +7009,7 @@ export namespace proto {
         }
 
         class ChatThemeSetting implements IChatThemeSetting {
+            public animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
             constructor(p?: proto.Message.IChatThemeSetting);
             public settingTimestampMs?: (number|Long|null);
             public clearTheme?: (boolean|null);
@@ -9995,6 +10081,8 @@ export namespace proto {
         }
 
         interface IProtocolMessage {
+            sharedDeviceContactHashKeyShare?: (proto.Message.ISharedDeviceContactHashKeyShare|null);
+            sharedDeviceContactHashKeyRequest?: (proto.Message.ISharedDeviceContactHashKeyRequest|null);
             acp2Setting?: (proto.IACP2Setting|null);
             markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
             coexStateSync?: (proto.ICoexStateSync|null);
@@ -10029,6 +10117,8 @@ export namespace proto {
         }
 
         class ProtocolMessage implements IProtocolMessage {
+            public sharedDeviceContactHashKeyShare?: (proto.Message.ISharedDeviceContactHashKeyShare|null);
+            public sharedDeviceContactHashKeyRequest?: (proto.Message.ISharedDeviceContactHashKeyRequest|null);
             public acp2Setting?: (proto.IACP2Setting|null);
             public markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
             public coexStateSync?: (proto.ICoexStateSync|null);
@@ -13892,6 +13982,8 @@ export namespace proto {
         }
 
         interface IBusinessBroadcastCampaignAction {
+            bbProStatus?: (number|null);
+            customAudienceFbid?: (string|null);
             deviceId?: (number|null);
             adId?: (string|null);
             name?: (string|null);
@@ -13904,6 +13996,8 @@ export namespace proto {
         }
 
         class BusinessBroadcastCampaignAction implements IBusinessBroadcastCampaignAction {
+            public bbProStatus?: (number|null);
+            public customAudienceFbid?: (string|null);
             constructor(p?: proto.SyncActionValue.IBusinessBroadcastCampaignAction);
             public deviceId?: (number|null);
             public adId?: (string|null);
