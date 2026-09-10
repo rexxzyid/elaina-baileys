@@ -1026,9 +1026,7 @@ await sock.sendMessage(jid, {
   contextInfo: {
     conversionSource: 'FB_Ads',
     conversionData: Buffer.from('120210000000000000'),
-    entryPointConversionSource: 'ctwa_ad',
-    entryPointConversionApp: 'facebook',
-    entryPointConversionDelaySeconds: 3,
+    conversionDelaySeconds: 3,
     externalAdReply: {
       sourceType: 'ad',
       sourceId: '120210000000000000',
@@ -1057,8 +1055,8 @@ What each of the CTWA-only keys is for:
 | Key | Meaning |
 |---|---|
 | `contextInfo.conversionSource` | which surface produced the click. `FB_Ads` is the value the client itself writes |
-| `contextInfo.conversionData` | opaque bytes the advertiser gets back for attribution — in practice the ad id |
-| `entryPointConversion*` | source, app and how many seconds passed between the tap and the send |
+| `contextInfo.conversionData` | opaque bytes the advertiser gets back for attribution — in practice the ad id. `ctwaPayload` (55) wins over this one when `ctwaSignals` is also set |
+| `contextInfo.conversionDelaySeconds` | seconds between the ad tap and the send. This is field **20**, not `entryPointConversionDelaySeconds` (31) — the CTWA parser only reads 20 |
 | `sourceType` | `"ad"` for an ad, `"post"` for an organic post |
 | `sourceId` | the ad or post id |
 | `ctwaClid` | the click id that ties this conversation to one ad click |
@@ -1070,22 +1068,63 @@ What each of the CTWA-only keys is for:
 
 `AdType.CTWA` is `0`, so protobuf leaves it off the wire and it decodes back as `0` — that is the default, not a dropped field.
 
-**Ad attribution is drawn under two conditions, neither of which is in your payload.** On WA Web:
+### The card and the "via ad" label are two different things
+
+On receive the client folds `contextInfo` into a `ctwaContext` on the message, and only some of the keys above survive that trip:
 
 ```js
-function shouldShowAdAttribution(msg) {
-  if (showForwarded(msg)) return false
-  const ctx = msg.ctwaContext
-  return ctx == null || ctx.alwaysShowAdAttribution !== true
-    ? false
-    : isAdsAttributionEnabled() === true
+n.alwaysShowAdAttribution = contextInfo.alwaysShowAdAttribution
+n.conversionSource        = contextInfo.conversionSource
+n.conversionDelaySeconds  = contextInfo.conversionDelaySeconds
+n.conversionData          = ctwaSignals != null && ctwaPayload != null ? ctwaPayload : conversionData
+const d = contextInfo.externalAdReply
+if (d != null) {
+  n.sourceUrl = d.sourceUrl, n.title = d.title, n.description = d.body
+  n.thumbnail = decodeBytes(d.thumbnail), n.thumbnailUrl = d.thumbnailUrl
+  n.mediaType = d.mediaType, n.mediaUrl = d.mediaUrl
+  n.isSuspiciousLink = findLink(d.sourceUrl).suspiciousCharacters.size > 0
+  // then sourceApp, and greetingMessageBody / automatedGreetingMessageShown / ctaPayload
+  // only when isWamoAGMIntegrationEnabled(d.sourceApp)
 }
-// isAdsAttributionEnabled = isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")
 ```
 
-So `showAdAttribution: true` is necessary but not sufficient: the recipient has to be a Business client, or have prop `wa_ctwa_web_thread_ad_attribution_enabled` (`2898`, default `false`) switched on. And a message the client considers forwarded never shows the label at all.
+`sourceType`, `sourceId` and `ctwaClid` are **not** copied into `ctwaContext` — they ride along for attribution, they do not draw anything.
 
-That sits on top of the suppression above, which is the harsher of the two — the attribution gate only hides a label, `ctwa_suppress_message_with_external_ad_reply_consumer_db_level_enabled` discards the message. Both point the same way: a CTWA payload is for a Business account receiving genuine ad traffic. Sending one from a consumer bot to a consumer number is the case both gates are written against.
+The **card** — picture, title, subtitle — is then drawn under conditions that mention neither Business nor any AB prop:
+
+```js
+if (ctwaContext == null
+    || ctwaContext.sourceUrl == null
+    || ctwaContext.mediaType === MediaType.NONE
+    || (ctwaContext.adContextPreviewDismissed === true && isHideAdContextIfSoftDismissed()))
+  return null
+```
+
+So a plain consumer account does render it, as long as `sourceUrl` is set and `mediaType` is `IMAGE` or `VIDEO`. `mediaType: 0` draws nothing at all.
+
+The **"Message via ad" label** is a separate element, and it keys off `contextInfo.alwaysShowAdAttribution` (field **48**) — not `externalAdReply.showAdAttribution`, which is a different field the label never reads. One render site checks the field alone; another goes through `shouldShowAdAttribution`, which adds `isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")` (`2898`, default `false`) and refuses outright for a forwarded message.
+
+### Never set `alwaysShowAdAttribution` from a bot
+
+Setting it costs you the whole message, with no prop involved:
+
+```js
+function D(msg) {
+  const n = msg.ctwaContext?.alwaysShowAdAttribution
+  if (!isSMB() && !isMeAccount(getSender(msg)) && n === true)
+    throw new MessageValidationError("This is a spam message sent to consumer number with 'Message Via Ad' header", INVALID_MESSAGE)
+}
+```
+
+No AB prop, no rollout — a consumer recipient drops any message carrying that flag from anyone but themselves, always. It sits in the same module as the `externalAdReply` suppression documented above, and the pair divides cleanly:
+
+| You send | Consumer recipient |
+|---|---|
+| `externalAdReply` with `sourceUrl` + `mediaType` 1/2 | card renders |
+| `externalAdReply`, prop `21819` on for that account | whole message dropped (server-controlled, default off) |
+| `contextInfo.alwaysShowAdAttribution: true` | whole message dropped, **always** |
+
+So the card half of CTWA is ordinary and safe; the ad-attribution half is what Business accounts are for.
 
 ---
 
