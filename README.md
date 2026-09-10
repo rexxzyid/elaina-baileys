@@ -1014,6 +1014,79 @@ Nothing in the payload changes this. It is not a matter of the right `mediaType`
 
 The prop's default in the client table is `false`, so this is not on everywhere — it is switched on per account from the server. Rule it in or out before assuming it: send the same card to a WhatsApp Business number. If the Business copy shows the card and the consumer copy shows no message at all, that is this gate. If neither shows a card but both show the message, the card itself is malformed and [Rich Link Card](#-rich-link-card) is not what you need — check the thumbnail first.
 
+### Click-to-WhatsApp, the shape an ad click really sends
+
+The examples above use `externalAdReply` as a decoration. Click-to-WhatsApp is what the field was built for: a person taps an ad on Facebook or Instagram, WhatsApp opens on the advertiser's thread, and the first message the person sends carries the ad it came from. Those extra keys are the ones a decorative card leaves empty.
+
+```js
+import { proto } from '@rexxhayanasi/elaina-baileys'
+
+await sock.sendMessage(jid, {
+  text: 'Halo, saya mau tanya soal promonya',
+  contextInfo: {
+    conversionSource: 'FB_Ads',
+    conversionData: Buffer.from('120210000000000000'),
+    entryPointConversionSource: 'ctwa_ad',
+    entryPointConversionApp: 'facebook',
+    entryPointConversionDelaySeconds: 3,
+    externalAdReply: {
+      sourceType: 'ad',
+      sourceId: '120210000000000000',
+      sourceUrl: 'https://fb.me/1a2b3c4d5e',
+      sourceApp: 'facebook',
+      ctwaClid: 'AbQ1kZ8xR2mNpL7vT0yUwE',
+      title: 'Diskon 50% Semua Menu',
+      body: 'Berlaku sampai akhir bulan',
+      mediaType: proto.ContextInfo.ExternalAdReplyInfo.MediaType.IMAGE,
+      thumbnailUrl: 'https://example.com/promo.jpg',
+      renderLargerThumbnail: true,
+      showAdAttribution: true,
+      containsAutoReply: true,
+      automatedGreetingMessageShown: true,
+      greetingMessageBody: 'Halo, saya mau tanya soal promonya',
+      ctaPayload: 'promo_bulan_ini',
+      adType: proto.ContextInfo.ExternalAdReplyInfo.AdType.CTWA,
+      containsCtwaFlowsAutoLabel: true
+    }
+  }
+})
+```
+
+What each of the CTWA-only keys is for:
+
+| Key | Meaning |
+|---|---|
+| `contextInfo.conversionSource` | which surface produced the click. `FB_Ads` is the value the client itself writes |
+| `contextInfo.conversionData` | opaque bytes the advertiser gets back for attribution — in practice the ad id |
+| `entryPointConversion*` | source, app and how many seconds passed between the tap and the send |
+| `sourceType` | `"ad"` for an ad, `"post"` for an organic post |
+| `sourceId` | the ad or post id |
+| `ctwaClid` | the click id that ties this conversation to one ad click |
+| `sourceApp` | `"facebook"`, `"instagram"`, … |
+| `containsAutoReply` / `greetingMessageBody` | the ad's prefilled greeting, and whether the sender saw it |
+| `ctaPayload` | the ad's call-to-action payload, yours to define |
+| `adType` | `CTWA` (0) or `CAWC` (1) |
+| `containsCtwaFlowsAutoLabel` | new in revision `1047203841`: the thread carries a CTWA Flows auto-label |
+
+`AdType.CTWA` is `0`, so protobuf leaves it off the wire and it decodes back as `0` — that is the default, not a dropped field.
+
+**Ad attribution is drawn under two conditions, neither of which is in your payload.** On WA Web:
+
+```js
+function shouldShowAdAttribution(msg) {
+  if (showForwarded(msg)) return false
+  const ctx = msg.ctwaContext
+  return ctx == null || ctx.alwaysShowAdAttribution !== true
+    ? false
+    : isAdsAttributionEnabled() === true
+}
+// isAdsAttributionEnabled = isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")
+```
+
+So `showAdAttribution: true` is necessary but not sufficient: the recipient has to be a Business client, or have prop `wa_ctwa_web_thread_ad_attribution_enabled` (`2898`, default `false`) switched on. And a message the client considers forwarded never shows the label at all.
+
+That sits on top of the suppression above, which is the harsher of the two — the attribution gate only hides a label, `ctwa_suppress_message_with_external_ad_reply_consumer_db_level_enabled` discards the message. Both point the same way: a CTWA payload is for a Business account receiving genuine ad traffic. Sending one from a consumer bot to a consumer number is the case both gates are written against.
+
 ---
 
 ## 🖼️ Rich Link Card
@@ -4154,6 +4227,9 @@ Supporting commands:
 | `npm run update:version` | bump the pinned revision without any of the checks |
 | `npm run audit:apk -- <dir>` | diff `WAProto` against an extracted Android APK |
 | `npm run sync:proto -- --gaps <file>` | patch `WAProto` from an audit's `--json` output |
+| `npm run proto:update` | the whole round trip: sync, verify, bump |
+
+`proto:update` runs `sync:proto`, then `verify:proto`, then `wa:update --apply`, then `update:version`, and that order is load-bearing. `wa:update` exits non-zero on the `needs-work` verdict and refuses `--apply`, so closing the protobuf gaps has to come first or the chain stops before it reaches them.
 
 **Auditing against Android.** Everything above reads the WhatsApp **Web** bundle, so a field the Android client knows and Web does not never reaches `WAProto` at all. `audit:apk` closes that blind spot: point it at a directory of extracted `classes*.dex` and it parses the protobuf model classes straight out of the dex — reading each `*_FIELD_NUMBER` constant and its value — then reports which fields and which whole types are missing, with their field numbers.
 

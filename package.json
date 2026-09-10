@@ -19,7 +19,7 @@
     "verify:assets": "node ./script/verifyassets.js",
     "fetch:bundle": "node ./script/fetchbundle.js",
     "test:pairing": "node ./script/testpairing.js",
-    "proto:update": "npm run wa:update -- --apply --keep 2 && npm run update:version && npm run sync:proto && npm run verify:proto"
+    "proto:update": "npm run sync:proto && npm run verify:proto && npm run wa:update -- --apply --keep 2 && npm run update:version"
   },
   "engines": {
     "node": ">=20.0.0"
