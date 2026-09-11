@@ -1033,3 +1033,40 @@ test('event-time', async () => {
         /event startDate must be a Date or a unix timestamp/
     );
 });
+
+test('interactive-mixing', async () => {
+    const options = { upload: async () => ({}) };
+    const teks = 'menu';
+
+    const content = await generateWAMessageContent({
+        text: teks,
+        footer: 'Elaina',
+        nativeFlow: [{ text: 'Menu', id: '.menu' }, { text: 'Situs', url: 'https://nixel.dev' }],
+        bloksWidget: { type: 'im_a2ui', uuid: 'u-1', fallback: teks, data: '{"type":"info_card"}' }
+    }, options);
+
+    const im = content.interactiveMessage;
+    const nf = im.nativeFlowMessage;
+
+    assert.equal(nf.messageVersion, 1, 'isSupportedInteractiveMessageVersion rejects a missing messageVersion outright');
+    assert.equal(nf.name, 'mixed');
+    assert.equal(nf.buttons[0].name, 'quick_reply', 'buttons[0].name is the flow name the client actually reads');
+    assert.equal(im.bloksWidget.type, 'im_a2ui', 'the widget rides alongside nativeFlowMessage instead of competing with it');
+    assert.equal(im.bloksWidget.fallback, im.body.text, 'the bubble text is hidden only when it equals the fallback');
+
+    const named = await generateWAMessageContent({
+        text: teks,
+        nativeFlow: [{ text: 'Menu', id: '.menu' }],
+        flowName: 'menu_options'
+    }, options);
+    assert.equal(named.interactiveMessage.nativeFlowMessage.name, 'menu_options');
+    assert.equal(named.interactiveMessage.bloksWidget, undefined, 'no widget key means no widget');
+
+    const both = proto.Message.fromObject({
+        richResponseMessage: { messageType: 1 },
+        interactiveMessage: { body: { text: 'x' } }
+    });
+    const back = proto.Message.toObject(proto.Message.decode(proto.Message.encode(both).finish()), { defaults: false });
+    assert.deepEqual(Object.keys(back), ['interactiveMessage', 'richResponseMessage'], 'both survive the wire');
+    assert.equal(getContentType(back), 'interactiveMessage', 'but the lower field number wins and the rich response is ignored');
+});

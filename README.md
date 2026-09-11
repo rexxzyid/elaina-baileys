@@ -1578,6 +1578,116 @@ Other available AIRich helpers include:
 .addSubmessage(submessage)
 ```
 
+### What Mixes With What
+
+A rich response and an interactive message look like they should combine, and the bot menus that pair `nativeFlowMessage` with `bloksWidget` suggest anything can. Read the client and it splits cleanly into one thing that cannot mix and two that can.
+
+#### Top-level content keys never mix
+
+`richResponseMessage` is field **97** of `Message`. `interactiveMessage` is **45**, `extendedTextMessage` is **6**, `conversation` is **1**. Protobuf happily encodes two of them side by side, and both survive the round trip — but every resolver picks exactly one, in field order, and the rest is dead weight on the wire:
+
+```js
+proto.Message.encode({ richResponseMessage, interactiveMessage }).finish()
+// keys on the wire : interactiveMessage, richResponseMessage
+// getContentType() : interactiveMessage        ← the rich response is ignored
+```
+
+So there is no "rich response with buttons". Send two messages, or pick one shape.
+
+#### Inside `interactiveMessage`, three slots mix and three compete
+
+The client resolves the interactive type by walking its own enum and taking the first field that is present:
+
+```js
+InteractiveMessageType = { NATIVE_FLOW: 'nativeFlowMessage', SHOPS_STOREFRONT: 'shopStorefrontMessage', CAROUSEL: 'carouselMessage' }
+getInteractiveMessageTypeForProto = f => members().find(t => fieldNameFor(t) in f)
+```
+
+`nativeFlowMessage`, `shopStorefrontMessage` and `carouselMessage` therefore **compete** — the first one present wins and decides `interactiveType`, whatever order you wrote them in. `header`, `body`, `footer`, `contextInfo` and `bloksWidget` are not in that enum, so they all **ride along** with whichever won.
+
+Two details that only show up in the parse:
+
+- **`carouselMessage` is still parsed when `nativeFlowMessage` won.** The carousel is read into `carouselCardsParsed` on its own, so cards and buttons really do arrive together — but if the carousel fails to parse, the whole message drops to the unsupported node, buttons included.
+- **A valid A2UI widget suspends the native-flow name check.** The guard reads `if (!S && (msgContext === 'relay' || msgContext === 'history'))`, where `S` is `bloksWidget.type === 'im_a2ui' && isBloksWidgetEnabled()`. With the widget in place and that prop on, `isValidNativeFlowName` and `isValidNativeFlowMessage` are skipped entirely.
+
+Both of those sit behind one hard requirement:
+
+```js
+isSupportedInteractiveMessageVersion(type, payload) {
+  const n = payload?.messageVersion
+  if (n == null || type == null) return false
+  switch (type) { case NATIVE_FLOW: return n <= 1; case SHOPS_STOREFRONT: return n <= 1; case CAROUSEL: return n <= 1 }
+}
+```
+
+`messageVersion` is **mandatory** on the slot that won, and must be `1` or less. Leave it out and the message is unsupported before any of the above runs — there is no version 9. The `nativeFlow` content key sets it for you.
+
+And one widespread mistake: `nativeFlowMessage.name` is **not** what the client reads. The effective flow name comes from the first button:
+
+```js
+getBizNativeFlowName = ({ interactiveMessage: m }) => {
+  const p = m?.nativeFlowMessage?.buttons
+  if (p?.length > 0 && !buttonsViolateButtonImprovementsConstraints(...)) return getNativeFlowNameByButtonName(p[0].name)
+  ...
+}
+```
+
+So `name: 'mixed'` on the message is cosmetic on Web; put the button kinds you want in `buttons` and order them deliberately, because `buttons[0].name` is the one that counts.
+
+Here is the whole mix through `sendMessage`, no imports:
+
+```js
+const teks = '✨ MENU ELAINA\n\nPilih kategori di bawah.'
+
+await sock.sendMessage(jid, {
+  text: teks,
+  footer: 'Elaina - MultiDevice',
+  nativeFlow: [
+    { text: 'Semua Menu', id: '.allmenu' },
+    { text: 'Situs', url: 'https://nixel.dev' },
+    { text: 'Salin prefix', copy: '.' }
+  ],
+  optionText: 'Pilih Kategori',
+  optionTitle: 'Kategori',
+  bloksWidget: {
+    type: 'im_a2ui',
+    uuid: crypto.randomUUID(),
+    fallback: teks,
+    data: JSON.stringify({ type: 'info_card', title: '✨ MENU ELAINA', body: 'Pilih kategori di bawah.' })
+  }
+})
+```
+
+Keep `bloksWidget.fallback` byte-identical to `text`. The client hides the bubble text only when the widget is enabled **and** the two match (`if (S && k === msg.bloksWidget?.fallback) k = null`), so the same payload draws the widget where the prop is on and the plain text where it is not, instead of showing the content twice.
+
+#### Inside `richResponseMessage`, everything mixes
+
+This is where the rich response is actually composable. Four lists travel together and none of them competes:
+
+| Slot | Carries |
+|---|---|
+| `sections` | the view models — one per `addText`, `addCode`, `addSection`, … |
+| `submessages` | the protobuf half that `addTable`, `addCode` and `addMap` pair with their section |
+| `footer_sections` | `addFooterSection`, drawn under the body |
+| `embedded_screens` | `addEmbeddedScreen`; WhatsApp calls `stripEmbeddedScreens` before rendering, so these reach the model and draw nothing |
+
+`messageContextInfo` rides alongside at the top level rather than competing, because the content-key scan only matches `conversation` or a name containing `Message` — and `messageContextInfo` contains neither. That is how `botMetadata` and the verification proof travel with a rich response at all.
+
+A Bloks widget can also live **inside** a rich response instead of beside it, as a section rather than an `interactiveMessage` field:
+
+```js
+import { AIRich, bloksSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
+
+rich.addText('*Statistik hari ini*')
+rich.addSection(bloksSection('im_a2ui', { type: 'info_card', title: 'Penjualan', body: 'Rp 1.250.000' }))
+
+await rich.send(jid)
+```
+
+That emits `FOABloksPrimitive`, which is one of the eighteen names WA Web draws too — so unlike the `interactiveMessage.bloksWidget` route it is not behind `im_bloks_widget_enable`.
+
 ### Inline Entities in Text
 
 `addText` and `addTable` scan the string for four markdown-ish shapes and turn them into **inline entities** — the pieces the client renders as links, citations and formulas inside a paragraph rather than as separate sections.
