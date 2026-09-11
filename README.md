@@ -1603,11 +1603,13 @@ InteractiveMessageType = { NATIVE_FLOW: 'nativeFlowMessage', SHOPS_STOREFRONT: '
 getInteractiveMessageTypeForProto = f => members().find(t => fieldNameFor(t) in f)
 ```
 
-`nativeFlowMessage`, `shopStorefrontMessage` and `carouselMessage` therefore **compete** — the first one present wins and decides `interactiveType`, whatever order you wrote them in. `header`, `body`, `footer`, `contextInfo` and `bloksWidget` are not in that enum, so they all **ride along** with whichever won.
+`nativeFlowMessage`, `shopStorefrontMessage` and `carouselMessage` therefore **compete** — the first one present wins and decides `interactiveType`, whatever order you wrote them in. And they are a real protobuf `oneof` (fields 4, 5, 6, 7), which the app's protobuf runtime enforces on parse by keeping only the last one on the wire: set two and Web takes field 6 while the app takes field 7. Never set two.
+
+`header` (1), `body` (2), `footer` (3), `bloksWidget` (8) and `contextInfo` (15) sit **outside** that oneof, so they all ride along with whichever payload won. That is why pairing `nativeFlowMessage` with `bloksWidget` is structurally sound rather than a trick.
 
 Two details that only show up in the parse:
 
-- **`carouselMessage` is still parsed when `nativeFlowMessage` won.** The carousel is read into `carouselCardsParsed` on its own, so cards and buttons really do arrive together — but if the carousel fails to parse, the whole message drops to the unsupported node, buttons included.
+- **On Web, `carouselMessage` is still parsed when `nativeFlowMessage` won.** The carousel is read into `carouselCardsParsed` on its own, so cards and buttons arrive together there — but if the carousel fails to parse, the whole message drops to the unsupported node, buttons included. Do not build on this: the oneof above means the app never sees both halves.
 - **A valid A2UI widget suspends the native-flow name check.** The guard reads `if (!S && (msgContext === 'relay' || msgContext === 'history'))`, where `S` is `bloksWidget.type === 'im_a2ui' && isBloksWidgetEnabled()`. With the widget in place and that prop on, `isValidNativeFlowName` and `isValidNativeFlowMessage` are skipped entirely.
 
 Both of those sit behind one hard requirement:
@@ -1667,7 +1669,9 @@ Three rules fall out of it:
 2. **At most 10 buttons if the first is `quick_reply`, at most 3 otherwise.**
 3. A later button whose name maps to a known flow must be one of the fifteen above. An unrecognised name passes this particular rule.
 
-Break any of them and the flow name comes back `undefined`, which is fatal one step later:
+**All of that is WA Web only.** `buttonsViolateButtonImprovementsConstraints` and `isValidNativeFlowName` appear nowhere in the Android APK — not in any dex. The app reaches its own unsupported decision in `FMessageInteractiveFactory/isUnknownInteractiveMessage`, and the predicates around it (`interactiveMessageCase_`, and a `buttons.size() == 1` test used only for the payment flows) look at the oneof case and the first button's name. There is no count limit and no same-kind rule. So a message carrying `cta_url`, `cta_call`, `send_location`, `quick_reply` and `single_select` together does draw on a phone — which is also the only place several of those names exist at all, per [Native Flow Support](#native-flow-support).
+
+Break one of the rules and the flow name comes back `undefined`, which on Web is fatal one step later:
 
 ```js
 isValidNativeFlowName = ({ bizInfo, msgContext, name }) => {
@@ -1678,7 +1682,7 @@ isValidNativeFlowName = ({ bizInfo, msgContext, name }) => {
 }
 ```
 
-An incoming message is a relay, so `name == null` returns false and the message becomes the unsupported node — buttons, text, footer and all. Note the order: the `MIXED` escape hatch is checked **after** the null test, so a `<biz>` node claiming `mixed` does not rescue a violating button list.
+An incoming message is a relay, so `name == null` returns false and the message becomes the unsupported node on Web — buttons, text, footer and all, while the same message draws normally on a phone. Note the order: the `MIXED` escape hatch is checked **after** the null test, so a `<biz>` node claiming `mixed` does not rescue a violating button list either.
 
 That `<biz>` node is the other half, and this library already sends it. When the first button is not one of the few flows that need their own name, it goes out as:
 
@@ -1693,9 +1697,9 @@ That `<biz>` node is the other half, and this library already sends it. When the
 
 That `v="9" name="mixed"` is a stanza attribute, unrelated to `messageVersion` in the protobuf — which still has to be `1`. With the node saying `mixed`, any flow name your buttons produce is accepted, so the button constraints above are the only thing left that can fail.
 
-`nativeFlowButtonsViolateConstraints` is exported so you can check a list yourself, and passing a violating one logs a warning naming the limit and the kinds it found.
+`nativeFlowButtonsViolateConstraints` is exported so you can check a list against the Web rules yourself, and passing a violating one logs a warning naming the limit and the kinds it found. It is a warning and not an error precisely because the app still draws it: treat it as "this will be blank for anyone reading on desktop", not as "this is broken".
 
-Here is the whole mix through `sendMessage`, no imports — one kind of button, inside the limit:
+Here is the whole mix through `sendMessage`, no imports — one kind of button, inside the limit, so it draws everywhere:
 
 ```js
 const teks = '✨ MENU ELAINA\n\nPilih kategori di bawah.'
@@ -1719,7 +1723,23 @@ await sock.sendMessage(jid, {
 })
 ```
 
-A url or a copy button cannot join those three. Send it as its own message, with at most three of its own kind:
+Mixing kinds in one message is fine for phone readers, and this is what it looks like — five kinds, five names, four of which WA Web has no flow name for anyway:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Semua jenis tombol dalam satu pesan',
+  footer: 'Elaina - MultiDevice',
+  nativeFlow: [
+    { text: 'Balas', id: '.menu' },
+    { text: 'Situs', url: 'https://nixel.dev' },
+    { text: 'Telepon', call: '+628000000000' },
+    { name: 'send_location', buttonParamsJson: '' },
+    { text: 'Pilih', sections: [{ title: 'Kategori', rows: [{ title: 'Downloader', id: '.menu downloader' }] }] }
+  ]
+})
+```
+
+That logs the constraint warning and draws on a phone. If the same message also has to work in a browser tab, split it so every message carries one kind, at most three of a non-quick-reply kind:
 
 ```js
 await sock.sendMessage(jid, {
