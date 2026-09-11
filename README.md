@@ -1509,6 +1509,18 @@ await carousel.send(jid)
 
 `AIRich` is the integrated rich-response builder for multiple layouts and content types
 
+It does not go through `sock.sendMessage`. A rich response is not a content key the way `text` or `image` is — it is built up on an instance and relayed by the builder itself, so every example below starts at `new AIRich(sock)` and ends at `await rich.send(jid)`:
+
+```js
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock)
+rich.addText('Halo')
+await rich.send(jid)
+```
+
+`send` takes the same options as `build` — `quoted`, `messageId`, `forwardWrapper`, `notification` — and `sendEdit` replaces a message already on screen. Pass the bot's own jid with `botJid` when you want the forward attribution to name something other than the default.
+
 ### Text + Code + Table
 
 ```js
@@ -1579,7 +1591,13 @@ Other available AIRich helpers include:
 | `[x^2]<https://img.test>` | a rendered formula | `GenAILatexItem` |
 
 ```js
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
+
 rich.addText('buka [Setelan](>whatsapp://settings), atau lihat [situsnya](https://nixel.dev)')
+
+await rich.send(jid)
 ```
 
 The two prefixes are markers on the **target**, not the label, and they are stripped before sending:
@@ -1597,6 +1615,8 @@ rich.addText(text, { hyperlink: false, citation: false, latex: false })
 rich.addText(text, { extract: false })
 ```
 
+Those three are options on one call, not a sequence to run as-is — pick the flags you want and send as above.
+
 `AI_RICH_INLINE_ENTITIES` lists all four. The list is closed on purpose — the Web parser dispatches on `__typename` and **throws** `inline entity <name>` on anything outside it, so a fifth invented name breaks the whole message rather than degrading.
 
 ```js
@@ -1612,6 +1632,8 @@ console.log(inline.map(e => e.metadata.__typename))
 Every `add*` call accepts `id`, `insertAt`, and `replace`, so a sent message can keep changing instead of being resent.
 
 ```js
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
 const rich = new AIRich(sock)
   .setTitle('Elaina AI')
   .addText('Working on it…', { id: 'intro' })
@@ -1672,6 +1694,7 @@ MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are
 
 ```js
 import {
+  AIRich,
   dividerSection,
   spacerSection,
   imageSection,
@@ -1683,6 +1706,11 @@ import {
   ThinkingIcon
 } from '@rexxhayanasi/elaina-baileys'
 
+const rich = new AIRich(sock)
+  .setTitle('Elaina AI')
+  .setFooter('Generated with AIRich')
+
+rich.addText('*Laporan render*')
 rich.addSection(dividerSection(), { id: 'rule' })
 rich.addSection(spacerSection({ spacing: 3 }))
 rich.addSection(imageSection('https://example.com/photo.jpg'))
@@ -1690,6 +1718,8 @@ rich.addSection(taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'fr
 rich.addSection(latexSection('E = mc^2'))
 rich.addSection(thinkingSection('Searching the web…', { icon: ThinkingIcon.WEB_SEARCH }))
 rich.addSection(progressSection('Almost done', { inProgress: false }))
+
+await rich.send(jid)
 ```
 
 | Builder | Primitive | Fields |
@@ -1731,6 +1761,7 @@ Inline entities are the one place where an unknown name is fatal rather than ign
 
 ```js
 import {
+  AIRich,
   mapSection,
   placeItem,
   sportsSection,
@@ -1744,6 +1775,8 @@ import {
   SportsGameStatus,
   SearchPlannerStepStatus
 } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
 
 rich.addSection(mapSection({
   staticMapUrl: 'https://example.com/static-map.png',
@@ -1783,6 +1816,8 @@ rich.addSection(searchPlannerSection({
     plannerStep({ title: 'Ringkas hasil', status: SearchPlannerStepStatus.IN_PROGRESS })
   ]
 }))
+
+await rich.send(jid)
 ```
 
 | Builder | Primitive | Key fields |
@@ -1815,11 +1850,17 @@ rich.addSection(searchPlannerSection({
 `rich.addMap` emits both halves at once, the same way `addTable` and `addCode` pair a section with their metadata:
 
 ```js
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
+
 rich.addText('*Tempat makan dekat kamu*')
 rich.addMap([
   { latitude: -6.2088, longitude: 106.8456, title: 'Warung Sederhana', body: 'Rumah makan padang' },
   { latitude: -6.2150, longitude: 106.8500, title: 'Bakso Pak Kumis', body: 'Bakso urat' }
 ])
+
+await rich.send(jid)
 ```
 
 Each place needs a numeric `latitude` and `longitude` — anything else throws rather than dropping a pin at 0,0. Pins are numbered from one in the order you pass them. The map centres on the average of the places unless you pass `center`, and `latitudeDelta` / `longitudeDelta` (both `0.05` by default) set how much ground the frame covers. `showInfoList` draws the list under the map, `motivation` is the line above it, and `staticMapUrl` fills in the section half for clients reading that instead.
@@ -1827,7 +1868,9 @@ Each place needs a numeric `latitude` and `longitude` — anything else throws r
 Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
 
 ```js
-import { mediaGridSection, mediaItem, socialEntityItem, contextualSourcesSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich, mediaGridSection, mediaItem, contextualSourcesSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
 
 rich.addSection(mediaGridSection([
   mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
@@ -1837,6 +1880,8 @@ rich.addSection(mediaGridSection([
 rich.addSection(contextualSourcesSection([
   { url: 'https://example.com/a', title: 'Sumber A', favicon: 'https://example.com/a.ico' }
 ]))
+
+await rich.send(jid)
 ```
 
 `mediaItem`, `placeEntityItem`, `socialEntityItem`, `productEntityItem`, `threadSurfingItem`, `sideBySideSurveyItem`, `accountLinkingApp`, `calendarEvent`, `actionListRow`, `plannerStep` and `transparencySignal` all return item nodes.
@@ -1846,10 +1891,14 @@ Two layouts join the eight already supported: `multipleResponseSection(responses
 For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
 
 ```js
-import { customSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich, customSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Elaina AI')
 
 rich.addSection(customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
 rich.addSection(customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
+
+await rich.send(jid)
 ```
 
 Enums for all of the above ship alongside the builders: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType` and `UnifiedResponseMessageGroupKind`.
@@ -2002,9 +2051,13 @@ The A2UI card and the native-flow buttons live in the same `interactiveMessage`,
 Pass `typename` to send the section under a different name:
 
 ```js
-import { AI_RICH_HTML_PRIMITIVE_CLASS, htmlSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich, AI_RICH_HTML_PRIMITIVE_CLASS, htmlSection } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new AIRich(sock).setTitle('Dashboard')
 
 rich.addSection(htmlSection(html, { typename: AI_RICH_HTML_PRIMITIVE_CLASS }))
+
+await rich.send(jid)
 ```
 
 The default stays `GenAIaeacdsnwHtmlPrimitive` because that is the name observed working in production.
