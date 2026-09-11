@@ -131,7 +131,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Rich Link Card](#-rich-link-card)
 - [Split Payment and Reminders](#-split-payment-and-reminders)
 - [Status Link Style](#-status-link-style)
-- [Social Link Preview](#-social-link-preview)
+- [Reading a Social Link Preview](#-reading-a-social-link-preview)
 - [Integrated MessageBuilder](#-integrated-messagebuilder)
   - [Button](#button)
   - [Selection / List](#selection--list)
@@ -1290,61 +1290,26 @@ await sock.sendMessage('status@broadcast', {
 
 The client publishes no names for these values, so this passes the number through unchanged rather than inventing an enum — `statusLinkPreview: 1` on its own works the same. A negative or non-integer style is refused.
 
-## 🎬 Social Link Preview
+## 🎬 Reading a Social Link Preview
 
-The rich half of a modern link preview lives in `linkPreviewMetadata` on the extended text message, next to the ordinary title and thumbnail. It marks what kind of post the link is, carries an inline video, and can stack tiles under it.
+When Meta's own clients send a link preview for a reel or a post, they attach extra nodes beside the ordinary title and thumbnail: `linkPreviewMetadata` with the post type, inline video and duration, plus `endCardTiles` and `videoContentUrl`. `readSocialPreview(msg)` pulls all of that back out, and returns `null` for a message that carries none of it.
 
 ```js
-import { SocialMediaPostType, videoEndCard } from '@rexxhayanasi/elaina-baileys'
+import { readSocialPreview } from '@rexxhayanasi/elaina-baileys'
 
-await sock.sendMessage(jid, {
-  text: 'lihat ini https://instagram.com/reel/xxxx',
-  socialPreview: {
-    postType: SocialMediaPostType.REEL,
-    videoUrl: 'https://cdn.example.com/reel.mp4',
-    videoCaption: 'Judul reel',
-    muted: true,
-    durationSeconds: 30,
-    endCards: [
-      videoEndCard({ username: 'rexx', caption: 'Berikutnya', thumbnailUrl: 'https://cdn.example.com/1.jpg' })
-    ]
+sock.ev.on('messages.upsert', ({ messages }) => {
+  for (const msg of messages) {
+    const social = readSocialPreview(msg)
+    if (social) console.log(social.postType, social.videoUrl, social.endCards)
   }
 })
 ```
 
-| Option | Goes to |
-|---|---|
-| `postType` | `socialMediaPostType` — `NONE`, `REEL`, `LIVE_VIDEO`, `LONG_VIDEO`, `SINGLE_IMAGE`, `CAROUSEL` |
-| `videoUrl`, `videoCaption`, `muted` | the inline video the preview plays |
-| `durationSeconds` | `linkMediaDuration` — **seconds**, the client stores `link_media_duration_seconds` |
-| `endCards` | `endCardTiles`, built with `videoEndCard` |
-| `music` | `musicMetadata`, an `EmbeddedMusic` node |
-| `experimentId` | `fbExperimentId` |
+**There is no send-side recipe here on purpose.** `socialPreview` and `videoEndCard` still exist and still encode correctly, but as of revision `1047301412` nothing draws them from a message you send, so documenting them as a way to build a card would be documenting a message that arrives blank.
 
-It rides on a link preview, so send it with a message that actually contains a link — without a matched link you get a warning and a preview with nothing to attach to.
+The evidence, so you do not have to re-derive it: on WA Web the proto-to-model mapper for `extendedTextMessage` copies `matchedText`, `description`, `title`, `jpegThumbnail`, `previewType`, `doNotPlayInline`, `mediaKey`, `mediaKeyTimestamp`, `thumbnailDirectPath`, `thumbnailSha256` and `thumbnailEncSha256` — and nothing else. `linkPreviewMetadata`, `endCardTiles` and `videoContentUrl` are dropped at that boundary before any component could read them, and a count of direct reads across the bundle agrees: `matchedText` 66, `thumbnailDirectPath` 51, those three **0** each. On the app, `endCardTiles_` is not in any dex at all, so the tiles cannot even be decoded there.
 
-`videoUrl` and `music` are written twice, nested inside `linkPreviewMetadata` and again directly on the extended text message. Both places exist in the current protocol and the client does not say which one it reads, so both carry the same value.
-
-Reading it back is `readSocialPreview(msg)`, which returns `null` for a message that carries none of it.
-
-### Expect nothing to draw
-
-Adding the link fixes the warning, not the rendering. As of revision `1047301412` this is a **decode-only** surface: build it and the bytes go out intact, and `readSocialPreview` will pull them back off a message Meta itself sent, but no client this repo can inspect draws any of it from a message you send.
-
-On WA Web the proof is the proto-to-model mapper, the one function that decides which protobuf fields ever reach a renderer:
-
-```js
-{ subtype: 'url', matchedText: t.matchedText, description: t.description, title: t.title,
-  thumbnail: decodeBytes(t.jpegThumbnail), richPreviewType: t.previewType, doNotPlayInline: t.doNotPlayInline,
-  mediaKey: …, mediaKeyTimestamp: …, thumbnailDirectPath: …, thumbnailSha256: …, thumbnailEncSha256: … }
-```
-
-`linkPreviewMetadata`, `endCardTiles` and `videoContentUrl` are not copied, so they are dropped at the model boundary before any component could read them. Counting direct reads across the whole bundle says the same: `matchedText` 66, `thumbnailDirectPath` 51, and `linkPreviewMetadata`, `endCardTiles`, `videoContentUrl` **0** each. `musicMetadata` has 6, but all of them are the status music-attribution UI reading it off a status message, not off a link preview.
-
-On the app, `socialMediaPostType_`, `linkMediaDuration_`, `linkInlineVideoMuted_` and `fbExperimentId_` are in the protobuf schema — as generated field names in `dynamicMethod`, with no renderer found near them — and **`endCardTiles_` is not in any dex at all**, so `endCards` cannot even be decoded there. Renderers are harder to rule out in dex than in the bundle, so treat the first four as unproven rather than impossible; `endCards` is settled.
-
-Keep it for reading Meta's own link previews. Do not build a feature on it drawing.
-
+For a card that does draw, with a large thumbnail and no link pasted into the body, use [Rich Link Card](#-rich-link-card) or the `linkPreview` option on an ordinary text message.
 
 ## Button
 
@@ -1976,7 +1941,7 @@ One caveat worth knowing before you build a card around any of them: the full ca
 
 The rest of `AI_RICH_PRIMITIVES` — maps, video, reminders, sports, search-planner steps, the 3P and Clippy surfaces, the HTML section, and the layouts `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid`, `RichListItem`, `MultipleResponse` and `IGSuggestedBloomCard` — draws in the app and comes out as an empty node in a browser.
 
-Two names are worth singling out because they are not WhatsApp's at all: `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have parsers only in `cometComposedTextV2GenAiUxPrimitiveParser`, Facebook Comet's renderer, and appear in no WhatsApp module on either platform. `taskSection` is in the builder because the payload shape is known, not because a WhatsApp client has been observed drawing it.
+Two names sit oddly in the middle: `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have a parser only in `cometComposedTextV2GenAiUxPrimitiveParser`, Facebook Comet's renderer, and none in any `WAWeb*` module — but both names are in the Android dex, so the app is where to test them. On desktop they land in the empty node like everything else outside the table above.
 
 Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
@@ -2267,7 +2232,7 @@ The A2UI card and the native-flow buttons live in the same `interactiveMessage`,
 
 `htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp app renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything. It is part of `AI_RICH_PRIMITIVES` and not part of `AI_RICH_PRIMITIVES_WEB_RENDERED`: the name appears nowhere in the WA Web bundle, so a desktop viewer gets an empty node where the page would be.
 
-**The typename is not validated.** `GenAIaeacdsnwHtmlPrimitive` occurs nowhere in the APK either — not in any dex, resource or native library. The client decodes the unified response through Meta's Pando runtime (`com.facebook.pando.TreeJNI`), which reinterprets a tree node as a model class **without comparing `__typename`**. The renderer dispatches on the field shape instead, and logs `JarvisRichContent/render skipped malformed HtmlSectionContent` when the shape does not fit. What actually has to be there is `payload` and `trusted_sources` — those two field names, and the class `HtmlSectionContent(payload=, trustedSources=)`, are in the APK. The Kotlin model for the section is `FOAHtmlPrimitive`, exported as `AI_RICH_HTML_PRIMITIVE_CLASS`; the only class in the dex that carries the name is `FOAHtmlPrimitiveDemoDONOTUSEImpl`, so treat the whole surface as one Meta has not finished.
+**The typename is not validated.** `GenAIaeacdsnwHtmlPrimitive` occurs nowhere in the APK either — not in any dex, resource or native library. The client decodes the unified response through Meta's Pando runtime (`com.facebook.pando.TreeJNI`), which reinterprets a tree node as a model class **without comparing `__typename`**. The renderer dispatches on the field shape instead, and logs `JarvisRichContent/render skipped malformed HtmlSectionContent` when the shape does not fit. What actually has to be there is `payload` and `trusted_sources` — those two field names, and the class `HtmlSectionContent(payload=, trustedSources=)`, are in the APK. The Kotlin model for the section is `FOAHtmlPrimitive`, exported as `AI_RICH_HTML_PRIMITIVE_CLASS`. Worth knowing before you lean on that override: the only dex class carrying the `FOAHtmlPrimitive` name is `FOAHtmlPrimitiveDemoDONOTUSEImpl`, while the render path that actually logs the line above is built around `HtmlSectionContent`. So the default typename is the one to keep, and the override is a fallback to try, not an equivalent.
 
 Pass `typename` to send the section under a different name:
 
