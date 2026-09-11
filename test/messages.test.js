@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { getImageProcessingLibrary } from '../lib/Utils/messages-media.js';
 import assert from 'node:assert/strict';
-import { generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType } from '../lib/Utils/messages.js';
+import { generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType, nativeFlowButtonsViolateConstraints, QUICK_REPLY_BUTTON_LIMIT } from '../lib/Utils/messages.js';
 import { promises as fs, readFileSync } from 'node:fs';
 import { proto } from '../WAProto/index.js';
 import { SocialMediaPostType, buildSocialPreview, readSocialPreview, videoEndCard } from '../lib/Utils/link-preview-metadata.js';
@@ -1069,4 +1069,30 @@ test('interactive-mixing', async () => {
     const back = proto.Message.toObject(proto.Message.decode(proto.Message.encode(both).finish()), { defaults: false });
     assert.deepEqual(Object.keys(back), ['interactiveMessage', 'richResponseMessage'], 'both survive the wire');
     assert.equal(getContentType(back), 'interactiveMessage', 'but the lower field number wins and the rich response is ignored');
+});
+
+test('native-flow-button-constraints', async () => {
+    const name = n => ({ name: n });
+    const quick = n => Array.from({ length: n }, () => name('quick_reply'));
+
+    assert.equal(nativeFlowButtonsViolateConstraints([]), false);
+    assert.equal(nativeFlowButtonsViolateConstraints(quick(QUICK_REPLY_BUTTON_LIMIT)), false, 'ten quick replies is the limit');
+    assert.equal(nativeFlowButtonsViolateConstraints(quick(QUICK_REPLY_BUTTON_LIMIT + 1)), true);
+    assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('cta_url'), name('cta_url')]), false, 'three is the limit when the first is not a quick reply');
+    assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('cta_url'), name('cta_url'), name('cta_url')]), true);
+    assert.equal(nativeFlowButtonsViolateConstraints([name('quick_reply'), name('cta_url')]), true, 'every button has to match the first one kind');
+    assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('quick_reply')]), true);
+    assert.equal(nativeFlowButtonsViolateConstraints([name('single_select')]), false, 'a lone unknown name is fine');
+
+    const warnings = [];
+    const options = { upload: async () => ({}), logger: { warn: (meta) => warnings.push(meta) } };
+
+    await generateWAMessageContent({ text: 'x', nativeFlow: Array.from({ length: 10 }, (_, i) => ({ text: 'b', id: '.b' + i })) }, options);
+    assert.equal(warnings.length, 0, 'a list inside the limits stays quiet');
+
+    await generateWAMessageContent({ text: 'x', nativeFlow: Array.from({ length: 30 }, (_, i) => ({ text: 'b', id: '.b' + i })) }, options);
+    assert.deepEqual(warnings.at(-1), { buttons: 30, limit: 10, kinds: ['quick_reply'] });
+
+    await generateWAMessageContent({ text: 'x', nativeFlow: [{ text: 'a', id: '.a' }, { text: 'b', url: 'https://x.test' }] }, options);
+    assert.deepEqual(warnings.at(-1), { buttons: 2, limit: 10, kinds: ['quick_reply', 'cta_url'] });
 });

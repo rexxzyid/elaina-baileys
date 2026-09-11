@@ -1622,19 +1622,80 @@ isSupportedInteractiveMessageVersion(type, payload) {
 
 `messageVersion` is **mandatory** on the slot that won, and must be `1` or less. Leave it out and the message is unsupported before any of the above runs — there is no version 9. The `nativeFlow` content key sets it for you.
 
-And one widespread mistake: `nativeFlowMessage.name` is **not** what the client reads. The effective flow name comes from the first button:
+#### The button constraints, and why they decide everything
+
+`nativeFlowMessage.name` is **not** what the client reads. The flow name is worked out from the buttons, and only if they pass a check:
 
 ```js
 getBizNativeFlowName = ({ interactiveMessage: m }) => {
   const p = m?.nativeFlowMessage?.buttons
-  if (p?.length > 0 && !buttonsViolateButtonImprovementsConstraints(...)) return getNativeFlowNameByButtonName(p[0].name)
-  ...
+  if (p?.length > 0 && !buttonsViolateButtonImprovementsConstraints(p.map(b => ({ nativeFlowButton: b }))))
+      return getNativeFlowNameByButtonName(p[0].name)          // ← the only branch a bot reaches
+  if (e.buttonsMessage?.buttons?.length === 1) return …          // legacy buttonsMessage
+  const f = !(p?.length) && (body.text || header.title || footer.text || header.imageMessage) && !m?.shopStorefrontMessage
+  if (f) return MIXED                                            // ← only when there are NO buttons
+  // otherwise: undefined
 }
 ```
 
-So `name: 'mixed'` on the message is cosmetic on Web; put the button kinds you want in `buttons` and order them deliberately, because `buttons[0].name` is the one that counts.
+Note what `MIXED` actually means there: it is the name for an interactive message **with no buttons at all**. It is not "a mix of button kinds", and `name: 'mixed'` in the protobuf is never consulted.
 
-Here is the whole mix through `sendMessage`, no imports:
+Here is the check, in full:
+
+```js
+const QUICK_REPLY_LIMIT = 10, OTHER_LIMIT = 3
+const SUPPORTED = [QUICK_REPLY, CTA_CALL, CTA_URL, CTA_CATALOG, CATALOG_MESSAGE, CTA_COPY_CODE, CTA_FLOW,
+                   ORDER_STATUS, PAYMENT_REMINDER, BOOKING_CONFIRMATION, PAYMENT_REQUEST,
+                   API_SIGNUP, INAPP_SIGNUP, CTA_APP, FORM_MESSAGE]
+
+const isQuickReply = b => b.nativeFlowButton?.name === String(QUICK_REPLY)
+
+buttonsViolateButtonImprovementsConstraints = e => {
+  if (e.length === 0) return false
+  const firstIsQR = isQuickReply(e[0])
+  if (e.length > (firstIsQR ? QUICK_REPLY_LIMIT : OTHER_LIMIT)) return true
+  return !e.slice(1).every(b => {
+    const mapped = getNativeFlowNameByButtonName(b.nativeFlowButton?.name)
+    return (mapped != null ? SUPPORTED.includes(mapped) : true) && firstIsQR === isQuickReply(b)
+  })
+}
+```
+
+Three rules fall out of it:
+
+1. **Every button must be the same kind of button as the first** — quick reply or not. One `cta_url` next to a `quick_reply` breaks the whole list.
+2. **At most 10 buttons if the first is `quick_reply`, at most 3 otherwise.**
+3. A later button whose name maps to a known flow must be one of the fifteen above. An unrecognised name passes this particular rule.
+
+Break any of them and the flow name comes back `undefined`, which is fatal one step later:
+
+```js
+isValidNativeFlowName = ({ bizInfo, msgContext, name }) => {
+  if (msgContext !== 'relay' && name != null) return true
+  const a = bizInfo?.nativeFlowName
+  if (a == null || name == null) return false            // ← undefined name, before anything else
+  return cast(a) === MIXED || … ? true : cast(a) === name
+}
+```
+
+An incoming message is a relay, so `name == null` returns false and the message becomes the unsupported node — buttons, text, footer and all. Note the order: the `MIXED` escape hatch is checked **after** the null test, so a `<biz>` node claiming `mixed` does not rescue a violating button list.
+
+That `<biz>` node is the other half, and this library already sends it. When the first button is not one of the few flows that need their own name, it goes out as:
+
+```xml
+<biz actual_actors="2" host_storage="2" privacy_mode_ts="…">
+  <interactive type="native_flow" v="1">
+    <native_flow v="9" name="mixed"/>
+  </interactive>
+  <quality_control decision_id="…" source_type="third_party">…</quality_control>
+</biz>
+```
+
+That `v="9" name="mixed"` is a stanza attribute, unrelated to `messageVersion` in the protobuf — which still has to be `1`. With the node saying `mixed`, any flow name your buttons produce is accepted, so the button constraints above are the only thing left that can fail.
+
+`nativeFlowButtonsViolateConstraints` is exported so you can check a list yourself, and passing a violating one logs a warning naming the limit and the kinds it found.
+
+Here is the whole mix through `sendMessage`, no imports — one kind of button, inside the limit:
 
 ```js
 const teks = '✨ MENU ELAINA\n\nPilih kategori di bawah.'
@@ -1644,8 +1705,8 @@ await sock.sendMessage(jid, {
   footer: 'Elaina - MultiDevice',
   nativeFlow: [
     { text: 'Semua Menu', id: '.allmenu' },
-    { text: 'Situs', url: 'https://nixel.dev' },
-    { text: 'Salin prefix', copy: '.' }
+    { text: 'Downloader', id: '.menu downloader' },
+    { text: 'Sticker', id: '.menu sticker' }
   ],
   optionText: 'Pilih Kategori',
   optionTitle: 'Kategori',
@@ -1657,6 +1718,20 @@ await sock.sendMessage(jid, {
   }
 })
 ```
+
+A url or a copy button cannot join those three. Send it as its own message, with at most three of its own kind:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Tautan penting',
+  nativeFlow: [
+    { text: 'Situs', url: 'https://nixel.dev' },
+    { text: 'Channel', url: 'https://whatsapp.com/channel/xxxx' }
+  ]
+})
+```
+
+There is one way out of the whole check, and it is the reason a menu with an A2UI card can be looser than one without: `if (!S && (msgContext === 'relay' || …))`. With a valid `im_a2ui` widget and `im_bloks_widget_enable` on, the flow-name validation never runs. That is a gate you do not control, so build the buttons to the rules anyway and treat the widget as a bonus.
 
 Keep `bloksWidget.fallback` byte-identical to `text`. The client hides the bubble text only when the widget is enabled **and** the two match (`if (S && k === msg.bloksWidget?.fallback) k = null`), so the same payload draws the widget where the prop is on and the plain text where it is not, instead of showing the content twice.
 
