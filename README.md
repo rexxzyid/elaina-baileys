@@ -1327,7 +1327,23 @@ It rides on a link preview, so send it with a message that actually contains a l
 
 Reading it back is `readSocialPreview(msg)`, which returns `null` for a message that carries none of it.
 
-This is an Android surface. Nothing in the WhatsApp Web bundle reads these fields — they appear in its protobuf spec and nowhere else — so expect the card to stay plain on desktop.
+### Expect nothing to draw
+
+Adding the link fixes the warning, not the rendering. As of revision `1047301412` this is a **decode-only** surface: build it and the bytes go out intact, and `readSocialPreview` will pull them back off a message Meta itself sent, but no client this repo can inspect draws any of it from a message you send.
+
+On WA Web the proof is the proto-to-model mapper, the one function that decides which protobuf fields ever reach a renderer:
+
+```js
+{ subtype: 'url', matchedText: t.matchedText, description: t.description, title: t.title,
+  thumbnail: decodeBytes(t.jpegThumbnail), richPreviewType: t.previewType, doNotPlayInline: t.doNotPlayInline,
+  mediaKey: …, mediaKeyTimestamp: …, thumbnailDirectPath: …, thumbnailSha256: …, thumbnailEncSha256: … }
+```
+
+`linkPreviewMetadata`, `endCardTiles` and `videoContentUrl` are not copied, so they are dropped at the model boundary before any component could read them. Counting direct reads across the whole bundle says the same: `matchedText` 66, `thumbnailDirectPath` 51, and `linkPreviewMetadata`, `endCardTiles`, `videoContentUrl` **0** each. `musicMetadata` has 6, but all of them are the status music-attribution UI reading it off a status message, not off a link preview.
+
+On the app, `socialMediaPostType_`, `linkMediaDuration_`, `linkInlineVideoMuted_` and `fbExperimentId_` are in the protobuf schema — as generated field names in `dynamicMethod`, with no renderer found near them — and **`endCardTiles_` is not in any dex at all**, so `endCards` cannot even be decoded there. Renderers are harder to rule out in dex than in the bundle, so treat the first four as unproven rather than impossible; `endCards` is settled.
+
+Keep it for reading Meta's own link previews. Do not build a feature on it drawing.
 
 
 ## Button
