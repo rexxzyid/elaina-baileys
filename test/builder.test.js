@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { proto } from '../WAProto/index.js';
-import { A2UI_BASIC_CATALOG, A2UI_VERSION, BLOKS_A2UI_TYPE, a2uiColumn, a2uiImage, a2uiRow, a2uiSurface, a2uiText, a2uiWidget, decodeBloksWidget, sendA2UI, autoHeight, HTML_APP_BRIDGE, AI_RICH_PRIMITIVES, BLOKS_A2UI_REPLY_ACTION, BLOKS_A2UI_SUPPORTED_ELEMENTS, bloksSection, bloksWidget, decodeAIRich, sendBloksWidget, AI_RICH_INLINE_ENTITIES, AI_RICH_SECTION_TYPENAME, EMBEDDED_SCREEN_PRESENTATION, EMBEDDED_SCREEN_TABBED_TYPENAME, SourceProvider, botSourcesMetadata, embeddedScreen, embeddedTab, embeddedTabbedContent, htmlSection, readEmbeddedSections, readEmbeddedTabs, readRichMessage, HTML_MIME_TYPE, fileLinkSection, fileSection, sendHtmlDocument, FooterActionType, footerActionSection, AI_RICH_HTML_PRIMITIVE, AI_RICH_PRIMITIVES_ANDROID_ONLY, lockHeight, sendHtmlApp, AI_RICH_ITEMS, AI_RICH_LAYOUTS } from '../lib/MessageBuilder/extras.js';
+import { A2UI_BASIC_CATALOG, A2UI_VERSION, BLOKS_A2UI_TYPE, a2uiColumn, a2uiImage, a2uiRow, a2uiSurface, a2uiText, a2uiWidget, decodeBloksWidget, sendA2UI, autoHeight, HTML_APP_BRIDGE, AI_RICH_PRIMITIVES, BLOKS_A2UI_REPLY_ACTION, BLOKS_A2UI_SUPPORTED_ELEMENTS, bloksSection, bloksWidget, decodeAIRich, sendBloksWidget, AI_RICH_INLINE_ENTITIES, AI_RICH_SECTION_TYPENAME, EMBEDDED_SCREEN_PRESENTATION, EMBEDDED_SCREEN_TABBED_TYPENAME, SourceProvider, botSourcesMetadata, embeddedScreen, embeddedTab, embeddedTabbedContent, htmlSection, readEmbeddedSections, readEmbeddedTabs, readRichMessage, HTML_MIME_TYPE, fileLinkSection, fileSection, sendHtmlDocument, FooterActionType, footerActionSection, AI_RICH_HTML_PRIMITIVE, AI_RICH_PRIMITIVES_WEB_RENDERED, lockHeight, sendHtmlApp, AI_RICH_ITEMS, AI_RICH_LAYOUTS } from '../lib/MessageBuilder/extras.js';
 import { AIRich, Toolkit, ContentValidationError } from '../lib/MessageBuilder/index.js';
 import { checkHtmlApp } from '../lib/Utils/html-app.js';
 import { accountLinkingApp, accountLinkingSection, actionListRow, actionListSection, addonActionSection, calendarEvent, calendarWidgetSection, chainOfThoughtSection, chainingSuggestionSection, commentSection, compactEntitySection, contextualSourcesSection, customSection, locationPermissionSection, mapSection, mediaGridSection, mediaItem, multipleResponseSection, placeItem, plannerSnippetSection, plannerStep, productEntityItem, reminderSection, searchAdSection, searchPlannerSection, searchResultV2Section, sideBySideSurveyItem, socialEntityItem, sportsSection, threadSurfingItem, timestampPlaceholderSection, transparencySection, transparencySignal, videoSection, ActionListRowType, CompactEntityType, MapQueryStatus, MultipleResponseLayoutType, SearchPlannerStepStatus, SportsGameStatus, SportsLeague, forwardRichResponse, readSignedRichResponse, verifyRichResponseSignature } from '../lib/MessageBuilder/metaai.js';
@@ -714,8 +714,8 @@ test('html-section', async () => {
     assert.throws(() => htmlSection(123), TypeError);
     assert.throws(() => htmlSection('<b>x</b>', { trustedSources: 'nixel.dev' }), TypeError);
 
-    assert.equal(AI_RICH_PRIMITIVES.includes(AI_RICH_HTML_PRIMITIVE), false);
-    assert.equal(AI_RICH_PRIMITIVES_ANDROID_ONLY.includes(AI_RICH_HTML_PRIMITIVE), true);
+    assert.equal(AI_RICH_PRIMITIVES.includes(AI_RICH_HTML_PRIMITIVE), true);
+    assert.equal(AI_RICH_PRIMITIVES_WEB_RENDERED.includes(AI_RICH_HTML_PRIMITIVE), false);
 
     const calls = [];
     const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async (jid, message) => { calls.push({ jid, message }); } };
@@ -804,7 +804,11 @@ test('metaai-sections', async () => {
         assert.ok(AI_RICH_ITEMS.includes('GenAIMediaItem'));
         assert.equal(new Set(AI_RICH_PRIMITIVES).size, AI_RICH_PRIMITIVES.length, 'no duplicate primitives');
         assert.equal(new Set(AI_RICH_LAYOUTS).size, AI_RICH_LAYOUTS.length, 'no duplicate layouts');
-        assert.equal(AI_RICH_PRIMITIVES.includes(AI_RICH_HTML_PRIMITIVE), false, 'the html primitive keeps its own export');
+        assert.equal(AI_RICH_PRIMITIVES.includes(AI_RICH_HTML_PRIMITIVE), true, 'the html primitive is part of the catalog');
+        assert.equal(new Set(AI_RICH_PRIMITIVES_WEB_RENDERED).size, 18, 'the web-rendered subset is eighteen');
+        for (const name of AI_RICH_PRIMITIVES_WEB_RENDERED) {
+            assert.ok(AI_RICH_PRIMITIVES.includes(name), `${name} has to be in the full catalog too`);
+        }
     }
 
     /**

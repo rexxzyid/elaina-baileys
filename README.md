@@ -1708,13 +1708,13 @@ Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is
 
 An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp client parses roughly forty primitives, and `AI_RICH_PRIMITIVES` now lists all of them, with `AI_RICH_ITEMS` for the item nodes a layout carries.
 
-One caveat worth knowing before you build a card around any of them: WA Web ships renderers for about half the catalog, so the newer surfaces draw on phones and come out blank on desktop. The message still arrives either way and the rest of the sections still render, because an unknown primitive falls through to the unsupported-node renderer.
+One caveat worth knowing before you build a card around any of them: the full catalog draws in the WhatsApp app, which is where your recipients are. WA Web desktop is the one that lags — it ships renderers for eighteen of the names and maps the rest to an empty node. The message still arrives either way and the other sections still render, so a desktop viewer sees a gap rather than a failure.
 
-#### Which half WA Web actually draws
+#### The subset that also draws on desktop
 
-The authority is `getPlainTextFromUnifiedResponse`, the one module that enumerates every primitive the WhatsApp Web client itself knows, plus `WAWebUnifiedResponseUtils` for two more. As of revision `1047301412` that is **sixteen** GenAI primitives, two FOA primitives and three layouts:
+`AI_RICH_PRIMITIVES_WEB_RENDERED` is the part of the catalog WA Web can draw too, so a card built only out of these names looks the same in the app and in a browser. The list is read off `getPlainTextFromUnifiedResponse`, the one module that enumerates every primitive the Web client knows, plus `WAWebUnifiedResponseUtils` for two more. As of revision `1047301412` it is eighteen primitives, alongside three layouts:
 
-| | Drawn by WA Web |
+| | |
 |---|---|
 | Text & structure | `GenAIMarkdownTextUXPrimitive`, `GenAICodeUXPrimitive`, `GenAILatexUXPrimitive`, `GenATableUXPrimitive`, `GenAIMetadataTextPrimitive`, `GenAIDividerPrimitive`, `GenAISpacerPrimitive` |
 | Media & cards | `GenAIImagePrimitive`, `GenAIImaginePrimitive`, `GenAIReelPrimitive`, `GenAIPostPrimitive`, `GenAIProductItemCardPrimitive`, `GenAISearchResultPrimitive` |
@@ -1723,9 +1723,9 @@ The authority is `getPlainTextFromUnifiedResponse`, the one module that enumerat
 | FOA | `FOATextPrimitive`, `FOABloksPrimitive` |
 | Layouts | `GenAISingleLayoutViewModel`, `GenAIGridLayoutViewModel`, `GenAIHScrollLayoutViewModel` |
 
-Everything else in `AI_RICH_PRIMITIVES` is phone-only on current builds. Two of them are not WhatsApp's at all but Facebook Comet's — `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have parsers in `cometComposedTextV2GenAiUxPrimitiveParser` and nowhere in the WhatsApp modules — along with the layouts `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid` and `RichListItem`. The remaining twenty-eight (maps, video, reminders, sports, search-planner steps, the 3P and Clippy surfaces, and the rest) are in the Android dex only.
+The rest of `AI_RICH_PRIMITIVES` — maps, video, reminders, sports, search-planner steps, the 3P and Clippy surfaces, the HTML section, and the layouts `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid`, `RichListItem`, `MultipleResponse` and `IGSuggestedBloomCard` — draws in the app and comes out as an empty node in a browser.
 
-So a section built out of the table above renders on every surface; one built out of anything else renders on a phone and falls through to a blank node on desktop.
+Two names are worth singling out because they are not WhatsApp's at all: `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have parsers only in `cometComposedTextV2GenAiUxPrimitiveParser`, Facebook Comet's renderer, and appear in no WhatsApp module on either platform. `taskSection` is in the builder because the payload shape is known, not because a WhatsApp client has been observed drawing it.
 
 Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
@@ -1995,18 +1995,16 @@ The A2UI card and the native-flow buttons live in the same `interactiveMessage`,
 
 ### HTML Mini App
 
-`htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp Android client renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything.
+`htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp app renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything. It is part of `AI_RICH_PRIMITIVES` and not part of `AI_RICH_PRIMITIVES_WEB_RENDERED`: the name appears nowhere in the WA Web bundle, so a desktop viewer gets an empty node where the page would be.
 
-**Platform support.** This primitive appears nowhere in the WhatsApp Web bundle, and the Web renderer maps unknown primitives to an empty string. So it is deliberately excluded from `AI_RICH_PRIMITIVES` and listed in `AI_RICH_PRIMITIVES_ANDROID_ONLY` instead.
-
-**The typename is not validated.** `GenAIaeacdsnwHtmlPrimitive` occurs nowhere in the Android APK either — not in any dex, resource or native library. Android decodes the unified response through Meta's Pando runtime (`com.facebook.pando.TreeJNI`), which reinterprets a tree node as a model class **without comparing `__typename`**. The renderer dispatches on the field shape instead, and logs `JarvisRichContent/render skipped malformed HtmlSectionContent` when the shape does not fit. What actually has to be there is `payload` and `trusted_sources` — those two field names, and the class `HtmlSectionContent(payload=, trustedSources=)`, are in the APK. The Kotlin model for the section is `FOAHtmlPrimitive`, exported as `AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS`.
+**The typename is not validated.** `GenAIaeacdsnwHtmlPrimitive` occurs nowhere in the APK either — not in any dex, resource or native library. The client decodes the unified response through Meta's Pando runtime (`com.facebook.pando.TreeJNI`), which reinterprets a tree node as a model class **without comparing `__typename`**. The renderer dispatches on the field shape instead, and logs `JarvisRichContent/render skipped malformed HtmlSectionContent` when the shape does not fit. What actually has to be there is `payload` and `trusted_sources` — those two field names, and the class `HtmlSectionContent(payload=, trustedSources=)`, are in the APK. The Kotlin model for the section is `FOAHtmlPrimitive`, exported as `AI_RICH_HTML_PRIMITIVE_CLASS`; the only class in the dex that carries the name is `FOAHtmlPrimitiveDemoDONOTUSEImpl`, so treat the whole surface as one Meta has not finished.
 
 Pass `typename` to send the section under a different name:
 
 ```js
-import { AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS, htmlSection } from '@rexxhayanasi/elaina-baileys'
+import { AI_RICH_HTML_PRIMITIVE_CLASS, htmlSection } from '@rexxhayanasi/elaina-baileys'
 
-rich.addSection(htmlSection(html, { typename: AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS }))
+rich.addSection(htmlSection(html, { typename: AI_RICH_HTML_PRIMITIVE_CLASS }))
 ```
 
 The default stays `GenAIaeacdsnwHtmlPrimitive` because that is the name observed working in production.
@@ -2249,7 +2247,7 @@ Do not reach for `sections[0]` — the HTML lands wherever you added it, so a ca
 Enum values, read from the client rather than guessed:
 
 ```js
-import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES, AI_RICH_PRIMITIVES_ANDROID_ONLY, AI_RICH_HTML_PRIMITIVE } from '@rexxhayanasi/elaina-baileys'
+import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES, AI_RICH_PRIMITIVES_WEB_RENDERED, AI_RICH_HTML_PRIMITIVE } from '@rexxhayanasi/elaina-baileys'
 ```
 
 `AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
@@ -2528,7 +2526,7 @@ const html = readEmbeddedSections(info.embeddedScreens[0])
 | Nothing opens at all | You are looking at WhatsApp Web. It does not render embedded screens; use a phone. |
 | The sheet opens empty | Tabs were placed beside `content` instead of inside it. Pass them to `embeddedScreen({ tabs })` and let it nest them. |
 | The tab strip shows, pages are blank | A section is missing its `view_model`, or the primitive is missing `payload`. Log `readEmbeddedSections(screen)` and look at the shape. |
-| Text renders, HTML does not | `htmlSection` is Android-only. See [HTML Mini App](#html-mini-app) for the primitive and its `trusted_sources`. |
+| Text renders, HTML does not | the viewer is on WA Web desktop, which has no renderer for the HTML section. See [HTML Mini App](#html-mini-app) for the primitive and its `trusted_sources`. |
 
 ### Inspecting a Received AI Rich Message
 
@@ -2574,7 +2572,7 @@ await sock.sendMessage(jid, {
 
 The per-item `caption` rides on each image or video. The `caption` beside `album` is the album's own — `AlbumMessage.caption`, field 1.
 
-**It is an Android-only field, so it is opt-in on purpose.** The WhatsApp Web protobuf has no `caption` on `AlbumMessage` at all; the field was found by auditing the Android APK. This library links as a Web device, so sending a field the real Web client cannot even express is a fingerprint. Leave the key out — as every existing caller already does — and nothing is written. Set it only when you have decided that trade is worth it.
+**It is opt-in on purpose.** The field was found by auditing the APK; the WA Web protobuf has no `caption` on `AlbumMessage` at all. That asymmetry is a sender-side problem, not a rendering one: this library links as a Web device no matter which phone scanned the code, so a field the real Web client cannot even express is a fingerprint on the wire. Leave the key out — as every existing caller already does — and nothing is written. Set it only when you have decided that trade is worth it.
 
 An album requires at least two image/video media items.
 

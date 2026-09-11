@@ -2,7 +2,7 @@ export declare const AI_RICH_LAYOUTS: readonly string[];
 export declare const AI_RICH_PRIMITIVES: readonly string[];
 export declare const AI_RICH_INLINE_ENTITIES: readonly string[];
 export declare const AI_RICH_ITEMS: readonly string[];
-export declare const AI_RICH_PRIMITIVES_ANDROID_ONLY: readonly string[];
+export declare const AI_RICH_PRIMITIVES_WEB_RENDERED: readonly string[];
 export declare const AI_RICH_HTML_PRIMITIVE: 'GenAIaeacdsnwHtmlPrimitive';
 
 export declare const DividerType: Readonly<{ DOT: 'DOT'; HORIZONTAL_LINE: 'HORIZONTAL_LINE' }>;
@@ -91,7 +91,7 @@ export interface ScrollControlsOptions {
  */
 export declare function scrollControls(options?: ScrollControlsOptions): string;
 
-export declare const AI_RICH_HTML_PRIMITIVE_ANDROID_CLASS: 'FOAHtmlPrimitive';
+export declare const AI_RICH_HTML_PRIMITIVE_CLASS: 'FOAHtmlPrimitive';
 
 export declare function htmlSection(html: string, options?: {
     trustedSources?: string[];
