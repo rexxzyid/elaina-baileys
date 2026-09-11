@@ -1710,6 +1710,23 @@ An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by fo
 
 One caveat worth knowing before you build a card around any of them: WA Web ships renderers for about half the catalog, so the newer surfaces draw on phones and come out blank on desktop. The message still arrives either way and the rest of the sections still render, because an unknown primitive falls through to the unsupported-node renderer.
 
+#### Which half WA Web actually draws
+
+The authority is `getPlainTextFromUnifiedResponse`, the one module that enumerates every primitive the WhatsApp Web client itself knows, plus `WAWebUnifiedResponseUtils` for two more. As of revision `1047301412` that is **sixteen** GenAI primitives, two FOA primitives and three layouts:
+
+| | Drawn by WA Web |
+|---|---|
+| Text & structure | `GenAIMarkdownTextUXPrimitive`, `GenAICodeUXPrimitive`, `GenAILatexUXPrimitive`, `GenATableUXPrimitive`, `GenAIMetadataTextPrimitive`, `GenAIDividerPrimitive`, `GenAISpacerPrimitive` |
+| Media & cards | `GenAIImagePrimitive`, `GenAIImaginePrimitive`, `GenAIReelPrimitive`, `GenAIPostPrimitive`, `GenAIProductItemCardPrimitive`, `GenAISearchResultPrimitive` |
+| Status | `GenAIBotThinkingStatusPrimitive`, `GenAIBotProgressStatusPrimitive` |
+| Upsell | `GenAIMetaSubsQuotaUpsellPrimitive` |
+| FOA | `FOATextPrimitive`, `FOABloksPrimitive` |
+| Layouts | `GenAISingleLayoutViewModel`, `GenAIGridLayoutViewModel`, `GenAIHScrollLayoutViewModel` |
+
+Everything else in `AI_RICH_PRIMITIVES` is phone-only on current builds. Two of them are not WhatsApp's at all but Facebook Comet's — `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have parsers in `cometComposedTextV2GenAiUxPrimitiveParser` and nowhere in the WhatsApp modules — along with the layouts `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid` and `RichListItem`. The remaining twenty-eight (maps, video, reminders, sports, search-planner steps, the 3P and Clippy surfaces, and the rest) are in the Android dex only.
+
+So a section built out of the table above renders on every surface; one built out of anything else renders on a phone and falls through to a blank node on desktop.
+
 Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
 ```js
