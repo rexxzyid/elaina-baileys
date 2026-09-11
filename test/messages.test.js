@@ -1096,3 +1096,32 @@ test('native-flow-button-constraints', async () => {
     await generateWAMessageContent({ text: 'x', nativeFlow: [{ text: 'a', id: '.a' }, { text: 'b', url: 'https://x.test' }] }, options);
     assert.deepEqual(warnings.at(-1), { buttons: 2, limit: 10, kinds: ['quick_reply', 'cta_url'] });
 });
+
+test('group-status-font', async () => {
+    const options = { upload: async () => ({}) };
+    const FONTS = proto.Message.ExtendedTextMessage.FontType;
+
+    for (const [name, value] of Object.entries(FONTS)) {
+        const content = await generateWAMessageContent({ text: 'halo grup', groupStatus: true },
+            { ...options, backgroundColor: '#7C3AED', textColor: '#FFEE58', font: value });
+        const inner = content.groupStatusMessageV2.message.extendedTextMessage;
+        assert.equal(inner.font, value, `${name} has to survive the groupStatusMessageV2 wrap`);
+        assert.equal(inner.contextInfo.isGroupStatus, true);
+        assert.equal(inner.backgroundArgb >>> 0, 0xFF7C3AED);
+        const back = proto.Message.decode(proto.Message.encode(proto.Message.fromObject(content)).finish());
+        assert.equal(back.groupStatusMessageV2.message.extendedTextMessage.font, value, `${name} has to survive the wire`);
+    }
+
+    assert.equal(Object.values(FONTS).sort((a, b) => a - b).join(','), '0,1,2,6,7,8,9,10', 'the accepted set is these eight, 3 to 5 do not exist');
+
+    const zero = await generateWAMessageContent({ text: 'x', groupStatus: true },
+        { ...options, backgroundColor: 0, textColor: 0, font: 0 });
+    const inner = zero.groupStatusMessageV2.message.extendedTextMessage;
+    assert.equal(inner.font, 0, 'SYSTEM used to be dropped as a falsy value');
+    assert.equal(inner.backgroundArgb, 0);
+    assert.equal(inner.textArgb, 0);
+
+    const image = await generateWAMessageContent({ image: Buffer.from(JPEG_320x200_BASE64, 'base64'), caption: 'halo', groupStatus: true },
+        { ...options, backgroundColor: '#7C3AED', font: FONTS.EXO2_EXTRABOLD });
+    assert.equal(image.groupStatusMessageV2.message.imageMessage.font, undefined, 'a media caption is not an extendedTextMessage, so it carries no font');
+});

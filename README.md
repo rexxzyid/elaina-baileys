@@ -3078,6 +3078,42 @@ await sock.sendMessage(groupJid, {
 }
 ```
 
+#### Which fonts a group status can use
+
+The same eight as a normal status, because it is the same `extendedTextMessage` underneath — the wrapper is added afterwards and changes nothing about the styling. There is no group-only face and no extra one to unlock.
+
+| Constant | Value | Looks like |
+| --- | --- | --- |
+| `SYSTEM` | 0 | the plain default, identical to sending no `font` |
+| `SYSTEM_TEXT` | 1 | the same plain face, kept as its own value |
+| `FB_SCRIPT` | 2 | flowing handwritten script, Meta's own cursive |
+| `SYSTEM_BOLD` | 6 | the plain face, heavy |
+| `MORNINGBREEZE_REGULAR` | 7 | casual marker-pen handwriting |
+| `CALISTOGA_REGULAR` | 8 | chunky rounded display serif |
+| `EXO2_EXTRABOLD` | 9 | geometric sans at its heaviest weight |
+| `COURIERPRIME_BOLD` | 10 | monospace typewriter |
+
+Three things carry over unchanged from [Background, Text Color and Font](#background-text-color-and-font), where each face is described in full:
+
+- **3, 4 and 5 do not exist.** The values jump 2 → 6. The client validates against the eight above and drops anything else, so an unknown value behaves exactly like sending no font.
+- **`font` takes the raw number too**, if you would rather not import — `font: 8` is `CALISTOGA_REGULAR`.
+- **The faces live in the Android APK**, under `assets/fonts/`. WA Web validates the field but has no font-family mapping for any of them, so a styled group status looks styled on a phone and plain in a browser.
+
+All eight survive the wrap, which is worth checking rather than assuming — `SYSTEM` writes `font: 0` into the message rather than being dropped as a falsy value:
+
+```
+SYSTEM                 nilai= 0 | font=0  | bg=0xff7c3aed | isGroupStatus=true
+SYSTEM_TEXT            nilai= 1 | font=1  | bg=0xff7c3aed | isGroupStatus=true
+FB_SCRIPT              nilai= 2 | font=2  | bg=0xff7c3aed | isGroupStatus=true
+SYSTEM_BOLD            nilai= 6 | font=6  | bg=0xff7c3aed | isGroupStatus=true
+MORNINGBREEZE_REGULAR  nilai= 7 | font=7  | bg=0xff7c3aed | isGroupStatus=true
+CALISTOGA_REGULAR      nilai= 8 | font=8  | bg=0xff7c3aed | isGroupStatus=true
+EXO2_EXTRABOLD         nilai= 9 | font=9  | bg=0xff7c3aed | isGroupStatus=true
+COURIERPRIME_BOLD      nilai=10 | font=10 | bg=0xff7c3aed | isGroupStatus=true
+```
+
+A caption on an `image` or `video` group status is **not** an `extendedTextMessage`, so it takes no `font` at all — the three styling options only reach a text status. A voice note keeps `backgroundArgb` and nothing else.
+
 Media works the same way — `groupStatus: true` alongside an `image`, `video` or voice note wraps whichever message got built, and a voice note keeps its background colour:
 
 ```js
