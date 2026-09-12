@@ -4470,13 +4470,13 @@ call.on('idle', async () => {
 await call.waitForEnd()
 ```
 
-`idle` fires the moment the queue empties. Anything enqueued before the grace window closes cancels the hang up and plays straight away; if nothing arrives, the call ends. Set `endWhenQueueEmpty: false` to stay on the call indefinitely and hang up yourself.
+`idle` dipancarkan begitu antreannya kosong. Apa pun yang diantrekan sebelum jendela toleransinya tertutup membatalkan penutupan panggilan dan langsung diputar; kalau tidak ada yang datang, panggilannya berakhir. Setel `endWhenQueueEmpty: false` untuk tetap di panggilan tanpa batas dan menutupnya sendiri.
 
-`enqueue` also takes an array, `skip()` drops the current track, `play()` replaces the queue with one track now, and `queued()` and `nowPlaying()` report what is left and what is running. Audio buffered from a finished track is played out before the next one starts, so a song is never cut off mid-tail by the queue advancing.
+`enqueue` juga menerima array, `skip()` membuang lagu yang sedang diputar, `play()` menggantikan antreannya dengan satu lagu sekarang, dan `queued()` serta `nowPlaying()` melaporkan apa yang tersisa dan apa yang sedang jalan. Audio yang masih tertahan di buffer dari lagu yang sudah selesai diputar habis dulu sebelum yang berikutnya mulai, jadi satu lagu tidak pernah terpotong di ekornya karena antreannya maju.
 
 ### Panggilan Video
 
-Both one to one and group calls take video. The frames come from ffmpeg the same way the audio does, so a video source is a file, a URL, a still image, or an `lavfi:` generator.
+Panggilan satu lawan satu maupun grup dua-duanya menerima video. Frame-nya datang dari ffmpeg sama seperti audionya, jadi sumber videonya bisa berupa berkas, URL, gambar diam, atau generator `lavfi:`.
 
 ```js
 const call = await voip.call('628123456789', {
@@ -4486,7 +4486,7 @@ const call = await voip.call('628123456789', {
     durationMs: 0
 })
 
-call.on('videotrack', track => console.log('now showing', track))
+call.on('videotrack', track => console.log('sekarang menampilkan', track))
 ```
 
 ```js
@@ -4496,21 +4496,21 @@ const call = await voip.callGroup('12345-67890@g.us', {
 })
 ```
 
-Video has its own queue, separate from the audio one: `playVideo`, `enqueueVideo`, `skipVideo`, `queuedVideo` and `nowPlayingVideo`, with `videotrack` and `videotrackend` events. The hang-up rules stay tied to the audio queue, so a call ends when the audio runs out rather than when the picture does.
+Video punya antreannya sendiri, terpisah dari antrean audio: `playVideo`, `enqueueVideo`, `skipVideo`, `queuedVideo`, dan `nowPlayingVideo`, dengan event `videotrack` dan `videotrackend`. Aturan penutupan panggilannya tetap terikat ke antrean audio, jadi panggilan berakhir saat audionya habis, bukan saat gambarnya habis.
 
-A still image is looped rather than shown for a single frame, which is the easy way to send a fixed card:
+Gambar diam diulang terus ketimbang ditampilkan satu frame saja, dan itu cara mudah mengirim kartu yang tetap:
 
 ```js
 await voip.call('628123456789', { video: true, videoSource: './poster.jpg', playlist: ['lagu.mp3'] })
 ```
 
-The engine picks the resolution and frame rate when the call connects and the feeder scales to fit, padding to keep the aspect ratio. Frames go out as I420 straight into the WASM encoder — there is no WebCodecs in Node, so the browser encode path is not used. When the queue runs dry the last frame is held rather than cutting to black, so a stall reads as a freeze instead of a flash.
+Mesinnya memilih resolusi dan laju frame saat panggilannya tersambung, dan pengumpannya menskalakan agar pas, menambahkan padding supaya rasio aspeknya tetap. Frame-nya dikirim sebagai I420 langsung ke encoder WASM — tidak ada WebCodecs di Node, jadi jalur encode browser-nya tidak dipakai. Saat antreannya kering, frame terakhirnya dipertahankan ketimbang memotong ke hitam, jadi tersendatnya terbaca sebagai gambar membeku, bukan kedipan.
 
-Audio and video are two ffmpeg processes with two clocks. Playing the same file through both will drift; if you need them locked together, pass the same file only to `playlist` and leave the picture on a still image.
+Audio dan video itu dua proses ffmpeg dengan dua jam berbeda. Memutar berkas yang sama lewat keduanya akan melenceng; kalau kamu butuh keduanya terkunci bersama, serahkan berkas yang sama hanya ke `playlist` dan biarkan gambarnya berupa gambar diam.
 
 ### Berbagi Layar
 
-The same video, sent as a screen share instead of a camera. It is a separate wasm entry point, so the recipient sees it labelled as a shared screen rather than as the bot turning its camera on.
+Video yang sama, dikirim sebagai berbagi layar ketimbang sebagai kamera. Ini titik masuk wasm yang terpisah, jadi penerimanya melihatnya berlabel layar yang dibagikan, bukan seperti bot menyalakan kameranya.
 
 ```js
 const call = await voip.call('628123456789', {
@@ -4520,12 +4520,12 @@ const call = await voip.call('628123456789', {
 })
 ```
 
-`screenShare: true` implies `video: true`. Turn it on and off mid-call with `call.startScreenShare()` and `call.stopScreenShare()`; `call.isScreenShare()` reports which one is live.
+`screenShare: true` sudah mengandung `video: true`. Nyalakan dan matikan di tengah panggilan dengan `call.startScreenShare()` dan `call.stopScreenShare()`; `call.isScreenShare()` melaporkan yang mana yang sedang hidup.
 
-Which to prefer depends on what you are sending, and it is worth testing both on a real call:
+Mana yang lebih baik bergantung pada apa yang kamu kirim, dan layak diuji keduanya di panggilan sungguhan:
 
-- **Screen share** suits still content — slides, lyrics, a card. The encoder favours sharpness over motion, and a 16:9 source is not padded into a portrait camera frame.
-- **The camera path** suits moving pictures, and reaches everyone. Screen share is gated by `calling_screen_share_milestone_version`: a recipient on an older WhatsApp gets a "please update" dialog instead of your content. In a group there is also a participant cap for sharing, and typically only one participant may share at a time.
+- **Berbagi layar** cocok untuk konten diam — slide, lirik, satu kartu. Encoder-nya lebih mengutamakan ketajaman daripada gerakan, dan sumber 16:9 tidak dipaksa masuk ke frame kamera potret.
+- **Jalur kamera** cocok untuk gambar bergerak, dan menjangkau semua orang. Berbagi layar digerbangi `calling_screen_share_milestone_version`: penerima dengan WhatsApp yang lebih lama mendapat dialog "mohon perbarui" ketimbang kontenmu. Di grup juga ada batas jumlah peserta untuk berbagi, dan biasanya hanya satu peserta yang boleh berbagi sekaligus.
 
 ### Panggilan Grup
 
@@ -4537,9 +4537,9 @@ const call = await voip.callGroup('12345-67890@g.us', {
 })
 ```
 
-`callGroup` reads the participant list from the group metadata, resolves each member's LID and devices, and rings them all. Pass `participants` to ring only some of them, or `metadata` if you already have it and want to skip the fetch.
+`callGroup` membaca daftar anggota dari metadata grupnya, menyelesaikan LID dan perangkat tiap anggota, lalu menelepon semuanya. Beri `participants` untuk menelepon sebagiannya saja, atau `metadata` kalau kamu sudah punya dan mau melewati pengambilannya.
 
-To join a call someone else started, hand `joinGroupCall` what the incoming offer told you:
+Untuk ikut ke panggilan yang dimulai orang lain, serahkan ke `joinGroupCall` apa yang disebutkan penawaran yang masuk:
 
 ```js
 const call = await voip.joinGroupCall({
@@ -4550,13 +4550,13 @@ const call = await voip.joinGroupCall({
 })
 ```
 
-The queue behaves the same on a group call as on a one-to-one call.
+Antreannya berperilaku sama di panggilan grup dan di panggilan satu lawan satu.
 
-The stack ships `whatsapp.wasm`, `loader.js` and `worker-modules.js` under `lib/assets/wasm/`, so it works out of the box; `wasmPath`, `resourcesPath` and `wasmBinary` are there for when you want to point it at a fresher build, and `storageDir` moves the engine's scratch directory off the default under the system temp dir. It needs `ffmpeg` for the outgoing media; set `ffmpegPath` on the client or `FFMPEG_PATH` in the environment when the binary is not on `PATH`.
+Tumpukannya membawa `whatsapp.wasm`, `loader.js`, dan `worker-modules.js` di bawah `lib/assets/wasm/`, jadi ia jalan langsung; `wasmPath`, `resourcesPath`, dan `wasmBinary` ada untuk saat kamu mau mengarahkannya ke build yang lebih baru, dan `storageDir` memindahkan direktori kerja mesinnya dari bawaannya di direktori temp sistem. Ia butuh `ffmpeg` untuk media keluarnya; setel `ffmpegPath` di klien atau `FFMPEG_PATH` di environment kalau binary-nya tidak ada di `PATH`.
 
-Those three files are WhatsApp Web's own, vendored byte for byte. A supply-chain scanner will call them obfuscated code and a large binary, so `lib/assets/wasm/README.md` records their checksums, what they can and cannot reach, and why they are not reformatted; `npm run verify:assets` re-checks all of it in one command.
+Ketiga berkas itu milik WhatsApp Web sendiri, dibawa byte per byte. Pemindai supply-chain akan menyebutnya kode terobfuskasi dan binary besar, jadi `lib/assets/wasm/README.md` mencatat checksum-nya, apa yang bisa dan tidak bisa dijangkaunya, serta kenapa keduanya tidak diformat ulang; `npm run verify:assets` memeriksa ulang semuanya dalam satu perintah.
 
-Nothing is written to stdout unless you ask: pass `debug: true` for the built-in tracing, or `logger: (...args) => …` to route it into your own logger.
+Tidak ada yang ditulis ke stdout kecuali kamu memintanya: beri `debug: true` untuk pelacakan bawaannya, atau `logger: (...args) => …` untuk mengarahkannya ke logger-mu sendiri.
 
 ### Keluar
 
@@ -4564,7 +4564,7 @@ Nothing is written to stdout unless you ask: pass `debug: true` for the built-in
 await sock.logout()
 ```
 
-This unlinks the device on WhatsApp's side, so the stored credentials become useless. To stop the socket without unlinking, use `sock.end()`.
+Ini melepas tautan perangkatnya di sisi WhatsApp, jadi kredensial yang tersimpan jadi tak berguna. Untuk menghentikan socket-nya tanpa melepas tautan, pakai `sock.end()`.
 
 ---
 
@@ -4595,7 +4595,7 @@ await sock.removeProfilePicture(jid)
 
 ## 🧰 Ekspor Yang Berguna
 
-Some commonly used exports include:
+Beberapa ekspor yang sering dipakai:
 
 ```js
 import {
