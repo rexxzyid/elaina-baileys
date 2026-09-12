@@ -4200,35 +4200,37 @@ keduanya field untuk dikenali saat mulai berdatangan, bukan untuk dikirim.
 
 ### 84 sisanya
 
-These carry the content. You will use a handful constantly and never touch
-most of the rest, but knowing they exist saves you from assuming a message is
-malformed when it is simply a kind you have not met.
+Yang ini membawa isinya. Kamu akan memakai segelintir terus-menerus dan tidak
+pernah menyentuh sisanya, tapi mengetahui mereka ada menyelamatkanmu dari
+mengira sebuah pesan cacat padahal itu sekadar jenis yang belum pernah kamu
+temui.
 
-| Group | Types |
+| Kelompok | Jenis |
 |---|---|
-| Text and location | `conversation`, `extendedTextMessage`, `locationMessage`, `liveLocationMessage`, `contactMessage`, `contactsArrayMessage`, `groupInviteMessage`, `albumMessage`, `musicMessage`, `conditionalRevealMessage` |
+| Teks dan lokasi | `conversation`, `extendedTextMessage`, `locationMessage`, `liveLocationMessage`, `contactMessage`, `contactsArrayMessage`, `groupInviteMessage`, `albumMessage`, `musicMessage`, `conditionalRevealMessage` |
 | Media | `imageMessage`, `videoMessage`, `audioMessage`, `documentMessage`, `stickerMessage`, `stickerPackMessage`, `stickerSyncRmrMessage`, `ptvMessage` |
-| Legacy | `chat` |
-| Buttons and lists | `buttonsMessage`, `buttonsResponseMessage`, `listMessage`, `listResponseMessage`, `templateMessage`, `templateButtonReplyMessage`, `interactiveMessage`, `interactiveResponseMessage`, `highlyStructuredMessage` |
-| Polls and events | `pollCreationMessage` … `pollCreationMessageV6`, `pollUpdateMessage`, `pollAddOptionMessage`, `pollResultSnapshotMessage`, `pollResultSnapshotMessageV3`, `eventMessage`, `eventInviteMessage`, `questionResponseMessage`, `keepInChatMessage` |
+| Warisan | `chat` |
+| Button dan list | `buttonsMessage`, `buttonsResponseMessage`, `listMessage`, `listResponseMessage`, `templateMessage`, `templateButtonReplyMessage`, `interactiveMessage`, `interactiveResponseMessage`, `highlyStructuredMessage` |
+| Polling dan acara | `pollCreationMessage` … `pollCreationMessageV6`, `pollUpdateMessage`, `pollAddOptionMessage`, `pollResultSnapshotMessage`, `pollResultSnapshotMessageV3`, `eventMessage`, `eventInviteMessage`, `questionResponseMessage`, `keepInChatMessage` |
 | Status | `statusNotificationMessage`, `statusQuestionAnswerMessage`, `statusQuotedMessage`, `statusStickerInteractionMessage`, `statusLinkPreviewMetadata` |
-| Newsletter | `newsletterFollowerInviteMessage`, `newsletterFollowerInviteMessageV2`, `newsletterAdminInviteMessage` |
-| Calls | `call`, `bcallMessage`, `callLogMesssage`, `scheduledCallCreationMessage`, `scheduledCallEditMessage` |
-| Payments and shop | `sendPaymentMessage`, `requestPaymentMessage`, `declinePaymentRequestMessage`, `cancelPaymentRequestMessage`, `paymentInviteMessage`, `paymentReminderMessage`, `splitPaymentMessage`, `splitPaymentUpdateMessage`, `productMessage`, `orderMessage`, `invoiceMessage` |
-| Reactions and comments | `reactionMessage`, `encReactionMessage`, `commentMessage`, `encCommentMessage`, `pinInChatMessage`, `encEventResponseMessage` |
-| Bots and AI | `richResponseMessage`, `placeholderMessage` |
-| Protocol and sync | `protocolMessage`, `deviceSentMessage`, `senderKeyDistributionMessage`, `fastRatchetKeySenderKeyDistributionMessage`, `messageContextInfo`, `messageHistoryBundle`, `messageHistoryNotice`, `secretEncryptedMessage`, `requestPhoneNumberMessage`, `groupRootKeyShare`, `rootSecretDistributeMessage` |
+| Channel | `newsletterFollowerInviteMessage`, `newsletterFollowerInviteMessageV2`, `newsletterAdminInviteMessage` |
+| Panggilan | `call`, `bcallMessage`, `callLogMesssage`, `scheduledCallCreationMessage`, `scheduledCallEditMessage` |
+| Pembayaran dan toko | `sendPaymentMessage`, `requestPaymentMessage`, `declinePaymentRequestMessage`, `cancelPaymentRequestMessage`, `paymentInviteMessage`, `paymentReminderMessage`, `splitPaymentMessage`, `splitPaymentUpdateMessage`, `productMessage`, `orderMessage`, `invoiceMessage` |
+| Reaksi dan komentar | `reactionMessage`, `encReactionMessage`, `commentMessage`, `encCommentMessage`, `pinInChatMessage`, `encEventResponseMessage` |
+| Bot dan AI | `richResponseMessage`, `placeholderMessage` |
+| Protokol dan sinkronisasi | `protocolMessage`, `deviceSentMessage`, `senderKeyDistributionMessage`, `fastRatchetKeySenderKeyDistributionMessage`, `messageContextInfo`, `messageHistoryBundle`, `messageHistoryNotice`, `secretEncryptedMessage`, `requestPhoneNumberMessage`, `groupRootKeyShare`, `rootSecretDistributeMessage` |
 
-`protocolMessage` is worth singling out: deletions, edits, ephemeral-timer
-changes and app-state syncs all arrive as one, distinguished by its `type`.
-A bot that ignores it will look like it never notices a deleted message.
+`protocolMessage` layak disebut khusus: penghapusan, suntingan, perubahan timer
+pesan sementara, dan sinkronisasi app-state semuanya tiba sebagai satu jenis
+ini, dibedakan oleh `type`-nya. Bot yang mengabaikannya akan kelihatan seperti
+tidak pernah menyadari ada pesan yang dihapus.
 
 ### Membaca pesan rich
 
-A message from another bot — AI Rich, A2UI, Bloks — leaves `conversation`
-empty and `getContentType` reporting only the wrapper. `readRichMessage`
-normalises all of them into one shape; see
-[Reading Rich Messages Back](#membaca-balik-pesan-rich).
+Pesan dari bot lain — AI Rich, A2UI, Bloks — meninggalkan `conversation` kosong
+dan `getContentType` hanya melaporkan pembungkusnya. `readRichMessage`
+menormalkan semuanya menjadi satu bentuk; lihat
+[Membaca Balik Pesan Rich](#membaca-balik-pesan-rich).
 
 ---
 
@@ -4245,7 +4247,7 @@ await sock.sendPresenceUpdate('available')
 await sock.sendPresenceUpdate('unavailable')
 ```
 
-You only receive someone's presence after `presenceSubscribe` on their jid. `available` and `unavailable` are your own global state and take no jid; the rest are per-chat typing indicators. `recording` goes on the wire as `composing` with `media: audio`, which is what produces "recording audio…".
+Kamu baru menerima presence seseorang setelah `presenceSubscribe` pada jid-nya. `available` dan `unavailable` itu keadaan global milikmu sendiri dan tidak menerima jid; sisanya indikator sedang-menulis per chat. `recording` dikirim ke wire sebagai `composing` dengan `media: audio`, dan itulah yang menghasilkan "merekam audio…".
 
 ### Menandai Sudah Dibaca
 
@@ -4256,7 +4258,7 @@ await sock.sendReceipt(jid, participant, [messageId], 'read')
 await sock.sendReceipts([msg.key], 'read')
 ```
 
-`readMessages` is the one to reach for. `sendReceipt` and `sendReceipts` are the lower layer underneath it, with the receipt type spelled out — `read`, `read-self`, `played` or `undefined` for a plain delivery receipt.
+`readMessages` yang sebaiknya kamu pakai. `sendReceipt` dan `sendReceipts` itu lapisan yang lebih rendah di bawahnya, dengan jenis tanda terimanya disebut eksplisit — `read`, `read-self`, `played`, atau `undefined` untuk tanda terkirim biasa.
 
 ### Memeriksa Nomor
 
@@ -4271,7 +4273,7 @@ for (const entry of results) {
 
 ## 🗂️ Keadaan Chat
 
-`chatModify` writes to app state, so a change syncs to the phone and to every other linked device.
+`chatModify` menulis ke app state, jadi satu perubahan ikut tersinkron ke ponsel dan ke setiap perangkat tertaut lainnya.
 
 ```js
 await sock.chatModify({ archive: true, lastMessages: [msg] }, jid)
@@ -4285,7 +4287,7 @@ await sock.chatModify({ delete: true, lastMessages: [msg] }, jid)
 await sock.chatModify({ contact: { fullName: 'Elaina' } }, jid)
 ```
 
-`mute` is a duration in milliseconds, and `null` unmutes. Several of these need `lastMessages` — the server uses it to place the change in the chat's timeline, and it throws without it.
+`mute` itu durasi dalam milidetik, dan `null` membatalkan pembisuan. Beberapa di antaranya butuh `lastMessages` — server memakainya untuk menempatkan perubahan itu di garis waktu chat-nya, dan ia melempar error tanpa itu.
 
 ### Riwayat dan Sinkronisasi Ulang
 
@@ -4295,16 +4297,16 @@ await sock.requestPlaceholderResend(messageKey)
 await sock.resyncAppState(['regular_high'], false)
 ```
 
-`fetchMessageHistory` asks the phone for messages older than the key you pass; they arrive through `messaging-history.set`. `requestPlaceholderResend` asks for one message again when it arrived as a placeholder.
+`fetchMessageHistory` meminta ke ponsel pesan-pesan yang lebih lama dari key yang kamu serahkan; mereka tiba lewat `messaging-history.set`. `requestPlaceholderResend` meminta satu pesan lagi kalau ia tiba sebagai placeholder.
 
 ---
 
 ## 🏷️ Label
 
-Labels are a WhatsApp Business feature.
+Label itu fitur WhatsApp Business.
 
 ```js
-await sock.addLabel(jid, { id: '1', name: 'Customer', color: 0, deleted: false })
+await sock.addLabel(jid, { id: '1', name: 'Pelanggan', color: 0, deleted: false })
 
 await sock.addChatLabel(jid, labelId)
 await sock.removeChatLabel(jid, labelId)
@@ -4326,14 +4328,14 @@ const collections = await sock.getCollections(jid, 51)
 const order = await sock.getOrderDetails(orderId, tokenBase64)
 ```
 
-`updateBusinessProfile` is also exported under its original misspelling, `updateBussinesProfile`; both are the same function.
+`updateBusinessProfile` juga diekspor dengan salah tulis aslinya, `updateBussinesProfile`; keduanya fungsi yang sama.
 
 ### Mengelola Produk
 
 ```js
 const created = await sock.productCreate({
-  name: 'Elaina Sticker Pack',
-  description: 'A pack of stickers',
+  name: 'Paket Stiker Elaina',
+  description: 'Satu paket stiker',
   price: 15000,
   currency: 'IDR',
   isHidden: false,
@@ -4349,13 +4351,13 @@ await sock.productDelete([created.id])
 ```js
 await sock.updateProfileName('Elaina')
 await sock.updateCoverPhoto(buffer)
-await sock.addOrEditQuickReply({ shortcut: 'hi', message: 'Hello!', keywords: ['halo'] })
+await sock.addOrEditQuickReply({ shortcut: 'hi', message: 'Halo!', keywords: ['halo'] })
 
 await sock.addOrEditContact(jid, { fullName: 'Elaina' })
 await sock.removeContact(jid)
 ```
 
-`removeContact` is `chatModify({ contact: null })` under a friendlier name, so it syncs to the phone like any other contact edit.
+`removeContact` itu `chatModify({ contact: null })` dengan nama yang lebih ramah, jadi ia tersinkron ke ponsel seperti penyuntingan kontak lainnya.
 
 ### Mengambil Ulang Media Kedaluwarsa
 
@@ -4363,7 +4365,7 @@ await sock.removeContact(jid)
 const refreshed = await sock.updateMediaMessage(msg)
 ```
 
-WhatsApp's media URLs expire. When a download fails on an old message, this asks the sender's device for a fresh `directPath` and returns the message with it filled in — then download again.
+URL media WhatsApp kedaluwarsa. Kalau unduhan gagal di pesan lama, ini meminta `directPath` baru ke perangkat pengirimnya lalu mengembalikan pesannya dengan field itu terisi — setelah itu unduh lagi.
 
 ### Label Anggota Grup
 
@@ -4371,7 +4373,7 @@ WhatsApp's media URLs expire. When a download fails on an old message, this asks
 await sock.updateMemberLabel(groupJid, memberLabel)
 ```
 
-Sends a `GROUP_MEMBER_LABEL_CHANGE` protocol message, which is how the per-group label beside a participant's name is set.
+Mengirim pesan protokol `GROUP_MEMBER_LABEL_CHANGE`, dan itulah cara label per-grup di sebelah nama anggota disetel.
 
 ---
 
@@ -4389,11 +4391,11 @@ console.log(CALL_AUDIO_PREFIX + scheduled)
 await sock.rejectCall(callId, callFrom)
 ```
 
-`createCallLink` takes `audio` or `video` and returns just the token. The two prefixes are exported because they do not match the media name — video links live under `/video/` but audio links under `/voice/`. Pass an `event` with a `startTime` in unix seconds to schedule the call instead of opening it now.
+`createCallLink` menerima `audio` atau `video` dan mengembalikan token-nya saja. Kedua prefiksnya diekspor karena tidak sama dengan nama medianya — link video ada di bawah `/video/` sementara link audio di bawah `/voice/`. Beri `event` dengan `startTime` dalam detik unix untuk menjadwalkan panggilannya ketimbang membukanya sekarang.
 
 ### Melakukan Panggilan Suara
 
-The VoIP stack runs the WhatsApp Web calling engine in-process and rides **the socket you are already logged in with**. There is no second pairing and no second QR: pair once, and the same session places calls.
+Tumpukan VoIP-nya menjalankan mesin panggilan WhatsApp Web di dalam proses yang sama dan menumpang **socket yang sudah kamu pakai login**. Tidak ada pairing kedua dan tidak ada QR kedua: pairing sekali, dan sesi yang sama yang melakukan panggilan.
 
 ```js
 import { makeVoipClient } from '@rexxhayanasi/elaina-baileys'
@@ -4409,19 +4411,19 @@ sock.ev.on('connection.update', async ({ connection }) => {
         audioSource: './halo.mp3'
     })
 
-    call.on('ringing', () => console.log('ringing'))
-    call.on('connected', () => console.log('answered'))
-    call.on('ended', reason => console.log('ended:', reason))
+    call.on('ringing', () => console.log('berdering'))
+    call.on('connected', () => console.log('dijawab'))
+    call.on('ended', reason => console.log('berakhir:', reason))
 
     await call.waitForEnd()
 })
 ```
 
-`audioSource` is anything ffmpeg can read — a file, a URL, or `lavfi:sine=frequency=440` for a tone. Leave it out and the call carries silence. `durationMs` hangs up on its own; pass `0` to stay on until someone ends it. `call.mute(true)` and `call.end()` do what they say, and `call.on('audio', pcm)` hands you the far end as 16 kHz mono `Float32Array` frames.
+`audioSource` bisa apa pun yang bisa dibaca ffmpeg — berkas, URL, atau `lavfi:sine=frequency=440` untuk satu nada. Hilangkan dan panggilannya membawa keheningan. `durationMs` menutup sendiri; beri `0` untuk tetap tersambung sampai seseorang mengakhirinya. `call.mute(true)` dan `call.end()` melakukan apa yang namanya sebutkan, dan `call.on('audio', pcm)` menyerahkan suara dari ujung seberang sebagai frame `Float32Array` mono 16 kHz.
 
-Audio is Opus at 16 kHz wideband. 48 kHz needs native audio device hooks the JS-only WASM build does not have.
+Audionya Opus pada 16 kHz wideband. 48 kHz butuh hook perangkat audio native yang tidak dimiliki build WASM murni-JS ini.
 
-When the socket reconnects, hand the new one over instead of building a second client:
+Saat socket-nya tersambung ulang, serahkan socket yang baru ketimbang membangun klien kedua:
 
 ```js
 const voip = await makeVoipClient(sock)
@@ -4435,7 +4437,7 @@ sock.ev.on('connection.update', async ({ connection }) => {
 
 ### Memainkan Antrean Audio
 
-Every call takes a playlist, and the queue drives the call rather than the other way round: play a song, hang up when it ends; or play, wait while the next track is being found, play that one, then hang up.
+Setiap panggilan menerima playlist, dan antreannya yang menggerakkan panggilan, bukan sebaliknya: putar satu lagu, tutup saat selesai; atau putar, tunggu sementara lagu berikutnya dicari, putar yang itu, lalu tutup.
 
 ```js
 const call = await voip.call('628123456789', {
@@ -4444,9 +4446,9 @@ const call = await voip.call('628123456789', {
 })
 ```
 
-One track, then the call ends by itself — `endWhenQueueEmpty` is on by default and `durationMs: 0` takes the hard timeout out of the way.
+Satu lagu, lalu panggilannya berakhir sendiri — `endWhenQueueEmpty` aktif secara bawaan dan `durationMs: 0` menyingkirkan batas waktu kerasnya.
 
-For a queue where the next track has to be looked up, give the gap a grace window and fill it while the call stays up:
+Untuk antrean yang lagu berikutnya masih harus dicari, beri jedanya jendela toleransi dan isi sementara panggilannya tetap tersambung:
 
 ```js
 const call = await voip.call('628123456789', {
@@ -4455,8 +4457,8 @@ const call = await voip.call('628123456789', {
     durationMs: 0
 })
 
-call.on('track', track => console.log('playing', track))
-call.on('trackend', track => console.log('finished', track))
+call.on('track', track => console.log('memutar', track))
+call.on('trackend', track => console.log('selesai', track))
 
 call.on('idle', async () => {
     const next = await findTrack(queue.shift())
