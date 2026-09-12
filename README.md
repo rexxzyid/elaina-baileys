@@ -4627,7 +4627,7 @@ import {
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
-Check the builder version:
+Cek versi builder-nya:
 
 ```js
 console.log(MESSAGE_BUILDER_VERSION)
@@ -4638,54 +4638,54 @@ console.log(MessageBuilder.VERSION)
 
 ## 🔄 Memperbarui Versi WhatsApp Web
 
-One command performs the whole check:
+Satu perintah menjalankan seluruh pemeriksaannya:
 
 ```bash
 npm run wa:update
 ```
 
-It reads the pinned revision, fetches the live one, downloads the bundle into `.wa-bundle/<revision>/`, parses WhatsApp Web's protobuf specs and compares them against `WAProto`, diffs the new snapshot against the previous one, round-trips every field through the encoder, and writes `.wa-bundle/report.md` and `report.json`.
+Ia membaca revisi yang dipaku, mengambil yang hidup, mengunduh bundle-nya ke `.wa-bundle/<revisi>/`, mem-parse spesifikasi protobuf WhatsApp Web dan membandingkannya dengan `WAProto`, membandingkan snapshot baru dengan yang sebelumnya, melewatkan setiap field lewat encoder untuk round-trip, lalu menulis `.wa-bundle/report.md` dan `report.json`.
 
-The report ends in one verdict:
+Laporannya berakhir dengan satu kesimpulan:
 
-| Verdict | Meaning |
+| Kesimpulan | Artinya |
 |---|---|
-| `no-change` | live revision matches the pinned one |
-| `bump-only` | revision moved, no wire surface changed |
-| `bump-and-review` | revision moved **and** a wire surface changed — read the diff |
-| `needs-work` | WhatsApp declares protobuf fields `WAProto` does not |
-| `blocked` | the round-trip encoder failed; do not bump |
+| `no-change` | revisi hidupnya sama dengan yang dipaku |
+| `bump-only` | revisinya bergerak, tidak ada permukaan wire yang berubah |
+| `bump-and-review` | revisinya bergerak **dan** ada permukaan wire yang berubah — baca diff-nya |
+| `needs-work` | WhatsApp mendeklarasikan field protobuf yang tidak ada di `WAProto` |
+| `blocked` | encoder round-trip-nya gagal; jangan naikkan versinya |
 
-Add `--apply` to bump the pinned revision, which is refused unless the verdict is a bump and the encoder passed.
+Tambahkan `--apply` untuk menaikkan revisi yang dipaku, dan itu ditolak kecuali kesimpulannya memang naik dan encoder-nya lulus.
 
 ```bash
 npm run wa:update -- --apply
 ```
 
-Supporting commands:
+Perintah pendukungnya:
 
-| Command | Purpose |
+| Perintah | Gunanya |
 |---|---|
-| `npm run wa:diff -- <old> <new>` | diff two bundle snapshots on their own |
-| `npm run check:proto` | protobuf gap check only |
-| `npm run sync:proto` | add missing protobuf fields to `WAProto` |
-| `npm run verify:proto` | round-trip encoder only |
-| `npm run verify:assets` | checksum and scan the vendored VoIP resources |
-| `npm run fetch:bundle -- <dir>` | download the raw bundle |
-| `npm run update:version` | bump the pinned revision without any of the checks |
-| `npm run audit:apk -- <dir>` | diff `WAProto` against an extracted Android APK |
-| `npm run sync:proto -- --gaps <file>` | patch `WAProto` from an audit's `--json` output |
-| `npm run proto:update` | the whole round trip: sync, verify, bump |
+| `npm run wa:diff -- <lama> <baru>` | membandingkan dua snapshot bundle secara terpisah |
+| `npm run check:proto` | hanya pemeriksaan lubang protobuf |
+| `npm run sync:proto` | menambahkan field protobuf yang kurang ke `WAProto` |
+| `npm run verify:proto` | hanya encoder round-trip |
+| `npm run verify:assets` | checksum dan pemindaian resource VoIP yang dibawa |
+| `npm run fetch:bundle -- <dir>` | mengunduh bundle mentahnya |
+| `npm run update:version` | menaikkan revisi yang dipaku tanpa pemeriksaan apa pun |
+| `npm run audit:apk -- <dir>` | membandingkan `WAProto` dengan APK Android yang sudah diekstrak |
+| `npm run sync:proto -- --gaps <berkas>` | menambal `WAProto` dari keluaran `--json` sebuah audit |
+| `npm run proto:update` | seluruh putarannya: sync, verifikasi, naikkan |
 
-`proto:update` runs `sync:proto`, then `verify:proto`, then `wa:update --apply`, then `update:version`, and that order is load-bearing. `wa:update` exits non-zero on the `needs-work` verdict and refuses `--apply`, so closing the protobuf gaps has to come first or the chain stops before it reaches them.
+`proto:update` menjalankan `sync:proto`, lalu `verify:proto`, lalu `wa:update --apply`, lalu `update:version`, dan urutan itu menanggung beban. `wa:update` keluar dengan kode bukan nol pada kesimpulan `needs-work` dan menolak `--apply`, jadi menutup lubang protobuf-nya harus lebih dulu atau rantainya berhenti sebelum sampai ke situ.
 
-**Auditing against Android.** Everything above reads the WhatsApp **Web** bundle, so a field the Android client knows and Web does not never reaches `WAProto` at all. `audit:apk` closes that blind spot: point it at a directory of extracted `classes*.dex` and it parses the protobuf model classes straight out of the dex — reading each `*_FIELD_NUMBER` constant and its value — then reports which fields and which whole types are missing, with their field numbers.
+**Mengaudit terhadap Android.** Semua yang di atas membaca bundle WhatsApp **Web**, jadi field yang dikenal klien Android tapi tidak dikenal Web sama sekali tidak pernah sampai ke `WAProto`. `audit:apk` menutup titik buta itu: arahkan ke direktori berisi `classes*.dex` hasil ekstraksi dan ia mem-parse kelas model protobuf-nya langsung dari dex — membaca setiap konstanta `*_FIELD_NUMBER` beserta nilainya — lalu melaporkan field mana dan tipe utuh mana yang hilang, beserta nomor field-nya.
 
 ```
 npm run audit:apk -- /path/to/extracted-apk
 ```
 
-Add `--json <file>` and it writes the gaps in the shape `sync:proto` consumes, so the same code generator that patches from the Web bundle can patch from the APK:
+Tambahkan `--json <berkas>` dan ia menuliskan lubangnya dalam bentuk yang dikonsumsi `sync:proto`, jadi generator kode yang sama yang menambal dari bundle Web bisa menambal dari APK:
 
 ```
 npm run audit:apk -- /path/to/extracted-apk /dev/null --json gaps.json
@@ -4693,41 +4693,41 @@ npm run sync:proto -- --gaps gaps.json
 npm run verify:proto
 ```
 
-Nothing is written by hand, so `npm run proto:update` will not undo it — `sync:proto` is additive and reads the existing `WAProto` as its baseline.
+Tidak ada yang ditulis dengan tangan, jadi `npm run proto:update` tidak akan membatalkannya — `sync:proto` bersifat menambah dan membaca `WAProto` yang ada sebagai dasarnya.
 
-**Android is not the client this library presents as.** Baileys links as a WhatsApp Web device, so a field the Web bundle does not declare is one the real Web client never sends — decoding it costs nothing, sending it makes this client look like neither Web nor Android. The auditor cross-checks every candidate against the Web bundle and marks the difference:
+**Android bukan klien yang dipresentasikan library ini.** Baileys menaut sebagai perangkat WhatsApp Web, jadi field yang tidak dideklarasikan bundle Web adalah field yang tidak pernah dikirim klien Web yang sebenarnya — mendekodenya tidak ada biayanya, mengirimnya membuat klien ini tampak bukan Web dan bukan Android. Auditornya memeriksa silang setiap kandidat terhadap bundle Web dan menandai bedanya:
 
 ```
 KHUSUS ANDROID Message.AlbumMessage.caption — aman didekode, kirim hanya kalau memang disengaja
 ```
 
-Treat that mark as a reason to keep the field readable but off by default. All four fields patched in so far carry it.
+Anggap tanda itu sebagai alasan untuk menjaga field-nya tetap bisa dibaca tapi mati secara bawaan. Keempat field yang sudah ditambal sejauh ini membawa tanda itu.
 
-**Two more guards matter, because a name can match while the numbering does not.** The auditor keeps only the single APK class that overlaps a type best — several classes carry similar field names and the loser is a false positive — and it refuses any field whose number is already taken in that type. Without the second guard, `CtwaContextData.canonicalUrl=3` would have been written straight over `sourceUrl`, silently corrupting the wire format. libsignal's own records are skipped outright.
+**Dua pengaman lain penting, karena nama bisa cocok sementara penomorannya tidak.** Auditornya hanya menyimpan satu kelas APK yang paling banyak bertumpang dengan sebuah tipe — beberapa kelas membawa nama field yang mirip dan yang kalah itu positif palsu — dan ia menolak field apa pun yang nomornya sudah terpakai di tipe tersebut. Tanpa pengaman kedua, `CtwaContextData.canonicalUrl=3` akan ditulis langsung menimpa `sourceUrl`, merusak format wire-nya tanpa suara. Catatan milik libsignal sendiri dilewati sama sekali.
 
-The diff covers every surface a WhatsApp change can reach the wire through — protobuf specs, stanza tags and attributes, `xmlns`, MEX operations, media paths — so a release that only moves UI code is reported as exactly that. `AGENTS.md` documents which surfaces matter and which are client-side noise.
+Diff-nya mencakup setiap permukaan yang bisa dilewati perubahan WhatsApp menuju wire — spesifikasi protobuf, tag dan atribut stanza, `xmlns`, operasi MEX, jalur media — jadi rilis yang hanya memindah kode UI dilaporkan tepat sebagai itu. `AGENTS.md` mendokumentasikan permukaan mana yang penting dan mana yang cuma derau sisi klien.
 
-Set `PROTO_BUNDLE_DIR` to read from a local directory and `PROTO_OFFLINE=1` to skip the live revision lookup. Where the built-in `fetch` is refused, the scripts fall back to `curl` automatically.
+Setel `PROTO_BUNDLE_DIR` untuk membaca dari direktori lokal dan `PROTO_OFFLINE=1` untuk melewati pencarian revisi hidupnya. Di tempat `fetch` bawaan ditolak, skripnya jatuh ke `curl` secara otomatis.
 
-For automated releases, only commit the files actually changed by the updater and `package.json`. Do not commit `node_modules`.
+Untuk rilis otomatis, hanya commit berkas yang benar-benar diubah updater-nya dan `package.json`. Jangan commit `node_modules`.
 
-Recommended `.gitignore` entries:
+Entri `.gitignore` yang disarankan:
 
 ```gitignore
 node_modules/
 npm-debug.log*
 ```
 
-If your repository intentionally does not track a lockfile for this library package, add `package-lock.json` as well. Otherwise, keep the lockfile tracked normally.
+Kalau repomu memang sengaja tidak melacak lockfile untuk paket library ini, tambahkan `package-lock.json` juga. Kalau tidak, biarkan lockfile-nya terlacak seperti biasa.
 
 
 ---
 
 ## ⏰ Pesan Terjadwal
 
-WhatsApp schedules a message by sending it **immediately, encrypted**, and letting the server hand out the key at the chosen time. The envelope is `conditionalRevealMessage`; the key travels in a `<meta type="scheduled_message">` node beside the message.
+WhatsApp menjadwalkan pesan dengan mengirimnya **langsung, dalam keadaan terenkripsi**, lalu membiarkan server membagikan kuncinya pada waktu yang dipilih. Pembungkusnya `conditionalRevealMessage`; kuncinya berjalan di node `<meta type="scheduled_message">` di sebelah pesannya.
 
-The pieces are exposed as building blocks, reconstructed from the WhatsApp Web client:
+Bagian-bagiannya dibuka sebagai balok penyusun, direkonstruksi dari klien WhatsApp Web:
 
 ```js
 import {
@@ -4740,9 +4740,9 @@ import {
 } from '@rexxhayanasi/elaina-baileys'
 
 const at = Math.floor(Date.now() / 1000) + 3600
-if (!isScheduledTimeValid(at)) throw new Error('outside the allowed window')
+if (!isScheduledTimeValid(at)) throw new Error('di luar jendela yang diizinkan')
 
-const scheduled = encodeScheduledMessage({ conversation: 'sent later' })
+const scheduled = encodeScheduledMessage({ conversation: 'dikirim nanti' })
 // { revealKey, revealKeyId, encIv, encPayload, message: { conditionalRevealMessage } }
 
 const meta = buildScheduledMsgMetaNode({
@@ -4750,7 +4750,7 @@ const meta = buildScheduledMsgMetaNode({
   revealKeyId: scheduled.revealKeyId,
   revealKey: scheduled.revealKey
 })
-// <meta type="scheduled_message" st="…"><key rkid="…">{32 bytes}</key></meta>
+// <meta type="scheduled_message" st="…"><key rkid="…">{32 byte}</key></meta>
 
 await sock.relayMessage(jid, scheduled.message, {
   messageId: sock.generateMessageTag(),
