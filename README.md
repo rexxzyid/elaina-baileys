@@ -2,7 +2,7 @@
 
 <div align="center">
   <h1>💫 @rexxhayanasi/elaina-baileys</h1>
-  <p><em>Custom WhatsApp library built upon Baileys — enhanced, modernized, and extended with an integrated message builder.</em></p>
+  <p><em>Library WhatsApp custom di atas Baileys — diperbaiki, dimodernkan, dan dilengkapi message builder bawaan.</em></p>
 
   <img src="https://files.catbox.moe/z913tc.jpg" width="400" alt="Elaina Baileys Banner" />
   <br><br>
@@ -34,78 +34,78 @@
 </div>
 
 > [!IMPORTANT]
-> `@rexxhayanasi/elaina-baileys` is an unofficial WhatsApp Web API library and is not affiliated with, authorized, maintained, sponsored, or endorsed by WhatsApp or Meta.
+> `@rexxhayanasi/elaina-baileys` adalah library API WhatsApp Web tidak resmi. Tidak berafiliasi, tidak diizinkan, tidak dipelihara, tidak disponsori, dan tidak didukung oleh WhatsApp maupun Meta.
 >
-> Use this project responsibly and comply with WhatsApp's Terms of Service and applicable laws.
+> Pakai proyek ini dengan bertanggung jawab, dan patuhi Ketentuan Layanan WhatsApp serta hukum yang berlaku.
 
 > [!NOTE]
-> Features reconstructed from the WhatsApp Web bundle, and how far each one has been verified, are documented in [EXPERIMENTAL.md](EXPERIMENTAL.md).
+> Fitur yang direkonstruksi dari bundle WhatsApp Web, beserta sejauh mana masing-masing sudah diverifikasi, didokumentasikan di [EXPERIMENTAL.md](EXPERIMENTAL.md).
 
 > [!NOTE]
-> This project is built on top of the Baileys ecosystem and extends it with additional fixes, compatibility changes, interactive messaging support, and an integrated MessageBuilder.
+> Proyek ini dibangun di atas ekosistem Baileys, lalu ditambah perbaikan, penyesuaian kompatibilitas, dukungan pesan interaktif, dan MessageBuilder bawaan.
 
 > [!CAUTION]
-> The previous project update channel is no longer used. Release information, changelogs, and project announcements are published through the current WhatsApp Channel linked in this README.
+> Channel update proyek yang lama sudah tidak dipakai. Informasi rilis, catatan perubahan, dan pengumuman proyek diterbitkan lewat WhatsApp Channel yang ditautkan di README ini.
 
 ---
 
 ## 📌 Ringkasan
 
-`@rexxhayanasi/elaina-baileys` is a modern ESM-focused Baileys fork for WhatsApp Multi-Device development.
+`@rexxhayanasi/elaina-baileys` adalah fork Baileys modern yang berorientasi ESM, untuk pengembangan WhatsApp Multi-Device.
 
-The package combines the socket layer, protocol utilities, LID-aware addressing support, and an integrated MessageBuilder in a single dependency. Buttons, native-flow messages, carousels, and AIRich layouts can be used directly from the package without installing a separate builder dependency.
+Paket ini menggabungkan lapisan socket, utilitas protokol, dukungan pengalamatan yang sadar LID, dan MessageBuilder bawaan dalam satu dependensi. Button, pesan native-flow, carousel, dan layout AIRich bisa dipakai langsung dari paket ini tanpa memasang dependensi builder terpisah.
 
 ### ✨ Yang Menonjol
 
-| Feature | Description |
+| Fitur | Keterangan |
 |---|---|
-| 🔌 Multi-Device | Connect to WhatsApp using the Baileys Multi-Device protocol. |
-| 🔐 Pairing Code | Supports normal and custom 8-character pairing codes. |
-| 🖱️ Interactive Buttons | Quick reply, URL, copy, call, list/select, location, and other native-flow buttons. |
-| 🧱 Integrated MessageBuilder | `Button`, `ButtonV2`, `Carousel`, `AIRich`, and `Toolkit` are included in the same package. |
-| 🖼️ Albums | Send multiple images/videos as an album message. |
-| 📢 Newsletter | Create, follow, update, react to, and fetch WhatsApp Channel/Newsletter data. |
-| 👥 Groups | Group creation, participant management, metadata, description updates, and more. |
-| 🪪 LID / PN Addressing | Supports modern LID addressing while exposing the PN/JID alternatives supplied by WhatsApp when available. |
-| 📷 Profile Picture | Fetch, update, and remove profile pictures. |
-| 🤖 AI Rich | Experimental rich-response builder for text, code, tables, media, suggestions, and other layouts. |
-| 📞 Voice & Video Calls | Place audio, video and screen-share calls on the session the bot already has, with a playlist that drives the call. |
-| 🗄️ Database Sessions | Keep the session in SQLite, PostgreSQL, MySQL, MongoDB, Redis or NekoDB instead of files. |
-| 📦 ESM | ESM-first package requiring Node.js 20+; Node.js 22 or newer is recommended. |
+| 🔌 Multi-Device | Terhubung ke WhatsApp lewat protokol Baileys Multi-Device. |
+| 🔐 Kode Pairing | Mendukung kode pairing biasa maupun kustom 8 karakter. |
+| 🖱️ Button Interaktif | Quick reply, URL, copy, call, list/select, lokasi, dan button native-flow lainnya. |
+| 🧱 MessageBuilder Terintegrasi | `Button`, `ButtonV2`, `Carousel`, `AIRich`, dan `Toolkit` ada di paket yang sama. |
+| 🖼️ Album | Mengirim beberapa gambar/video sebagai satu pesan album. |
+| 📢 Channel | Membuat, mengikuti, mengubah, bereaksi, dan mengambil data WhatsApp Channel. |
+| 👥 Grup | Pembuatan grup, pengelolaan anggota, metadata, pengubahan deskripsi, dan lainnya. |
+| 🪪 Pengalamatan LID / PN | Mendukung pengalamatan LID yang baru, sekaligus membuka alternatif PN/JID yang diberikan WhatsApp kalau ada. |
+| 📷 Foto Profil | Mengambil, mengubah, dan menghapus foto profil. |
+| 🤖 AI Rich | Builder respons rich eksperimental untuk teks, kode, tabel, media, saran, dan layout lainnya. |
+| 📞 Panggilan Suara & Video | Melakukan panggilan audio, video, dan berbagi layar di sesi yang sudah dipunyai bot, dengan playlist yang menggerakkan panggilannya. |
+| 🗄️ Sesi di Database | Menyimpan sesi di SQLite, PostgreSQL, MySQL, MongoDB, Redis, atau NekoDB, bukan di berkas. |
+| 📦 ESM | Paket ESM-first, butuh Node.js 20+; disarankan Node.js 22 atau lebih baru. |
 
 ### 🗺️ Apa Saja Yang Bisa Dilakukan?
 
-New here? This is the whole library at a glance. Each row links to the section that shows the code.
+Baru di sini? Ini seluruh library dalam satu pandangan. Tiap baris menaut ke bagian yang memperlihatkan kodenya.
 
-| I want to… | Use | Read |
+| Aku mau… | Pakai | Baca |
 |---|---|---|
-| Log in and stay logged in | `useMultiFileAuthState`, `usePostgresAuthState`, … | [Session Storage](#-penyimpanan-sesi) |
-| Log in without scanning a QR | pairing code | [Pairing Code](#-kode-pairing) |
-| React to incoming messages | `messages.upsert` | [Receive Messages](#-menerima-pesan), [Events](#-event) |
-| Send text, images, video, files, location, polls | `sock.sendMessage` | [Send Messages](#-mengirim-pesan) |
-| Send buttons, lists, carousels | `Button`, `ButtonV2`, `Carousel` | [Integrated MessageBuilder](#-messagebuilder-terintegrasi) |
-| Send a rich AI-style card | `AIRich`, A2UI | [AIRich](#airich), [A2UI Cards](#kartu-a2ui) |
-| Read a rich message a bot sent me | `readRichMessage` | [Reading Rich Messages Back](#membaca-balik-pesan-rich) |
-| Send several photos as one post | album message | [Album Message](#-pesan-album) |
-| Run a channel | newsletter helpers | [Newsletter / Channel](#-newsletter--channel) |
-| Manage a group | `groupCreate`, `groupParticipantsUpdate`, … | [Group Management](#-pengelolaan-grup) |
-| Manage a community | community helpers | [Communities](#-komunitas) |
-| Block, unblock, report spam | `updateBlockStatus`, `reportSpam` | [Privacy Settings](#-pengaturan-privasi) |
-| Show typing, read receipts, presence | `sendPresenceUpdate`, `readMessages` | [Presence and Read Receipts](#-presence-dan-tanda-dibaca) |
-| Pin, archive, mute, star a chat | `chatModify` | [Chat State](#-keadaan-chat) |
-| Use business labels and a catalog | label and catalog helpers | [Labels](#-label), [Business and Catalog](#-bisnis-dan-katalog) |
-| Make a call link, reject a call | `createCallLink`, `rejectCall` | [Calls](#-panggilan) |
-| Ring someone and play audio | `makeVoipClient`, `voip.call` | [Placing a Voice Call](#melakukan-panggilan-suara) |
-| Play a queue of songs on a call | `playlist`, `enqueue`, `idle` | [Playing a Queue](#memainkan-antrean-audio) |
-| Send video or share a screen on a call | `video: true`, `screenShare: true` | [Video Calls](#panggilan-video), [Screen Share](#berbagi-layar) |
-| Call a whole group | `voip.callGroup` | [Group Calls](#panggilan-grup) |
-| Change or read a profile picture | profile picture helpers | [Profile Picture](#-foto-profil) |
-| Schedule a message for later | scheduled messages | [Scheduled Messages](#-pesan-terjadwal) |
-| Keep up with WhatsApp Web changes | `npm run wa:update` | [Update WhatsApp Web Version](#-memperbarui-versi-whatsapp-web) |
-| Know if my number is in trouble | account health signals | [Account Health Signals](#-sinyal-kesehatan-akun) |
-| Understand LID vs PN jids | addressing helpers | [LID / PN / JID Addressing](#-pengalamatan-lid--pn--jid) |
-| Know why `conversation` is empty | `normalizeMessageContent` | [Every Message Type](#-semua-jenis-pesan) |
-| Fix something that broke | — | [Troubleshooting](#-penanganan-masalah) |
+| Login dan tetap login | `useMultiFileAuthState`, `usePostgresAuthState`, … | [Penyimpanan Sesi](#-penyimpanan-sesi) |
+| Login tanpa scan QR | kode pairing | [Kode Pairing](#-kode-pairing) |
+| Menanggapi pesan masuk | `messages.upsert` | [Menerima Pesan](#-menerima-pesan), [Event](#-event) |
+| Kirim teks, gambar, video, berkas, lokasi, polling | `sock.sendMessage` | [Mengirim Pesan](#-mengirim-pesan) |
+| Kirim button, list, carousel | `Button`, `ButtonV2`, `Carousel` | [MessageBuilder Terintegrasi](#-messagebuilder-terintegrasi) |
+| Kirim kartu bergaya AI | `AIRich`, A2UI | [AIRich](#airich), [Kartu A2UI](#kartu-a2ui) |
+| Baca pesan rich yang dikirim bot lain | `readRichMessage` | [Membaca Balik Pesan Rich](#membaca-balik-pesan-rich) |
+| Kirim beberapa foto jadi satu postingan | pesan album | [Pesan Album](#-pesan-album) |
+| Mengelola channel | helper channel | [Newsletter / Channel](#-newsletter--channel) |
+| Mengelola grup | `groupCreate`, `groupParticipantsUpdate`, … | [Pengelolaan Grup](#-pengelolaan-grup) |
+| Mengelola komunitas | helper komunitas | [Komunitas](#-komunitas) |
+| Blokir, buka blokir, lapor spam | `updateBlockStatus`, `reportSpam` | [Pengaturan Privasi](#-pengaturan-privasi) |
+| Tampilkan sedang menulis, tanda dibaca, presence | `sendPresenceUpdate`, `readMessages` | [Presence dan Tanda Dibaca](#-presence-dan-tanda-dibaca) |
+| Pin, arsip, bisukan, bintangi chat | `chatModify` | [Keadaan Chat](#-keadaan-chat) |
+| Pakai label bisnis dan katalog | helper label dan katalog | [Label](#-label), [Bisnis dan Katalog](#-bisnis-dan-katalog) |
+| Buat link panggilan, tolak panggilan | `createCallLink`, `rejectCall` | [Panggilan](#-panggilan) |
+| Menelepon orang dan memutar audio | `makeVoipClient`, `voip.call` | [Melakukan Panggilan Suara](#melakukan-panggilan-suara) |
+| Memutar antrean lagu di panggilan | `playlist`, `enqueue`, `idle` | [Memainkan Antrean Audio](#memainkan-antrean-audio) |
+| Kirim video atau bagikan layar saat panggilan | `video: true`, `screenShare: true` | [Panggilan Video](#panggilan-video), [Berbagi Layar](#berbagi-layar) |
+| Menelepon satu grup sekaligus | `voip.callGroup` | [Panggilan Grup](#panggilan-grup) |
+| Mengubah atau membaca foto profil | helper foto profil | [Foto Profil](#-foto-profil) |
+| Menjadwalkan pesan untuk nanti | pesan terjadwal | [Pesan Terjadwal](#-pesan-terjadwal) |
+| Mengikuti perubahan WhatsApp Web | `npm run wa:update` | [Memperbarui Versi WhatsApp Web](#-memperbarui-versi-whatsapp-web) |
+| Tahu kalau nomorku sedang bermasalah | sinyal kesehatan akun | [Sinyal Kesehatan Akun](#-sinyal-kesehatan-akun) |
+| Paham bedanya jid LID dan PN | helper pengalamatan | [Pengalamatan LID / PN / JID](#-pengalamatan-lid--pn--jid) |
+| Tahu kenapa `conversation` kosong | `normalizeMessageContent` | [Semua Jenis Pesan](#-semua-jenis-pesan) |
+| Memperbaiki yang rusak | — | [Penanganan Masalah](#-penanganan-masalah) |
 
 ---
 
@@ -309,12 +309,12 @@ New here? This is the whole library at a glance. Each row links to the section t
 
 ## ⚙️ Kebutuhan
 
-- Node.js **20 or newer** — this is what `package.json` declares and what the `preinstall` check enforces, so anything older is refused at install time
-- **Node.js 22 or newer recommended**, and **24** for development and release workflows
+- Node.js **20 atau lebih baru** — itu yang dideklarasikan `package.json` dan yang dipaksa oleh pemeriksaan `preinstall`, jadi versi di bawahnya ditolak saat instalasi
+- **Disarankan Node.js 22 atau lebih baru**, dan **24** untuk pengembangan serta alur rilis
 - npm
-- A WhatsApp account for pairing
+- Satu akun WhatsApp untuk pairing
 
-Check your Node.js version:
+Cek versi Node.js kamu:
 
 ```bash
 node -v
@@ -324,7 +324,7 @@ node -v
 
 ## 📦 Pemasangan
 
-Install directly from npm:
+Pasang langsung dari npm:
 
 ```bash
 npm install @rexxhayanasi/elaina-baileys
@@ -332,7 +332,7 @@ npm install @rexxhayanasi/elaina-baileys
 
 ### Paket yang disarankan
 
-Use the package directly under its own name:
+Pakai paketnya langsung dengan namanya sendiri:
 
 ```json
 {
@@ -343,33 +343,33 @@ Use the package directly under its own name:
 }
 ```
 
-This package is ESM-first. Use `import` syntax instead of `require()`.
+Paket ini ESM-first. Pakai sintaks `import`, bukan `require()`.
 
 ### Paket Media Opsional
 
-The base install carries no image or video processing library, which keeps it around 45 MB smaller and leaves the choice of `sharp` build to you — no clash with a version your project already pins.
+Pemasangan dasarnya tidak membawa library pengolah gambar atau video. Ukurannya jadi sekitar 45 MB lebih kecil, dan pilihan build `sharp` diserahkan ke kamu — tidak bentrok dengan versi yang sudah dipaku proyekmu.
 
 ```bash
-npm i sharp            # thumbnails, resizing, MessageBuilder Toolkit.resize
-npm i fluent-ffmpeg    # video preview frames, MessageBuilder Toolkit.getMp4Preview
+npm i sharp            # thumbnail, resize, MessageBuilder Toolkit.resize
+npm i fluent-ffmpeg    # frame preview video, MessageBuilder Toolkit.getMp4Preview
 ```
 
-Media handling picks whichever image library it finds, in this order:
+Penanganan media memakai library gambar mana pun yang ditemukan, dengan urutan ini:
 
-| Package | Used for |
+| Paket | Dipakai untuk |
 |---|---|
-| `sharp` | preferred, fastest |
-| `@napi-rs/image` | fallback |
-| `jimp` | pure-JS fallback, no native build |
+| `sharp` | pilihan utama, paling cepat |
+| `@napi-rs/image` | cadangan |
+| `jimp` | cadangan murni JS, tanpa build native |
 
-Sending plain text, buttons, polls, newsletters and AI Rich messages needs none of them. Sending media without any of the three throws `No image processing library available`; calling `Toolkit.resize` or `Toolkit.getMp4Preview` without the relevant package throws a message naming what to install.
+Mengirim teks biasa, button, polling, channel, dan pesan AI Rich tidak butuh satu pun dari itu. Mengirim media tanpa ketiganya melempar `No image processing library available`; memanggil `Toolkit.resize` atau `Toolkit.getMp4Preview` tanpa paketnya melempar pesan yang menyebutkan apa yang harus dipasang.
 
-Check at runtime before relying on either:
+Periksa saat runtime sebelum mengandalkan salah satunya:
 
 ```js
 import { hasOptionalMedia } from '@rexxhayanasi/elaina-baileys'
 
-await hasOptionalMedia('sharp')          // false when it is not installed
+await hasOptionalMedia('sharp')          // false kalau belum terpasang
 await hasOptionalMedia('fluent-ffmpeg')
 ```
 
@@ -381,7 +381,7 @@ await hasOptionalMedia('fluent-ffmpeg')
 import makeWASocket from '@rexxhayanasi/elaina-baileys'
 ```
 
-Import additional utilities:
+Mengimpor utilitas tambahan:
 
 ```js
 import makeWASocket, {
@@ -398,7 +398,7 @@ import makeWASocket, {
 ```
 
 > [!NOTE]
-> MessageBuilder is already integrated. You do not need to install `baileys-mbuilder` separately.
+> MessageBuilder sudah terintegrasi. Kamu tidak perlu memasang `baileys-mbuilder` secara terpisah.
 
 ---
 
@@ -423,7 +423,7 @@ async function startSock() {
 
   sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
     if (connection === 'open') {
-      console.log('WhatsApp connected')
+      console.log('WhatsApp tersambung')
     }
 
     if (connection === 'close') {
@@ -433,7 +433,7 @@ async function startSock() {
       if (shouldReconnect) {
         startSock()
       } else {
-        console.log('Session logged out')
+        console.log('Sesi ter-logout')
       }
     }
   })
@@ -446,63 +446,63 @@ startSock()
 
 ### Opsi percobaan ulang dan pairing
 
-Beyond the usual Baileys options, these control how the socket handles undecryptable messages, rejected sends, and pairing:
+Selain opsi Baileys yang biasa, yang ini mengatur bagaimana socket menangani pesan yang tidak bisa didekripsi, pengiriman yang ditolak, dan pairing:
 
-| Option | Default | What it does |
+| Opsi | Bawaan | Fungsinya |
 |---|---|---|
-| `maxMsgRetryCount` | `3` | decryption retries requested per incoming message |
-| `retryRequestDelayMs` | `250` | wait before asking the sender to re-encrypt |
-| `maxRetryQueueSize` | `64` | messages allowed to queue for retry at once |
-| `ackRetryDelayMs` | `750` | wait before resending after a retryable nack |
-| `maxAckRetryCount` | `3` | resend attempts after a retryable nack |
-| `pairingCodeTimeoutMs` | `180000` | how long a pairing code stays valid |
+| `maxMsgRetryCount` | `3` | jumlah percobaan dekripsi yang diminta per pesan masuk |
+| `retryRequestDelayMs` | `250` | jeda sebelum meminta pengirim mengenkripsi ulang |
+| `maxRetryQueueSize` | `64` | jumlah pesan yang boleh mengantre untuk diulang sekaligus |
+| `ackRetryDelayMs` | `750` | jeda sebelum mengirim ulang setelah nack yang bisa diulang |
+| `maxAckRetryCount` | `3` | jumlah percobaan kirim ulang setelah nack yang bisa diulang |
+| `pairingCodeTimeoutMs` | `180000` | berapa lama satu kode pairing tetap berlaku |
 
-`maxRetryQueueSize` is a safety valve, not a throughput knob. A burst of undecryptable messages would otherwise queue without limit and grow the heap; past the cap the extras are acked without a retry. Raising it does not rescue more messages — `retryRequestDelayMs` is the setting that does, at the cost of pressing the sender harder.
+`maxRetryQueueSize` itu klep pengaman, bukan tombol throughput. Tanpa batas itu, ledakan pesan yang tidak bisa didekripsi akan mengantre tanpa henti dan menggelembungkan heap; di atas batasnya, kelebihannya di-ack tanpa diulang. Menaikkannya tidak menyelamatkan lebih banyak pesan — yang berperan di situ `retryRequestDelayMs`, dengan harga menekan pengirim lebih keras.
 
 ### Opsi socket
 
-Everything `makeWASocket` accepts, with its default:
+Semua yang diterima `makeWASocket`, beserta bawaannya:
 
-| Option | Default | What it does |
+| Opsi | Bawaan | Fungsinya |
 |---|---|---|
-| `auth` | — | required; the auth state from one of the session stores below |
-| `logger` | pino instance | any pino-compatible logger |
-| `version` | pinned WA Web version | protocol version the socket claims |
-| `browser` | `['Mac OS', 'Chrome', '14.4.1']` | name shown under Linked Devices |
-| `markOnlineOnConnect` | `true` | set `false` to keep phone notifications working |
-| `syncFullHistory` | `true` | request the full history instead of the recent slice |
-| `shouldSyncHistoryMessage` | `() => true` | decide per history batch whether to keep it |
-| `shouldIgnoreJid` | `() => false` | drop events from matching jids before they are emitted |
-| `getMessage` | `async () => undefined` | supply an old message so the socket can answer a retry |
-| `cachedGroupMetadata` | `async () => undefined` | reuse your own group metadata cache |
-| `emitOwnEvents` | `true` | emit events for actions this device performed |
-| `fireInitQueries` | `true` | run the startup queries (props, blocklist, privacy) |
-| `generateHighQualityLinkPreview` | `true` | fetch a larger link preview thumbnail |
-| `linkPreviewImageThumbnailWidth` | `192` | link preview thumbnail width |
-| `connectTimeoutMs` | `20000` | give up on the socket handshake |
-| `keepAliveIntervalMs` | `15000` | ping interval |
-| `defaultQueryTimeoutMs` | `60000` | give up on an iq query |
-| `countryCode` | `'US'` | country hint sent at registration |
-| `patchMessageBeforeSending` | identity | last chance to rewrite a message before relay |
-| `enableAutoSessionRecreation` | `true` | rebuild a Signal session after repeated failures |
-| `enableRecentMessageCache` | `true` | keep recent outbound messages for retry answers |
-| `appStateMacVerification` | `{ patch: false, snapshot: false }` | verify app-state MACs |
-| `waWebSocketUrl` | WA Web endpoint | override the socket URL |
-| `customUploadHosts` | `[]` | extra media upload hosts |
-| `inlineSenderKeyDistribution` | `true` | carry the sender key distribution message inside each group message, the way the official clients do; set `false` to send it only as a separate message |
-| `transactionOpts` | `{ maxCommitRetries: 10, delayBetweenTriesMs: 3000 }` | retry policy for app-state transactions |
-| `options` | `{}` | axios options for every HTTP request (proxy, timeout, headers) |
-| `makeSignalRepository` | built-in | swap the Signal protocol store implementation |
+| `auth` | — | wajib; auth state dari salah satu penyimpanan sesi di bawah |
+| `logger` | instance pino | logger apa pun yang kompatibel dengan pino |
+| `version` | versi WA Web yang dipaku | versi protokol yang diklaim socket |
+| `browser` | `['Mac OS', 'Chrome', '14.4.1']` | nama yang tampil di Perangkat Tertaut |
+| `markOnlineOnConnect` | `true` | setel `false` supaya notifikasi di ponsel tetap jalan |
+| `syncFullHistory` | `true` | minta seluruh riwayat, bukan cuma potongan terbaru |
+| `shouldSyncHistoryMessage` | `() => true` | putuskan per batch riwayat, disimpan atau tidak |
+| `shouldIgnoreJid` | `() => false` | buang event dari jid yang cocok sebelum dipancarkan |
+| `getMessage` | `async () => undefined` | sediakan pesan lama supaya socket bisa menjawab permintaan ulang |
+| `cachedGroupMetadata` | `async () => undefined` | pakai ulang cache metadata grup milikmu sendiri |
+| `emitOwnEvents` | `true` | pancarkan event untuk tindakan yang dilakukan perangkat ini |
+| `fireInitQueries` | `true` | jalankan kueri awal (props, blocklist, privasi) |
+| `generateHighQualityLinkPreview` | `true` | ambil thumbnail link preview yang lebih besar |
+| `linkPreviewImageThumbnailWidth` | `192` | lebar thumbnail link preview |
+| `connectTimeoutMs` | `20000` | batas waktu menyerah pada handshake socket |
+| `keepAliveIntervalMs` | `15000` | selang ping |
+| `defaultQueryTimeoutMs` | `60000` | batas waktu menyerah pada kueri iq |
+| `countryCode` | `'US'` | petunjuk negara yang dikirim saat registrasi |
+| `patchMessageBeforeSending` | identitas | kesempatan terakhir menulis ulang pesan sebelum direlay |
+| `enableAutoSessionRecreation` | `true` | bangun ulang sesi Signal setelah gagal berulang kali |
+| `enableRecentMessageCache` | `true` | simpan pesan keluar terbaru untuk menjawab permintaan ulang |
+| `appStateMacVerification` | `{ patch: false, snapshot: false }` | verifikasi MAC app-state |
+| `waWebSocketUrl` | endpoint WA Web | ganti URL socket |
+| `customUploadHosts` | `[]` | host unggah media tambahan |
+| `inlineSenderKeyDistribution` | `true` | bawa sender key distribution message di dalam tiap pesan grup, seperti yang dilakukan klien resmi; setel `false` supaya dikirim hanya sebagai pesan terpisah |
+| `transactionOpts` | `{ maxCommitRetries: 10, delayBetweenTriesMs: 3000 }` | kebijakan ulang untuk transaksi app-state |
+| `options` | `{}` | opsi axios untuk tiap permintaan HTTP (proxy, timeout, header) |
+| `makeSignalRepository` | bawaan | ganti implementasi penyimpanan protokol Signal |
 
-`getMessage` matters more than its default suggests: without it, a recipient asking to re-receive a message gets nothing, and the message shows as "waiting for this message". Point it at whatever store you keep.
+`getMessage` lebih penting daripada yang tersirat dari bawaannya: tanpa itu, penerima yang meminta pesan dikirim ulang tidak mendapat apa pun, dan pesannya tampil sebagai "menunggu pesan ini". Arahkan ke penyimpanan apa pun yang kamu punya.
 
 ---
 
 ## 💾 Penyimpanan Sesi
 
-The auth state holds your credentials and Signal keys. Losing it means scanning the QR again; leaking it means someone else can use your account. Four stores ship with the package, all returning the same `{ state, saveCreds }` shape.
+Auth state menyimpan kredensial dan kunci Signal kamu. Kehilangannya berarti scan QR lagi; membocorkannya berarti orang lain bisa memakai akunmu. Paket ini membawa beberapa penyimpanan sekaligus, semuanya mengembalikan bentuk `{ state, saveCreds }` yang sama.
 
-Whichever you pick, wire `saveCreds` to the `creds.update` event — nothing is persisted otherwise:
+Mana pun yang kamu pilih, sambungkan `saveCreds` ke event `creds.update` — kalau tidak, tidak ada yang tersimpan:
 
 ```js
 sock.ev.on('creds.update', saveCreds)
@@ -510,7 +510,7 @@ sock.ev.on('creds.update', saveCreds)
 
 ### Multi-berkas (bawaan)
 
-One folder, one file per key. Simple, dependency-free, and the right choice for a single bot on one machine.
+Satu folder, satu berkas per kunci. Sederhana, tanpa dependensi, dan pilihan yang tepat untuk satu bot di satu mesin.
 
 ```js
 import { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
@@ -518,11 +518,11 @@ import { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
 const { state, saveCreds } = await useMultiFileAuthState('./session')
 ```
 
-It writes many small files — a busy account produces thousands of pre-key files. That is normal; deleting them mid-session breaks the session.
+Ia menulis banyak berkas kecil — akun yang sibuk menghasilkan ribuan berkas pre-key. Itu normal; menghapusnya di tengah sesi merusak sesinya.
 
 ### Satu berkas
 
-Everything in one JSON file. Easier to back up or move between hosts, slower once the key set grows because the whole file is rewritten on every change.
+Semuanya dalam satu berkas JSON. Lebih mudah dibackup atau dipindah antar host, tapi melambat begitu kumpulan kuncinya membesar karena seluruh berkas ditulis ulang setiap ada perubahan.
 
 ```js
 import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
@@ -532,7 +532,7 @@ const { state, saveCreds } = await useSingleFileAuthState('./session.json')
 
 ### SQLite
 
-Keys in a real database, so concurrent reads and large key sets stay fast. Requires `better-sqlite3` v11, v12 or v13.
+Kunci disimpan di database sungguhan, jadi pembacaan bersamaan dan kumpulan kunci besar tetap cepat. Butuh `better-sqlite3` v11, v12, atau v13.
 
 ```bash
 npm i better-sqlite3
@@ -544,7 +544,7 @@ import { useSqliteAuthState } from '@rexxhayanasi/elaina-baileys'
 const { state, saveCreds } = await useSqliteAuthState({ dbPath: './session.db' })
 ```
 
-Pass an existing connection instead when the rest of your bot already uses one:
+Kalau bagian lain botmu sudah punya koneksi, serahkan koneksi itu saja:
 
 ```js
 import Database from 'better-sqlite3'
@@ -553,17 +553,17 @@ const database = new Database('./bot.db')
 const { state, saveCreds } = await useSqliteAuthState({ database })
 ```
 
-Two tables are created on first use: `creds` and `signal_keys`.
+Dua tabel dibuat saat pertama dipakai: `creds` dan `signal_keys`.
 
 ### PostgreSQL, MySQL, MongoDB, Redis
 
-For a bot that already runs a database, or several bots that share one. Each takes either a connection you already have or the details to open its own, and each keeps its rows under a `session` name so one database can hold many accounts.
+Untuk bot yang sudah menjalankan database, atau beberapa bot yang berbagi satu database. Masing-masing menerima koneksi yang sudah kamu punya atau detail untuk membuka koneksinya sendiri, dan masing-masing menyimpan barisnya di bawah satu nama `session`, jadi satu database bisa memuat banyak akun.
 
 ```bash
 npm i pg        # PostgreSQL
-npm i mysql2    # MySQL or MariaDB
+npm i mysql2    # MySQL atau MariaDB
 npm i mongodb   # MongoDB
-npm i ioredis   # Redis (node-redis works too)
+npm i ioredis   # Redis (node-redis juga bisa)
 ```
 
 ```js
@@ -592,7 +592,7 @@ const { state, saveCreds } = await useRedisAuthState({
 })
 ```
 
-Hand over your own connection when the rest of the bot already has one, and name the session when several accounts share the database:
+Serahkan koneksimu sendiri kalau bagian lain bot sudah punya, dan beri nama sesinya kalau beberapa akun berbagi database yang sama:
 
 ```js
 import { Pool } from 'pg'
@@ -601,22 +601,22 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const { state, saveCreds } = await usePostgresAuthState({ pool, session: 'sales-bot' })
 ```
 
-`useMySQLAuthState` takes `pool`, `useMongoAuthState` takes `db` or `collection`, and `useRedisAuthState` takes `client` — node-redis and ioredis are both accepted, the command names are detected at startup.
+`useMySQLAuthState` menerima `pool`, `useMongoAuthState` menerima `db` atau `collection`, dan `useRedisAuthState` menerima `client` — node-redis maupun ioredis dua-duanya diterima, nama perintahnya dideteksi saat start.
 
-All four return `clearAuth()` to wipe the session and `close()` to release a connection they opened themselves; a connection you passed in is left alone. `useSqliteAuthState` returns them too.
+Keempatnya mengembalikan `clearAuth()` untuk menghapus sesi dan `close()` untuk melepas koneksi yang mereka buka sendiri; koneksi yang kamu serahkan tidak disentuh. `useSqliteAuthState` juga mengembalikan keduanya.
 
-| Backend | Where keys live | Table or key |
+| Backend | Tempat kuncinya | Tabel atau key |
 |---|---|---|
-| PostgreSQL | one table | `baileys_auth (session, type, id, value)` |
-| MySQL | one table | `baileys_auth (session, type, id, value)` |
-| MongoDB | one collection | `baileys_auth`, indexed on session + type + id |
-| Redis | one hash per key type | `baileys_auth:<session>:<type>` |
+| PostgreSQL | satu tabel | `baileys_auth (session, type, id, value)` |
+| MySQL | satu tabel | `baileys_auth (session, type, id, value)` |
+| MongoDB | satu koleksi | `baileys_auth`, terindeks pada session + type + id |
+| Redis | satu hash per jenis kunci | `baileys_auth:<session>:<type>` |
 
-Rename them with `table`, `collectionName` or `prefix`. The SQL backends write a batch of keys inside a transaction, MongoDB uses one `bulkWrite`, and Redis pipelines through `MULTI`, so a decrypt that stores thirty pre-keys costs one round trip, not thirty.
+Ganti namanya dengan `table`, `collectionName`, atau `prefix`. Backend SQL menulis sekumpulan kunci di dalam satu transaksi, MongoDB memakai satu `bulkWrite`, dan Redis menyalurkannya lewat `MULTI`, jadi satu dekripsi yang menyimpan tiga puluh pre-key memakan satu perjalanan, bukan tiga puluh.
 
 ### NekoDB
 
-For a bot whose state already lives in NekoDB, so the session travels with the rest of your data.
+Untuk bot yang state-nya sudah ada di NekoDB, supaya sesinya ikut bersama data yang lain.
 
 ```js
 import { useNekoDBAuth } from '@rexxhayanasi/elaina-baileys'
@@ -624,7 +624,7 @@ import { useNekoDBAuth } from '@rexxhayanasi/elaina-baileys'
 const { state, saveCreds } = await useNekoDBAuth(db)
 ```
 
-The first argument must be a connected NekoDB instance; the collection defaults to `baileys_elaina_auth`. Pass a second argument to keep several sessions in one database:
+Argumen pertama harus instance NekoDB yang sudah tersambung; koleksinya default ke `baileys_elaina_auth`. Beri argumen kedua untuk menyimpan beberapa sesi dalam satu database:
 
 ```js
 const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')
@@ -632,7 +632,7 @@ const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')
 
 ### Menyimpan Kunci Signal di Cache
 
-Every store reads keys from disk or database on each decrypt. Wrapping the key store in a cache removes that round trip:
+Setiap penyimpanan membaca kunci dari disk atau database pada tiap dekripsi. Membungkus penyimpanan kunci dengan cache menghilangkan perjalanan itu:
 
 ```js
 import makeWASocket, { makeCacheableSignalKeyStore, useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
@@ -650,11 +650,11 @@ const sock = makeWASocket({
 })
 ```
 
-Worth doing on every store, and close to required on the file-based ones for a busy group bot.
+Layak dipakai di penyimpanan apa pun, dan hampir wajib di yang berbasis berkas untuk bot grup yang sibuk.
 
 ### Menyimpan Chat dan Pesan
 
-The auth state stores keys, not conversations. For chats, contacts and message history, bind the in-memory store:
+Auth state menyimpan kunci, bukan percakapan. Untuk chat, kontak, dan riwayat pesan, pasang penyimpanan in-memory:
 
 ```js
 import { makeInMemoryStore } from '@rexxhayanasi/elaina-baileys'
@@ -672,73 +672,73 @@ const sock = makeWASocket({
 store.bind(sock.ev)
 ```
 
-`store.chats`, `store.contacts`, `store.messages` and `store.groupMetadata` stay in sync from there, and `loadMessage` is exactly what `getMessage` needs. It lives in memory, so size it against your traffic — a bot in large groups will grow it steadily.
+Dari situ `store.chats`, `store.contacts`, `store.messages`, dan `store.groupMetadata` akan terus sinkron, dan `loadMessage` persis yang dibutuhkan `getMessage`. Ia hidup di memori, jadi ukur terhadap trafikmu — bot di grup besar akan terus menggembungkannya.
 
 ---
 
 ## 🔐 Kode Pairing
 
-Pairing code can be requested after creating the socket.
+Kode pairing bisa diminta setelah socket dibuat.
 
 ```js
 const phoneNumber = '6281234567890'
 
 if (!state.creds.registered) {
   const code = await sock.requestPairingCode(phoneNumber)
-  console.log('Pairing code:', code)
+  console.log('Kode pairing:', code)
 }
 ```
 
-The number is normalized before it is used, so `+62 812-3456-7890` and `6281234567890` are the same request. What is rejected is a number that cannot be valid: fewer than 6 or more than 15 digits, or a leading `0` — country codes never start with one, so `081234567890` is the local form, not the international one WhatsApp expects.
+Nomornya dinormalkan sebelum dipakai, jadi `+62 812-3456-7890` dan `6281234567890` itu permintaan yang sama. Yang ditolak adalah nomor yang mustahil valid: kurang dari 6 atau lebih dari 15 digit, atau diawali `0` — kode negara tidak pernah dimulai dengan nol, jadi `081234567890` itu bentuk lokal, bukan bentuk internasional yang diharapkan WhatsApp.
 
 ```js
 await sock.requestPairingCode('081234567890')
 // Boom 400: phoneNumber must be in international format:
-// country code followed by the national number, digits only
+// kode negara lalu nomor nasionalnya, hanya digit
 ```
 
 ### Permintaannya dikonfirmasi server
 
-`requestPairingCode` waits for WhatsApp's answer and only returns once the server has registered the code. A rejection is thrown rather than swallowed, so a code you receive is a code the server actually knows about:
+`requestPairingCode` menunggu jawaban WhatsApp dan baru kembali setelah server mendaftarkan kodenya. Penolakan dilempar, bukan ditelan, jadi kode yang kamu terima memang kode yang benar-benar diketahui server:
 
 ```js
 try {
   const code = await sock.requestPairingCode(phoneNumber)
-  console.log('Pairing code:', code)
+  console.log('Kode pairing:', code)
 } catch (error) {
-  console.log(error.message)   // e.g. rate-overlimit, not-allowed
-  console.log(error.data)      // e.g. 429
+  console.log(error.message)   // misalnya rate-overlimit, not-allowed
+  console.log(error.data)      // misalnya 429
 }
 ```
 
-The two rejections you are most likely to meet are `rate-overlimit` — too many attempts, wait before retrying — and a not-allowed variant, meaning link-by-phone-number is not enabled for that account.
+Dua penolakan yang paling sering kamu temui: `rate-overlimit` — terlalu banyak percobaan, tunggu dulu sebelum mencoba lagi — dan varian not-allowed, artinya tautan-lewat-nomor-telepon tidak diaktifkan untuk akun itu.
 
 ### Satu kode dalam satu waktu
 
-A pairing response can only be decrypted by the keys that produced it, so a second request while one is still pending would destroy the first. That is refused with a `409`:
+Respons pairing hanya bisa didekripsi oleh kunci yang menghasilkannya, jadi permintaan kedua saat yang pertama masih menggantung akan merusak yang pertama. Itu ditolak dengan `409`:
 
 ```js
 try {
   await sock.requestPairingCode(phoneNumber)
 } catch (error) {
   if (error.output?.statusCode === 409) {
-    console.log('still pending, seconds left:', error.data.secondsLeft)
+    console.log('masih menggantung, sisa detik:', error.data.secondsLeft)
   }
 }
 ```
 
-Call `cancelPairingCode()` to abandon a pending attempt and request a new one immediately. It returns whether there was anything to cancel:
+Panggil `cancelPairingCode()` untuk meninggalkan percobaan yang menggantung lalu langsung meminta yang baru. Ia mengembalikan apakah memang ada yang dibatalkan:
 
 ```js
 sock.cancelPairingCode()
 const code = await sock.requestPairingCode(phoneNumber)
 ```
 
-The guard clears itself once the code expires. WhatsApp rotates a pairing code every 3 minutes; adjust with `pairingCodeTimeoutMs` if you need a different window.
+Pengamannya membersihkan diri sendiri begitu kodenya kedaluwarsa. WhatsApp merotasi kode pairing setiap 3 menit; sesuaikan dengan `pairingCodeTimeoutMs` kalau kamu butuh jendela lain.
 
 ### Kode Pairing Kustom
 
-A custom pairing code must contain exactly **8 characters**.
+Kode pairing kustom harus berisi tepat **8 karakter**.
 
 ```js
 const code = await sock.requestPairingCode(
@@ -751,13 +751,13 @@ console.log(code)
 
 ### Memeriksa pairing tanpa menyentuh bot yang jalan
 
-`script/testpairing.js` runs one pairing request against a throwaway session directory, so credentials of a bot that is already connected are never replaced:
+`script/testpairing.js` menjalankan satu permintaan pairing ke direktori sesi sekali pakai, jadi kredensial bot yang sudah tersambung tidak pernah tertimpa:
 
 ```bash
 node script/testpairing.js 6281234567890 --check-only
 ```
 
-`--check-only` reports whether the server accepted the registration and never prints the code — use it anywhere the output can be read by someone else. Drop the flag to print the code and wait for the link to complete.
+`--check-only` melaporkan apakah server menerima registrasinya dan tidak pernah mencetak kodenya — pakai itu di tempat mana pun yang outputnya bisa dibaca orang lain. Lepas flag-nya untuk mencetak kode dan menunggu penautannya selesai.
 
 ---
 
@@ -770,12 +770,12 @@ sock.ev.on('messages.upsert', async ({ messages, type }) => {
   const message = messages[0]
   if (!message?.message) return
 
-  console.log('From:', message.key.remoteJid)
-  console.log('Message:', message.message)
+  console.log('Dari:', message.key.remoteJid)
+  console.log('Pesan:', message.message)
 })
 ```
 
-Simple text extraction:
+Mengambil teksnya secara sederhana:
 
 ```js
 sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -797,7 +797,7 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 
 ## 📡 Event
 
-Everything the socket emits, through `sock.ev`. Subscribe individually, or batch with `sock.ev.process`.
+Semua yang dipancarkan socket, lewat `sock.ev`. Berlangganan satu-satu, atau sekaligus dengan `sock.ev.process`.
 
 ```js
 sock.ev.process(async (events) => {
@@ -806,85 +806,85 @@ sock.ev.process(async (events) => {
 })
 ```
 
-`process` hands you one object per flush instead of one callback per event, which keeps a burst of history sync from thrashing your handler.
+`process` memberimu satu objek per flush, bukan satu callback per event, sehingga ledakan sinkronisasi riwayat tidak menggempur handler-mu.
 
 ### Koneksi dan kredensial
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `connection.update` | connection state, QR, pairing code, reachout timelock |
-| `creds.update` | credentials changed — always wire this to `saveCreds` |
+| `connection.update` | keadaan koneksi, QR, kode pairing, timelock reachout |
+| `creds.update` | kredensial berubah — selalu sambungkan ini ke `saveCreds` |
 
 ### Pesan
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `messages.upsert` | new or appended messages, with `type: 'notify' \| 'append'` |
-| `messages.update` | status, edits, poll updates |
-| `messages.delete` | messages revoked |
-| `messages.reaction` | a reaction added or removed |
-| `messages.media-update` | media re-upload finished |
-| `message-receipt.update` | delivered / read receipts |
-| `message-capping.update` | the new-chat quota changed |
-| `messaging-history.set` | a history sync batch arrived |
-| `messaging-history.status` | history sync progress |
+| `messages.upsert` | pesan baru atau tambahan, dengan `type: 'notify' \| 'append'` |
+| `messages.update` | status, suntingan, pembaruan polling |
+| `messages.delete` | pesan ditarik |
+| `messages.reaction` | reaksi ditambah atau dihapus |
+| `messages.media-update` | unggah ulang media selesai |
+| `message-receipt.update` | tanda terkirim / dibaca |
+| `message-capping.update` | kuota chat baru berubah |
+| `messaging-history.set` | satu batch sinkronisasi riwayat datang |
+| `messaging-history.status` | kemajuan sinkronisasi riwayat |
 
 ### Chat dan kontak
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `chats.upsert` / `chats.update` / `chats.delete` | chat list changes |
-| `chats.lock` | a chat was locked or unlocked |
-| `contacts.upsert` / `contacts.update` | contact changes |
-| `presence.update` | typing, recording, online |
-| `blocklist.update` | blocklist changed |
-| `settings.update` | privacy or account settings changed |
-| `labels.edit` / `labels.association` | business labels |
-| `lid-mapping.update` | a phone number was mapped to a LID |
+| `chats.upsert` / `chats.update` / `chats.delete` | daftar chat berubah |
+| `chats.lock` | satu chat dikunci atau dibuka |
+| `contacts.upsert` / `contacts.update` | kontak berubah |
+| `presence.update` | sedang menulis, merekam, online |
+| `blocklist.update` | daftar blokir berubah |
+| `settings.update` | pengaturan privasi atau akun berubah |
+| `labels.edit` / `labels.association` | label bisnis |
+| `lid-mapping.update` | satu nomor telepon dipetakan ke LID |
 
 ### Grup dan komunitas
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `groups.upsert` / `groups.update` | group metadata |
-| `group-participants.update` | joins, leaves, promotes, demotes |
-| `group.join-request` | someone asked to join |
-| `group.member-tag.update` | a member label changed |
+| `groups.upsert` / `groups.update` | metadata grup |
+| `group-participants.update` | masuk, keluar, promote, demote |
+| `group.join-request` | ada yang minta masuk |
+| `group.member-tag.update` | label anggota berubah |
 
 ### Channel
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `newsletter.reaction` | a follower reacted |
-| `newsletter.view` | view counter moved |
-| `newsletter-settings.update` | channel settings changed |
-| `newsletter-participants.update` | admin promoted or demoted |
-| `newsletter-admin-profile.update` | an admin changed their channel profile |
+| `newsletter.reaction` | ada follower bereaksi |
+| `newsletter.view` | penghitung tayangan bergerak |
+| `newsletter-settings.update` | pengaturan channel berubah |
+| `newsletter-participants.update` | admin dipromote atau didemote |
+| `newsletter-admin-profile.update` | seorang admin mengubah profil channel-nya |
 
 ### Panggilan dan suara
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `call` | incoming or updated call |
-| `voice.transcription` | a voice note was transcribed |
-| `voice.command` | a transcription matched the wake phrase |
+| `call` | panggilan masuk atau diperbarui |
+| `voice.transcription` | satu pesan suara ditranskripsikan |
+| `voice.command` | satu transkripsi cocok dengan frasa pemicu |
 
 ### Lain-lain
 
-| Event | Fires when |
+| Event | Dipancarkan saat |
 |---|---|
-| `event` | event message created or updated |
-| `mex.notification` | a MEX notification this library does not model yet |
+| `event` | pesan acara dibuat atau diperbarui |
+| `mex.notification` | notifikasi MEX yang belum dimodelkan library ini |
 
-`mex.notification` is the escape hatch: anything WhatsApp adds that the library has not modelled arrives there with its raw operation name and payload, so a new feature never goes silently missing.
+`mex.notification` itu pintu daruratnya: apa pun yang ditambahkan WhatsApp dan belum dimodelkan library ini tiba di situ beserta nama operasi dan payload mentahnya, jadi fitur baru tidak pernah hilang tanpa jejak.
 
 ---
 
 ## 🪪 Pengalamatan LID / PN / JID
 
-Recent WhatsApp protocol versions may identify users with LID addresses instead of only phone-number JIDs. Do not assume every incoming user identifier ends with `@s.whatsapp.net`.
+Versi protokol WhatsApp yang baru bisa mengidentifikasi pengguna dengan alamat LID, bukan hanya JID nomor telepon. Jangan berasumsi setiap penanda pengguna yang masuk berakhiran `@s.whatsapp.net`.
 
-Common forms include:
+Bentuk yang umum antara lain:
 
 ```text
 6281234567890@s.whatsapp.net
@@ -893,7 +893,7 @@ Common forms include:
 123456789@newsletter
 ```
 
-For incoming messages, inspect the key fields provided by WhatsApp:
+Untuk pesan masuk, periksa field key yang diberikan WhatsApp:
 
 ```js
 const key = message.key
