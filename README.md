@@ -4898,20 +4898,20 @@ Kesalahan yang paling banyak memakan waktu adalah menyerahkan key milikmu sendir
 | `statusNotification.responseMessageKey` | **kamu** — jawabanmu |
 | `statusNotification.originalMessageKey` | **mereka** — prompt-nya |
 | `groupStatusReaction.key` | **mereka** — status grup yang kamu reaksi |
-| `statusQuoted.originalStatusId` | **theirs** — the status id, not a whole key |
+| `statusQuoted.originalStatusId` | **mereka** — id statusnya, bukan key utuh |
 
-Every maker checks the key before building anything, and throws a `TypeError` naming the exact field — `addYours.key must be an object` when it is missing, `addYours.key.id is required` when it is there but half-built. Either way it fails at build time rather than going out and being quietly ignored.
+Setiap pembuatnya memeriksa key-nya sebelum membangun apa pun, dan melempar `TypeError` yang menyebut field tepatnya — `addYours.key must be an object` kalau hilang, `addYours.key.id is required` kalau ada tapi setengah jadi. Bagaimanapun ia gagal saat build ketimbang terkirim lalu diabaikan tanpa suara.
 
 ### Polling Foto
 
-Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
+Beri sebuah opsi `image` dan polling-nya dikirim sebagai polling foto: gambar opsinya dikirim sebagai pesan terkait dan setiap opsi membawa hash yang diharapkan server.
 
-These work in groups and one-to-one chats as well as channels, and `hideVoter` and `endDate` can be combined with them — the poll stays on `pollCreationMessageV3`, which is the version the option images attach to. See [Poll settings](#pengaturan-polling).
+Ini jalan di grup dan chat satu lawan satu maupun di channel, dan `hideVoter` serta `endDate` bisa digabungkan dengannya — polling-nya tetap di `pollCreationMessageV3`, yaitu versi tempat gambar opsinya menempel. Lihat [Pengaturan polling](#pengaturan-polling).
 
 ```js
 await sock.sendMessage(jid, {
   poll: {
-    name: 'Which cover?',
+    name: 'Sampul yang mana?',
     values: [
       { name: 'Jakarta', image: { url: './jakarta.jpg' } },
       { name: 'Bandung', image: { url: './bandung.jpg' } }
@@ -4921,26 +4921,26 @@ await sock.sendMessage(jid, {
 })
 ```
 
-Each option image is uploaded and then sent as its own `pollCreationOptionImageMessage`, linked back to the poll by `MEDIA_POLL` association. A poll with two image options is three messages on the wire.
+Setiap gambar opsi diunggah lalu dikirim sebagai `pollCreationOptionImageMessage`-nya sendiri, ditautkan balik ke polling-nya lewat asosiasi `MEDIA_POLL`. Polling dengan dua opsi bergambar itu tiga pesan di wire.
 
-Plain string options still send a normal text poll, and the two can be mixed. The rest of the poll switches — multiple answers, hidden voters, add-option, end time — are listed under [Poll settings](#pengaturan-polling).
+Opsi berupa string biasa tetap mengirim polling teks normal, dan keduanya bisa dicampur. Sakelar polling lainnya — banyak jawaban, pemilih tersembunyi, tambah opsi, waktu berakhir — didaftar di [Pengaturan polling](#pengaturan-polling).
 
 ### Pesan Pertanyaan
 
 ```js
 await sock.sendMessage(jid, {
   question: {
-    text: 'What feature should be added next?'
+    text: 'Fitur apa yang harus ditambahkan berikutnya?'
   }
 })
 ```
 
-The same payload can be sent to a newsletter JID. Newsletter questions are keyed by a `<meta questiontype>` node, which the socket adds automatically:
+Payload yang sama bisa dikirim ke JID channel. Pertanyaan channel ditandai oleh node `<meta questiontype>`, yang ditambahkan socket secara otomatis:
 
 ```js
 await sock.sendMessage('123456789@newsletter', {
   question: {
-    text: 'Which update do you want next?'
+    text: 'Update mana yang kamu mau berikutnya?'
   }
 })
 ```
@@ -4952,11 +4952,11 @@ await sock.sendMessage('123456789@newsletter', {
 </message>
 ```
 
-`questiontype` is `question` when posting a question, `response` when a follower answers it, and `reply` when the channel replies to an answer.
+`questiontype` bernilai `question` saat memposting pertanyaan, `response` saat seorang follower menjawabnya, dan `reply` saat channel-nya membalas sebuah jawaban.
 
 ### Jawaban Pertanyaan Masuk
 
-A follower answering a question. Sent with `questiontype="response"`.
+Seorang follower menjawab sebuah pertanyaan. Dikirim dengan `questiontype="response"`.
 
 ```js
 await sock.sendMessage(jid, {
@@ -4969,15 +4969,15 @@ await sock.sendMessage(jid, {
 
 ### Balasan Pertanyaan
 
-The channel replying to an answer, quoting it by the question's server id. Sent with `questiontype="reply"`.
+Channel-nya membalas sebuah jawaban, mengutipnya lewat server id pertanyaannya. Dikirim dengan `questiontype="reply"`.
 
 ```js
 await sock.sendMessage('123456789@newsletter', {
   questionReply: {
-    text: 'Good pick, shipping it next',
+    text: 'Pilihan bagus, ini yang berikutnya dikerjakan',
     serverQuestionId: 175,
-    quotedQuestion: questionMessage.message,   // optional
-    quotedResponse: responseMessage.message    // optional
+    quotedQuestion: questionMessage.message,   // opsional
+    quotedResponse: responseMessage.message    // opsional
   }
 })
 ```
@@ -5000,7 +5000,7 @@ await sock.sendMessage(jid, {
   statusQuoted: {
     originalStatusId: statusMessage.key,
     type: 'QUESTION_ANSWER',
-    text: 'Quoted status answer'
+    text: 'Jawaban status yang dikutip'
   }
 })
 ```
@@ -5019,9 +5019,9 @@ await sock.sendMessage(jid, {
 
 ### Notifikasi Status
 
-Supported notification types are `UNKNOWN` 0, `STATUS_ADD_YOURS` 1, `STATUS_RESHARE` 2, `STATUS_QUESTION_ANSWER_RESHARE` 3 and `STATUS_GROUP_STATUS_REPLY` 4, exported as `StatusNotificationType`.
+Jenis notifikasi yang didukung: `UNKNOWN` 0, `STATUS_ADD_YOURS` 1, `STATUS_RESHARE` 2, `STATUS_QUESTION_ANSWER_RESHARE` 3, dan `STATUS_GROUP_STATUS_REPLY` 4, diekspor sebagai `StatusNotificationType`.
 
-`STATUS_GROUP_STATUS_REPLY` is in the WhatsApp Web bundle but not in the generated `WAProto` enum, which only carries the first four — the sync tooling reads message fields, not enum values. `StatusNotificationType` and `statusNotification` both resolve against the bundle's list, so the name works here even though `proto.Message.StatusNotificationMessage.StatusNotificationType.STATUS_GROUP_STATUS_REPLY` is `undefined`.
+`STATUS_GROUP_STATUS_REPLY` ada di bundle WhatsApp Web tapi tidak ada di enum `WAProto` yang dibangkitkan, yang hanya membawa empat yang pertama — alat sinkronisasinya membaca field pesan, bukan nilai enum. `StatusNotificationType` dan `statusNotification` dua-duanya menyelesaikan namanya terhadap daftar di bundle, jadi namanya jalan di sini walau `proto.Message.StatusNotificationMessage.StatusNotificationType.STATUS_GROUP_STATUS_REPLY` bernilai `undefined`.
 
 ```js
 await sock.sendMessage(jid, {
@@ -5040,13 +5040,13 @@ await sock.sendMessage(userJid, {
   newsletterAdminInvite: {
     newsletterJid: '123456789@newsletter',
     newsletterName: 'Elaina Updates',
-    caption: 'Join as an admin',
+    caption: 'Gabung sebagai admin',
     inviteExpiration: Math.floor(Date.now() / 1000) + 86400
   }
 })
 ```
 
-`jpegThumbnail` and `contextInfo` can also be supplied.
+`jpegThumbnail` dan `contextInfo` juga bisa diberikan.
 
 ### Undangan Follower Channel V2
 
@@ -5055,23 +5055,23 @@ await sock.sendMessage(userJid, {
   newsletterFollowerInvite: {
     newsletterJid: '123456789@newsletter',
     newsletterName: 'Elaina Updates',
-    caption: 'Follow this channel'
+    caption: 'Ikuti channel ini'
   }
 })
 ```
 
 ### Audiens Status Kustom (Teman Dekat)
 
-This is the status that shows a badge with an emoji and a list name, and opens a dialog reading **"You're in {name}'s custom audience"** — *"Anda ada di audiens kustom {nama}"*. The emoji and the name are yours to pick, which is where the "custom emoji" part comes from.
+Ini status yang menampilkan lencana berisi emoji dan nama daftar, dan membuka dialog berbunyi **"Anda ada di audiens kustom {nama}"**. Emoji dan namanya kamu yang pilih, dan dari situlah bagian "emoji kustom"-nya datang.
 
-It is **not** `groupStatusMessageV2`. Two different features get mixed up here, so before the code:
+Ini **bukan** `groupStatusMessageV2`. Dua fitur berbeda sering tertukar di sini, jadi sebelum kodenya:
 
-| | Field | What the viewer sees |
+| | Field | Yang dilihat penonton |
 | --- | --- | --- |
-| **Custom audience** | `contextInfo.statusAudienceMetadata` | a purple ring on the status, a badge with your emoji and list name, and the "custom audience" dialog |
-| **Group status** | `groupStatusMessageV2` wrapper + `contextInfo.isGroupStatus` | "Added by {name}" under the poster's name |
+| **Audiens kustom** | `contextInfo.statusAudienceMetadata` | cincin ungu di statusnya, lencana berisi emoji dan nama daftarmu, dan dialog "audiens kustom" |
+| **Status grup** | pembungkus `groupStatusMessageV2` + `contextInfo.isGroupStatus` | "Ditambahkan oleh {nama}" di bawah nama pemostingnya |
 
-They are independent. A status can be one, the other, or both.
+Keduanya berdiri sendiri. Satu status bisa jadi yang satu, yang lain, atau dua-duanya.
 
 #### Audiens kustomnya
 
@@ -5087,7 +5087,7 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-A bare string is shorthand for the list name:
+String polos itu bentuk singkat untuk nama daftarnya:
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -5097,7 +5097,7 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList: bestiesJids })
 ```
 
-Leave a field out and you get the client's own fallback — `⭐` and `Close friends`, exported as `STATUS_AUDIENCE_DEFAULT_EMOJI` and `STATUS_AUDIENCE_DEFAULT_LIST_NAME`:
+Hilangkan salah satu field-nya dan kamu mendapat cadangan milik klien sendiri — `⭐` dan `Close friends`, diekspor sebagai `STATUS_AUDIENCE_DEFAULT_EMOJI` dan `STATUS_AUDIENCE_DEFAULT_LIST_NAME`:
 
 ```js
 await sock.sendMessage('status@broadcast', { text: 'halo', statusAudience: {} }, { statusJidList })
@@ -5105,11 +5105,11 @@ await sock.sendMessage('status@broadcast', { text: 'halo', statusAudience: {} },
 ```
 
 > [!IMPORTANT]
-> `statusAudience` is the **label**, not the lock. Who actually receives the status is decided by `statusJidList` — the people you fan it out to. Setting the metadata without narrowing that list posts to everyone with a "Besties" badge on it.
+> `statusAudience` itu **labelnya**, bukan kuncinya. Siapa yang benar-benar menerima statusnya ditentukan `statusJidList` — orang-orang yang kamu kirimi. Menyetel metadata-nya tanpa mempersempit daftar itu berarti memposting ke semua orang dengan lencana "Besties" terpasang.
 
 #### Status grupnya
 
-`groupStatus: true` wraps whatever you send in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer add the `is_group_status` meta node:
+`groupStatus: true` membungkus apa pun yang kamu kirim di dalam `groupStatusMessageV2` dan menyetel `contextInfo.isGroupStatus`, dan itulah yang membuat lapisan relay menambahkan node meta `is_group_status`:
 
 ```js
 await sock.sendMessage(groupJid, {
@@ -5118,7 +5118,7 @@ await sock.sendMessage(groupJid, {
 })
 ```
 
-Both together, which is the payload the question was really about:
+Keduanya sekaligus, dan itulah payload yang sebenarnya dimaksud pertanyaannya:
 
 ```js
 await sock.sendMessage(groupJid, {
@@ -5128,7 +5128,7 @@ await sock.sendMessage(groupJid, {
 })
 ```
 
-produces:
+menghasilkan:
 
 ```jsonc
 {
@@ -5150,19 +5150,19 @@ produces:
 }
 ```
 
-Note that `message.conversation` is `undefined` there — the text is two layers down. Run it through `normalizeMessageContent` first, as with every other wrapper (see [Every Message Type](#-semua-jenis-pesan)).
+Perhatikan `message.conversation` bernilai `undefined` di situ — teksnya dua lapis di bawah. Jalankan lewat `normalizeMessageContent` dulu, seperti pembungkus lainnya (lihat [Semua Jenis Pesan](#-semua-jenis-pesan)).
 
 #### Field-nya
 
-`contextInfo.statusAudienceMetadata` is field **69** of `ContextInfo`:
+`contextInfo.statusAudienceMetadata` itu field **69** dari `ContextInfo`:
 
-| Field | Tag | Values |
+| Field | Tag | Nilai |
 | --- | --- | --- |
-| `audienceType` | 1 | `UNKNOWN` = 0, `CLOSE_FRIENDS` = 1 — defaults to `CLOSE_FRIENDS` |
-| `listName` | 2 | free text, defaults to `Close friends` |
-| `listEmoji` | 3 | free text, defaults to `⭐` |
+| `audienceType` | 1 | `UNKNOWN` = 0, `CLOSE_FRIENDS` = 1 — bawaannya `CLOSE_FRIENDS` |
+| `listName` | 2 | teks bebas, bawaannya `Close friends` |
+| `listEmoji` | 3 | teks bebas, bawaannya `⭐` |
 
-`audienceType` accepts the enum name or the number:
+`audienceType` menerima nama enum-nya atau angkanya:
 
 ```js
 import { makeStatusAudienceMetadata, proto } from '@rexxhayanasi/elaina-baileys'
@@ -5171,7 +5171,7 @@ makeStatusAudienceMetadata({ listName: 'Kerja', listEmoji: '💼', audienceType:
 makeStatusAudienceMetadata({ listName: 'Kerja', audienceType: proto.ContextInfo.StatusAudienceMetadata.AudienceType.CLOSE_FRIENDS })
 ```
 
-Or write the contextInfo yourself, if you are relaying rather than sending:
+Atau tulis contextInfo-nya sendiri, kalau kamu merelay ketimbang mengirim:
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -5197,7 +5197,7 @@ if (audience) {
 
 #### Kalau namanya tetap "Close friends"
 
-The emoji and the name travel in the same submessage, so if one of them arrives the other did too. Check what you actually put on the wire before blaming the phone — `sendMessage` returns the message it sent:
+Emoji dan namanya berjalan di submessage yang sama, jadi kalau salah satunya tiba, yang lain juga tiba. Periksa apa yang benar-benar kamu taruh di wire sebelum menyalahkan ponselnya — `sendMessage` mengembalikan pesan yang dikirimnya:
 
 ```js
 const sent = await sock.sendMessage('status@broadcast', {
