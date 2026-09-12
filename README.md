@@ -904,9 +904,9 @@ console.log('participant:', key.participant)
 console.log('participantAlt:', key.participantAlt)
 ```
 
-When WhatsApp supplies an alternate PN/JID, `remoteJidAlt` or `participantAlt` can be used by applications that prefer phone-number JIDs. Keep the original LID available as well because some protocol operations may still require the address WhatsApp originally supplied.
+Kalau WhatsApp menyediakan PN/JID alternatif, `remoteJidAlt` atau `participantAlt` bisa dipakai aplikasi yang lebih suka JID nomor telepon. Tetap simpan LID aslinya juga, karena sebagian operasi protokol masih bisa menuntut alamat yang awalnya diberikan WhatsApp.
 
-Use the built-in JID helpers when normalizing identifiers:
+Pakai helper JID bawaan saat menormalkan penanda:
 
 ```js
 import { jidDecode, jidEncode, jidNormalizedUser } from '@rexxhayanasi/elaina-baileys'
@@ -919,7 +919,7 @@ console.log(decoded)
 ```
 
 > [!IMPORTANT]
-> LID and PN are two address forms for the same account only when WhatsApp provides or your application already knows the mapping. Do not create a fake PN by replacing the `@lid` suffix.
+> LID dan PN adalah dua bentuk alamat untuk akun yang sama **hanya** kalau WhatsApp menyediakan pemetaannya atau aplikasimu sudah tahu pemetaannya. Jangan membuat PN palsu dengan mengganti akhiran `@lid`.
 
 ---
 
@@ -929,28 +929,28 @@ console.log(decoded)
 
 ```js
 await sock.sendMessage(jid, {
-  text: 'Hello from Elaina 💜'
+  text: 'Salam dari Elaina 💜'
 })
 ```
 
-**View once for text — built, but it renders as unsupported.** `ExtendedTextMessage` carries a `viewOnce` field, and the Android client ships a whole module around it: `FMessageViewOnceText`, `ConversationRowViewOnceText`, `ViewOnceTextRowFactory`, a dedicated `ViewOnceTextFragment`, and its own `VIEW_ONCE_TEXT_MESSAGES_SENT` / `_RECEIVED` / `_OPENED` counters. The client's own encoder sets `extendedTextMessage.viewOnce` and wraps the result in `viewOnceMessageV2Extension`.
+**View once untuk teks — sudah dibangun, tapi tergambar sebagai tidak didukung.** `ExtendedTextMessage` punya field `viewOnce`, dan klien Android membawa satu modul penuh di sekitarnya: `FMessageViewOnceText`, `ConversationRowViewOnceText`, `ViewOnceTextRowFactory`, satu `ViewOnceTextFragment` khusus, plus penghitungnya sendiri `VIEW_ONCE_TEXT_MESSAGES_SENT` / `_RECEIVED` / `_OPENED`. Encoder klien itu sendiri menyetel `extendedTextMessage.viewOnce` lalu membungkus hasilnya di `viewOnceMessageV2Extension`.
 
-`sendMessage(jid, { text, viewOnceV2Extension: true })` produces exactly that shape:
+`sendMessage(jid, { text, viewOnceV2Extension: true })` menghasilkan bentuk itu persis:
 
 ```js
 { viewOnceMessageV2Extension: { message: { extendedTextMessage: { text, viewOnce: true } } } }
 ```
 
-**Measured on a 2.26.34 device, it still displays "you received a message your version of WhatsApp doesn't support."** The payload matches what the client writes for itself, so the shape is not the problem — the feature is present in the binary but not live for ordinary senders on that build. Treat it as unavailable until a device shows otherwise.
+**Diukur di perangkat 2.26.34, yang tampil tetap "kamu menerima pesan yang tidak didukung versi WhatsApp-mu."** Payload-nya sama dengan yang ditulis klien untuk dirinya sendiri, jadi bentuknya bukan masalahnya — fiturnya ada di binary tapi belum hidup untuk pengirim biasa di build itu. Anggap belum tersedia sampai ada perangkat yang membuktikan sebaliknya.
 
-`viewOnce: true` and `viewOnceV2: true` wrap in `viewOnceMessage` / `viewOnceMessageV2` instead; those are the wrappers media uses. The plain `conversation` field cannot carry any of this — it is a bare string with nowhere to put the flag — so the text has to travel as `extendedTextMessage`, which this fork always does.
+`viewOnce: true` dan `viewOnceV2: true` membungkusnya di `viewOnceMessage` / `viewOnceMessageV2`; itu pembungkus yang dipakai media. Field `conversation` yang polos tidak bisa membawa semua ini — ia cuma string tanpa tempat untuk menaruh flag-nya — jadi teksnya harus berjalan sebagai `extendedTextMessage`, dan fork ini selalu begitu.
 
 ### Gambar
 
 ```js
 await sock.sendMessage(jid, {
   image: { url: 'https://example.com/image.jpg' },
-  caption: 'Elaina Image'
+  caption: 'Gambar Elaina'
 })
 ```
 
@@ -959,7 +959,7 @@ await sock.sendMessage(jid, {
 ```js
 await sock.sendMessage(jid, {
   video: { url: 'https://example.com/video.mp4' },
-  caption: 'Elaina Video'
+  caption: 'Video Elaina'
 })
 ```
 
@@ -968,7 +968,7 @@ await sock.sendMessage(jid, {
 ```js
 await sock.sendMessage(jid, {
   document: { url: 'https://example.com/file.pdf' },
-  fileName: 'document.pdf',
+  fileName: 'dokumen.pdf',
   mimetype: 'application/pdf'
 })
 ```
@@ -991,8 +991,8 @@ await sock.sendMessage(jid, {
 ```js
 await sock.sendMessage(jid, {
   poll: {
-    name: 'Choose one',
-    values: ['Option A', 'Option B', 'Option C'],
+    name: 'Pilih satu',
+    values: ['Opsi A', 'Opsi B', 'Opsi C'],
     selectableCount: 1
   }
 })
@@ -1000,33 +1000,33 @@ await sock.sendMessage(jid, {
 
 #### Pengaturan polling
 
-Every switch WhatsApp shows on its own poll composer is available here. The option names do not match the protobuf field names, so they are listed side by side:
+Setiap sakelar yang ditampilkan WhatsApp di composer polling-nya sendiri tersedia di sini. Nama opsinya tidak sama dengan nama field protobuf-nya, jadi keduanya didaftar bersebelahan:
 
-| Option | Protobuf field | Default | What it does |
+| Opsi | Field protobuf | Bawaan | Fungsinya |
 |---|---|---|---|
-| `selectableCount` | `selectableOptionsCount` | `1` | how many answers one person may pick |
-| `hideVoter` | `hideParticipantName` | `false` | hides who voted for what |
-| `canAddOption` | `allowAddOption` | `false` | lets recipients add their own options |
-| `endDate` | `endTime` | none | a `Date` after which the poll closes |
+| `selectableCount` | `selectableOptionsCount` | `1` | berapa jawaban yang boleh dipilih satu orang |
+| `hideVoter` | `hideParticipantName` | `false` | menyembunyikan siapa memilih apa |
+| `canAddOption` | `allowAddOption` | `false` | mengizinkan penerima menambah opsinya sendiri |
+| `endDate` | `endTime` | tidak ada | `Date` yang setelahnya polling ditutup |
 
-> **These four are gated on the receiving account.** WhatsApp checks each one against a server-controlled flag, and when a flag is off the recipient does not merely ignore the setting — the **entire poll** renders as *"You received a message that your version of WhatsApp doesn't support"*. Option images are relayed separately, so a failed poll can look like only the pictures arrived.
+> **Empat opsi ini digerbangi di akun penerima.** WhatsApp memeriksa masing-masing terhadap flag yang dikendalikan server, dan kalau flag-nya mati, penerima bukan cuma mengabaikan pengaturannya — **seluruh polling** tergambar sebagai *"Kamu menerima pesan yang tidak didukung versi WhatsApp-mu"*. Gambar opsinya direlay terpisah, jadi polling yang gagal bisa kelihatan seperti hanya gambarnya yang sampai.
 >
-> The check is on the field being *present*, not on its value, which is why this library omits `hideParticipantName` and `allowAddOption` entirely when you leave them off rather than sending `false`.
+> Yang diperiksa itu *keberadaan* field-nya, bukan nilainya. Itu sebabnya library ini menghilangkan `hideParticipantName` dan `allowAddOption` sama sekali kalau kamu tidak menyalakannya, bukan mengirim `false`.
 >
-> `canAddOption` is the least available of the four: WhatsApp Web has no sending gate for it at all, meaning its own composer never offers it, and the receiving flag `poll_add_option_receiving_enabled` still defaults to off. Treat it as experimental. `selectableCount` is the one setting that is never gated.
+> `canAddOption` paling jarang tersedia di antara keempatnya: WhatsApp Web sama sekali tidak punya gerbang pengiriman untuknya, artinya composer-nya sendiri tidak pernah menawarkannya, dan flag penerimanya `poll_add_option_receiving_enabled` masih default mati. Anggap eksperimental. `selectableCount` satu-satunya pengaturan yang tidak pernah digerbangi.
 >
-> To find out what a given account supports, send one poll per setting and see which arrive as real polls.
+> Untuk tahu apa yang didukung sebuah akun, kirim satu polling per pengaturan lalu lihat mana yang tiba sebagai polling sungguhan.
 
-`hideVoter` and `endDate` work on photo polls too. Every poll version carries the same `PollCreationMessage`, so `pollCreationMessageV3` holds those fields exactly as V6 does and the receiver reads them from whichever version arrived — but the option images only attach on V3. This library therefore keeps a photo poll on V3 and reserves V6 for text polls:
+`hideVoter` dan `endDate` jalan di polling foto juga. Semua versi polling membawa `PollCreationMessage` yang sama, jadi `pollCreationMessageV3` memegang field-field itu persis seperti V6, dan penerima membacanya dari versi mana pun yang datang — tapi gambar opsinya hanya menempel di V3. Karena itu library ini menahan polling foto di V3 dan menyimpan V6 untuk polling teks:
 
-| Poll | Version sent |
+| Polling | Versi yang dikirim |
 |---|---|
-| any option carrying an `image` | V3, settings included |
-| text options + `hideVoter` / `endDate` | V6 |
-| text options, one answer | V3 |
-| text options, several answers | `pollCreationMessage` |
+| ada opsi yang membawa `image` | V3, lengkap dengan pengaturannya |
+| opsi teks + `hideVoter` / `endDate` | V6 |
+| opsi teks, satu jawaban | V3 |
+| opsi teks, beberapa jawaban | `pollCreationMessage` |
 
-`canAddOption` remains the exception: it fails the whole poll wherever its receiving flag is off, images or not.
+`canAddOption` tetap jadi pengecualian: ia menggagalkan seluruh polling di mana pun flag penerimanya mati, ada gambar atau tidak.
 
 ```js
  await conn.sendMessage(jid, {
@@ -1043,28 +1043,28 @@ Every switch WhatsApp shows on its own poll composer is available here. The opti
 })
 ```
 
-`canAddOption` is left out of the example on purpose — add it only once you have confirmed the recipient supports it, since it is the one most likely to turn the whole poll into an unsupported placeholder.
+`canAddOption` sengaja tidak dimasukkan ke contohnya — tambahkan hanya setelah kamu memastikan penerimanya mendukung, karena itu yang paling mungkin mengubah seluruh polling jadi placeholder tidak didukung.
 
-Text options and image options can be mixed in the same poll, exactly as the composer allows. An option carrying an `image` turns the poll into a [photo poll](#polling-foto); once `canAddOption` is set, recipients extend it with [Poll Add Option](#menambah-opsi-polling).
+Opsi teks dan opsi gambar bisa dicampur dalam satu polling, persis seperti yang diizinkan composer. Satu opsi yang membawa `image` mengubah polling itu jadi [polling foto](#polling-foto); begitu `canAddOption` disetel, penerima bisa memperluasnya lewat [Menambah Opsi Polling](#menambah-opsi-polling).
 
-`endDate` takes a `Date`, not a timestamp — it is converted to epoch milliseconds on the way out.
+`endDate` menerima `Date`, bukan timestamp — ia dikonversi ke milidetik epoch saat dikirim.
 
-Photo polls do render in groups and one-to-one chats — the phone clients accept them there.
+Polling foto memang tergambar di grup maupun chat satu lawan satu — klien ponsel menerimanya di sana.
 
-Two caveats worth knowing. WhatsApp **Web**'s own receiver is stricter than the phones. Its gate, read out of the Web bundle, is roughly this — it is WhatsApp's code, not an export of this library, so there is nothing here to import or call:
+Dua catatan yang perlu diketahui. Penerima WhatsApp **Web** lebih ketat daripada ponsel. Gerbangnya, yang dibaca dari bundle Web, kira-kira begini — ini kode WhatsApp, bukan ekspor library ini, jadi tidak ada yang bisa diimpor atau dipanggil dari sini:
 
 ```text
 isPhotoPollReceiverEnabled(msg) =
   isNewsletterMsg({ from: msg.from, to: msg.to }) && isNewsletterPhotoPollsReceiverEnabled()
 ```
 
-In other words Web only accepts a photo poll inside a channel, so a photo poll that looks right on a phone can show as unsupported in a browser session. And combining image options with `hideVoter` or `endDate` moves the message to `pollCreationMessageV6`; if the images stop appearing once you add those switches, send the photo poll without them.
+Dengan kata lain, Web hanya menerima polling foto di dalam channel, jadi polling foto yang kelihatan benar di ponsel bisa tampil tidak didukung di sesi browser. Dan mencampur opsi gambar dengan `hideVoter` atau `endDate` memindahkan pesannya ke `pollCreationMessageV6`; kalau gambarnya berhenti muncul setelah kamu menambahkan sakelar itu, kirim polling fotonya tanpa keduanya.
 
 ---
 
 ## 📰 External Ad Reply
 
-`externalAdReply` can be attached through `contextInfo` when you want a standard WhatsApp link-preview style card.
+`externalAdReply` bisa ditempelkan lewat `contextInfo` kalau kamu mau kartu bergaya link preview WhatsApp yang standar.
 
 ```js
 await sock.sendMessage(jid, {
@@ -1072,7 +1072,7 @@ await sock.sendMessage(jid, {
   contextInfo: {
     externalAdReply: {
       title: 'Elaina Baileys',
-      body: 'Modern WhatsApp Multi-Device library',
+      body: 'Library WhatsApp Multi-Device modern',
       mediaType: 1,
       thumbnailUrl: 'https://example.com/elaina.jpg',
       sourceUrl: 'https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys',
@@ -1083,16 +1083,16 @@ await sock.sendMessage(jid, {
 })
 ```
 
-The payload can also be passed to a builder using `.setContextInfo(...)` when the builder supports context information.
+Payload-nya juga bisa diserahkan ke builder lewat `.setContextInfo(...)` kalau builder-nya mendukung context info.
 
-There is also a shorthand that lives beside the content instead of inside `contextInfo`:
+Ada juga bentuk singkat yang duduk di sebelah konten, bukan di dalam `contextInfo`:
 
 ```js
 await sock.sendMessage(jid, {
   text: 'Elaina Baileys',
   externalAdReply: {
     title: 'Elaina Baileys',
-    body: 'Modern WhatsApp Multi-Device library',
+    body: 'Library WhatsApp Multi-Device modern',
     thumbnail: await fs.promises.readFile('./cover.jpg'),
     url: 'https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys',
     largeThumbnail: true
@@ -1100,11 +1100,11 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`url` there fills `sourceUrl`, which is the link the card opens. It is not an image, so it is no longer copied into `thumbnailUrl` or `mediaUrl` — those are separate keys you set yourself when the picture really is fetched over the network. Give the card either an inline `thumbnail` buffer or a `thumbnailUrl`; with neither, the card draws without a picture and a warning goes to the logger.
+`url` di situ mengisi `sourceUrl`, yaitu tautan yang dibuka kartunya. Itu bukan gambar, jadi tidak lagi disalin ke `thumbnailUrl` atau `mediaUrl` — keduanya kunci terpisah yang kamu setel sendiri kalau gambarnya memang diambil lewat jaringan. Beri kartunya salah satu: buffer `thumbnail` inline atau `thumbnailUrl`; tanpa keduanya, kartunya tergambar tanpa gambar dan satu peringatan masuk ke logger.
 
 ### Kenapa kartunya bisa tidak muncul sama sekali
 
-The field is alive — current WhatsApp builds still parse `externalAdReply` and still walk it in validation. What changed is on the receiving side. Both clients drop the **whole message**, not just the card, when it arrives at a consumer account. WA Web:
+Field-nya masih hidup — build WhatsApp sekarang tetap mem-parse `externalAdReply` dan tetap menelusurinya saat validasi. Yang berubah ada di sisi penerima. Kedua klien membuang **seluruh pesannya**, bukan cuma kartunya, kalau tiba di akun konsumer. WA Web:
 
 ```js
 if (!isSMB() && !getIsSentByMe(t) && r != null
@@ -1112,21 +1112,21 @@ if (!isSMB() && !getIsSentByMe(t) && r != null
   throw new MessageValidationError("This is a spam message sent to consumer number with externalAdReply", INVALID_MESSAGE)
 ```
 
-Android has the same gate, logged as `ctwa-message-suppressed-external-ad-reply` next to "message suppressed due to ExternalAdReply, mitigation enabled" in `CoreMessageStore`, right before the message is dropped with a placeholder.
+Android punya gerbang yang sama, dicatat sebagai `ctwa-message-suppressed-external-ad-reply` di sebelah "message suppressed due to ExternalAdReply, mitigation enabled" di `CoreMessageStore`, tepat sebelum pesannya dibuang dan diganti placeholder.
 
-Read the three conditions:
+Baca ketiga syaratnya:
 
-- `!isSMB()` — a WhatsApp Business recipient still shows the card. Only consumer WhatsApp drops it.
-- `!getIsSentByMe` — your own copy on your own device is exempt, which is why a card can look perfect on the sending phone while nobody else receives the message.
-- the AB prop — server-controlled per account, so the same payload can work for one recipient and vanish for another, and can start failing without anything in your code changing.
+- `!isSMB()` — penerima WhatsApp Business tetap melihat kartunya. Hanya WhatsApp konsumer yang membuangnya.
+- `!getIsSentByMe` — salinanmu sendiri di perangkatmu sendiri dikecualikan. Itu sebabnya satu kartu bisa kelihatan sempurna di ponsel pengirim sementara tidak ada orang lain yang menerima pesannya.
+- AB prop-nya — dikendalikan server per akun, jadi payload yang sama bisa jalan untuk satu penerima dan hilang untuk yang lain, dan bisa mulai gagal tanpa satu baris kodemu berubah.
 
-Nothing in the payload changes this. It is not a matter of the right `mediaType`, a valid thumbnail, or `showAdAttribution`; the message is discarded after decryption, before render. If the card is what carries your content, send that content in the message body as well so the message survives on its own.
+Tidak ada isi payload yang mengubah ini. Ini bukan soal `mediaType` yang benar, thumbnail yang valid, atau `showAdAttribution`; pesannya dibuang setelah didekripsi, sebelum digambar. Kalau kartunya yang membawa isi pesanmu, kirim isi itu di badan pesan juga supaya pesannya tetap berguna sendiri.
 
-The prop's default in the client table is `false`, so this is not on everywhere — it is switched on per account from the server. Rule it in or out before assuming it: send the same card to a WhatsApp Business number. If the Business copy shows the card and the consumer copy shows no message at all, that is this gate. If neither shows a card but both show the message, the card itself is malformed and [Rich Link Card](#-kartu-rich-link) is not what you need — check the thumbnail first.
+Bawaan prop ini di tabel klien `false`, jadi ini tidak aktif di mana-mana — dinyalakan per akun dari server. Pastikan dulu sebelum berasumsi: kirim kartu yang sama ke nomor WhatsApp Business. Kalau salinan Business menampilkan kartunya dan salinan konsumer tidak menampilkan pesan sama sekali, itu gerbang ini. Kalau dua-duanya tidak menampilkan kartu tapi dua-duanya menampilkan pesannya, berarti kartunya sendiri yang cacat dan [Kartu Rich Link](#-kartu-rich-link) bukan yang kamu butuhkan — periksa thumbnail-nya dulu.
 
 ### Click-to-WhatsApp, bentuk yang benar-benar dikirim saat iklan diklik
 
-The examples above use `externalAdReply` as a decoration. Click-to-WhatsApp is what the field was built for: a person taps an ad on Facebook or Instagram, WhatsApp opens on the advertiser's thread, and the first message the person sends carries the ad it came from. Those extra keys are the ones a decorative card leaves empty.
+Contoh di atas memakai `externalAdReply` sebagai hiasan. Click-to-WhatsApp adalah tujuan asli field ini dibangun: seseorang mengetuk iklan di Facebook atau Instagram, WhatsApp terbuka di thread pengiklan, dan pesan pertama yang dikirim orang itu membawa iklan asalnya. Kunci-kunci tambahan itulah yang dibiarkan kosong oleh kartu hiasan.
 
 ```js
 import { proto } from '@rexxhayanasi/elaina-baileys'
@@ -1160,27 +1160,27 @@ await sock.sendMessage(jid, {
 })
 ```
 
-What each of the CTWA-only keys is for:
+Kegunaan tiap kunci yang khusus CTWA:
 
-| Key | Meaning |
+| Kunci | Artinya |
 |---|---|
-| `contextInfo.conversionSource` | which surface produced the click. `FB_Ads` is the value the client itself writes |
-| `contextInfo.conversionData` | opaque bytes the advertiser gets back for attribution — in practice the ad id. `ctwaPayload` (55) wins over this one when `ctwaSignals` is also set |
-| `contextInfo.conversionDelaySeconds` | seconds between the ad tap and the send. This is field **20**, not `entryPointConversionDelaySeconds` (31) — the CTWA parser only reads 20 |
-| `sourceType` | `"ad"` for an ad, `"post"` for an organic post |
-| `sourceId` | the ad or post id |
-| `ctwaClid` | the click id that ties this conversation to one ad click |
+| `contextInfo.conversionSource` | permukaan mana yang menghasilkan kliknya. `FB_Ads` adalah nilai yang ditulis klien itu sendiri |
+| `contextInfo.conversionData` | byte opaque yang dikembalikan ke pengiklan untuk atribusi — dalam praktiknya id iklannya. `ctwaPayload` (55) mengalahkan yang ini kalau `ctwaSignals` juga disetel |
+| `contextInfo.conversionDelaySeconds` | jumlah detik antara ketukan iklan dan pengirimannya. Ini field **20**, bukan `entryPointConversionDelaySeconds` (31) — parser CTWA hanya membaca 20 |
+| `sourceType` | `"ad"` untuk iklan, `"post"` untuk postingan organik |
+| `sourceId` | id iklan atau postingannya |
+| `ctwaClid` | id klik yang mengikat percakapan ini ke satu klik iklan |
 | `sourceApp` | `"facebook"`, `"instagram"`, … |
-| `containsAutoReply` / `greetingMessageBody` | the ad's prefilled greeting, and whether the sender saw it |
-| `ctaPayload` | the ad's call-to-action payload, yours to define |
-| `adType` | `CTWA` (0) or `CAWC` (1) |
-| `containsCtwaFlowsAutoLabel` | new in revision `1047203841`: the thread carries a CTWA Flows auto-label |
+| `containsAutoReply` / `greetingMessageBody` | sapaan yang sudah terisi dari iklannya, dan apakah pengirim melihatnya |
+| `ctaPayload` | payload call-to-action iklannya, kamu yang menentukan |
+| `adType` | `CTWA` (0) atau `CAWC` (1) |
+| `containsCtwaFlowsAutoLabel` | baru di revisi `1047203841`: thread-nya membawa auto-label CTWA Flows |
 
-`AdType.CTWA` is `0`, so protobuf leaves it off the wire and it decodes back as `0` — that is the default, not a dropped field.
+`AdType.CTWA` bernilai `0`, jadi protobuf tidak menuliskannya ke wire dan ia terbaca balik sebagai `0` — itu nilai bawaannya, bukan field yang hilang.
 
 ### Kartu dan label "via ad" itu dua hal berbeda
 
-On receive the client folds `contextInfo` into a `ctwaContext` on the message, and only some of the keys above survive that trip:
+Saat diterima, klien melipat `contextInfo` menjadi `ctwaContext` pada pesannya, dan hanya sebagian kunci di atas yang selamat dalam perjalanan itu:
 
 ```js
 n.alwaysShowAdAttribution = contextInfo.alwaysShowAdAttribution
@@ -1193,14 +1193,14 @@ if (d != null) {
   n.thumbnail = decodeBytes(d.thumbnail), n.thumbnailUrl = d.thumbnailUrl
   n.mediaType = d.mediaType, n.mediaUrl = d.mediaUrl
   n.isSuspiciousLink = findLink(d.sourceUrl).suspiciousCharacters.size > 0
-  // then sourceApp, and greetingMessageBody / automatedGreetingMessageShown / ctaPayload
-  // only when isWamoAGMIntegrationEnabled(d.sourceApp)
+  // lalu sourceApp, dan greetingMessageBody / automatedGreetingMessageShown / ctaPayload
+  // hanya kalau isWamoAGMIntegrationEnabled(d.sourceApp)
 }
 ```
 
-`sourceType`, `sourceId` and `ctwaClid` are **not** copied into `ctwaContext` — they ride along for attribution, they do not draw anything.
+`sourceType`, `sourceId`, dan `ctwaClid` **tidak** disalin ke `ctwaContext` — mereka ikut untuk keperluan atribusi, tidak menggambar apa pun.
 
-The **card** — picture, title, subtitle — is then drawn under conditions that mention neither Business nor any AB prop:
+**Kartunya** — gambar, judul, subjudul — lalu digambar dengan syarat yang tidak menyebut Business maupun AB prop mana pun:
 
 ```js
 if (ctwaContext == null
@@ -1210,13 +1210,13 @@ if (ctwaContext == null
   return null
 ```
 
-So a plain consumer account does render it, as long as `sourceUrl` is set and `mediaType` is `IMAGE` or `VIDEO`. `mediaType: 0` draws nothing at all.
+Jadi akun konsumer biasa memang menggambarnya, selama `sourceUrl` disetel dan `mediaType` bernilai `IMAGE` atau `VIDEO`. `mediaType: 0` tidak menggambar apa pun.
 
-The **"Message via ad" label** is a separate element, and it keys off `contextInfo.alwaysShowAdAttribution` (field **48**) — not `externalAdReply.showAdAttribution`, which is a different field the label never reads. One render site checks the field alone; another goes through `shouldShowAdAttribution`, which adds `isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")` (`2898`, default `false`) and refuses outright for a forwarded message.
+**Label "Message via ad"** itu elemen terpisah, dan ia bertumpu pada `contextInfo.alwaysShowAdAttribution` (field **48**) — bukan `externalAdReply.showAdAttribution`, yang merupakan field lain dan tidak pernah dibaca labelnya. Satu titik render memeriksa field-nya saja; satu lagi lewat `shouldShowAdAttribution`, yang menambahkan `isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")` (`2898`, bawaan `false`) dan menolak langsung untuk pesan yang diteruskan.
 
 ### Jangan pernah menyetel `alwaysShowAdAttribution` dari bot
 
-Setting it costs you the whole message, with no prop involved:
+Menyetelnya mengorbankan seluruh pesanmu, tanpa prop apa pun terlibat:
 
 ```js
 function D(msg) {
@@ -1226,21 +1226,21 @@ function D(msg) {
 }
 ```
 
-No AB prop, no rollout — a consumer recipient drops any message carrying that flag from anyone but themselves, always. It sits in the same module as the `externalAdReply` suppression documented above, and the pair divides cleanly:
+Tanpa AB prop, tanpa rollout — penerima konsumer selalu membuang pesan apa pun yang membawa flag itu dari siapa pun kecuali dirinya sendiri. Ia berada di modul yang sama dengan penekanan `externalAdReply` yang didokumentasikan di atas, dan keduanya terbagi rapi:
 
-| You send | Consumer recipient |
+| Yang kamu kirim | Penerima konsumer |
 |---|---|
-| `externalAdReply` with `sourceUrl` + `mediaType` 1/2 | card renders |
-| `externalAdReply`, prop `21819` on for that account | whole message dropped (server-controlled, default off) |
-| `contextInfo.alwaysShowAdAttribution: true` | whole message dropped, **always** |
+| `externalAdReply` dengan `sourceUrl` + `mediaType` 1/2 | kartunya tergambar |
+| `externalAdReply`, prop `21819` aktif untuk akun itu | seluruh pesan dibuang (dikendalikan server, bawaan mati) |
+| `contextInfo.alwaysShowAdAttribution: true` | seluruh pesan dibuang, **selalu** |
 
-So the card half of CTWA is ordinary and safe; the ad-attribution half is what Business accounts are for.
+Jadi paruh kartu dari CTWA itu biasa dan aman; paruh atribusi iklannya memang untuk akun Business.
 
 ---
 
 ## 🖼️ Kartu Rich Link
 
-The card WhatsApp itself draws for a link. Same big picture, title and subtitle as `externalAdReply`, but built out of `extendedTextMessage`, which is the ordinary link preview every user sends all day — no ad fields, so the suppression above cannot touch it.
+Kartu yang digambar WhatsApp sendiri untuk sebuah tautan. Gambar besar, judul, dan subjudulnya sama dengan `externalAdReply`, tapi dibangun dari `extendedTextMessage`, yaitu link preview biasa yang dikirim semua pengguna sepanjang hari — tanpa field iklan, jadi penekanan di atas tidak bisa menyentuhnya.
 
 ```js
 await sock.sendMessage(jid, {
@@ -1254,31 +1254,31 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`url` is required. `text` is your message; the link is appended to it when it is not already in there, because the client only draws a preview for a link that is in the body. Leave `text` out and the link becomes the body.
+`url` wajib. `text` adalah pesanmu; tautannya ditambahkan ke situ kalau belum ada di dalamnya, karena klien hanya menggambar preview untuk tautan yang ada di badan pesan. Hilangkan `text` dan tautannya yang menjadi badan pesan.
 
-`image` is the part that does the work. WhatsApp's own composer does not put the picture in the message — it uploads it to the media servers as a `thumbnail-link` blob and sends the key, so the recipient downloads and decrypts a full-size cover. That is what makes the preview large instead of a small square, and it is what this does:
+`image` bagian yang melakukan pekerjaannya. Composer WhatsApp sendiri tidak menaruh gambarnya di dalam pesan — ia mengunggahnya ke server media sebagai blob `thumbnail-link` lalu mengirim kuncinya, sehingga penerima mengunduh dan mendekripsi sampul ukuran penuh. Itulah yang membuat preview-nya besar, bukan kotak kecil, dan itu yang dilakukan di sini:
 
-| what goes on the wire | from |
+| yang dikirim ke wire | dari |
 | --- | --- |
-| `jpegThumbnail` | a 192px inline copy, shown while the download runs |
-| `thumbnailDirectPath`, `mediaKey`, `mediaKeyTimestamp` | the upload |
-| `thumbnailSha256`, `thumbnailEncSha256` | the upload |
-| `thumbnailWidth`, `thumbnailHeight` | the size of the picture that was actually encoded |
+| `jpegThumbnail` | salinan inline 192px, ditampilkan selama unduhan berjalan |
+| `thumbnailDirectPath`, `mediaKey`, `mediaKeyTimestamp` | hasil unggahan |
+| `thumbnailSha256`, `thumbnailEncSha256` | hasil unggahan |
+| `thumbnailWidth`, `thumbnailHeight` | ukuran gambar yang benar-benar dienkode |
 
-Those last two are not decoration. The client's own guard is:
+Dua yang terakhir bukan hiasan. Pengaman klien itu sendiri begini:
 
 ```js
 var n = !!(e.thumbnailDirectPath || e.thumbnailHQ) && e.thumbnailHeight != null && e.thumbnailWidth != null;
 if (!n) return false;
 ```
 
-With either dimension missing it draws the small card and never downloads the blob, and the ratio of the two picks the portrait or landscape bubble. So the dimensions here are measured from the encoded bytes rather than the source: a picture wider than the target is scaled down to it, a picture already narrower is left alone rather than being stretched up to 640 and going blurry. If no image library is installed, nothing can be measured, so no upload happens at all and you get the small card — an upload with no dimensions beside it is one the client would refuse to use.
+Kalau salah satu dimensinya hilang, ia menggambar kartu kecil dan tidak pernah mengunduh blob-nya, dan perbandingan keduanya menentukan bubble potret atau lanskap. Karena itu dimensinya di sini diukur dari byte yang sudah dienkode, bukan dari sumbernya: gambar yang lebih lebar dari targetnya diperkecil, gambar yang sudah lebih sempit dibiarkan apa adanya, bukan ditarik sampai 640 lalu jadi kabur. Kalau tidak ada library gambar yang terpasang, tidak ada yang bisa diukur, jadi tidak ada unggahan sama sekali dan kamu dapat kartu kecil — unggahan tanpa dimensi di sebelahnya adalah unggahan yang akan ditolak klien.
 
-Pass `large: false` for the small card on purpose; it skips the upload too. `thumbnailWidth` changes the 640; `previewType` takes a `proto.Message.ExtendedTextMessage.PreviewType` if you want `VIDEO` for a link that plays inline. Any other key is passed through to the message, so `contextInfo` works as usual.
+Beri `large: false` kalau memang mau kartu kecil; itu melewati unggahannya juga. `thumbnailWidth` mengubah angka 640; `previewType` menerima `proto.Message.ExtendedTextMessage.PreviewType` kalau kamu mau `VIDEO` untuk tautan yang diputar inline. Kunci lain apa pun diteruskan ke pesannya, jadi `contextInfo` jalan seperti biasa.
 
-One case where the large card is refused no matter what you send: on a status, the client also requires `thumbnailWidth / thumbnailHeight >= 1.4`, so a portrait or square cover falls back to the small card there.
+Satu kasus di mana kartu besar ditolak apa pun yang kamu kirim: di status, klien juga menuntut `thumbnailWidth / thumbnailHeight >= 1.4`, jadi sampul potret atau persegi jatuh ke kartu kecil di situ.
 
-If you already have your own preview pipeline, `linkPreview` accepts the same `image` and uploads it the same way:
+Kalau kamu sudah punya pipeline preview sendiri, `linkPreview` menerima `image` yang sama dan mengunggahnya dengan cara yang sama:
 
 ```js
 await sock.sendMessage(jid, {
@@ -1292,7 +1292,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`linkPreview` also takes `large: false` for the small card, and it does not need the link to be in your text at all:
+`linkPreview` juga menerima `large: false` untuk kartu kecil, dan ia sama sekali tidak butuh tautannya ada di teksmu:
 
 ```js
 await sock.sendMessage(jid, {
@@ -1306,19 +1306,19 @@ await sock.sendMessage(jid, {
 })
 ```
 
-The client decides a message carries a preview with `isUrlExtendedTextMessage`, which is `!!matchedText || !!description || !!title` — the body is never consulted. So the card draws, tapping it opens `matchedText`, and the chat shows only your words. `richLink` appends the link because a link preview normally belongs to a link the reader can see; when you want the card without it, use `linkPreview` directly.
+Klien memutuskan sebuah pesan membawa preview lewat `isUrlExtendedTextMessage`, yaitu `!!matchedText || !!description || !!title` — badan pesannya tidak pernah dilihat. Jadi kartunya tergambar, mengetuknya membuka `matchedText`, dan chat-nya hanya menampilkan kata-katamu. `richLink` menambahkan tautannya karena link preview normalnya milik sebuah tautan yang bisa dilihat pembaca; kalau kamu mau kartunya tanpa itu, pakai `linkPreview` langsung.
 
-An `upload` function has to be available for the large card, since the thumbnail really is uploaded — sending through a socket gives you that for free. An image library (`sharp`, `@napi-rs/image` or `jimp`) is what measures and scales the cover, and without one the card is always the small one.
+Fungsi `upload` harus tersedia untuk kartu besar, karena thumbnail-nya memang benar-benar diunggah — mengirim lewat socket sudah memberimu itu. Library gambar (`sharp`, `@napi-rs/image`, atau `jimp`) yang mengukur dan menskalakan sampulnya, dan tanpa itu kartunya selalu yang kecil.
 
 ---
 
 # 🧱 MessageBuilder Terintegrasi
 
-MessageBuilder v4.7 is included directly inside `@rexxhayanasi/elaina-baileys`.
+MessageBuilder v4.7 sudah disertakan langsung di dalam `@rexxhayanasi/elaina-baileys`.
 
 ### Satu impor, seluruh builder
 
-The builder surface is 175 names spread over four modules, which is how a bot ends up with a paragraph of imports to draw one card. `MB` (long name: `MessageBuilder`) carries all of them — the five builder classes, every section and item factory, every enum, the native-flow checks, the signature helpers. Nothing else has to go on the import line:
+Permukaan builder-nya terdiri dari 175 nama yang tersebar di empat modul, dan itulah kenapa satu bot bisa berakhir dengan satu paragraf impor cuma untuk menggambar satu kartu. `MB` (nama panjangnya: `MessageBuilder`) membawa semuanya — kelima kelas builder, semua pabrik section dan item, semua enum, pemeriksa native flow, helper tanda tangan. Tidak ada lagi yang perlu ikut di baris impor:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1337,7 +1337,7 @@ await rich.send(jid)
 MB.checkNativeFlowButtons([{ name: 'single_select' }])
 ```
 
-Each member on `MB` is the same function as the named export, not a copy, so nothing changes if you already import them individually — `MB.dividerSection === dividerSection`. The builder classes also carry the same members as statics (`AIRich.dividerSection`, `Button.checkNativeFlowButtons`), which is handy when the class is already the only thing you imported.
+Tiap anggota `MB` adalah fungsi yang sama dengan named export-nya, bukan salinan, jadi tidak ada yang berubah kalau kamu sudah mengimpornya satu-satu — `MB.dividerSection === dividerSection`. Kelas builder-nya juga membawa anggota yang sama sebagai static (`AIRich.dividerSection`, `Button.checkNativeFlowButtons`), yang berguna kalau kelasnya sudah jadi satu-satunya yang kamu impor.
 
 Every example in this chapter is written this way, `MB` and nothing else, down to the A2UI and HTML-app pages. The long-hand list still works and nothing is deprecated, so an existing bot needs no changes:
 
