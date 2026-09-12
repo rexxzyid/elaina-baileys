@@ -3035,7 +3035,7 @@ await sock.sendMessage('status@broadcast', {
 
 ### Stiker Status
 
-An image or video status can carry tappable stickers — a place, a channel, a link, a song. They ride on the media message as `interactiveAnnotations`, and each one is positioned by a rectangle given in **fractions of the media**, not pixels: the client multiplies every coordinate by the rendered width and height.
+Status gambar atau video bisa membawa stiker yang bisa diketuk — satu tempat, satu channel, satu tautan, satu lagu. Mereka menempel di pesan medianya sebagai `interactiveAnnotations`, dan masing-masing diposisikan oleh persegi yang diberikan dalam **pecahan dari medianya**, bukan piksel: klien mengalikan setiap koordinat dengan lebar dan tinggi hasil gambarnya.
 
 ```js
 import {
@@ -3066,21 +3066,21 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-The option is `statusStickers`, not `stickers` — that key already builds a sticker pack. A single sticker does not need an array. Anything other than an image or a video is refused, because the field exists nowhere else.
+Opsinya `statusStickers`, bukan `stickers` — kunci itu sudah dipakai untuk membangun paket stiker. Satu stiker tidak perlu array. Apa pun selain gambar atau video ditolak, karena field-nya tidak ada di tempat lain.
 
-| Builder | Puts | Needs |
+| Builder | Menaruh | Membutuhkan |
 |---|---|---|
-| `locationSticker` | `location` | numeric `latitude` and `longitude`, optional `name` |
-| `channelSticker` | `newsletter` | `jid` ending in `@newsletter`, optional `name`, `serverMessageId` |
-| `linkSticker` | `tapAction` + `statusLinkType` | `url`, optional `title` |
-| `musicSticker` | `embeddedContent.embeddedMusic` | `songId` or `mediaId`, plus `title`, `author`, `startTimeMs`, `durationMs`, artwork fields |
-| `messageSticker` | `embeddedContent.embeddedMessage` | the `message` to embed, optional `stanzaId` |
+| `locationSticker` | `location` | `latitude` dan `longitude` berupa angka, `name` opsional |
+| `channelSticker` | `newsletter` | `jid` berakhiran `@newsletter`, `name` dan `serverMessageId` opsional |
+| `linkSticker` | `tapAction` + `statusLinkType` | `url`, `title` opsional |
+| `musicSticker` | `embeddedContent.embeddedMusic` | `songId` atau `mediaId`, plus `title`, `author`, `startTimeMs`, `durationMs`, field artwork |
+| `messageSticker` | `embeddedContent.embeddedMessage` | `message` yang ditanam, `stanzaId` opsional |
 
-`location`, `newsletter`, `embeddedAction` and `tapAction` are one `oneof` in the protobuf, so a sticker carries exactly one of them — passing two throws instead of silently dropping one. Music and embedded messages sit outside that group and can pair with an action.
+`location`, `newsletter`, `embeddedAction`, dan `tapAction` itu satu `oneof` di protobuf, jadi satu stiker membawa tepat satu di antaranya — menyerahkan dua akan melempar error, bukan membuang salah satunya tanpa suara. Musik dan pesan tertanam duduk di luar kelompok itu dan bisa dipasangkan dengan sebuah aksi.
 
-`stickerArea({ x, y, width, height })` builds the four corners by hand if you want them; every value is between 0 and 1 and an area running off the edge is refused. Left out, a sticker lands on `STICKER_DEFAULT_AREA` in the middle.
+`stickerArea({ x, y, width, height })` membangun keempat sudutnya dengan tangan kalau kamu mau; setiap nilainya antara 0 dan 1, dan area yang melewati tepinya ditolak. Kalau dihilangkan, stikernya mendarat di `STICKER_DEFAULT_AREA` di tengah.
 
-Reading them back:
+Membacanya kembali:
 
 ```js
 import { readStickers } from '@rexxhayanasi/elaina-baileys'
@@ -3091,11 +3091,11 @@ for (const sticker of readStickers(msg.message)) {
 }
 ```
 
-`readStickers` returns `[]` for anything without annotations, so it is safe on every message.
+`readStickers` mengembalikan `[]` untuk apa pun tanpa anotasi, jadi aman dipakai di setiap pesan.
 
 #### Mengirim Lagu
 
-An ordinary audio message with the cover art, title and artist in `externalAdReply`. Nothing here depends on Meta's music catalog, so it renders for any file you have:
+Pesan audio biasa dengan sampul, judul, dan penyanyinya di `externalAdReply`. Tidak ada di sini yang bergantung pada katalog musik Meta, jadi ia tergambar untuk berkas apa pun yang kamu punya:
 
 ```js
 await sock.sendMessage(jid, {
@@ -3109,11 +3109,11 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`audio` is required; everything else is optional. The artwork is downscaled to a 640px jpeg before it goes in, because a full cover is far past what a thumbnail may weigh — pass `thumbnailWidth` to change that, and if no image library is installed the file is sent through untouched. `largeThumbnail` defaults to `true` for the big card; set it `false` for the compact one. `url` fills both `sourceUrl` and `mediaUrl`, so tapping the card opens it. Any other key is handed to the audio upload, so `ptt`, `seconds` and `waveform` work as usual.
+`audio` wajib; sisanya opsional. Artwork-nya diperkecil jadi jpeg 640px sebelum masuk, karena sampul ukuran penuh jauh melewati berat yang boleh dipikul sebuah thumbnail — beri `thumbnailWidth` untuk mengubahnya, dan kalau tidak ada library gambar terpasang berkasnya dikirim tanpa disentuh. `largeThumbnail` bawaannya `true` untuk kartu besar; setel `false` untuk yang ringkas. `url` mengisi `sourceUrl` dan `mediaUrl` sekaligus, jadi mengetuk kartunya membukanya. Kunci lain apa pun diserahkan ke unggahan audionya, jadi `ptt`, `seconds`, dan `waveform` jalan seperti biasa.
 
-`mediaType` stays on `1` (IMAGE) unless you change it. `2` is VIDEO, and with that the client waits for a video and draws no thumbnail at all — the cover bytes are simply ignored.
+`mediaType` tetap di `1` (IMAGE) kecuali kamu mengubahnya. `2` itu VIDEO, dan dengan itu klien menunggu sebuah video dan tidak menggambar thumbnail sama sekali — byte sampulnya sekadar diabaikan.
 
-`ptt: true` turns it into a voice note and keeps the card:
+`ptt: true` mengubahnya jadi pesan suara dan mempertahankan kartunya:
 
 ```js
 await sock.sendMessage(jid, {
@@ -3127,15 +3127,15 @@ await sock.sendMessage(jid, {
 })
 ```
 
-Set the mimetype yourself when you do. A voice note is opus in an ogg container, the default here is `audio/mpeg`, and nothing in this library transcodes — handing an mp3 to `ptt: true` gets you a warning in the log and a bubble that may not play. The waveform is still computed for you when ffmpeg is around.
+Setel mimetype-nya sendiri kalau melakukan itu. Pesan suara itu opus di dalam kontainer ogg, bawaan di sini `audio/mpeg`, dan tidak ada apa pun di library ini yang men-transcode — menyerahkan mp3 ke `ptt: true` memberimu peringatan di log dan bubble yang bisa jadi tidak mau diputar. Waveform-nya tetap dihitung untukmu kalau ffmpeg tersedia.
 
-The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition, and [Rich Link Card](#-kartu-rich-link) for a cover that renders with no ad field involved — as its own message beside the audio, since a preview belongs to text and an audio bubble has no room for one.
+Kartu di sini `externalAdReply`, jadi ia membawa risiko pengiriman field itu: penerima konsumer yang akunnya punya prop penekanan aktif akan membuang seluruh pesan audionya, bukan cuma artwork-nya. Lihat [External Ad Reply](#-external-ad-reply) untuk syarat tepatnya, dan [Kartu Rich Link](#-kartu-rich-link) untuk sampul yang tergambar tanpa field iklan terlibat — sebagai pesannya sendiri di sebelah audionya, karena preview itu milik teks dan bubble audio tidak punya tempat untuknya.
 
-Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
+Membaca musik yang datang pakai `readMusicMessage(msg.message)`, yang mengembalikan `null` untuk apa pun yang bukan itu.
 
 ### Status Grup
 
-A group status is the same message with `groupStatus: true` on it. That wraps the finished message in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer attach the `<meta is_group_status="true">` node the client looks for:
+Status grup itu pesan yang sama dengan `groupStatus: true` padanya. Itu membungkus pesan yang sudah jadi di dalam `groupStatusMessageV2` dan menyetel `contextInfo.isGroupStatus`, dan itulah yang membuat lapisan relay menempelkan node `<meta is_group_status="true">` yang dicari klien:
 
 ```js
 await sock.sendMessage(groupJid, {
@@ -3144,7 +3144,7 @@ await sock.sendMessage(groupJid, {
 })
 ```
 
-**The styling works here too, and there is nothing extra to pass.** The wrap happens after the message is built, so `backgroundColor`, `textColor` and `font` land on the `extendedTextMessage` inside the wrapper exactly as they would on a normal status:
+**Penggayaannya jalan di sini juga, dan tidak ada tambahan yang perlu diserahkan.** Pembungkusannya terjadi setelah pesannya dibangun, jadi `backgroundColor`, `textColor`, dan `font` mendarat di `extendedTextMessage` di dalam pembungkusnya persis seperti di status biasa:
 
 ```js
 import { StatusFont } from '@rexxhayanasi/elaina-baileys'
@@ -3181,26 +3181,26 @@ await sock.sendMessage(groupJid, {
 
 #### Font apa saja yang bisa dipakai status grup
 
-The same eight as a normal status, because it is the same `extendedTextMessage` underneath — the wrapper is added afterwards and changes nothing about the styling. There is no group-only face and no extra one to unlock.
+Delapan yang sama dengan status biasa, karena di bawahnya `extendedTextMessage` yang sama juga — pembungkusnya ditambahkan setelahnya dan tidak mengubah apa pun soal penggayaannya. Tidak ada muka huruf khusus grup dan tidak ada tambahan yang perlu dibuka.
 
-| Constant | Value | Looks like |
+| Konstanta | Nilai | Tampaknya |
 | --- | --- | --- |
-| `SYSTEM` | 0 | the plain default, identical to sending no `font` |
-| `SYSTEM_TEXT` | 1 | the same plain face, kept as its own value |
-| `FB_SCRIPT` | 2 | flowing handwritten script, Meta's own cursive |
-| `SYSTEM_BOLD` | 6 | the plain face, heavy |
-| `MORNINGBREEZE_REGULAR` | 7 | casual marker-pen handwriting |
-| `CALISTOGA_REGULAR` | 8 | chunky rounded display serif |
-| `EXO2_EXTRABOLD` | 9 | geometric sans at its heaviest weight |
-| `COURIERPRIME_BOLD` | 10 | monospace typewriter |
+| `SYSTEM` | 0 | bawaan polos, identik dengan tidak mengirim `font` |
+| `SYSTEM_TEXT` | 1 | muka polos yang sama, disimpan sebagai nilainya sendiri |
+| `FB_SCRIPT` | 2 | tulisan tangan mengalir, kursif milik Meta sendiri |
+| `SYSTEM_BOLD` | 6 | muka polosnya, tebal |
+| `MORNINGBREEZE_REGULAR` | 7 | tulisan tangan spidol yang santai |
+| `CALISTOGA_REGULAR` | 8 | serif display gempal membulat |
+| `EXO2_EXTRABOLD` | 9 | sans geometris di berat paling tebalnya |
+| `COURIERPRIME_BOLD` | 10 | mesin tik monospace |
 
-Three things carry over unchanged from [Background, Text Color and Font](#latar-warna-teks-dan-font), where each face is described in full:
+Tiga hal berlaku sama seperti di [Latar, Warna Teks dan Font](#latar-warna-teks-dan-font), tempat tiap muka huruf dijelaskan lengkap:
 
-- **3, 4 and 5 do not exist.** The values jump 2 → 6. The client validates against the eight above and drops anything else, so an unknown value behaves exactly like sending no font.
-- **`font` takes the raw number too**, if you would rather not import — `font: 8` is `CALISTOGA_REGULAR`.
-- **The faces live in the Android APK**, under `assets/fonts/`. WA Web validates the field but has no font-family mapping for any of them, so a styled group status looks styled on a phone and plain in a browser.
+- **3, 4, dan 5 tidak ada.** Nilainya melompat 2 → 6. Klien memvalidasi terhadap delapan di atas dan membuang yang lain, jadi nilai tak dikenal berperilaku persis seperti tidak mengirim font.
+- **`font` juga menerima angka mentahnya**, kalau kamu tidak mau mengimpor — `font: 8` itu `CALISTOGA_REGULAR`.
+- **Muka hurufnya ada di APK Android**, di `assets/fonts/`. WA Web memvalidasi field-nya tapi tidak punya pemetaan font-family untuk satu pun di antaranya, jadi status grup yang digayakan tampil bergaya di ponsel dan polos di browser.
 
-All eight survive the wrap, which is worth checking rather than assuming — `SYSTEM` writes `font: 0` into the message rather than being dropped as a falsy value:
+Kedelapannya selamat melewati pembungkusan, dan itu layak diperiksa ketimbang diasumsikan — `SYSTEM` menuliskan `font: 0` ke dalam pesannya, bukan dibuang karena dianggap nilai falsy:
 
 ```
 SYSTEM                 nilai= 0 | font=0  | bg=0xff7c3aed | isGroupStatus=true
@@ -3213,9 +3213,9 @@ EXO2_EXTRABOLD         nilai= 9 | font=9  | bg=0xff7c3aed | isGroupStatus=true
 COURIERPRIME_BOLD      nilai=10 | font=10 | bg=0xff7c3aed | isGroupStatus=true
 ```
 
-A caption on an `image` or `video` group status is **not** an `extendedTextMessage`, so it takes no `font` at all — the three styling options only reach a text status. A voice note keeps `backgroundArgb` and nothing else.
+Caption pada status grup `image` atau `video` **bukan** `extendedTextMessage`, jadi ia sama sekali tidak menerima `font` — ketiga opsi penggayaan hanya menjangkau status teks. Pesan suara mempertahankan `backgroundArgb` dan tidak lebih.
 
-Media works the same way — `groupStatus: true` alongside an `image`, `video` or voice note wraps whichever message got built, and a voice note keeps its background colour:
+Media bekerja dengan cara yang sama — `groupStatus: true` bersama `image`, `video`, atau pesan suara membungkus pesan mana pun yang terbangun, dan pesan suara mempertahankan warna latarnya:
 
 ```js
 await sock.sendMessage(groupJid, {
@@ -3226,28 +3226,28 @@ await sock.sendMessage(groupJid, {
 }, { backgroundColor: '#7C3AED' })
 ```
 
-Because the payload is wrapped, `message.conversation` is `undefined` on the receiving end and the real content sits a layer down. Run it through `normalizeMessageContent` before reading it, the same as any other wrapper — see [Every Message Type](#-semua-jenis-pesan).
+Karena payload-nya terbungkus, `message.conversation` bernilai `undefined` di sisi penerima dan isi sebenarnya ada satu lapis di bawahnya. Jalankan lewat `normalizeMessageContent` sebelum membacanya, sama seperti pembungkus lainnya — lihat [Semua Jenis Pesan](#-semua-jenis-pesan).
 
 > [!NOTE]
-> `groupStatusMessageV2` is `Message` field 103; the older `groupStatusMessage` is field 96. Both are `FutureProofMessage` wrappers and the relay layer adds the meta node for either, but `groupStatus: true` always builds V2. WhatsApp Web only ever *parses* these — it has no send path for a group status at all, so this is posted from a phone in the official client.
+> `groupStatusMessageV2` itu field 103 dari `Message`; `groupStatusMessage` yang lebih lama field 96. Keduanya pembungkus `FutureProofMessage` dan lapisan relay menambahkan node meta untuk keduanya, tapi `groupStatus: true` selalu membangun V2. WhatsApp Web hanya pernah *mem-parse* ini — ia sama sekali tidak punya jalur kirim untuk status grup, jadi di klien resmi ini diposting dari ponsel.
 
 ### Apa Saja Yang Benar-Benar Bisa Digayakan
 
-Worth being blunt about, because it is the most common wrong assumption:
+Layak dikatakan terang-terangan, karena ini asumsi salah yang paling umum:
 
-| Status kind | Background | Text color | Font | Caption |
+| Jenis status | Latar | Warna teks | Font | Caption |
 | --- | --- | --- | --- | --- |
-| Text | ✅ | ✅ | ✅ | — |
-| Voice note (`ptt: true`) | ✅ | ❌ | ❌ | ❌ |
-| Image | ❌ | ❌ | ❌ | ✅ |
+| Teks | ✅ | ✅ | ✅ | — |
+| Pesan suara (`ptt: true`) | ✅ | ❌ | ❌ | ❌ |
+| Gambar | ❌ | ❌ | ❌ | ✅ |
 | Video | ❌ | ❌ | ❌ | ✅ |
-| Audio without `ptt` | ❌ | ❌ | ❌ | ❌ |
+| Audio tanpa `ptt` | ❌ | ❌ | ❌ | ❌ |
 
-A group status is not a separate row: `groupStatus: true` wraps whichever of those you built, and the wrapped message keeps whatever styling it already had.
+Status grup bukan baris terpisah: `groupStatus: true` membungkus mana pun di antara itu yang kamu bangun, dan pesan yang terbungkus mempertahankan penggayaan yang sudah ada padanya.
 
-`ImageMessage` and `VideoMessage` have **no color or font fields in the protobuf** — not in the WhatsApp Web spec, not in the Android one. The colored text you see over a photo in the app is burned into the image by the media editor before it is uploaded, so if you want that from a bot, draw it into the picture yourself and send a plain image.
+`ImageMessage` dan `VideoMessage` **tidak punya field warna atau font di protobuf** — tidak di spesifikasi WhatsApp Web, tidak di Android. Teks berwarna yang kamu lihat di atas foto di aplikasi itu dibakar ke dalam gambarnya oleh editor media sebelum diunggah, jadi kalau kamu mau itu dari bot, gambar sendiri ke fotonya lalu kirim sebagai gambar biasa.
 
-To put a custom audience badge on any of these, see [Custom Status Audience](#audiens-status-kustom-teman-dekat).
+Untuk menaruh lencana audiens kustom di salah satunya, lihat [Audiens Status Kustom](#audiens-status-kustom-teman-dekat).
 
 ---
 
