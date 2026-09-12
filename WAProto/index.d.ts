@@ -6024,6 +6024,7 @@ export namespace proto {
     }
 
     interface IMessage {
+        audioStickerMessage?: (proto.Message.IFutureProofMessage|null);
         acp2SettingMessage?: (proto.Message.IFutureProofMessage|null);
         newsletterFollowerInviteMessage?: (proto.Message.INewsletterFollowerInviteMessage|null);
         conversation?: (string|null);
@@ -6141,6 +6142,7 @@ export namespace proto {
     }
 
     class Message implements IMessage {
+        public audioStickerMessage?: (proto.Message.IFutureProofMessage|null);
         public acp2SettingMessage?: (proto.Message.IFutureProofMessage|null);
         public newsletterFollowerInviteMessage?: (proto.Message.INewsletterFollowerInviteMessage|null);
         constructor(p?: proto.IMessage);
@@ -10680,6 +10682,7 @@ export namespace proto {
         }
 
         interface IStickerMessage {
+            audioMessage?: (proto.Message.IAudioMessage|null);
             url?: (string|null);
             fileSha256?: (Uint8Array|null);
             fileEncSha256?: (Uint8Array|null);
@@ -10705,6 +10708,7 @@ export namespace proto {
         }
 
         class StickerMessage implements IStickerMessage {
+            public audioMessage?: (proto.Message.IAudioMessage|null);
             constructor(p?: proto.Message.IStickerMessage);
             public url?: (string|null);
             public fileSha256?: (Uint8Array|null);
@@ -11497,11 +11501,13 @@ export namespace proto {
         }
 
         interface IPollOption {
+            addOptionMsgKey?: (string|null);
             name?: (string|null);
             hash?: (string|null);
         }
 
         class PollOption implements IPollOption {
+            public addOptionMsgKey?: (string|null);
             constructor(p?: proto.MsgOpaqueData.IPollOption);
             public name?: (string|null);
             public hash?: (string|null);

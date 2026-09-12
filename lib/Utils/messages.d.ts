@@ -47,6 +47,7 @@ export function generateWAMessageContent(message: any, options: any): Promise<an
 export function generateWAMessageFromContent(jid: any, message: any, options: any): proto.WebMessageInfo;
 export function generateWAMessage(jid: any, content: any, options: any): Promise<proto.WebMessageInfo>;
 export function getContentType(content: any): string | undefined;
+export const FUTURE_PROOF_MESSAGE_KEYS: string[];
 export function normalizeMessageContent(content: any): any;
 export function extractMessageContent(content: any): any;
 export function getDevice(id: any): "unknown" | "android" | "web" | "ios" | "desktop";

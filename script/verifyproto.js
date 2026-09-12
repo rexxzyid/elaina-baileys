@@ -1,5 +1,6 @@
 import { loadBundle } from './protobundle.js'
 import waproto from '../WAProto/index.js'
+import { FUTURE_PROOF_MESSAGE_KEYS } from '../lib/Utils/messages.js'
 
 const { proto } = waproto
 
@@ -118,6 +119,22 @@ for (const [name, fields] of bundle.specs) {
 }
 
 console.log(`Round-tripped ${checked} fields across the bundle.`)
+
+const wrappers = (bundle.specs.get('Message') || [])
+    .filter(field => field.ref === 'Message.FutureProofMessage')
+    .map(field => field.name)
+
+if (!wrappers.length) {
+    failures.push('Message: no FutureProofMessage field found in the bundle, the spec parser is broken')
+}
+else {
+    const unwrapped = new Set(FUTURE_PROOF_MESSAGE_KEYS)
+    const missing = wrappers.filter(name => !unwrapped.has(name))
+    if (missing.length) {
+        failures.push(`FUTURE_PROOF_MESSAGE_KEYS is missing ${missing.join(', ')}, so normalizeMessageContent leaves them wrapped`)
+    }
+    console.log(`Checked ${wrappers.length} FutureProofMessage wrappers against normalizeMessageContent.`)
+}
 
 if (failures.length) {
     console.error(`${failures.length} fields failed:`)

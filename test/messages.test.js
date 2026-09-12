@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { getImageProcessingLibrary } from '../lib/Utils/messages-media.js';
 import assert from 'node:assert/strict';
-import { generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType, nativeFlowButtonsViolateConstraints, QUICK_REPLY_BUTTON_LIMIT } from '../lib/Utils/messages.js';
+import { FUTURE_PROOF_MESSAGE_KEYS, generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType, nativeFlowButtonsViolateConstraints, normalizeMessageContent, QUICK_REPLY_BUTTON_LIMIT } from '../lib/Utils/messages.js';
 import { promises as fs, readFileSync } from 'node:fs';
 import { proto } from '../WAProto/index.js';
 import { SocialMediaPostType, buildSocialPreview, readSocialPreview, videoEndCard } from '../lib/Utils/link-preview-metadata.js';
@@ -1124,4 +1124,32 @@ test('group-status-font', async () => {
     const image = await generateWAMessageContent({ image: Buffer.from(JPEG_320x200_BASE64, 'base64'), caption: 'halo', groupStatus: true },
         { ...options, backgroundColor: '#7C3AED', font: FONTS.EXO2_EXTRABOLD });
     assert.equal(image.groupStatusMessageV2.message.imageMessage.font, undefined, 'a media caption is not an extendedTextMessage, so it carries no font');
+});
+
+test('future-proof-unwrap', async () => {
+    const inner = { conversation: 'halo' };
+
+    for (const key of FUTURE_PROOF_MESSAGE_KEYS) {
+        assert.deepEqual(normalizeMessageContent({ [key]: { message: inner } }), inner, `${key} has to unwrap`);
+    }
+
+    assert.equal(FUTURE_PROOF_MESSAGE_KEYS.includes('audioStickerMessage'), true, 'field 134, added in revision 1047376727');
+    assert.equal(FUTURE_PROOF_MESSAGE_KEYS.includes('acp2SettingMessage'), true, 'field 133, a wrapper that used to be left wrapped');
+
+    const wrapped = { audioStickerMessage: { message: { stickerMessage: { url: 'https://x/y.webp' } } } };
+    assert.equal(getContentType(wrapped), 'audioStickerMessage');
+    assert.equal(getContentType(normalizeMessageContent(wrapped)), 'stickerMessage');
+
+    const nested = { ephemeralMessage: { message: { viewOnceMessageV2: { message: inner } } } };
+    assert.deepEqual(normalizeMessageContent(nested), inner, 'nested wrappers still peel');
+
+    assert.equal(normalizeMessageContent(undefined), undefined);
+    assert.deepEqual(normalizeMessageContent(inner), inner, 'a plain message is returned untouched');
+
+    const sticker = proto.Message.StickerMessage.fromObject({
+        url: 'https://x/y.webp',
+        audioMessage: { url: 'https://x/y.enc', seconds: 3 }
+    });
+    const back = proto.Message.StickerMessage.decode(proto.Message.StickerMessage.encode(sticker).finish());
+    assert.equal(back.audioMessage.seconds, 3, 'StickerMessage.audioMessage is field 26, added in the same revision');
 });

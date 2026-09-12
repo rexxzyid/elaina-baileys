@@ -43019,6 +43019,7 @@ export const proto = $root.proto = (() => {
 
         Message.prototype.newsletterFollowerInviteMessage = null;
         Message.prototype.acp2SettingMessage = null;
+        Message.prototype.audioStickerMessage = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -43701,6 +43702,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(Message.prototype, "_audioStickerMessage", {
+            get: $util.oneOfGetter($oneOfFields = ["audioStickerMessage"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         Message.create = function create(properties) {
             return new Message(properties);
         };
@@ -43936,6 +43942,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.Message.NewsletterFollowerInviteMessage.encode(m.newsletterFollowerInviteMessage, w.uint32(866).fork()).ldelim();
             if (m.acp2SettingMessage != null && Object.hasOwnProperty.call(m, "acp2SettingMessage"))
                 $root.proto.Message.FutureProofMessage.encode(m.acp2SettingMessage, w.uint32(1066).fork()).ldelim();
+            if (m.audioStickerMessage != null && Object.hasOwnProperty.call(m, "audioStickerMessage"))
+                $root.proto.Message.FutureProofMessage.encode(m.audioStickerMessage, w.uint32(1074).fork()).ldelim();
             return w;
         };
 
@@ -44406,6 +44414,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 133: {
                         m.acp2SettingMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 134: {
+                        m.audioStickerMessage = $root.proto.Message.FutureProofMessage.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -44992,6 +45004,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.acp2SettingMessage: object expected");
                 m.acp2SettingMessage = $root.proto.Message.FutureProofMessage.fromObject(d.acp2SettingMessage, n + 1);
             }
+            if (d.audioStickerMessage != null) {
+                if (typeof d.audioStickerMessage !== "object")
+                    throw TypeError(".proto.audioStickerMessage: object expected");
+                m.audioStickerMessage = $root.proto.Message.FutureProofMessage.fromObject(d.audioStickerMessage, n + 1);
+            }
             return m;
         };
 
@@ -45568,6 +45585,11 @@ export const proto = $root.proto = (() => {
                 d.acp2SettingMessage = $root.proto.Message.FutureProofMessage.toObject(m.acp2SettingMessage, o);
                 if (o.oneofs)
                     d._acp2SettingMessage = "acp2SettingMessage";
+            }
+            if (m.audioStickerMessage != null && m.hasOwnProperty("audioStickerMessage")) {
+                d.audioStickerMessage = $root.proto.Message.FutureProofMessage.toObject(m.audioStickerMessage, o);
+                if (o.oneofs)
+                    d._audioStickerMessage = "audioStickerMessage";
             }
             return d;
         };
@@ -76138,6 +76160,7 @@ export const proto = $root.proto = (() => {
             StickerMessage.prototype.premium = null;
             StickerMessage.prototype.emojis = null;
 
+            StickerMessage.prototype.audioMessage = null;
             let $oneOfFields;
 
             // Virtual OneOf for proto3 optional field
@@ -76272,6 +76295,11 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            Object.defineProperty(StickerMessage.prototype, "_audioMessage", {
+                get: $util.oneOfGetter($oneOfFields = ["audioMessage"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             StickerMessage.create = function create(properties) {
                 return new StickerMessage(properties);
             };
@@ -76323,6 +76351,8 @@ export const proto = $root.proto = (() => {
                     w.uint32(192).int32(m.premium);
                 if (m.emojis != null && Object.hasOwnProperty.call(m, "emojis"))
                     w.uint32(202).string(m.emojis);
+                if (m.audioMessage != null && Object.hasOwnProperty.call(m, "audioMessage"))
+                    $root.proto.Message.AudioMessage.encode(m.audioMessage, w.uint32(210).fork()).ldelim();
                 return w;
             };
 
@@ -76425,6 +76455,10 @@ export const proto = $root.proto = (() => {
                         }
                     case 25: {
                             m.emojis = r.string();
+                            break;
+                        }
+                    case 26: {
+                            m.audioMessage = $root.proto.Message.AudioMessage.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     default:
@@ -76546,6 +76580,11 @@ export const proto = $root.proto = (() => {
                 }
                 if (d.emojis != null) {
                     m.emojis = String(d.emojis);
+                }
+                if (d.audioMessage != null) {
+                    if (typeof d.audioMessage !== "object")
+                        throw TypeError(".proto.audioMessage: object expected");
+                    m.audioMessage = $root.proto.Message.AudioMessage.fromObject(d.audioMessage, n + 1);
                 }
                 return m;
             };
@@ -76672,6 +76711,11 @@ export const proto = $root.proto = (() => {
                     d.emojis = m.emojis;
                     if (o.oneofs)
                         d._emojis = "emojis";
+                }
+                if (m.audioMessage != null && m.hasOwnProperty("audioMessage")) {
+                    d.audioMessage = $root.proto.Message.AudioMessage.toObject(m.audioMessage, o);
+                    if (o.oneofs)
+                        d._audioMessage = "audioMessage";
                 }
                 return d;
             };
@@ -84322,6 +84366,7 @@ export const proto = $root.proto = (() => {
             PollOption.prototype.name = null;
             PollOption.prototype.hash = null;
 
+            PollOption.prototype.addOptionMsgKey = null;
             let $oneOfFields;
 
             // Virtual OneOf for proto3 optional field
@@ -84336,6 +84381,11 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            Object.defineProperty(PollOption.prototype, "_addOptionMsgKey", {
+                get: $util.oneOfGetter($oneOfFields = ["addOptionMsgKey"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             PollOption.create = function create(properties) {
                 return new PollOption(properties);
             };
@@ -84347,6 +84397,8 @@ export const proto = $root.proto = (() => {
                     w.uint32(10).string(m.name);
                 if (m.hash != null && Object.hasOwnProperty.call(m, "hash"))
                     w.uint32(18).string(m.hash);
+                if (m.addOptionMsgKey != null && Object.hasOwnProperty.call(m, "addOptionMsgKey"))
+                    w.uint32(26).string(m.addOptionMsgKey);
                 return w;
             };
 
@@ -84371,6 +84423,10 @@ export const proto = $root.proto = (() => {
                             m.hash = r.string();
                             break;
                         }
+                    case 3: {
+                            m.addOptionMsgKey = r.string();
+                            break;
+                        }
                     default:
                         r.skipType(t & 7, n);
                         break;
@@ -84393,6 +84449,9 @@ export const proto = $root.proto = (() => {
                 if (d.hash != null) {
                     m.hash = String(d.hash);
                 }
+                if (d.addOptionMsgKey != null) {
+                    m.addOptionMsgKey = String(d.addOptionMsgKey);
+                }
                 return m;
             };
 
@@ -84409,6 +84468,11 @@ export const proto = $root.proto = (() => {
                     d.hash = m.hash;
                     if (o.oneofs)
                         d._hash = "hash";
+                }
+                if (m.addOptionMsgKey != null && m.hasOwnProperty("addOptionMsgKey")) {
+                    d.addOptionMsgKey = m.addOptionMsgKey;
+                    if (o.oneofs)
+                        d._addOptionMsgKey = "addOptionMsgKey";
                 }
                 return d;
             };

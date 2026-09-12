@@ -169,7 +169,7 @@ New here? This is the whole library at a glance. Each row links to the section t
   - [Reporting Spam](#reporting-spam)
 - [Every Message Type](#-every-message-type)
   - [Why conversation is sometimes empty](#why-conversation-is-sometimes-empty)
-  - [The other 88](#the-other-88)
+  - [The other 84](#the-other-84)
 - [Presence and Read Receipts](#-presence-and-read-receipts)
 - [Chat State](#-chat-state)
 - [Labels](#-labels)
@@ -4040,12 +4040,12 @@ await sock.reportSpam(groupJid, {
 ## 📨 Every Message Type
 
 `message.message` is a box with exactly one key set, and the key names the
-kind. There are **117** of them. Two things trip up almost everyone starting
+kind. There are **115** of them. Two things trip up almost everyone starting
 out, so read this part before hunting for a bug that is not there.
 
 ### Why `conversation` is sometimes empty
 
-**29 of the 117 are wrappers.** They carry no content of their own — they hold
+**31 of the 115 are wrappers.** They carry no content of their own — they hold
 another message inside. A view-once photo is not `imageMessage`, it is
 `viewOnceMessageV2` containing an `imageMessage`. A group status reply is
 `groupStatusMessageV2` containing whatever was actually said. Read the outer
@@ -4080,9 +4080,24 @@ recognise one when you see it:
 | Groups | `groupMentionedMessage` |
 | Bots | `botInvokeMessage`, `botTaskMessage`, `botForwardedMessage`, `botPlatformRegistrationSuccessMessage` |
 | Newsletter | `newsletterAdminProfileMessage`, `newsletterAdminProfileMessageV2`, `newsletterAdminProfileStatusMessage`, `newsletterScheduledMessage` |
-| Polls and media | `pollCreationMessageV4`, `pollCreationOptionImageMessage`, `documentWithCaptionMessage`, `lottieStickerMessage`, `eventCoverImage`, `spoilerMessage` |
+| Polls and media | `pollCreationMessageV4`, `pollCreationOptionImageMessage`, `documentWithCaptionMessage`, `lottieStickerMessage`, `audioStickerMessage`, `eventCoverImage`, `spoilerMessage` |
+| Settings | `acp2SettingMessage` |
 
-### The other 88
+The list is kept honest by `npm run verify:proto`: it reads every
+`FutureProofMessage` field out of the live WhatsApp Web bundle and fails if
+`normalizeMessageContent` would leave one of them wrapped. That check is how
+`acp2SettingMessage` and `audioStickerMessage` were caught — both had been
+sitting in the protocol unwrapped, so a bot receiving one saw an opaque key
+and an empty `conversation`.
+
+`audioStickerMessage` (field 134) arrived with a sibling, `stickerMessage.audioMessage`
+(field 26, in a new `audio` oneof): a sticker that carries a voice clip. Both
+decode, and nothing draws them yet — WhatsApp Web maps `audioStickerMessage` to
+no message type at all, and its sticker parser does not read `audioMessage`
+back out. Treat them as fields to recognise when they start arriving, not as
+something to send.
+
+### The other 84
 
 These carry the content. You will use a handful constantly and never touch
 most of the rest, but knowing they exist saves you from assuming a message is
@@ -4092,6 +4107,7 @@ malformed when it is simply a kind you have not met.
 |---|---|
 | Text and location | `conversation`, `extendedTextMessage`, `locationMessage`, `liveLocationMessage`, `contactMessage`, `contactsArrayMessage`, `groupInviteMessage`, `albumMessage`, `musicMessage`, `conditionalRevealMessage` |
 | Media | `imageMessage`, `videoMessage`, `audioMessage`, `documentMessage`, `stickerMessage`, `stickerPackMessage`, `stickerSyncRmrMessage`, `ptvMessage` |
+| Legacy | `chat` |
 | Buttons and lists | `buttonsMessage`, `buttonsResponseMessage`, `listMessage`, `listResponseMessage`, `templateMessage`, `templateButtonReplyMessage`, `interactiveMessage`, `interactiveResponseMessage`, `highlyStructuredMessage` |
 | Polls and events | `pollCreationMessage` … `pollCreationMessageV6`, `pollUpdateMessage`, `pollAddOptionMessage`, `pollResultSnapshotMessage`, `pollResultSnapshotMessageV3`, `eventMessage`, `eventInviteMessage`, `questionResponseMessage`, `keepInChatMessage` |
 | Status | `statusNotificationMessage`, `statusQuestionAnswerMessage`, `statusQuotedMessage`, `statusStickerInteractionMessage`, `statusLinkPreviewMetadata` |
