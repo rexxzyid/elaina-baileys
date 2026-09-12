@@ -1,8 +1,11 @@
 import { test } from 'node:test';
 import { getImageProcessingLibrary } from '../lib/Utils/messages-media.js';
 import assert from 'node:assert/strict';
-import { FUTURE_PROOF_MESSAGE_KEYS, generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType, nativeFlowButtonsViolateConstraints, normalizeMessageContent, QUICK_REPLY_BUTTON_LIMIT } from '../lib/Utils/messages.js';
+import { FUTURE_PROOF_MESSAGE_KEYS, generateWAMessageContent, extractMessageContent, generateWAMessage, getContentType, nativeFlowButtonsViolateConstraints, normalizeMessageContent } from '../lib/Utils/messages.js';
+import { NATIVE_FLOW_BUTTON_LIMIT, checkNativeFlowButtons, getNativeFlowNameByButtonName } from '../lib/Utils/native-flow.js';
 import { promises as fs, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { proto } from '../WAProto/index.js';
 import { SocialMediaPostType, buildSocialPreview, readSocialPreview, videoEndCard } from '../lib/Utils/link-preview-metadata.js';
 import { MONEY_OFFSET, ReminderFrequency, ReminderStatus, SplitPaymentStatus, buildPaymentReminder, buildSplitPayment, buildSplitPaymentUpdate, money, readMoney, readPaymentReminder, readSplitPayment } from '../lib/Utils/payment-messages.js';
@@ -1076,13 +1079,19 @@ test('native-flow-button-constraints', async () => {
     const quick = n => Array.from({ length: n }, () => name('quick_reply'));
 
     assert.equal(nativeFlowButtonsViolateConstraints([]), false);
-    assert.equal(nativeFlowButtonsViolateConstraints(quick(QUICK_REPLY_BUTTON_LIMIT)), false, 'ten quick replies is the limit');
-    assert.equal(nativeFlowButtonsViolateConstraints(quick(QUICK_REPLY_BUTTON_LIMIT + 1)), true);
+    assert.equal(nativeFlowButtonsViolateConstraints(quick(NATIVE_FLOW_BUTTON_LIMIT.quickReply)), false, 'ten quick replies is the limit');
+    assert.equal(nativeFlowButtonsViolateConstraints(quick(NATIVE_FLOW_BUTTON_LIMIT.quickReply + 1)), true);
     assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('cta_url'), name('cta_url')]), false, 'three is the limit when the first is not a quick reply');
     assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('cta_url'), name('cta_url'), name('cta_url')]), true);
     assert.equal(nativeFlowButtonsViolateConstraints([name('quick_reply'), name('cta_url')]), true, 'every button has to match the first one kind');
     assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('quick_reply')]), true);
     assert.equal(nativeFlowButtonsViolateConstraints([name('single_select')]), false, 'a lone unknown name is fine');
+
+    assert.equal(NATIVE_FLOW_BUTTON_LIMIT.other, 3, 'one limit table, shared with checkNativeFlowButtons');
+    assert.equal(getNativeFlowNameByButtonName('cta_copy'), 'cta_copy', 'the enum key is CTA_COPY_CODE but the flow name it carries is cta_copy');
+    assert.equal(nativeFlowButtonsViolateConstraints([name('cta_copy'), name('cta_copy')]), false, 'cta_copy is a flow WhatsApp Web renders');
+    assert.equal(nativeFlowButtonsViolateConstraints([name('cta_url'), name('payment_info')]), true, 'payment_info maps to a flow Web does not render');
+    assert.equal(checkNativeFlowButtons(quick(NATIVE_FLOW_BUTTON_LIMIT.quickReply + 1)).ok, false, 'both checkers read the same table');
 
     const warnings = [];
     const options = { upload: async () => ({}), logger: { warn: (meta) => warnings.push(meta) } };
@@ -1155,7 +1164,7 @@ test('future-proof-unwrap', async () => {
 });
 
 test('airich-namespace', async () => {
-    const { AIRich } = await import('../lib/index.js');
+    const { AIRich, Button, ButtonV2, Carousel, Toolkit, MB, MessageBuilder } = await import('../lib/index.js');
     const extras = await import('../lib/MessageBuilder/extras.js');
     const metaai = await import('../lib/MessageBuilder/metaai.js');
 
@@ -1176,4 +1185,45 @@ test('airich-namespace', async () => {
     const divider = AIRich.dividerSection();
     assert.equal(divider.view_model.primitive.__typename, 'GenAIDividerPrimitive');
     assert.equal(AIRich.mapSection === metaai.mapSection, true, 'metaai sections reach the namespace too');
+
+    assert.equal(MB, MessageBuilder, 'MB is the alias, not a second object');
+    assert.equal(Object.isFrozen(MB), true);
+    for (const name of ['Button', 'ButtonV2', 'Carousel', 'AIRich', 'Toolkit']) {
+        assert.equal(typeof MB[name], 'function', `MB.${name} has to be the class`);
+    }
+    assert.equal(MB.AIRich, AIRich, 'MB holds the same class, not a copy');
+    assert.equal(Object.keys(MB).length, 175, 'the README quotes this count, update both together');
+
+    const lib = await import('../lib/index.js');
+    for (const builder of [Button, ButtonV2, Carousel, AIRich, Toolkit]) {
+        assert.equal(builder.dividerSection, extras.dividerSection, `${builder.name} carries the shared members`);
+        assert.equal(builder.checkNativeFlowButtons, lib.checkNativeFlowButtons, `${builder.name} carries the native flow checks`);
+    }
+    assert.equal(typeof Toolkit.resize, 'function', 'own statics are never overwritten by the namespace');
+    assert.equal(AIRich.DEFAULT_BOT_JID, '867051314767696@bot');
+});
+
+test('toolkit-image-source', async () => {
+    const { Toolkit } = await import('../lib/index.js');
+    const bytes = Buffer.from(JPEG_320x200_BASE64, 'base64');
+    const file = join(tmpdir(), `elaina-toolkit-${Date.now()}.jpg`);
+    await fs.writeFile(file, bytes);
+
+    try {
+        assert.equal((await Toolkit.fetchBuffer(file)).equals(bytes), true, 'a local path used to come back as an empty buffer');
+        assert.equal((await Toolkit.fetchBuffer(bytes)).equals(bytes), true, 'a buffer passes straight through');
+
+        const unreachable = await Toolkit.fetchBuffer('https://127.0.0.1:1/missing.jpg');
+        assert.equal(unreachable.length, 0, 'silent mode still swallows a failed fetch');
+
+        await assert.rejects(() => Toolkit.resize(unreachable, 10, 10), /could not be read/,
+            'an empty buffer used to surface as sharp saying Input Buffer is empty');
+        await assert.rejects(() => Toolkit.resize(undefined, 10, 10), /could not be read/);
+
+        const resized = await Toolkit.resize(bytes, 10, 10);
+        assert.equal(resized.length > 0, true, 'real bytes still resize');
+    }
+    finally {
+        await fs.rm(file, { force: true });
+    }
 });

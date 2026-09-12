@@ -133,6 +133,7 @@ New here? This is the whole library at a glance. Each row links to the section t
 - [Status Link Style](#-status-link-style)
 - [Reading a Social Link Preview](#-reading-a-social-link-preview)
 - [Integrated MessageBuilder](#-integrated-messagebuilder)
+  - [One import, the whole builder](#one-import-the-whole-builder)
   - [Button](#button)
   - [Selection / List](#selection--list)
   - [ButtonV2](#buttonv2)
@@ -1206,7 +1207,30 @@ An `upload` function has to be available for the large card, since the thumbnail
 
 MessageBuilder v4.7 is included directly inside `@rexxhayanasi/elaina-baileys`.
 
-Available exports:
+### One import, the whole builder
+
+The builder surface is 175 names spread over four modules, which is how a bot ends up with a paragraph of imports to draw one card. `MB` (long name: `MessageBuilder`) carries all of them — the five builder classes, every section and item factory, every enum, the native-flow checks, the signature helpers. Nothing else has to go on the import line:
+
+```js
+import { MB } from '@rexxhayanasi/elaina-baileys'
+
+await new MB.Button(sock)
+  .setTitle('Elaina Menu')
+  .addReply('Ping', 'ping')
+  .send(jid)
+
+const rich = new MB.AIRich(sock)
+rich.addText('*Laporan*')
+rich.addSection(MB.dividerSection())
+rich.addSection(MB.taskSection({ taskId: 'job-1', title: 'Rendering', status: MB.TaskStatus.RUNNING }))
+await rich.send(jid)
+
+MB.checkNativeFlowButtons([{ name: 'single_select' }])
+```
+
+Each member on `MB` is the same function as the named export, not a copy, so nothing changes if you already import them individually — `MB.dividerSection === dividerSection`. The builder classes also carry the same members as statics (`AIRich.dividerSection`, `Button.checkNativeFlowButtons`), which is handy when the class is already the only thing you imported.
+
+The examples in this README use `MB.Button`, `MB.Carousel` and `MB.ButtonV2`, and plain `AIRich` inside the AIRich section where that class is the whole subject. Both reach the same objects — pick one and stay with it. The long-hand list still works and nothing is deprecated:
 
 ```js
 import {
@@ -1224,13 +1248,6 @@ import {
   InvalidTargetError,
   ContentValidationError
 } from '@rexxhayanasi/elaina-baileys'
-```
-
-You can also access the classes through `MessageBuilder` or its short alias `MB`:
-
-```js
-const button = new MessageBuilder.Button(sock)
-const carousel = new MB.Carousel(sock)
 ```
 
 ---
@@ -1318,9 +1335,9 @@ The `Button` builder is intended for native-flow interactive messages.
 ### Quick Reply + URL + Copy
 
 ```js
-import { Button } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const message = new Button(sock)
+const message = new MB.Button(sock)
   .setTitle('Elaina Menu')
   .setBody('Choose an option below.')
   .setFooter('@rexxhayanasi/elaina-baileys')
@@ -1334,7 +1351,7 @@ await message.send(jid)
 ### Button with Image
 
 ```js
-const message = new Button(sock)
+const message = new MB.Button(sock)
   .setImage('https://example.com/elaina.jpg')
   .setTitle('Elaina')
   .setBody('Interactive message with image header.')
@@ -1386,7 +1403,7 @@ The builder also provides:
 Create a native single-select list using `addSelection`, `makeSection`, and `makeRow`.
 
 ```js
-const list = new Button(sock)
+const list = new MB.Button(sock)
   .setTitle('Elaina Menu')
   .setBody('Select one menu.')
   .setFooter('Elaina Baileys')
@@ -1408,12 +1425,12 @@ await list.send(jid)
 WhatsApp Web keeps a fixed list of native-flow button names. Anything outside it is dropped and the message is downgraded to `phone_only_feature` — the text still arrives, the buttons do not.
 
 ```js
-import { checkNativeFlowButtons, isWebSupportedButtonName, NATIVE_FLOW_BUTTON_LIMIT } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-checkNativeFlowButtons([{ name: 'single_select' }])
+MB.checkNativeFlowButtons([{ name: 'single_select' }])
 // { ok: false, unsupported: ['single_select'], problems: ['"single_select" is not a native flow WhatsApp Web or iOS can render, only Android shows it'] }
 
-isWebSupportedButtonName('quick_reply')  // true
+MB.isWebSupportedButtonName('quick_reply')  // true
 ```
 
 Rendered everywhere: `quick_reply`, `cta_url`, `cta_call`, `cta_copy`, `cta_catalog`, `catalog_message`, `galaxy_message`, `order_status`, `payment_reminder`, `booking_confirmation`, `payment_request`, `api_signup`, `inapp_signup`, `cta_app`, `form_message`.
@@ -1438,9 +1455,9 @@ If you need one menu that works on every platform, use up to 10 `addReply` butto
 `ButtonV2` provides a simpler classic button builder.
 
 ```js
-import { ButtonV2 } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const message = new ButtonV2(sock)
+const message = new MB.ButtonV2(sock)
   .setTitle('Elaina')
   .setSubtitle('WhatsApp Bot')
   .setBody('Choose an action.')
@@ -1459,21 +1476,21 @@ await message.send(jid)
 Carousel cards can be created from `Button.toCard()` and then passed to `Carousel`.
 
 ```js
-import { Button, Carousel } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const card1 = await new Button(sock)
+const card1 = await new MB.Button(sock)
   .setImage('https://example.com/card1.jpg')
   .setBody('First card')
   .addReply('Select', 'card_1')
   .toCard()
 
-const card2 = await new Button(sock)
+const card2 = await new MB.Button(sock)
   .setImage('https://example.com/card2.jpg')
   .setBody('Second card')
   .addUrl('Open', 'https://example.com')
   .toCard()
 
-const carousel = new Carousel(sock)
+const carousel = new MB.Carousel(sock)
   .setBody('Choose one of the cards below.')
   .setFooter('Elaina Carousel')
   .addCard([card1, card2])
@@ -1872,10 +1889,10 @@ await rich.sendEdit()
 `loadFrom` rebuilds a builder from a message you received, so an incoming interactive message can be edited and resent.
 
 ```js
-const rich = new AIRich(sock).loadFrom(m.message)
-const button = new Button(sock).loadFrom(m.message)
-const carousel = new Carousel(sock).loadFrom(m.message)
-const buttonV2 = new ButtonV2(sock).loadFrom(m.message)
+const rich = new MB.AIRich(sock).loadFrom(m.message)
+const button = new MB.Button(sock).loadFrom(m.message)
+const carousel = new MB.Carousel(sock).loadFrom(m.message)
+const buttonV2 = new MB.ButtonV2(sock).loadFrom(m.message)
 ```
 
 ### Primitives MessageBuilder Has No Helper For
@@ -5516,7 +5533,7 @@ Another code is still pending. Wait it out or call `sock.cancelPairingCode()` fi
 Builder classes require an active Baileys socket:
 
 ```js
-const button = new Button(sock)
+const button = new MB.Button(sock)
 ```
 
 Do not create them without passing `sock`.

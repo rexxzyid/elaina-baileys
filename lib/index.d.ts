@@ -24,6 +24,21 @@ export type WASocket = BaseWASocket & {
 };
 export declare const makeWASocket: (config: Parameters<typeof baseMakeWASocket>[0]) => WASocket;
 export default makeWASocket;
-import { AIRich as AIRichBuilder } from './MessageBuilder/index.js';
-export declare const AIRich: typeof AIRichBuilder & typeof import('./MessageBuilder/extras.js') & typeof import('./MessageBuilder/metaai.js');
+import { AIRich as AIRichBuilder, Button as ButtonBuilder, ButtonV2 as ButtonV2Builder, Carousel as CarouselBuilder, MessageBuilder as MessageBuilderCore, Toolkit as ToolkitCore } from './MessageBuilder/index.js';
+type BuilderMembers = typeof import('./MessageBuilder/extras.js')
+    & typeof import('./MessageBuilder/metaai.js')
+    & typeof import('./MessageBuilder/bot-signature.js')
+    & typeof import('./Utils/native-flow.js')
+    & Pick<typeof import('./Utils/messages.js'), 'nativeFlowButtonsViolateConstraints'>;
+export declare const AIRich: typeof AIRichBuilder & BuilderMembers;
 export type AIRich = AIRichBuilder;
+export declare const Button: typeof ButtonBuilder & BuilderMembers;
+export type Button = ButtonBuilder;
+export declare const ButtonV2: typeof ButtonV2Builder & BuilderMembers;
+export type ButtonV2 = ButtonV2Builder;
+export declare const Carousel: typeof CarouselBuilder & BuilderMembers;
+export type Carousel = CarouselBuilder;
+export declare const Toolkit: typeof ToolkitCore & BuilderMembers;
+export type Toolkit = ToolkitCore;
+export declare const MessageBuilder: Readonly<typeof MessageBuilderCore & BuilderMembers>;
+export declare const MB: typeof MessageBuilder;
