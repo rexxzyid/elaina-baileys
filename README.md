@@ -2217,39 +2217,39 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 })
 ```
 
-`contextInfo` is not part of the signed payload, so quoting, mentions and the rest are free to change. The unified response bytes, the proof and `forwardedAiBotMessageInfo.botJid` are not.
+`contextInfo` bukan bagian dari payload yang ditandatangani, jadi kutipan, mention, dan sisanya bebas berubah. Byte unified response, buktinya, dan `forwardedAiBotMessageInfo.botJid` tidak.
 
-`MB.loadFrom` keeps the proof too. When the incoming message carries a real certificate chain, the original bytes and the original verification metadata go straight back out on `build` — no re-serialising, no placeholder. `rich.isSignaturePreserved` says whether that is still true.
+`MB.loadFrom` juga mempertahankan buktinya. Kalau pesan masuk membawa rantai sertifikat yang asli, byte aslinya dan metadata verifikasi aslinya langsung keluar kembali saat `build` — tanpa diserialisasi ulang, tanpa placeholder. `rich.isSignaturePreserved` memberi tahu apakah itu masih berlaku.
 
-The corollary matters more than the feature: **any edit voids it.** `addText`, `addSection`, `delete`, `addFooterSection`, `clearFooterSections`, `addEmbeddedScreen`, `setResponseId`, `refreshResponseId` and `setResponseMeta` all drop the preserved signature, because the bytes it covers no longer match. After any of them the build falls back to freshly serialised JSON and placeholder metadata, exactly as it did before.
+Konsekuensinya lebih penting daripada fiturnya: **suntingan apa pun membatalkannya.** `addText`, `addSection`, `delete`, `addFooterSection`, `clearFooterSections`, `addEmbeddedScreen`, `setResponseId`, `refreshResponseId`, dan `setResponseMeta` semuanya membuang tanda tangan yang dipertahankan, karena byte yang dicakupnya sudah tidak cocok lagi. Setelah salah satunya, build-nya jatuh ke JSON yang baru diserialisasi dan metadata placeholder, persis seperti sebelumnya.
 
-So: relay or load-and-resend when you want the proof to survive, and treat `AIRich` as an authoring tool the moment you change anything.
+Jadi: relay atau muat-lalu-kirim-ulang kalau kamu mau buktinya selamat, dan perlakukan `AIRich` sebagai alat penulisan begitu kamu mengubah apa pun.
 
-| Function | Answers |
+| Fungsi | Menjawab |
 |---|---|
-| `readSignedRichResponse(msg)` | the parts a proof covers: `unifiedResponseBytes`, `botJid`, `proof`, and `hasProof` for whether the fields are merely populated |
-| `verifyRichResponseSignature(msg)` | `{ status: 'passed' \| 'failed', reason }` — the real check: chain to Meta's root, validity windows, then Ed25519 over the payload above |
-| `verifyBotSignature({ botJid, unifiedResponseBytes, proof })` | the same check with the pieces supplied by hand |
-| `constructSignaturePayload({ botFbid, messageDigest })` | the exact bytes that get signed |
+| `readSignedRichResponse(msg)` | bagian yang dicakup sebuah bukti: `unifiedResponseBytes`, `botJid`, `proof`, plus `hasProof` untuk sekadar tahu apakah field-nya terisi |
+| `verifyRichResponseSignature(msg)` | `{ status: 'passed' \| 'failed', reason }` — pemeriksaan sungguhan: rantai ke root Meta, jendela masa berlaku, lalu Ed25519 atas payload di atas |
+| `verifyBotSignature({ botJid, unifiedResponseBytes, proof })` | pemeriksaan yang sama dengan bagian-bagiannya diserahkan manual |
+| `constructSignaturePayload({ botFbid, messageDigest })` | byte persis yang ditandatangani |
 
-Certificate revocation is not checked. The client fetches a CRL from Meta and treats an unavailable or stale list as revoked; `verifyRichResponseSignature` skips that step, so a `passed` here means the chain and signature are good, not that the certificate is still live.
+Pencabutan sertifikat tidak diperiksa. Klien mengambil CRL dari Meta dan menganggap daftar yang tidak tersedia atau kedaluwarsa sebagai tercabut; `verifyRichResponseSignature` melewati langkah itu, jadi `passed` di sini berarti rantai dan tanda tangannya baik, bukan berarti sertifikatnya masih hidup.
 
 #### Yang tidak bisa dimiliki respons bikinan sendiri
 
-A signature over content Meta did not produce is not something a bot can mint — it needs a leaf certificate issued under that root. `AIRich` fills `verificationMetadata` with placeholder bytes so the field is present and well-formed; `verifyRichResponseSignature` on your own output returns `failed`, correctly.
+Tanda tangan atas konten yang bukan produksi Meta bukan sesuatu yang bisa dicetak bot — itu butuh sertifikat leaf yang diterbitkan di bawah root tersebut. `AIRich` mengisi `verificationMetadata` dengan byte placeholder supaya field-nya ada dan berbentuk benar; `verifyRichResponseSignature` atas keluaranmu sendiri mengembalikan `failed`, dan itu benar.
 
-Whether that costs you anything depends on server-side switches you cannot see:
+Apakah itu merugikanmu atau tidak bergantung pada sakelar sisi server yang tidak bisa kamu lihat:
 
-- `ai_rich_response_forwarding_verification_enabled_v1` — `none`, `log_only` or `enforce_blocking`. Only the last one acts on a failure.
-- `ai_rich_response_unknown_sender_verification_masking_enabled` — when a failed message gets replaced by a fallback bubble instead of rendering.
-- `ai_rich_response_unknown_sender_preview_enabled` — collapses a rich response carrying media when the sender is not in the recipient's contacts, whether or not verification ran.
-- `ai_unified_response_receiver_web_timestamp_v2` — WA Web only renders a unified response when the message timestamp is at or after this value.
+- `ai_rich_response_forwarding_verification_enabled_v1` — `none`, `log_only`, atau `enforce_blocking`. Hanya yang terakhir bertindak atas kegagalan.
+- `ai_rich_response_unknown_sender_verification_masking_enabled` — menentukan kapan pesan yang gagal diganti bubble cadangan ketimbang digambar.
+- `ai_rich_response_unknown_sender_preview_enabled` — melipat respons rich yang membawa media kalau pengirimnya tidak ada di kontak penerima, verifikasinya jalan atau tidak.
+- `ai_unified_response_receiver_web_timestamp_v2` — WA Web hanya menggambar unified response kalau timestamp pesannya sama atau setelah nilai ini.
 
-All four are set per account by the server. A response can be structurally perfect and still come out as a fallback bubble, and there is no way to tell from the sending side.
+Keempatnya disetel per akun oleh server. Sebuah respons bisa sempurna secara struktur dan tetap keluar sebagai bubble cadangan, dan tidak ada cara mengetahuinya dari sisi pengirim.
 
 ### Membaca Balik Pesan Rich
 
-An AI Rich, A2UI or Bloks message arrives with nothing where a bot usually looks — `conversation` is empty, `extendedTextMessage` is absent, and `getContentType` reports only the wrapper (`botForwardedMessage` or `interactiveMessage`). `readRichMessage` normalises all of them into one shape.
+Pesan AI Rich, A2UI, atau Bloks tiba dengan keadaan kosong di tempat yang biasa dilihat bot — `conversation` kosong, `extendedTextMessage` tidak ada, dan `getContentType` hanya melaporkan pembungkusnya (`botForwardedMessage` atau `interactiveMessage`). `readRichMessage` menormalkan semuanya menjadi satu bentuk.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2263,27 +2263,27 @@ sock.ev.on('messages.upsert', ({ messages }) => {
 })
 ```
 
-It returns `null` for anything that is not one of these, so it is safe to call on every message.
+Ia mengembalikan `null` untuk apa pun yang bukan salah satunya, jadi aman dipanggil di setiap pesan.
 
-| Field | Contents |
+| Field | Isinya |
 |---|---|
-| `kind` | `a2ui`, `airich`, `bloks` or `interactive` |
-| `text` | every readable string joined by newlines — AI Rich text primitives, A2UI `Text` components, and the interactive body and footer |
-| `title` | `botMetadata.messageDisclaimerText`, falling back to the interactive header title |
-| `buttons` | native flow buttons with `buttonParamsJson` already parsed; `params` is `null` when it will not parse |
-| `html` | payloads of any HTML primitives, including ones inside an embedded screen |
-| `a2ui` | `surfaceId`, `catalogId`, `version` and the component list |
-| `bloks` | `type`, `uuid`, `fallback` and the parsed `params` |
-| `typenames`, `sections`, `footerSections`, `embeddedScreens`, `embeddedTabs`, `submessages`, `responseId` | the AI Rich parts, empty when absent |
+| `kind` | `a2ui`, `airich`, `bloks`, atau `interactive` |
+| `text` | semua string yang bisa dibaca, disambung dengan baris baru — primitif teks AI Rich, komponen `Text` A2UI, serta badan dan footer interaktifnya |
+| `title` | `botMetadata.messageDisclaimerText`, jatuh ke judul header interaktifnya |
+| `buttons` | button native flow dengan `buttonParamsJson` yang sudah di-parse; `params` bernilai `null` kalau tidak bisa di-parse |
+| `html` | payload dari primitif HTML mana pun, termasuk yang ada di dalam layar tertanam |
+| `a2ui` | `surfaceId`, `catalogId`, `version`, dan daftar komponennya |
+| `bloks` | `type`, `uuid`, `fallback`, dan `params` yang sudah di-parse |
+| `typenames`, `sections`, `footerSections`, `embeddedScreens`, `embeddedTabs`, `submessages`, `responseId` | bagian AI Rich-nya, kosong kalau tidak ada |
 
-It unwraps view-once and the other envelopes first, so a card inside `viewOnceMessageV2` reads the same as a bare one.
+Ia membuka view-once dan pembungkus lainnya dulu, jadi kartu di dalam `viewOnceMessageV2` terbaca sama dengan yang tanpa pembungkus.
 
 ### Kartu A2UI
 
-`interactiveMessage.bloksWidget` with `type: "im_a2ui"` renders a card the client draws **from a declarative spec carried in the message**. No HTML, no hosting, and unlike the rest of Bloks nothing is fetched from Meta — the components travel in `data` and the client lays them out.
+`interactiveMessage.bloksWidget` dengan `type: "im_a2ui"` menghasilkan kartu yang digambar klien **dari spesifikasi deklaratif yang dibawa pesannya**. Tanpa HTML, tanpa hosting, dan berbeda dari Bloks lainnya, tidak ada yang diambil dari Meta — komponennya berjalan di dalam `data` dan klien yang menata letaknya.
 
 > [!WARNING]
-> The payload shape below is confirmed: a hand-written `bloksWidget` of this form renders on Android, and the client answers a malformed one with a named `A2UIValidationException`. The `sendA2UI` helper is **not** confirmed — cards sent through it have not been seen to render, and the cause is still open. Until that is settled, build the `bloksWidget` by hand if you need this to work.
+> Bentuk payload di bawah sudah terkonfirmasi: `bloksWidget` bentuk ini yang ditulis tangan tergambar di Android, dan klien menjawab yang cacat dengan `A2UIValidationException` bernama. Helper `sendA2UI` **belum** terkonfirmasi — kartu yang dikirim lewatnya belum pernah terlihat tergambar, dan penyebabnya masih terbuka. Sampai itu selesai, bangun `bloksWidget`-nya dengan tangan kalau kamu butuh ini bekerja.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2291,27 +2291,27 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 await MB.sendA2UI(sock, jid, [
     MB.a2uiColumn('root', ['card_image', 'card_title', 'card_body']),
     MB.a2uiImage('card_image', 'https://example.com/header.jpg'),
-    MB.a2uiText('card_title', 'Welcome!', { variant: 'h1' }),
-    MB.a2uiText('card_body', 'Nice to have you here.')
+    MB.a2uiText('card_title', 'Selamat datang!', { variant: 'h1' }),
+    MB.a2uiText('card_body', 'Senang kamu di sini.')
 ], {
     buttons: [{
         name: 'cta_url',
-        buttonParamsJson: JSON.stringify({ display_text: 'Join Group', url: 'https://chat.whatsapp.com/…' })
+        buttonParamsJson: JSON.stringify({ display_text: 'Gabung Grup', url: 'https://chat.whatsapp.com/…' })
     }]
 })
 ```
 
-The layout is a flat list addressed by id: exactly one component must be `root`, and containers name their children by id rather than nesting them. `sendA2UI` throws if `root` is missing.
+Layout-nya daftar datar yang dialamati lewat id: tepat satu komponen harus bernama `root`, dan kontainer menyebut anaknya lewat id ketimbang menyarangkannya. `sendA2UI` melempar error kalau `root` tidak ada.
 
-| Builder | Emits |
+| Builder | Memancarkan |
 |---|---|
-| `a2uiColumn(id, children)` | `Column` — children stacked vertically |
+| `a2uiColumn(id, children)` | `Column` — anaknya ditumpuk vertikal |
 | `a2uiRow(id, children)` | `Row` |
-| `a2uiText(id, text, { variant })` | `Text` — `variant` is `h1`, `body`, and so on |
-| `a2uiImage(id, url, { variant, fit })` | `Image` — defaults `header` and `cover` |
-| `a2uiCard(id, child)` | `Card` — takes one child id, not an array |
+| `a2uiText(id, text, { variant })` | `Text` — `variant` bisa `h1`, `body`, dan seterusnya |
+| `a2uiImage(id, url, { variant, fit })` | `Image` — bawaannya `header` dan `cover` |
+| `a2uiCard(id, child)` | `Card` — menerima satu id anak, bukan array |
 
-The wrapper `a2uiSurface` builds the payload itself if you want to hand-write components the helpers do not cover:
+Pembungkus `a2uiSurface` membangun payload-nya sendiri kalau kamu mau menulis tangan komponen yang belum dicakup helper-nya:
 
 ```js
 {
@@ -2325,17 +2325,17 @@ The wrapper `a2uiSurface` builds the payload itself if you want to hand-write co
 }
 ```
 
-`catalogId` names the component vocabulary, so components outside the basic catalog will not render. `Column`, `Row`, `Text`, `Image` and `Card` have been confirmed on a device — `Card` wraps exactly one child and uses the singular `child` field, which is why `a2uiCard` refuses an array; the catalog lists more, and `a2uiSurface` will carry any object you give it, but treat the rest as untested.
+`catalogId` menyebut kosakata komponennya, jadi komponen di luar katalog dasar tidak akan tergambar. `Column`, `Row`, `Text`, `Image`, dan `Card` sudah terkonfirmasi di perangkat — `Card` membungkus tepat satu anak dan memakai field tunggal `child`, itu sebabnya `a2uiCard` menolak array; katalognya mendaftar lebih banyak, dan `a2uiSurface` akan membawa objek apa pun yang kamu beri, tapi anggap sisanya belum teruji.
 
-The A2UI card and the native-flow buttons live in the same `interactiveMessage`, which is how the card gets a button row beneath it. `decodeBloksWidget(msg)` reads one back, with `params` already parsed.
+Kartu A2UI dan button native-flow hidup di `interactiveMessage` yang sama, dan begitulah kartunya mendapat baris button di bawahnya. `decodeBloksWidget(msg)` membacanya kembali, dengan `params` yang sudah di-parse.
 
 ### Mini App HTML
 
-`htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp app renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything. It is part of `AI_RICH_PRIMITIVES` and not part of `AI_RICH_PRIMITIVES_WEB_RENDERED`: the name appears nowhere in the WA Web bundle, so a desktop viewer gets an empty node where the page would be.
+`htmlSection` membawa satu dokumen HTML utuh — style dan `<script>` termasuk — yang digambar aplikasi WhatsApp di dalam WebView di dalam bubble chat. Itulah cara satu halaman interaktif, game canvas kecil, atau grafik langsung sampai ke pengguna tanpa menghosting apa pun. Ia bagian dari `AI_RICH_PRIMITIVES` dan bukan bagian dari `AI_RICH_PRIMITIVES_WEB_RENDERED`: namanya tidak muncul di mana pun di bundle WA Web, jadi penonton desktop mendapat node kosong di tempat halaman itu seharusnya.
 
-**The typename is not validated.** `GenAIaeacdsnwHtmlPrimitive` occurs nowhere in the APK either — not in any dex, resource or native library. The client decodes the unified response through Meta's Pando runtime (`com.facebook.pando.TreeJNI`), which reinterprets a tree node as a model class **without comparing `__typename`**. The renderer dispatches on the field shape instead, and logs `JarvisRichContent/render skipped malformed HtmlSectionContent` when the shape does not fit. What actually has to be there is `payload` and `trusted_sources` — those two field names, and the class `HtmlSectionContent(payload=, trustedSources=)`, are in the APK. The Kotlin model for the section is `FOAHtmlPrimitive`, exported as `AI_RICH_HTML_PRIMITIVE_CLASS`. Worth knowing before you lean on that override: the only dex class carrying the `FOAHtmlPrimitive` name is `FOAHtmlPrimitiveDemoDONOTUSEImpl`, while the render path that actually logs the line above is built around `HtmlSectionContent`. So the default typename is the one to keep, and the override is a fallback to try, not an equivalent.
+**Typename-nya tidak divalidasi.** `GenAIaeacdsnwHtmlPrimitive` juga tidak muncul di mana pun di APK — tidak di dex, resource, maupun library native. Klien mendekode unified response lewat runtime Pando milik Meta (`com.facebook.pando.TreeJNI`), yang menafsirkan ulang sebuah node pohon menjadi kelas model **tanpa membandingkan `__typename`**. Renderer-nya justru memilih jalur berdasarkan bentuk field-nya, dan mencatat `JarvisRichContent/render skipped malformed HtmlSectionContent` kalau bentuknya tidak pas. Yang benar-benar harus ada adalah `payload` dan `trusted_sources` — dua nama field itu, plus kelas `HtmlSectionContent(payload=, trustedSources=)`, ada di APK. Model Kotlin untuk section-nya adalah `FOAHtmlPrimitive`, diekspor sebagai `AI_RICH_HTML_PRIMITIVE_CLASS`. Yang perlu diketahui sebelum kamu bersandar pada penggantian itu: satu-satunya kelas dex yang membawa nama `FOAHtmlPrimitive` adalah `FOAHtmlPrimitiveDemoDONOTUSEImpl`, sementara jalur render yang benar-benar mencatat baris di atas dibangun di sekitar `HtmlSectionContent`. Jadi typename bawaannya yang sebaiknya dipakai, dan penggantinya itu cadangan untuk dicoba, bukan padanan.
 
-Pass `typename` to send the section under a different name:
+Beri `typename` untuk mengirim section-nya dengan nama lain:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2347,19 +2347,19 @@ rich.addSection(MB.htmlSection(html, { typename: MB.AI_RICH_HTML_PRIMITIVE_CLASS
 await rich.send(jid)
 ```
 
-The default stays `GenAIaeacdsnwHtmlPrimitive` because that is the name observed working in production.
+Bawaannya tetap `GenAIaeacdsnwHtmlPrimitive` karena itu nama yang teramati bekerja di produksi.
 
-| Client | Result |
+| Klien | Hasilnya |
 |---|---|
-| Android | renders in a WebView, scripts run, taps and keys work |
-| Web / Desktop | section comes through empty; `label` still shows |
-| iOS | untested |
+| Android | tergambar di WebView, script jalan, ketukan dan tombol bekerja |
+| Web / Desktop | section-nya tiba kosong; `label` tetap tampil |
+| iOS | belum diuji |
 
-The WebView it renders in is offline and has no storage — see [what it actually gives you](#apa-yang-sebenarnya-disediakan-webview) before designing around it.
+WebView tempatnya digambar itu offline dan tidak punya penyimpanan — baca [apa yang sebenarnya disediakannya](#apa-yang-sebenarnya-disediakan-webview) sebelum merancang di sekitarnya.
 
 #### sendHtmlApp
 
-One call, no envelope assembly.
+Satu panggilan, tanpa menyusun pembungkusnya sendiri.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2376,35 +2376,35 @@ await MB.sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
 MB.sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 ```
 
-| Argument | Required | Meaning |
+| Argumen | Wajib | Artinya |
 |---|---|---|
-| `sock` | yes | the socket returned by `makeWASocket` |
-| `jid` | yes | target chat |
-| `html` | yes | the HTML document; must be a non-empty string |
+| `sock` | ya | socket yang dikembalikan `makeWASocket` |
+| `jid` | ya | chat tujuan |
+| `html` | ya | dokumen HTML-nya; harus string yang tidak kosong |
 
-| Option | Default | Meaning |
+| Opsi | Bawaan | Artinya |
 |---|---|---|
-| `title` | `''` | bot disclaimer line above the card |
-| `label` | none | plain-text submessage; the only part Web and Desktop can show |
-| `trustedSources` | `[]` | origins rendered as the attribution under the card |
-| `height` | none | pin the page to this many pixels so the host stops re-measuring it |
-| `id` | none | section id, so you can `replace` it later on the same builder |
+| `title` | `''` | baris disclaimer bot di atas kartunya |
+| `label` | tidak ada | submessage teks biasa; satu-satunya bagian yang bisa ditampilkan Web dan Desktop |
+| `trustedSources` | `[]` | origin yang digambar sebagai atribusi di bawah kartunya |
+| `height` | tidak ada | paku halamannya ke sebanyak ini piksel supaya host berhenti mengukurnya ulang |
+| `id` | tidak ada | id section, supaya kamu bisa `replace` nanti di builder yang sama |
 
-Anything else is forwarded to `MB.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
+Apa pun selain itu diteruskan ke `MB.send`, jadi `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId`, dan `additionalNodes` semuanya jalan.
 
-**`bypassDownload` defaults to `false` here**, unlike `MB.send` where it is `true`. With it on, every send relays twice — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content — and the client renders the card, then re-renders it. For a static card that is a flicker; for a page running an animation loop it restarts the whole WebView. So a mini app sends once by default. Turn it back on if a card fails to appear without it.
+**`bypassDownload` di sini bawaannya `false`**, berbeda dari `MB.send` yang `true`. Kalau dinyalakan, setiap pengiriman merelay dua kali — pesan yang sebenarnya, lalu satu suntingan langsung (`protocolMessage` tipe 14) yang membawa isi identik — dan klien menggambar kartunya, lalu menggambarnya ulang. Untuk kartu statis itu cuma kedipan; untuk halaman yang menjalankan loop animasi itu memulai ulang seluruh WebView-nya. Jadi mini app mengirim sekali saja secara bawaan. Nyalakan lagi kalau ada kartu yang gagal muncul tanpa itu.
 
-| Passed | Relays | Effect |
+| Yang diberikan | Jumlah relay | Akibatnya |
 |---|---|---|
-| *(default)* | 1 | one message, no follow-up edit |
-| `bypassDownload: true` | 2 | message, then the edit — re-renders the page |
-| `includesUnifiedResponse: false` | 1 | empties `unifiedResponse` — **your HTML is gone** |
-| `messageId: 'ABC123'` | 1 | uses your id instead of a generated one |
-| `forwarded: false` | 1 | sends an empty `contextInfo`, dropping the Meta AI forward metadata |
+| *(bawaan)* | 1 | satu pesan, tanpa suntingan lanjutan |
+| `bypassDownload: true` | 2 | pesan, lalu suntingannya — halamannya digambar ulang |
+| `includesUnifiedResponse: false` | 1 | mengosongkan `unifiedResponse` — **HTML-mu hilang** |
+| `messageId: 'ABC123'` | 1 | memakai id-mu, bukan yang dibangkitkan |
+| `forwarded: false` | 1 | mengirim `contextInfo` kosong, membuang metadata forward Meta AI |
 
-The edit only ever fires under `includesUnifiedResponse && bypassDownload`, so both have to be on for a second relay to happen.
+Suntingannya hanya pernah terjadi di bawah `includesUnifiedResponse && bypassDownload`, jadi keduanya harus aktif supaya ada relay kedua.
 
-These are filled in for you, matching what the client expects:
+Yang berikut ini diisi untukmu, sesuai yang diharapkan klien:
 
 ```js
 contextInfo: {
@@ -2415,7 +2415,7 @@ contextInfo: {
 }
 ```
 
-plus `messageType: 1`, a fresh `botResponseId`, and the `verificationMetadata` block.
+ditambah `messageType: 1`, satu `botResponseId` baru, dan blok `verificationMetadata`.
 
 #### htmlSection
 
