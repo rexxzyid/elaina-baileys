@@ -2641,11 +2641,11 @@ rich.addEmbeddedScreen(MB.embeddedScreen({
 }))
 ```
 
-You can pass both. The tab container is appended **after** whatever plain `content` you gave, so the flat sections render first and the tab strip below them.
+Kamu bisa memberi keduanya. Kontainer tab-nya ditambahkan **setelah** `content` biasa apa pun yang kamu beri, jadi section datarnya tergambar lebih dulu dan strip tab-nya di bawahnya.
 
 #### Apa yang benar-benar dikirim
 
-`MB.send` base64-encodes all of this into `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. The example above produces:
+`MB.send` mengenkode semua ini dengan base64 ke dalam `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. Contoh di atas menghasilkan:
 
 ```jsonc
 {
@@ -2657,7 +2657,7 @@ You can pass both. The tab container is appended **after** whatever plain `conte
         "__typename": "GenAISingleLayoutViewModel",
         "primitive": {
           "__typename": "GenAIaeacdsnwHtmlPrimitive",
-          "payload": "<b>Dino Runner</b> — tap to play",
+          "payload": "<b>Dino Runner</b> — ketuk untuk main",
           "trusted_sources": []
         }
       }
@@ -2684,7 +2684,7 @@ You can pass both. The tab container is appended **after** whatever plain `conte
                 }
               ]
             },
-            { "id": "tab_1", "tab_header": "Scores", "sections": [ /* … */ ] }
+            { "id": "tab_1", "tab_header": "Skor", "sections": [ /* … */ ] }
           ]
         }
       ]
@@ -2693,11 +2693,11 @@ You can pass both. The tab container is appended **after** whatever plain `conte
 }
 ```
 
-Read the nesting from the outside in: **screen → `content[]` → `tabs[]` → `sections[]` → `view_model` → `primitive`**. Every level except the tab and the screen itself carries a `__typename`, and the builder fills all of them in.
+Baca penyarangannya dari luar ke dalam: **layar → `content[]` → `tabs[]` → `sections[]` → `view_model` → `primitive`**. Setiap tingkat kecuali tab dan layarnya sendiri membawa `__typename`, dan builder-nya mengisi semuanya.
 
 #### Hal yang sama tanpa builder
 
-If you would rather assemble the payload by hand — or you are porting one you received from another bot — this is the equivalent `relayMessage` call. Nothing here is magic; it is exactly what `AIRich` produces:
+Kalau kamu lebih suka menyusun payload-nya dengan tangan — atau sedang memindahkan yang kamu terima dari bot lain — ini panggilan `relayMessage` yang setara. Tidak ada sihir di sini; ini persis yang dihasilkan `AIRich`:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2772,24 +2772,24 @@ await sock.relayMessage(m.chat, {
 }, {})
 ```
 
-The builder is worth using anyway — it generates the ids, drops empty fields instead of sending `null`, and keeps the typenames in one place — but the payload is plain JSON and there is nothing stopping you from writing it out.
+Builder-nya tetap layak dipakai — ia membangkitkan id-nya, membuang field kosong ketimbang mengirim `null`, dan menyimpan typename-nya di satu tempat — tapi payload-nya JSON biasa dan tidak ada yang menghalangimu menuliskannya sendiri.
 
 #### Typename-nya
 
-| Constant | Value | Where it goes |
+| Konstanta | Nilai | Tempatnya |
 | --- | --- | --- |
-| `AI_RICH_SECTION_TYPENAME` | `GenAIUnifiedResponseSection` | every section, top level or nested |
-| `AI_RICH_UNIFIED_RESPONSE_TYPENAME` | `XMSGGenAIUnifiedResponse` | the unified response root |
-| `EMBEDDED_SCREEN_TABBED_TYPENAME` | `FOAEmbeddedScreenContentTabbed` | the `content` entry that holds tabs |
-| `EMBEDDED_SCREEN_TAB_TYPENAME` | `FOAUnifiedResponseTab` | a tab, when you want it named |
-| `EMBEDDED_SCREEN_TYPENAME` | `FOAUnifiedResponseEmbeddedScreen` | the screen itself, when you want it named |
+| `AI_RICH_SECTION_TYPENAME` | `GenAIUnifiedResponseSection` | setiap section, tingkat atas maupun tersarang |
+| `AI_RICH_UNIFIED_RESPONSE_TYPENAME` | `XMSGGenAIUnifiedResponse` | akar unified response-nya |
+| `EMBEDDED_SCREEN_TABBED_TYPENAME` | `FOAEmbeddedScreenContentTabbed` | entri `content` yang memegang tab |
+| `EMBEDDED_SCREEN_TAB_TYPENAME` | `FOAUnifiedResponseTab` | satu tab, kalau kamu mau ia diberi nama |
+| `EMBEDDED_SCREEN_TYPENAME` | `FOAUnifiedResponseEmbeddedScreen` | layarnya sendiri, kalau kamu mau ia diberi nama |
 
-Where these come from, so you can check them yourself:
+Asal-usulnya, supaya kamu bisa memeriksanya sendiri:
 
-- `GenAIUnifiedResponseSection` and `XMSGGenAIUnifiedResponse` are in the WhatsApp Web bundle, in the `injectRichResponseTestMessage` debug command, which builds that exact section shape.
-- The three `FOA…` names are the Android client's Kotlin models: `FOAEmbeddedScreenContentTabbedImpl.kt`, `FOAUnifiedResponseTabImpl.kt`, `FOAUnifiedResponseEmbeddedScreenImpl.kt`. The field names `embedded_screens`, `tab_header`, `step_entries` and `poll_id` are in the same dex.
+- `GenAIUnifiedResponseSection` dan `XMSGGenAIUnifiedResponse` ada di bundle WhatsApp Web, di perintah debug `injectRichResponseTestMessage`, yang membangun bentuk section itu persis.
+- Tiga nama `FOA…` itu model Kotlin klien Android: `FOAEmbeddedScreenContentTabbedImpl.kt`, `FOAUnifiedResponseTabImpl.kt`, `FOAUnifiedResponseEmbeddedScreenImpl.kt`. Nama field `embedded_screens`, `tab_header`, `step_entries`, dan `poll_id` ada di dex yang sama.
 
-Sections always get their typename. The screen and the tabs stay untyped unless you ask for it:
+Section selalu mendapat typename-nya. Layar dan tab-nya tetap tanpa tipe kecuali kamu memintanya:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2797,44 +2797,44 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 MB.embeddedScreen({ typename: MB.EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
 MB.embeddedTab({ typename: MB.EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
 
-// a build that expects a different container name
+// untuk build yang mengharapkan nama kontainer lain
 MB.embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
 ```
 
-That last line matters. As with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape, so payloads in the wild carry all sorts of container names and still render. `tabsTypename` exists so you can match whatever a given build expects instead of being locked to one string.
+Baris terakhir itu penting. Seperti pada `htmlSection`, **Android tidak membandingkan `__typename`** — Pando menafsirkan ulang node pohonnya berdasarkan bentuk field, jadi payload di lapangan membawa macam-macam nama kontainer dan tetap tergambar. `tabsTypename` ada supaya kamu bisa menyamakan dengan apa pun yang diharapkan sebuah build, bukan terkunci ke satu string.
 
 #### Opsi
 
 `embeddedScreen({ … })`:
 
-| Option | Wire field | Notes |
+| Opsi | Field di wire | Catatan |
 | --- | --- | --- |
-| `id` | `id` | a UUID is generated when omitted |
-| `title` | `title` | the sheet header |
-| `content` | `content` | array of sections, or hand-built content entries |
-| `tabs` | `content[n].tabs` | wrapped in a tab container and appended to `content` |
-| `tabsTypename` | `content[n].__typename` | defaults to `FOAEmbeddedScreenContentTabbed` |
-| `typename` | `__typename` | omitted unless given |
-| `header`, `body` | `header`, `body` | passed through as-is |
-| `artifacts`, `steps`, `sources` | same names | must be arrays |
-| `stepEntries` | `step_entries` | must be an array |
+| `id` | `id` | UUID dibangkitkan kalau dihilangkan |
+| `title` | `title` | header sheet-nya |
+| `content` | `content` | array section, atau entri content yang dibangun tangan |
+| `tabs` | `content[n].tabs` | dibungkus kontainer tab lalu ditambahkan ke `content` |
+| `tabsTypename` | `content[n].__typename` | bawaannya `FOAEmbeddedScreenContentTabbed` |
+| `typename` | `__typename` | dihilangkan kecuali diberikan |
+| `header`, `body` | `header`, `body` | diteruskan apa adanya |
+| `artifacts`, `steps`, `sources` | nama yang sama | harus array |
+| `stepEntries` | `step_entries` | harus array |
 | `pollId` | `poll_id` | |
 
 `embeddedTab({ … })`:
 
-| Option | Wire field | Notes |
+| Opsi | Field di wire | Catatan |
 | --- | --- | --- |
-| `id` | `id` | a UUID is generated when omitted |
-| `tabHeader` | `tab_header` | the label on the tab strip |
-| `header` | `header` | passed through as-is |
-| `sections` | `sections` | each one gets `GenAIUnifiedResponseSection` |
-| `typename` | `__typename` | omitted unless given |
+| `id` | `id` | UUID dibangkitkan kalau dihilangkan |
+| `tabHeader` | `tab_header` | label di strip tab-nya |
+| `header` | `header` | diteruskan apa adanya |
+| `sections` | `sections` | masing-masing mendapat `GenAIUnifiedResponseSection` |
+| `typename` | `__typename` | dihilangkan kecuali diberikan |
 
-`embeddedTabbedContent(tabs, { typename })` builds the container on its own, for when you want to place it inside `content` yourself.
+`embeddedTabbedContent(tabs, { typename })` membangun kontainernya sendiri, untuk saat kamu mau menaruhnya di dalam `content` secara manual.
 
-Anything left `undefined` is dropped, never sent as `null`. Passing a non-array where an array belongs throws a `TypeError` at build time rather than producing a payload the phone silently ignores.
+Apa pun yang dibiarkan `undefined` dibuang, tidak pernah dikirim sebagai `null`. Menyerahkan sesuatu yang bukan array di tempat yang seharusnya array melempar `TypeError` saat build, bukan menghasilkan payload yang diabaikan ponsel tanpa suara.
 
-`EMBEDDED_SCREEN_PRESENTATION` (`HALF_HEIGHT`, `FULL_HEIGHT`) is exported too. Both values and the field `overwrite_first_screen_presentation` are in the Android client, but which object carries that field is not determinable from the client alone, so the builder does not set it — add it yourself if you know where a given build wants it.
+`EMBEDDED_SCREEN_PRESENTATION` (`HALF_HEIGHT`, `FULL_HEIGHT`) juga diekspor. Kedua nilainya dan field `overwrite_first_screen_presentation` ada di klien Android, tapi objek mana yang membawa field itu tidak bisa ditentukan dari kliennya saja, jadi builder-nya tidak menyetelnya — tambahkan sendiri kalau kamu tahu di mana sebuah build menginginkannya.
 
 #### Membaca balik layar tertanam
 
@@ -2843,34 +2843,34 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const info = MB.decodeAIRich(m.message)
 
-info.embeddedScreens   // the raw screens, exactly as they arrived
-info.embeddedTabs      // every tab, flattened, from either nesting shape
-info.embeddedSections  // every section inside those screens
+info.embeddedScreens   // layar mentahnya, persis seperti saat tiba
+info.embeddedTabs      // semua tab, didatarkan, dari bentuk penyarangan mana pun
+info.embeddedSections  // semua section di dalam layar-layar itu
 
-// or per screen
+// atau per layar
 MB.readEmbeddedTabs(info.embeddedScreens[0])
 MB.readEmbeddedSections(info.embeddedScreens[0])
 
-// pull the HTML a tab is carrying
+// ambil HTML yang dibawa sebuah tab
 const html = MB.readEmbeddedSections(info.embeddedScreens[0])
   .map(section => section.view_model?.primitive?.payload)
   .filter(Boolean)
 ```
 
-`readRichMessage(m).html` also collects HTML that sits inside an embedded screen, so a page delivered through a tab is no longer invisible to it. `readEmbeddedTabs` reads both shapes — nested under `content`, and the older flat `tabs` at screen level — so a payload from another bot parses either way.
+`readRichMessage(m).html` juga mengumpulkan HTML yang duduk di dalam layar tertanam, jadi halaman yang dikirim lewat tab tidak lagi tak terlihat olehnya. `readEmbeddedTabs` membaca kedua bentuknya — yang tersarang di bawah `content`, dan `tabs` datar yang lebih lama di tingkat layar — jadi payload dari bot lain terbaca bagaimanapun bentuknya.
 
 #### Kalau sheet-nya terbuka kosong
 
-| Symptom | Cause |
+| Gejala | Penyebab |
 | --- | --- |
-| Nothing opens at all | You are looking at WhatsApp Web. It does not render embedded screens; use a phone. |
-| The sheet opens empty | Tabs were placed beside `content` instead of inside it. Pass them to `embeddedScreen({ tabs })` and let it nest them. |
-| The tab strip shows, pages are blank | A section is missing its `view_model`, or the primitive is missing `payload`. Log `readEmbeddedSections(screen)` and look at the shape. |
-| Text renders, HTML does not | the viewer is on WA Web desktop, which has no renderer for the HTML section. See [HTML Mini App](#mini-app-html) for the primitive and its `trusted_sources`. |
+| Tidak ada yang terbuka sama sekali | Kamu sedang melihat WhatsApp Web. Ia tidak menggambar layar tertanam; pakai ponsel. |
+| Sheet-nya terbuka kosong | Tab-nya ditaruh di sebelah `content`, bukan di dalamnya. Serahkan ke `embeddedScreen({ tabs })` dan biarkan ia menyarangkannya. |
+| Strip tab-nya muncul, halamannya kosong | Ada section yang kehilangan `view_model`-nya, atau primitifnya kehilangan `payload`. Log `readEmbeddedSections(screen)` lalu lihat bentuknya. |
+| Teksnya tergambar, HTML-nya tidak | Penontonnya di WA Web desktop, yang tidak punya renderer untuk section HTML. Lihat [Mini App HTML](#mini-app-html) untuk primitifnya dan `trusted_sources`-nya. |
 
 ### Memeriksa Pesan AI Rich Yang Diterima
 
-`decodeAIRich` unpacks the base64 `unifiedResponse` so you can see exactly which primitives a message uses — useful for reproducing something another bot sent.
+`decodeAIRich` membongkar `unifiedResponse` yang base64 supaya kamu bisa melihat persis primitif apa yang dipakai sebuah pesan — berguna untuk menirukan sesuatu yang dikirim bot lain.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2882,13 +2882,13 @@ console.log(info.sections)
 ```
 
 > [!WARNING]
-> AIRich and some experimental interactive payloads depend on WhatsApp client/server compatibility. Rendering may change between WhatsApp versions.
+> AIRich dan beberapa payload interaktif eksperimental bergantung pada kompatibilitas klien/server WhatsApp. Hasil gambarnya bisa berubah antar versi WhatsApp.
 
 ---
 
 ## 🖼️ Pesan Album
 
-Send multiple images or videos as one album.
+Mengirim beberapa gambar atau video sebagai satu album.
 
 ```js
 await sock.sendMessage(jid, {
