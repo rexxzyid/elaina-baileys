@@ -4758,34 +4758,34 @@ await sock.relayMessage(jid, scheduled.message, {
 })
 ```
 
-Reading one back, once you hold the reveal key:
+Membacanya kembali, begitu kamu memegang reveal key-nya:
 
 ```js
 const message = decodeScheduledMessage(msg.message, revealKey)
 ```
 
-Cancelling a scheduled message is a protocol message:
+Membatalkan pesan terjadwal itu sebuah pesan protokol:
 
 ```js
 await sock.relayMessage(jid, buildUnscheduleProtocolMessage(scheduledKey), { messageId })
 ```
 
-Limits taken from the client, not guessed:
+Batas yang diambil dari kliennya, bukan dikira-kira:
 
 | | Chat | Channel |
 |---|---|---|
-| Earliest | 10 minutes ahead | 10 minutes ahead |
-| Latest | 14 days | 30 days |
-| Per chat | 30 scheduled messages | 30 |
-| Media per schedule | 1 | 1 |
+| Paling cepat | 10 menit ke depan | 10 menit ke depan |
+| Paling lambat | 14 hari | 30 hari |
+| Per chat | 30 pesan terjadwal | 30 |
+| Media per jadwal | 1 | 1 |
 
-The reveal key is AES-256-GCM, 32 bytes, with a 12-byte IV and the tag appended to `encPayload`. The server keeps reveal keys for 30 days, and answers `419` when a chat is over its limit.
+Reveal key-nya AES-256-GCM, 32 byte, dengan IV 12 byte dan tag-nya ditambahkan ke `encPayload`. Server menyimpan reveal key selama 30 hari, dan menjawab `419` kalau satu chat melewati batasnya.
 
 > [!WARNING]
-> Every gate for this feature is off by default in the client WhatsApp ships (`scheduled_messages_sender_enabled`, `scheduled_messages_receiver_enabled`, `channels_scheduling_updates_enabled`). These builders match the wire format the client uses, but until WhatsApp enables the feature for an account the server may reject or ignore the request. Treat it as experimental.
+> Semua gerbang untuk fitur ini mati secara bawaan di klien yang dikirim WhatsApp (`scheduled_messages_sender_enabled`, `scheduled_messages_receiver_enabled`, `channels_scheduling_updates_enabled`). Builder di sini sudah cocok dengan format wire yang dipakai klien, tapi sampai WhatsApp mengaktifkan fiturnya untuk satu akun, server bisa menolak atau mengabaikan permintaannya. Anggap eksperimental.
 
 ## 🧪 API Pesan WhatsApp Modern
-Elaina Baileys exposes helpers for newer protobuf message types already present in the bundled WAProto. These APIs are experimental because WhatsApp can gate rendering or server acceptance by account, platform, or rollout.
+Elaina Baileys membuka helper untuk jenis pesan protobuf yang lebih baru yang sudah ada di WAProto yang dibawa. API ini eksperimental karena WhatsApp bisa menggerbangi penggambaran atau penerimaan servernya per akun, per platform, atau per rollout.
 
 ```js
 import {
@@ -4797,22 +4797,22 @@ import {
 
 ### Message Key
 
-Almost everything in this chapter takes a **message key** — `addYours`, `statusMention`, `statusNotification`, `groupStatusReaction`, `statusQuoted`, `pollAddOption`, and so on. The examples write `myStatus.key` or `promptStatus.key` and that is easy to skim past, so here is where those actually come from.
+Hampir semua di bab ini menerima sebuah **message key** — `addYours`, `statusMention`, `statusNotification`, `groupStatusReaction`, `statusQuoted`, `pollAddOption`, dan seterusnya. Contohnya menulis `myStatus.key` atau `promptStatus.key` dan itu mudah terlewat saat dibaca cepat, jadi ini asal sebenarnya.
 
-A key is four fields, and it identifies one message anywhere on the account:
+Satu key terdiri dari empat field, dan ia mengidentifikasi satu pesan di mana pun di akunnya:
 
 ```js
 {
-  remoteJid: 'status@broadcast',        // the chat it lives in
-  fromMe: false,                        // did this account send it
-  id: '3EB03AC13066A48D44FF59',         // the message id
-  participant: '628000@s.whatsapp.net'  // who sent it, in a group or on status
+  remoteJid: 'status@broadcast',        // chat tempat ia hidup
+  fromMe: false,                        // apakah akun ini yang mengirimnya
+  id: '3EB03AC13066A48D44FF59',         // id pesannya
+  participant: '628000@s.whatsapp.net'  // siapa yang mengirimnya, di grup atau di status
 }
 ```
 
 #### Pesan yang kamu kirim
 
-`sendMessage` returns the message it sent. Keep it and read `.key`:
+`sendMessage` mengembalikan pesan yang dikirimnya. Simpan lalu baca `.key`:
 
 ```js
 const myStatus = await sock.sendMessage('status@broadcast', {
@@ -4824,18 +4824,18 @@ console.log(myStatus.key)
 // { remoteJid: 'status@broadcast', fromMe: true, id: '3EB03AC13066A48D44FF59' }
 ```
 
-Your own status key has **no `participant`** — you are the sender, so there is nothing to disambiguate. A group status keeps the group jid instead:
+Key status milikmu sendiri **tidak punya `participant`** — kamu pengirimnya, jadi tidak ada yang perlu dibedakan. Status grup justru menyimpan jid grupnya:
 
 ```js
 const myGroupStatus = await sock.sendMessage(groupJid, { text: 'halo grup', groupStatus: true })
 // key: { remoteJid: '120363000000000000@g.us', fromMe: true, id: '…' }
 ```
 
-That return value is the whole `WebMessageInfo`, so `myStatus.message` and `myStatus.messageTimestamp` are there too if you need them.
+Nilai kembalian itu seluruh `WebMessageInfo`, jadi `myStatus.message` dan `myStatus.messageTimestamp` juga ada kalau kamu membutuhkannya.
 
 #### Pesan yang kamu terima
 
-Every incoming message arrives with its key already attached, on the `messages.upsert` event:
+Setiap pesan masuk tiba dengan key-nya sudah menempel, di event `messages.upsert`:
 
 ```js
 sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -4848,9 +4848,9 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 })
 ```
 
-Here `participant` **is** set, and it is the person who posted the status — that is the piece that tells one poster's status from another's, since `remoteJid` is `status@broadcast` for all of them.
+Di sini `participant` **terisi**, dan itu orang yang memposting statusnya — itulah bagian yang membedakan status satu pemosting dari yang lain, karena `remoteJid`-nya `status@broadcast` untuk semuanya.
 
-To answer a specific prompt you have to hold onto its key when it arrives, because you cannot rebuild one later:
+Untuk menjawab satu prompt tertentu, kamu harus memegang key-nya saat ia tiba, karena kamu tidak bisa membangunnya ulang nanti:
 
 ```js
 const prompts = new Map()
@@ -4863,18 +4863,18 @@ sock.ev.on('messages.upsert', ({ messages }) => {
   }
 })
 
-// …later
+// …nanti
 await sock.sendMessage('status@broadcast', {
   text: 'ikutan!',
   addYours: prompts.get(chosenId)
 }, { statusJidList })
 ```
 
-A key you kept stays valid — it is just four strings, so storing it in a database or a JSON file works fine. Nothing here needs the original message body.
+Key yang kamu simpan tetap berlaku — isinya cuma empat string, jadi menyimpannya di database atau berkas JSON sudah cukup. Tidak ada di sini yang butuh badan pesan aslinya.
 
 #### Pesan yang dibalas orang
 
-When a message quotes another one, the quoted key is in its `contextInfo`:
+Kalau satu pesan mengutip pesan lain, key yang dikutip ada di `contextInfo`-nya:
 
 ```js
 const context = m.message?.extendedTextMessage?.contextInfo
@@ -4888,16 +4888,16 @@ const quotedKey = context && {
 
 #### Key mana untuk apa
 
-The mistake that costs the most time is passing your own key where the other person's belongs, or the reverse. This is who owns each one:
+Kesalahan yang paling banyak memakan waktu adalah menyerahkan key milikmu sendiri di tempat milik orang lain seharusnya, atau sebaliknya. Ini pemilik masing-masingnya:
 
-| Field | Whose key |
+| Field | Key milik siapa |
 | --- | --- |
-| `addYours` | **theirs** — the prompt status you are answering |
-| `messageAssociation.parentMessageKey` | **theirs** — the status, poll or question being answered |
-| `statusMention.key` | **yours** — the status you just posted and are announcing |
-| `statusNotification.responseMessageKey` | **yours** — your answer |
-| `statusNotification.originalMessageKey` | **theirs** — the prompt |
-| `groupStatusReaction.key` | **theirs** — the group status you are reacting to |
+| `addYours` | **mereka** — status prompt yang kamu jawab |
+| `messageAssociation.parentMessageKey` | **mereka** — status, polling, atau pertanyaan yang dijawab |
+| `statusMention.key` | **kamu** — status yang baru kamu posting dan sedang kamu umumkan |
+| `statusNotification.responseMessageKey` | **kamu** — jawabanmu |
+| `statusNotification.originalMessageKey` | **mereka** — prompt-nya |
+| `groupStatusReaction.key` | **mereka** — status grup yang kamu reaksi |
 | `statusQuoted.originalStatusId` | **theirs** — the status id, not a whole key |
 
 Every maker checks the key before building anything, and throws a `TypeError` naming the exact field — `addYours.key must be an object` when it is missing, `addYours.key.id is required` when it is there but half-built. Either way it fails at build time rather than going out and being quietly ignored.
