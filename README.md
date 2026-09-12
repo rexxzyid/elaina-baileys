@@ -2895,32 +2895,32 @@ await sock.sendMessage(jid, {
   album: [
     {
       image: { url: 'https://example.com/1.jpg' },
-      caption: 'Image 1'
+      caption: 'Gambar 1'
     },
     {
       image: { url: 'https://example.com/2.jpg' },
-      caption: 'Image 2'
+      caption: 'Gambar 2'
     },
     {
       video: { url: 'https://example.com/3.mp4' },
       caption: 'Video 3'
     }
   ],
-  caption: 'Caption for the album itself'
+  caption: 'Caption untuk albumnya sendiri'
 })
 ```
 
-The per-item `caption` rides on each image or video. The `caption` beside `album` is the album's own — `AlbumMessage.caption`, field 1.
+`caption` per item menempel di tiap gambar atau video. `caption` yang di sebelah `album` adalah milik albumnya sendiri — `AlbumMessage.caption`, field 1.
 
-**It is opt-in on purpose.** The field was found by auditing the APK; the WA Web protobuf has no `caption` on `AlbumMessage` at all. That asymmetry is a sender-side problem, not a rendering one: this library links as a Web device no matter which phone scanned the code, so a field the real Web client cannot even express is a fingerprint on the wire. Leave the key out — as every existing caller already does — and nothing is written. Set it only when you have decided that trade is worth it.
+**Ini sengaja opt-in.** Field-nya ditemukan dengan mengaudit APK; protobuf WA Web sama sekali tidak punya `caption` di `AlbumMessage`. Ketidaksimetrisan itu masalah sisi pengirim, bukan masalah penggambaran: library ini menaut sebagai perangkat Web apa pun ponsel yang memindai kodenya, jadi field yang bahkan tidak bisa diungkapkan klien Web yang sebenarnya itu sidik jari di wire. Hilangkan kuncinya — seperti yang sudah dilakukan semua pemanggil yang ada — dan tidak ada yang dituliskan. Setel hanya kalau kamu sudah memutuskan pertukaran itu layak.
 
-An album requires at least two image/video media items.
+Satu album butuh setidaknya dua item media gambar/video.
 
 ---
 
 ## 📸 Status
 
-A status goes to the special jid `status@broadcast`, and the people who receive it are the ones you list in `statusJidList`. That list is the whole audience mechanism — there is no separate privacy setting to flip from here.
+Status dikirim ke jid khusus `status@broadcast`, dan yang menerimanya adalah orang-orang yang kamu daftar di `statusJidList`. Daftar itu seluruh mekanisme audiensnya — tidak ada pengaturan privasi terpisah yang bisa dibalik dari sini.
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -2932,7 +2932,7 @@ await sock.sendMessage('status@broadcast', {
 
 ### Latar, Warna Teks dan Font
 
-A **text** status is an `extendedTextMessage` with three styling fields, and all three are options on the third argument, not part of the content:
+Status **teks** itu `extendedTextMessage` dengan tiga field penggayaan, dan ketiganya opsi di argumen ketiga, bukan bagian dari kontennya:
 
 ```js
 import { StatusFont } from '@rexxhayanasi/elaina-baileys'
@@ -2945,7 +2945,7 @@ await sock.sendMessage('status@broadcast', { text: 'Halo semua' }, {
 })
 ```
 
-| Option | Wire field | Tag |
+| Opsi | Field di wire | Tag |
 | --- | --- | --- |
 | `backgroundColor` | `backgroundArgb` | 8, `FIXED32` |
 | `textColor` | `textArgb` | 7, `FIXED32` |
@@ -2953,43 +2953,43 @@ await sock.sendMessage('status@broadcast', { text: 'Halo semua' }, {
 
 #### Warna
 
-Both colors take the same shapes:
+Kedua warnanya menerima bentuk yang sama:
 
-| You pass | Result |
+| Yang kamu beri | Hasilnya |
 | --- | --- |
-| `'#7C3AED'` or `'7C3AED'` | `0xFF7C3AED` — the hash is optional, six digits are made opaque |
-| `'807C3AED'` | `0x807C3AED` — eight digits keep your alpha |
-| `0xFF7C3AED` | used as-is |
-| `-1` | wrapped into the unsigned range, so `0xFFFFFFFF` |
+| `'#7C3AED'` atau `'7C3AED'` | `0xFF7C3AED` — tanda pagarnya opsional, enam digit dibuat opaque |
+| `'807C3AED'` | `0x807C3AED` — delapan digit mempertahankan alpha-mu |
+| `0xFF7C3AED` | dipakai apa adanya |
+| `-1` | dibungkus ke rentang unsigned, jadi `0xFFFFFFFF` |
 
-Leave an option out and nothing is written to the message at all — the client picks its own.
+Hilangkan salah satu opsinya dan sama sekali tidak ada yang dituliskan ke pesannya — klien memilih sendiri.
 
 #### Font
 
-`StatusFont` is `ExtendedTextMessage.FontType`. These eight are the entire accepted set — WhatsApp Web validates against exactly this list and drops anything else, so a ninth value is the same as sending no font at all.
+`StatusFont` itu `ExtendedTextMessage.FontType`. Delapan ini seluruh himpunan yang diterima — WhatsApp Web memvalidasi terhadap daftar ini persis dan membuang yang lain, jadi nilai kesembilan sama saja dengan tidak mengirim font sama sekali.
 
-| Constant | Value | Looks like | Font file in the Android client |
+| Konstanta | Nilai | Tampaknya | Berkas font di klien Android |
 | --- | --- | --- | --- |
-| `SYSTEM` | 0 | the plain default — what you get with no `font` at all | the platform face |
-| `SYSTEM_TEXT` | 1 | the same plain face, kept as its own value | the platform face |
-| `FB_SCRIPT` | 2 | flowing handwritten script, Meta's own cursive | `FacebookScriptWA-Regular.otf` |
-| `SYSTEM_BOLD` | 6 | the plain face, heavy | the platform face, bold |
-| `MORNINGBREEZE_REGULAR` | 7 | casual marker-pen handwriting, loose and informal | `MorningBreeze-Regular.ttf` |
-| `CALISTOGA_REGULAR` | 8 | chunky rounded display serif, warm and poster-like | `Calistoga-Regular.ttf` |
-| `EXO2_EXTRABOLD` | 9 | geometric sans at its heaviest weight, loud and modern | `Exo2-ExtraBold.ttf` |
-| `COURIERPRIME_BOLD` | 10 | monospace typewriter, every character the same width | `CourierPrime-Bold.ttf` |
+| `SYSTEM` | 0 | bawaan polos — yang kamu dapat kalau tidak memberi `font` | muka huruf platform |
+| `SYSTEM_TEXT` | 1 | muka polos yang sama, disimpan sebagai nilainya sendiri | muka huruf platform |
+| `FB_SCRIPT` | 2 | tulisan tangan mengalir, kursif milik Meta sendiri | `FacebookScriptWA-Regular.otf` |
+| `SYSTEM_BOLD` | 6 | muka polosnya, tebal | muka huruf platform, bold |
+| `MORNINGBREEZE_REGULAR` | 7 | tulisan tangan spidol yang santai, longgar dan informal | `MorningBreeze-Regular.ttf` |
+| `CALISTOGA_REGULAR` | 8 | serif display gempal membulat, hangat dan mirip poster | `Calistoga-Regular.ttf` |
+| `EXO2_EXTRABOLD` | 9 | sans geometris di berat paling tebalnya, lantang dan modern | `Exo2-ExtraBold.ttf` |
+| `COURIERPRIME_BOLD` | 10 | mesin tik monospace, tiap karakter selebar yang lain | `CourierPrime-Bold.ttf` |
 
-Picking one:
+Cara memilih:
 
-- **Plain text** → leave `font` out, or `SYSTEM`. `SYSTEM_TEXT` is the same face; the client keeps both values, so there is no visible reason to prefer one.
-- **Loud and short** → `EXO2_EXTRABOLD` for a heavy modern shout, `CALISTOGA_REGULAR` for something rounder and friendlier. Both are display faces: they carry a few words well and a paragraph badly.
-- **Personal or handwritten** → `FB_SCRIPT` for neat cursive, `MORNINGBREEZE_REGULAR` for scrawled marker. Script faces suffer at small sizes and with long text.
-- **Code, numbers, ASCII art** → `COURIERPRIME_BOLD`. It is the only monospace one, so it is the only one where columns line up.
+- **Teks biasa** → hilangkan `font`, atau pakai `SYSTEM`. `SYSTEM_TEXT` muka yang sama; klien menyimpan kedua nilainya, jadi tidak ada alasan yang kelihatan untuk memilih salah satu.
+- **Lantang dan pendek** → `EXO2_EXTRABOLD` untuk teriakan modern yang tebal, `CALISTOGA_REGULAR` untuk yang lebih membulat dan ramah. Keduanya muka display: bagus membawa beberapa kata, buruk membawa satu paragraf.
+- **Personal atau tulisan tangan** → `FB_SCRIPT` untuk kursif yang rapi, `MORNINGBREEZE_REGULAR` untuk coretan spidol. Muka script menderita di ukuran kecil dan di teks panjang.
+- **Kode, angka, ASCII art** → `COURIERPRIME_BOLD`. Itu satu-satunya yang monospace, jadi satu-satunya tempat kolomnya sejajar.
 
-Two things worth knowing before you commit to a face:
+Dua hal yang perlu diketahui sebelum kamu mantap memilih satu muka:
 
-- **Only these three names are certain from the file list alone.** `FB_SCRIPT`, `MORNINGBREEZE_REGULAR`, `CALISTOGA_REGULAR`, `EXO2_EXTRABOLD` and `COURIERPRIME_BOLD` each match a bundled file one-for-one by name. The APK also ships `Roboto-Medium.ttf` and `RobotoMono-Regular.ttf`, which are almost certainly what the three `SYSTEM*` values resolve to, but the dex does not spell out which goes with which — so the table says "the platform face" rather than guessing.
-- **The gap in the numbering is real.** The values jump 2 → 6, so 3, 4 and 5 are retired or unused. Do not send them; they are not in the accepted list and will be dropped like any other unknown value.
+- **Hanya nama-nama ini yang pasti dari daftar berkasnya saja.** `FB_SCRIPT`, `MORNINGBREEZE_REGULAR`, `CALISTOGA_REGULAR`, `EXO2_EXTRABOLD`, dan `COURIERPRIME_BOLD` masing-masing cocok satu-satu dengan berkas yang dibundel berdasarkan namanya. APK-nya juga membawa `Roboto-Medium.ttf` dan `RobotoMono-Regular.ttf`, yang hampir pasti jadi tujuan ketiga nilai `SYSTEM*`, tapi dex-nya tidak menyebutkan mana untuk mana — jadi tabelnya menulis "muka huruf platform" ketimbang menebak.
+- **Lubang di penomorannya nyata.** Nilainya melompat 2 → 6, jadi 3, 4, dan 5 pensiun atau tidak dipakai. Jangan mengirimnya; mereka tidak ada di daftar yang diterima dan akan dibuang seperti nilai tak dikenal lainnya.
 
 ```js
 import { StatusFont } from '@rexxhayanasi/elaina-baileys'
@@ -2999,14 +2999,14 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList, backgroundColor: '#7C3AED', textColor: '#FFFFFF', font: StatusFont.EXO2_EXTRABOLD })
 ```
 
-`font` also takes the raw number if you would rather not import anything — `font: 8` is `CALISTOGA_REGULAR`.
+`font` juga menerima angka mentahnya kalau kamu tidak mau mengimpor apa pun — `font: 8` itu `CALISTOGA_REGULAR`.
 
 > [!NOTE]
-> The fonts ship inside the Android APK, under `assets/fonts/`. The WhatsApp Web bundle parses the field and validates the eight values but has **no font-family mapping for any of them** — so a status you style will look styled on a phone and plain on Web. That is the client, not the message.
+> Font-nya dibawa di dalam APK Android, di `assets/fonts/`. Bundle WhatsApp Web mem-parse field-nya dan memvalidasi kedelapan nilainya tapi **tidak punya pemetaan font-family untuk satu pun di antaranya** — jadi status yang kamu gayakan akan tampil bergaya di ponsel dan polos di Web. Itu kliennya, bukan pesannya.
 
 ### Status Gambar, Video dan Suara
 
-Media statuses are ordinary media messages sent to `status@broadcast`:
+Status media itu pesan media biasa yang dikirim ke `status@broadcast`:
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -3020,7 +3020,7 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-A **voice note** status is the one media kind that also takes a background color — `AudioMessage.backgroundArgb`, tag 20 — and only when `ptt` is on:
+Status **pesan suara** satu-satunya jenis media yang juga menerima warna latar — `AudioMessage.backgroundArgb`, tag 20 — dan hanya kalau `ptt` aktif:
 
 ```js
 await sock.sendMessage('status@broadcast', {
