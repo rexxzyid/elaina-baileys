@@ -1689,39 +1689,39 @@ Helper AIRich lain yang tersedia antara lain:
 
 ### Apa Yang Bisa Dicampur Dengan Apa
 
-A rich response and an interactive message look like they should combine, and the bot menus that pair `nativeFlowMessage` with `bloksWidget` suggest anything can. Read the client and it splits cleanly into one thing that cannot mix and two that can.
+Respons rich dan pesan interaktif kelihatannya seharusnya bisa digabung, dan menu bot yang memasangkan `nativeFlowMessage` dengan `bloksWidget` memberi kesan apa pun bisa. Baca kliennya, dan semuanya terbagi rapi jadi satu hal yang tidak bisa dicampur dan dua yang bisa.
 
 #### Kunci konten tingkat atas tidak pernah bisa dicampur
 
-`richResponseMessage` is field **97** of `Message`. `interactiveMessage` is **45**, `extendedTextMessage` is **6**, `conversation` is **1**. Protobuf happily encodes two of them side by side, and both survive the round trip — but every resolver picks exactly one, in field order, and the rest is dead weight on the wire:
+`richResponseMessage` itu field **97** dari `Message`. `interactiveMessage` **45**, `extendedTextMessage` **6**, `conversation` **1**. Protobuf dengan senang hati mengenkode dua di antaranya bersebelahan, dan keduanya selamat dalam perjalanan — tapi setiap resolver memilih tepat satu, mengikuti urutan field, dan sisanya cuma beban mati di wire:
 
 ```js
 proto.Message.encode({ richResponseMessage, interactiveMessage }).finish()
-// keys on the wire : interactiveMessage, richResponseMessage
-// getContentType() : interactiveMessage        ← the rich response is ignored
+// kunci di wire   : interactiveMessage, richResponseMessage
+// getContentType() : interactiveMessage        ← respons rich-nya diabaikan
 ```
 
-So there is no "rich response with buttons". Send two messages, or pick one shape.
+Jadi tidak ada yang namanya "respons rich dengan button". Kirim dua pesan, atau pilih satu bentuk.
 
 #### Di dalam `interactiveMessage`, tiga slot ikut dan tiga saling berebut
 
-The client resolves the interactive type by walking its own enum and taking the first field that is present:
+Klien menentukan jenis interaktifnya dengan menelusuri enum-nya sendiri lalu mengambil field pertama yang ada:
 
 ```js
 InteractiveMessageType = { NATIVE_FLOW: 'nativeFlowMessage', SHOPS_STOREFRONT: 'shopStorefrontMessage', CAROUSEL: 'carouselMessage' }
 getInteractiveMessageTypeForProto = f => members().find(t => fieldNameFor(t) in f)
 ```
 
-`nativeFlowMessage`, `shopStorefrontMessage` and `carouselMessage` therefore **compete** — the first one present wins and decides `interactiveType`, whatever order you wrote them in. And they are a real protobuf `oneof` (fields 4, 5, 6, 7), which the app's protobuf runtime enforces on parse by keeping only the last one on the wire: set two and Web takes field 6 while the app takes field 7. Never set two.
+Jadi `nativeFlowMessage`, `shopStorefrontMessage`, dan `carouselMessage` **saling berebut** — yang pertama ada yang menang dan menentukan `interactiveType`, apa pun urutan penulisanmu. Dan ketiganya memang `oneof` protobuf sungguhan (field 4, 5, 6, 7), yang dipaksakan runtime protobuf aplikasi saat parse dengan menyimpan hanya yang terakhir di wire: setel dua, Web mengambil field 6 sementara aplikasi mengambil field 7. Jangan pernah menyetel dua.
 
-`header` (1), `body` (2), `footer` (3), `bloksWidget` (8) and `contextInfo` (15) sit **outside** that oneof, so they all ride along with whichever payload won. That is why pairing `nativeFlowMessage` with `bloksWidget` is structurally sound rather than a trick.
+`header` (1), `body` (2), `footer` (3), `bloksWidget` (8), dan `contextInfo` (15) duduk **di luar** oneof itu, jadi semuanya ikut bersama payload mana pun yang menang. Itu sebabnya memasangkan `nativeFlowMessage` dengan `bloksWidget` itu sehat secara struktur, bukan trik.
 
-Two details that only show up in the parse:
+Dua detail yang hanya muncul saat parse:
 
-- **On Web, `carouselMessage` is still parsed when `nativeFlowMessage` won.** The carousel is read into `carouselCardsParsed` on its own, so cards and buttons arrive together there — but if the carousel fails to parse, the whole message drops to the unsupported node, buttons included. Do not build on this: the oneof above means the app never sees both halves.
-- **A valid A2UI widget suspends the native-flow name check.** The guard reads `if (!S && (msgContext === 'relay' || msgContext === 'history'))`, where `S` is `bloksWidget.type === 'im_a2ui' && isBloksWidgetEnabled()`. With the widget in place and that prop on, `isValidNativeFlowName` and `isValidNativeFlowMessage` are skipped entirely.
+- **Di Web, `carouselMessage` tetap di-parse walau `nativeFlowMessage` yang menang.** Carousel-nya dibaca ke `carouselCardsParsed` secara terpisah, jadi kartu dan button tiba bersamaan di sana — tapi kalau carousel-nya gagal di-parse, seluruh pesannya jatuh ke node tidak didukung, button ikut. Jangan membangun di atas ini: oneof di atas berarti aplikasi tidak pernah melihat kedua paruhnya.
+- **Widget A2UI yang valid menunda pemeriksaan nama native-flow.** Pengamannya berbunyi `if (!S && (msgContext === 'relay' || msgContext === 'history'))`, di mana `S` adalah `bloksWidget.type === 'im_a2ui' && isBloksWidgetEnabled()`. Dengan widget itu terpasang dan prop-nya aktif, `isValidNativeFlowName` dan `isValidNativeFlowMessage` dilewati sama sekali.
 
-Both of those sit behind one hard requirement:
+Keduanya berdiri di belakang satu syarat keras:
 
 ```js
 isSupportedInteractiveMessageVersion(type, payload) {
@@ -1731,27 +1731,27 @@ isSupportedInteractiveMessageVersion(type, payload) {
 }
 ```
 
-`messageVersion` is **mandatory** on the slot that won, and must be `1` or less. Leave it out and the message is unsupported before any of the above runs — there is no version 9. The `nativeFlow` content key sets it for you.
+`messageVersion` **wajib** ada di slot yang menang, dan nilainya harus `1` atau kurang. Hilangkan itu dan pesannya tidak didukung sebelum semua yang di atas dijalankan — tidak ada versi 9. Kunci konten `nativeFlow` menyetelnya untukmu.
 
 #### Constraint tombol, dan kenapa itu menentukan segalanya
 
-`nativeFlowMessage.name` is **not** what the client reads. The flow name is worked out from the buttons, and only if they pass a check:
+`nativeFlowMessage.name` **bukan** yang dibaca klien. Nama flow-nya diturunkan dari button-nya, dan hanya kalau button-nya lolos pemeriksaan:
 
 ```js
 getBizNativeFlowName = ({ interactiveMessage: m }) => {
   const p = m?.nativeFlowMessage?.buttons
   if (p?.length > 0 && !buttonsViolateButtonImprovementsConstraints(p.map(b => ({ nativeFlowButton: b }))))
-      return MB.getNativeFlowNameByButtonName(p[0].name)          // ← the only branch a bot reaches
-  if (e.buttonsMessage?.buttons?.length === 1) return …          // legacy buttonsMessage
+      return MB.getNativeFlowNameByButtonName(p[0].name)          // ← satu satunya cabang yang dicapai bot
+  if (e.buttonsMessage?.buttons?.length === 1) return …          // buttonsMessage lama
   const f = !(p?.length) && (body.text || header.title || footer.text || header.imageMessage) && !m?.shopStorefrontMessage
-  if (f) return MIXED                                            // ← only when there are NO buttons
-  // otherwise: undefined
+  if (f) return MIXED                                            // ← hanya kalau TIDAK ADA button
+  // selain itu: undefined
 }
 ```
 
-Note what `MIXED` actually means there: it is the name for an interactive message **with no buttons at all**. It is not "a mix of button kinds", and `name: 'mixed'` in the protobuf is never consulted.
+Perhatikan arti `MIXED` yang sebenarnya di situ: itu nama untuk pesan interaktif **tanpa button sama sekali**. Bukan "campuran jenis button", dan `name: 'mixed'` di protobuf tidak pernah dilihat.
 
-Here is the check, in full:
+Ini pemeriksaannya, lengkap:
 
 ```js
 const QUICK_REPLY_LIMIT = 10, OTHER_LIMIT = 3
@@ -1772,28 +1772,28 @@ buttonsViolateButtonImprovementsConstraints = e => {
 }
 ```
 
-Three rules fall out of it:
+Tiga aturan keluar dari situ:
 
-1. **Every button must be the same kind of button as the first** — quick reply or not. One `cta_url` next to a `quick_reply` breaks the whole list.
-2. **At most 10 buttons if the first is `quick_reply`, at most 3 otherwise.**
-3. A later button whose name maps to a known flow must be one of the fifteen above. An unrecognised name passes this particular rule.
+1. **Setiap button harus sejenis dengan button pertama** — quick reply atau bukan. Satu `cta_url` di sebelah `quick_reply` merusak seluruh daftarnya.
+2. **Maksimum 10 button kalau yang pertama `quick_reply`, maksimum 3 kalau bukan.**
+3. Button berikutnya yang namanya terpetakan ke flow yang dikenal harus salah satu dari lima belas di atas. Nama yang tidak dikenali lolos aturan yang satu ini.
 
-**All of that is WA Web only.** `buttonsViolateButtonImprovementsConstraints` and `isValidNativeFlowName` appear nowhere in the Android APK — not in any dex. The app reaches its own unsupported decision in `FMessageInteractiveFactory/isUnknownInteractiveMessage`, and the predicates around it (`interactiveMessageCase_`, and a `buttons.size() == 1` test used only for the payment flows) look at the oneof case and the first button's name. There is no count limit and no same-kind rule. So a message carrying `cta_url`, `cta_call`, `send_location`, `quick_reply` and `single_select` together does draw on a phone — which is also the only place several of those names exist at all, per [Native Flow Support](#dukungan-native-flow).
+**Semua itu khusus WA Web.** `buttonsViolateButtonImprovementsConstraints` dan `isValidNativeFlowName` tidak muncul di mana pun di APK Android — tidak di dex mana pun. Aplikasi mengambil keputusan tidak-didukungnya sendiri di `FMessageInteractiveFactory/isUnknownInteractiveMessage`, dan predikat di sekitarnya (`interactiveMessageCase_`, plus satu tes `buttons.size() == 1` yang hanya dipakai untuk alur pembayaran) melihat kasus oneof-nya dan nama button pertamanya. Tidak ada batas jumlah dan tidak ada aturan sejenis. Jadi pesan yang membawa `cta_url`, `cta_call`, `send_location`, `quick_reply`, dan `single_select` sekaligus memang tergambar di ponsel — dan di situ pula satu-satunya tempat beberapa nama itu ada, sesuai [Dukungan Native Flow](#dukungan-native-flow).
 
-Break one of the rules and the flow name comes back `undefined`, which on Web is fatal one step later:
+Langgar satu aturannya dan nama flow-nya kembali `undefined`, dan di Web itu fatal satu langkah kemudian:
 
 ```js
 isValidNativeFlowName = ({ bizInfo, msgContext, name }) => {
   if (msgContext !== 'relay' && name != null) return true
   const a = bizInfo?.nativeFlowName
-  if (a == null || name == null) return false            // ← undefined name, before anything else
+  if (a == null || name == null) return false            // ← nama undefined, sebelum apa pun yang lain
   return cast(a) === MIXED || … ? true : cast(a) === name
 }
 ```
 
-An incoming message is a relay, so `name == null` returns false and the message becomes the unsupported node on Web — buttons, text, footer and all, while the same message draws normally on a phone. Note the order: the `MIXED` escape hatch is checked **after** the null test, so a `<biz>` node claiming `mixed` does not rescue a violating button list either.
+Pesan masuk itu relay, jadi `name == null` mengembalikan false dan pesannya jadi node tidak didukung di Web — button, teks, footer, semuanya, sementara pesan yang sama tergambar normal di ponsel. Perhatikan urutannya: pintu darurat `MIXED` diperiksa **setelah** tes null, jadi node `<biz>` yang mengaku `mixed` juga tidak menyelamatkan daftar button yang melanggar.
 
-That `<biz>` node is the other half, and this library already sends it. When the first button is not one of the few flows that need their own name, it goes out as:
+Node `<biz>` itu paruh yang lain, dan library ini sudah mengirimnya. Kalau button pertamanya bukan salah satu dari sedikit flow yang butuh namanya sendiri, yang dikirim adalah:
 
 ```xml
 <biz actual_actors="2" host_storage="2" privacy_mode_ts="…">
@@ -1804,11 +1804,11 @@ That `<biz>` node is the other half, and this library already sends it. When the
 </biz>
 ```
 
-That `v="9" name="mixed"` is a stanza attribute, unrelated to `messageVersion` in the protobuf — which still has to be `1`. With the node saying `mixed`, any flow name your buttons produce is accepted, so the button constraints above are the only thing left that can fail.
+`v="9" name="mixed"` itu atribut stanza, tidak berhubungan dengan `messageVersion` di protobuf — yang tetap harus `1`. Dengan node-nya menyebut `mixed`, nama flow apa pun yang dihasilkan button-mu diterima, jadi constraint button di atas satu-satunya yang masih bisa gagal.
 
-`nativeFlowButtonsViolateConstraints` is exported so you can check a list against the Web rules yourself, and passing a violating one logs a warning naming the limit and the kinds it found. It is a warning and not an error precisely because the app still draws it: treat it as "this will be blank for anyone reading on desktop", not as "this is broken".
+`nativeFlowButtonsViolateConstraints` diekspor supaya kamu bisa memeriksa sendiri satu daftar terhadap aturan Web, dan menyerahkan daftar yang melanggar akan mencatat peringatan yang menyebutkan batasnya dan jenis yang ditemukannya. Itu peringatan dan bukan error justru karena aplikasi tetap menggambarnya: anggap sebagai "ini akan kosong bagi siapa pun yang membaca di desktop", bukan "ini rusak".
 
-Here is the whole mix through `sendMessage`, no imports — one kind of button, inside the limit, so it draws everywhere:
+Ini campuran lengkapnya lewat `sendMessage`, tanpa impor — satu jenis button, masih di dalam batasnya, jadi tergambar di mana-mana:
 
 ```js
 const teks = '✨ MENU ELAINA\n\nPilih kategori di bawah.'
@@ -1832,7 +1832,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-Mixing kinds in one message is fine for phone readers, and this is what it looks like — five kinds, five names, four of which WA Web has no flow name for anyway:
+Mencampur jenis dalam satu pesan tidak masalah bagi pembaca di ponsel, dan bentuknya seperti ini — lima jenis, lima nama, empat di antaranya memang tidak punya nama flow di WA Web:
 
 ```js
 await sock.sendMessage(jid, {
@@ -1848,7 +1848,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-That logs the constraint warning and draws on a phone. If the same message also has to work in a browser tab, split it so every message carries one kind, at most three of a non-quick-reply kind:
+Itu mencatat peringatan constraint-nya dan tergambar di ponsel. Kalau pesan yang sama juga harus jalan di tab browser, pecah supaya setiap pesan membawa satu jenis saja, maksimum tiga untuk jenis non-quick-reply:
 
 ```js
 await sock.sendMessage(jid, {
@@ -1860,24 +1860,24 @@ await sock.sendMessage(jid, {
 })
 ```
 
-There is one way out of the whole check, and it is the reason a menu with an A2UI card can be looser than one without: `if (!S && (msgContext === 'relay' || …))`. With a valid `im_a2ui` widget and `im_bloks_widget_enable` on, the flow-name validation never runs. That is a gate you do not control, so build the buttons to the rules anyway and treat the widget as a bonus.
+Ada satu jalan keluar dari seluruh pemeriksaan ini, dan itu alasan kenapa menu dengan kartu A2UI bisa lebih longgar daripada yang tanpa: `if (!S && (msgContext === 'relay' || …))`. Dengan widget `im_a2ui` yang valid dan `im_bloks_widget_enable` aktif, validasi nama flow-nya tidak pernah dijalankan. Itu gerbang yang tidak kamu kendalikan, jadi bangun button-nya tetap sesuai aturan dan anggap widget-nya bonus.
 
-Keep `bloksWidget.fallback` byte-identical to `text`. The client hides the bubble text only when the widget is enabled **and** the two match (`if (S && k === msg.bloksWidget?.fallback) k = null`), so the same payload draws the widget where the prop is on and the plain text where it is not, instead of showing the content twice.
+Jaga `bloksWidget.fallback` identik byte-per-byte dengan `text`. Klien menyembunyikan teks bubble-nya hanya kalau widget-nya aktif **dan** keduanya sama (`if (S && k === msg.bloksWidget?.fallback) k = null`), jadi payload yang sama menggambar widget-nya di tempat prop-nya aktif dan teks biasa di tempat yang tidak, bukan menampilkan isinya dua kali.
 
 #### Di dalam `richResponseMessage`, semuanya bisa dicampur
 
-This is where the rich response is actually composable. Four lists travel together and none of them competes:
+Di sinilah respons rich benar-benar bisa disusun. Empat daftar berjalan bersama dan tidak ada yang saling berebut:
 
-| Slot | Carries |
+| Slot | Membawa |
 |---|---|
-| `sections` | the view models — one per `addText`, `addCode`, `addSection`, … |
-| `submessages` | the protobuf half that `addTable`, `addCode` and `addMap` pair with their section |
-| `footer_sections` | `addFooterSection`, drawn under the body |
-| `embedded_screens` | `addEmbeddedScreen`; WhatsApp calls `stripEmbeddedScreens` before rendering, so these reach the model and draw nothing |
+| `sections` | view model-nya — satu per `addText`, `addCode`, `addSection`, … |
+| `submessages` | paruh protobuf yang dipasangkan `addTable`, `addCode`, dan `addMap` dengan section-nya |
+| `footer_sections` | `addFooterSection`, digambar di bawah badan pesan |
+| `embedded_screens` | `addEmbeddedScreen`; WhatsApp memanggil `stripEmbeddedScreens` sebelum menggambar, jadi ini sampai ke model tapi tidak menggambar apa-apa |
 
-`messageContextInfo` rides alongside at the top level rather than competing, because the content-key scan only matches `conversation` or a name containing `Message` — and `messageContextInfo` contains neither. That is how `botMetadata` and the verification proof travel with a rich response at all.
+`messageContextInfo` ikut di sebelahnya di tingkat atas, bukan berebut, karena pemindaian kunci kontennya hanya mencocokkan `conversation` atau nama yang mengandung `Message` — dan `messageContextInfo` tidak mengandung keduanya. Begitulah `botMetadata` dan bukti verifikasinya bisa ikut bersama respons rich.
 
-A Bloks widget can also live **inside** a rich response instead of beside it, as a section rather than an `interactiveMessage` field:
+Widget Bloks juga bisa hidup **di dalam** respons rich, bukan di sebelahnya, sebagai section ketimbang field `interactiveMessage`:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1890,13 +1890,13 @@ rich.addSection(MB.bloksSection('im_a2ui', { type: 'info_card', title: 'Penjuala
 await rich.send(jid)
 ```
 
-That emits `FOABloksPrimitive`, which is one of the eighteen names WA Web draws too — so unlike the `interactiveMessage.bloksWidget` route it is not behind `im_bloks_widget_enable`.
+Itu memancarkan `FOABloksPrimitive`, salah satu dari delapan belas nama yang juga digambar WA Web — jadi berbeda dari jalur `interactiveMessage.bloksWidget`, yang ini tidak berada di belakang `im_bloks_widget_enable`.
 
 ### Inline Entity di Dalam Teks
 
-`addText` and `addTable` scan the string for four markdown-ish shapes and turn them into **inline entities** — the pieces the client renders as links, citations and formulas inside a paragraph rather than as separate sections.
+`addText` dan `addTable` memindai string-nya untuk empat bentuk mirip markdown lalu mengubahnya menjadi **inline entity** — bagian yang digambar klien sebagai tautan, kutipan, dan rumus di dalam satu paragraf, bukan sebagai section terpisah.
 
-| You write | Becomes | `__typename` |
+| Kamu menulis | Menjadi | `__typename` |
 | --- | --- | --- |
 | `[label](https://x.test)` | a tappable link | `GenAIInlineLinkItem` |
 | `[label](!https://x.test)` | the same, marked untrusted | `GenAIInlineLinkItem` |
