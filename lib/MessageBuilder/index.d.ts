@@ -102,6 +102,16 @@ export declare class Carousel extends BaseBuilder {
 
 export declare class AIRich extends BaseBuilder {
   constructor(client: any, options?: { dynamic?: boolean; unsupportedTypeAlert?: boolean });
+  static readonly DEFAULT_BOT_JID: string;
+  static readonly MAP_DELTA: number;
+  static readonly LAYOUT_FIELDS: Readonly<Record<string, string>>;
+  static readonly SECTION_TYPENAME: string;
+  static readonly UNIFIED_RESPONSE_TYPENAME: string;
+  static tokenizer(code: string, lang?: string): any;
+  static toTableMetadata(rows: any[], options?: Record<string, any>): any;
+  static generateVerificationMetadata(): any;
+  static wrapRichResponse(richResponseMessage: any, forwardWrapper?: boolean): any;
+  static newLayout(name: string, data: any, extra?: Record<string, any>): any;
   /** True while the loaded proof and its signed bytes are still going out untouched. */
   readonly isSignaturePreserved: boolean;
   loadFrom(msg: any): this;

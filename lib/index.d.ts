@@ -24,3 +24,6 @@ export type WASocket = BaseWASocket & {
 };
 export declare const makeWASocket: (config: Parameters<typeof baseMakeWASocket>[0]) => WASocket;
 export default makeWASocket;
+import { AIRich as AIRichBuilder } from './MessageBuilder/index.js';
+export declare const AIRich: typeof AIRichBuilder & typeof import('./MessageBuilder/extras.js') & typeof import('./MessageBuilder/metaai.js');
+export type AIRich = AIRichBuilder;

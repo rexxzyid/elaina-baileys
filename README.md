@@ -1490,7 +1490,11 @@ await carousel.send(jid)
 
 `AIRich` is the integrated rich-response builder for multiple layouts and content types
 
-It does not go through `sock.sendMessage`. A rich response is not a content key the way `text` or `image` is — it is built up on an instance and relayed by the builder itself, so every example below starts at `new AIRich(sock)` and ends at `await rich.send(jid)`:
+It does not go through `sock.sendMessage`, and it cannot. `send` relays the message and then immediately sends a `protocolMessage` edit of it — the unified response only draws once that second stanza lands. That is two stanzas out of one call, which is not a thing `sendMessage` can return; it hands you one `WebMessageInfo` for one message. So a rich response is built up on an instance and relayed by the builder itself, and every example below starts at `new AIRich(sock)` and ends at `await rich.send(jid)`.
+
+**One import covers the whole surface.** All 149 section builders, item builders and enums are also statics on `AIRich`, so `AIRich.htmlSection(…)`, `AIRich.mapSection(…)`, `AIRich.TaskStatus.RUNNING` work without a second name on the import line. They are the same functions, not copies — the named exports still work unchanged if you prefer them. The statics exist so a bot does not collect a paragraph of imports to draw one card.
+
+The examples below use the statics for anything that goes *into* a build, and a plain import for the few helpers that do not belong to one — `decodeAIRich`, `readRichMessage`, `readEmbeddedSections`, `readEmbeddedTabs`, `sendHtmlApp`, `sendA2UI`. Those reach through `AIRich` too; reading `decodeAIRich(msg)` is simply clearer than `AIRich.decodeAIRich(msg)` when no builder is involved.
 
 ```js
 import { AIRich } from '@rexxhayanasi/elaina-baileys'
@@ -1752,12 +1756,12 @@ This is where the rich response is actually composable. Four lists travel togeth
 A Bloks widget can also live **inside** a rich response instead of beside it, as a section rather than an `interactiveMessage` field:
 
 ```js
-import { AIRich, bloksSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock).setTitle('Elaina AI')
 
 rich.addText('*Statistik hari ini*')
-rich.addSection(bloksSection('im_a2ui', { type: 'info_card', title: 'Penjualan', body: 'Rp 1.250.000' }))
+rich.addSection(AIRich.bloksSection('im_a2ui', { type: 'info_card', title: 'Penjualan', body: 'Rp 1.250.000' }))
 
 await rich.send(jid)
 ```
@@ -1806,7 +1810,7 @@ Those three are options on one call, not a sequence to run as-is — pick the fl
 `AI_RICH_INLINE_ENTITIES` lists all four. The list is closed on purpose — the Web parser dispatches on `__typename` and **throws** `inline entity <name>` on anything outside it, so a fifth invented name breaks the whole message rather than degrading.
 
 ```js
-import { AI_RICH_INLINE_ENTITIES, decodeAIRich } from '@rexxhayanasi/elaina-baileys'
+import { AIRich, decodeAIRich } from '@rexxhayanasi/elaina-baileys'
 
 const info = decodeAIRich(m.message)
 const inline = info.sections.flatMap(s => s.view_model?.primitive?.inline_entities ?? [])
@@ -1879,31 +1883,20 @@ const buttonV2 = new ButtonV2(sock).loadFrom(m.message)
 MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog).
 
 ```js
-import {
-  AIRich,
-  dividerSection,
-  spacerSection,
-  imageSection,
-  taskSection,
-  latexSection,
-  thinkingSection,
-  progressSection,
-  TaskStatus,
-  ThinkingIcon
-} from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock)
   .setTitle('Elaina AI')
   .setFooter('Generated with AIRich')
 
 rich.addText('*Laporan render*')
-rich.addSection(dividerSection(), { id: 'rule' })
-rich.addSection(spacerSection({ spacing: 3 }))
-rich.addSection(imageSection('https://example.com/photo.jpg'))
-rich.addSection(taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: TaskStatus.RUNNING }))
-rich.addSection(latexSection('E = mc^2'))
-rich.addSection(thinkingSection('Searching the web…', { icon: ThinkingIcon.WEB_SEARCH }))
-rich.addSection(progressSection('Almost done', { inProgress: false }))
+rich.addSection(AIRich.dividerSection(), { id: 'rule' })
+rich.addSection(AIRich.spacerSection({ spacing: 3 }))
+rich.addSection(AIRich.imageSection('https://example.com/photo.jpg'))
+rich.addSection(AIRich.taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: AIRich.TaskStatus.RUNNING }))
+rich.addSection(AIRich.latexSection('E = mc^2'))
+rich.addSection(AIRich.thinkingSection('Searching the web…', { icon: AIRich.ThinkingIcon.WEB_SEARCH }))
+rich.addSection(AIRich.progressSection('Almost done', { inProgress: false }))
 
 await rich.send(jid)
 ```
@@ -1946,29 +1939,15 @@ Two names sit oddly in the middle: `GenAIFollowUpSuggestionPillPrimitive` and `G
 Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
 ```js
-import {
-  AIRich,
-  mapSection,
-  placeItem,
-  sportsSection,
-  videoSection,
-  reminderSection,
-  actionListSection,
-  actionListRow,
-  searchPlannerSection,
-  plannerStep,
-  SportsLeague,
-  SportsGameStatus,
-  SearchPlannerStepStatus
-} from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(mapSection({
+rich.addSection(AIRich.mapSection({
   staticMapUrl: 'https://example.com/static-map.png',
   motivation: 'Tempat makan dekat kamu',
   items: [
-    placeItem({
+    AIRich.placeItem({
       id: '1',
       name: 'Warung Sederhana',
       rating: 4.6,
@@ -1979,10 +1958,10 @@ rich.addSection(mapSection({
   ]
 }))
 
-rich.addSection(sportsSection({
+rich.addSection(AIRich.sportsSection({
   gameId: 'g-1',
-  league: SportsLeague.EURO,
-  status: SportsGameStatus.LIVE,
+  league: AIRich.SportsLeague.EURO,
+  status: AIRich.SportsGameStatus.LIVE,
   statusDetail: "72'",
   homeTeam: { name: 'Indonesia', abbreviation: 'IDN' },
   awayTeam: { name: 'Vietnam', abbreviation: 'VIE' },
@@ -1990,16 +1969,16 @@ rich.addSection(sportsSection({
   awayScore: 1
 }))
 
-rich.addSection(actionListSection([
-  actionListRow({ title: 'Buka peta', url: 'https://maps.example.com' }),
-  actionListRow({ title: 'Telepon', action: 'tel:+62800000000' })
+rich.addSection(AIRich.actionListSection([
+  AIRich.actionListRow({ title: 'Buka peta', url: 'https://maps.example.com' }),
+  AIRich.actionListRow({ title: 'Telepon', action: 'tel:+62800000000' })
 ]))
 
-rich.addSection(searchPlannerSection({
+rich.addSection(AIRich.searchPlannerSection({
   queryUrl: 'https://search.example.com?q=cuaca',
   steps: [
-    plannerStep({ title: 'Cari cuaca', status: SearchPlannerStepStatus.COMPLETED }),
-    plannerStep({ title: 'Ringkas hasil', status: SearchPlannerStepStatus.IN_PROGRESS })
+    AIRich.plannerStep({ title: 'Cari cuaca', status: AIRich.SearchPlannerStepStatus.COMPLETED }),
+    AIRich.plannerStep({ title: 'Ringkas hasil', status: AIRich.SearchPlannerStepStatus.IN_PROGRESS })
   ]
 }))
 
@@ -2054,16 +2033,16 @@ Each place needs a numeric `latitude` and `longitude` — anything else throws r
 Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
 
 ```js
-import { AIRich, mediaGridSection, mediaItem, contextualSourcesSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(mediaGridSection([
-  mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
-  mediaItem({ previewUrl: 'https://example.com/2-small.jpg', fullUrl: 'https://example.com/2.jpg' })
+rich.addSection(AIRich.mediaGridSection([
+  AIRich.mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
+  AIRich.mediaItem({ previewUrl: 'https://example.com/2-small.jpg', fullUrl: 'https://example.com/2.jpg' })
 ]))
 
-rich.addSection(contextualSourcesSection([
+rich.addSection(AIRich.contextualSourcesSection([
   { url: 'https://example.com/a', title: 'Sumber A', favicon: 'https://example.com/a.ico' }
 ]))
 
@@ -2077,12 +2056,12 @@ Two layouts join the eight already supported: `multipleResponseSection(responses
 For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
 
 ```js
-import { AIRich, customSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
-rich.addSection(customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
+rich.addSection(AIRich.customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
+rich.addSection(AIRich.customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
 
 await rich.send(jid)
 ```
@@ -2237,11 +2216,11 @@ The A2UI card and the native-flow buttons live in the same `interactiveMessage`,
 Pass `typename` to send the section under a different name:
 
 ```js
-import { AIRich, AI_RICH_HTML_PRIMITIVE_CLASS, htmlSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock).setTitle('Dashboard')
 
-rich.addSection(htmlSection(html, { typename: AI_RICH_HTML_PRIMITIVE_CLASS }))
+rich.addSection(AIRich.htmlSection(html, { typename: AIRich.AI_RICH_HTML_PRIMITIVE_CLASS }))
 
 await rich.send(jid)
 ```
@@ -2321,18 +2300,18 @@ plus `messageType: 1`, a fresh `botResponseId`, and the `verificationMetadata` b
 Use the section builder when the HTML sits alongside other sections on a builder you control.
 
 ```js
-import { AIRich, htmlSection, dividerSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new AIRich(sock)
 rich.setTitle('Dashboard')
 rich.addText('Penjualan hari ini')
-rich.addSection(dividerSection())
-rich.addSection(htmlSection(chartHtml, { trustedSources: ['nixel.dev'] }), { id: 'chart' })
+rich.addSection(AIRich.dividerSection())
+rich.addSection(AIRich.htmlSection(chartHtml, { trustedSources: ['nixel.dev'] }), { id: 'chart' })
 await rich.send(m.chat)
 ```
 
 ```
-htmlSection(html, { trustedSources?, height? }) => section
+AIRich.htmlSection(html, { trustedSources?, height? }) => section
 ```
 
 | Builder | Primitive | Fields |
@@ -2475,7 +2454,7 @@ document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventD
 
 ```js
 const rich = decodeAIRich(msg)
-const section = rich?.sections.find(s => s.view_model?.primitive?.__typename === AI_RICH_HTML_PRIMITIVE)
+const section = rich?.sections.find(s => s.view_model?.primitive?.__typename === AIRich.AI_RICH_HTML_PRIMITIVE)
 if (section) {
   const html = section.view_model.primitive.payload
 }
@@ -2486,7 +2465,7 @@ Do not reach for `sections[0]` — the HTML lands wherever you added it, so a ca
 Enum values, read from the client rather than guessed:
 
 ```js
-import { DividerType, ImagineType, ImagineStatus, TaskStatus, ThinkingIcon, FooterActionType, AddonActionType, AI_RICH_LAYOUTS, AI_RICH_PRIMITIVES, AI_RICH_PRIMITIVES_WEB_RENDERED, AI_RICH_HTML_PRIMITIVE } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 ```
 
 `AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
@@ -2503,7 +2482,7 @@ Two things to know before you build one:
 #### A complete example
 
 ```js
-import { AIRich, embeddedScreen, embeddedTab, htmlSection } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
 const gameHtml = `
 <body style="margin:0;background:transparent;color:#eee;font-family:Arial">
@@ -2518,13 +2497,13 @@ const gameHtml = `
 const scoreHtml = '<body style="margin:0;color:#eee;font-family:Arial"><h3>Best: 00000</h3></body>'
 
 const rich = new AIRich(sock)
-  .addSection(htmlSection('<b>Dino Runner</b> — tap to play'))
+  .addSection(AIRich.htmlSection('<b>Dino Runner</b> — tap to play'))
 
-rich.addEmbeddedScreen(embeddedScreen({
+rich.addEmbeddedScreen(AIRich.embeddedScreen({
   title: 'Preview',
   tabs: [
-    embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [htmlSection(gameHtml)] }),
-    embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [htmlSection(scoreHtml)] })
+    AIRich.embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [AIRich.htmlSection(gameHtml)] }),
+    AIRich.embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [AIRich.htmlSection(scoreHtml)] })
   ]
 }))
 
@@ -2534,9 +2513,9 @@ await rich.send(m.chat)
 A screen without tabs is just as valid — pass `content` instead, and the sheet shows one page:
 
 ```js
-rich.addEmbeddedScreen(embeddedScreen({
+rich.addEmbeddedScreen(AIRich.embeddedScreen({
   title: 'Rincian',
-  content: [htmlSection(detailHtml)]
+  content: [AIRich.htmlSection(detailHtml)]
 }))
 ```
 
@@ -2691,13 +2670,13 @@ Where these come from, so you can check them yourself:
 Sections always get their typename. The screen and the tabs stay untyped unless you ask for it:
 
 ```js
-import { EMBEDDED_SCREEN_TAB_TYPENAME, EMBEDDED_SCREEN_TYPENAME } from '@rexxhayanasi/elaina-baileys'
+import { AIRich } from '@rexxhayanasi/elaina-baileys'
 
-embeddedScreen({ typename: EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
-embeddedTab({ typename: EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
+AIRich.embeddedScreen({ typename: AIRich.EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
+AIRich.embeddedTab({ typename: AIRich.EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
 
 // a build that expects a different container name
-embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
+AIRich.embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
 ```
 
 That last line matters. As with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape, so payloads in the wild carry all sorts of container names and still render. `tabsTypename` exists so you can match whatever a given build expects instead of being locked to one string.

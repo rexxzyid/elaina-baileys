@@ -1153,3 +1153,27 @@ test('future-proof-unwrap', async () => {
     const back = proto.Message.StickerMessage.decode(proto.Message.StickerMessage.encode(sticker).finish());
     assert.equal(back.audioMessage.seconds, 3, 'StickerMessage.audioMessage is field 26, added in the same revision');
 });
+
+test('airich-namespace', async () => {
+    const { AIRich } = await import('../lib/index.js');
+    const extras = await import('../lib/MessageBuilder/extras.js');
+    const metaai = await import('../lib/MessageBuilder/metaai.js');
+
+    const members = [...Object.keys(extras), ...Object.keys(metaai)].filter(name => name !== 'default');
+    assert.equal(new Set(members).size, members.length, 'extras and metaai must not export the same name twice');
+    assert.equal(members.length, 149, 'the README quotes this count, update both together');
+
+    for (const name of members) {
+        assert.equal(AIRich[name], (extras[name] ?? metaai[name]), `AIRich.${name} has to be the same member as the named export`);
+    }
+
+    assert.equal(AIRich.DEFAULT_BOT_JID, '867051314767696@bot', 'the namespace must not shadow AIRich own statics');
+    assert.equal(typeof AIRich.wrapRichResponse, 'function');
+    assert.equal(typeof AIRich.newLayout, 'function');
+    assert.equal(AIRich.name, 'AIRich');
+    assert.equal(AIRich.prototype.constructor, AIRich);
+
+    const divider = AIRich.dividerSection();
+    assert.equal(divider.view_model.primitive.__typename, 'GenAIDividerPrimitive');
+    assert.equal(AIRich.mapSection === metaai.mapSection, true, 'metaai sections reach the namespace too');
+});
