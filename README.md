@@ -3260,7 +3260,7 @@ Untuk menaruh lencana audiens kustom di salah satunya, lihat [Audiens Status Kus
 ```js
 const newsletter = await sock.newsletterCreate(
   'Elaina Updates',
-  'Official update channel'
+  'Channel update resmi'
 )
 
 console.log(newsletter)
@@ -3280,7 +3280,7 @@ await sock.newsletterUpdateName(
 ```js
 await sock.newsletterUpdateDescription(
   '123456789@newsletter',
-  'Fresh updates from Elaina'
+  'Kabar terbaru dari Elaina'
 )
 ```
 
@@ -3299,7 +3299,7 @@ await sock.newsletterUpdatePicture(
 await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
 ```
 
-`ALL` allows any emoji, `BASIC` the default set only, `NONE` disables reactions, `BLOCKLIST` uses the server-side blocklist. Anything else is rejected before the request leaves.
+`ALL` mengizinkan emoji apa pun, `BASIC` hanya himpunan bawaan, `NONE` mematikan reaksi, `BLOCKLIST` memakai daftar blokir sisi server. Selain itu ditolak sebelum permintaannya dikirim.
 
 ### Mengikuti Channel
 
@@ -3319,14 +3319,14 @@ await sock.newsletterUnmute('123456789@newsletter')
 
 #### Membisukan Aktivitas Admin atau Follower
 
-WhatsApp Web replaced the old mute/unmute pair with one setting that separates admin notifications from follower notifications.
+WhatsApp Web menggantikan pasangan mute/unmute yang lama dengan satu pengaturan yang memisahkan notifikasi admin dari notifikasi follower.
 
 ```js
 await sock.newsletterUpdateUserSetting('123456789@newsletter', 'ADMIN_NOTIFICATIONS', true)
 await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFICATIONS', false)
 ```
 
-`newsletterMute` and `newsletterUnmute` are shorthands for the same mutation with `ADMIN_NOTIFICATIONS`, which is exactly what the mute toggle in WhatsApp Web sends. They used to call a separate pair of operations that no longer exists in either client, so they now return the same `{ id, state }` the setting call returns.
+`newsletterMute` dan `newsletterUnmute` itu bentuk singkat untuk mutasi yang sama dengan `ADMIN_NOTIFICATIONS`, dan itu persis yang dikirim sakelar mute di WhatsApp Web. Keduanya dulu memanggil sepasang operasi terpisah yang sudah tidak ada lagi di kedua klien, jadi sekarang keduanya mengembalikan `{ id, state }` yang sama dengan yang dikembalikan panggilan pengaturannya.
 
 #### Mengambil Daftar Channel Yang Diikuti
 
@@ -3345,14 +3345,14 @@ const metadata = await sock.newsletterMetadata(
   '123456789@newsletter'
 )
 
-console.log(metadata.thread_metadata.handle)          // the channel's @username
+console.log(metadata.thread_metadata.handle)          // @username channel-nya
 console.log(metadata.thread_metadata.subscribers_count)
 console.log(metadata.thread_metadata.settings.reaction_codes.value)
 ```
 
-`handle` is the channel's public username — the part after `wa.me/channel/`. It comes back on every call, whether or not you own the channel.
+`handle` itu username publik channel-nya — bagian setelah `wa.me/channel/`. Ia kembali di setiap panggilan, kamu pemilik channel-nya atau bukan.
 
-Three extra sections are off by default because they cost the server extra work:
+Tiga bagian tambahan mati secara bawaan karena membebani server dengan pekerjaan ekstra:
 
 ```js
 const metadata = await sock.newsletterMetadata('jid', '123456789@newsletter', {
@@ -3368,7 +3368,7 @@ metadata.status_metadata                   // { last_status_server_id, last_stat
 
 #### Pembaruan Pesan Bertahap
 
-Poll only what changed on a channel since a timestamp, instead of refetching history.
+Hanya menanyakan apa yang berubah di sebuah channel sejak satu timestamp, ketimbang mengambil ulang riwayatnya.
 
 ```js
 const { messages } = await sock.newsletterFetchMessageUpdates('123456789@newsletter', {
@@ -3385,7 +3385,7 @@ const followers = await sock.newsletterFollowers('123456789@newsletter', { count
 
 #### Insight
 
-Admin analytics for a channel you own.
+Analitik admin untuk channel yang kamu miliki.
 
 ```js
 const insights = await sock.newsletterInsights('123456789@newsletter', {
@@ -3394,11 +3394,11 @@ const insights = await sock.newsletterInsights('123456789@newsletter', {
 // { result: [{ id, values }], last_update_time, metrics_status }
 ```
 
-`metrics_status` is `OK` or `MISSING`; `MISSING` means the server has no data for the requested window yet.
+`metrics_status` bernilai `OK` atau `MISSING`; `MISSING` berarti server belum punya data untuk jendela yang diminta.
 
 #### Reaksi dan Vote Milik Sendiri
 
-What you reacted or voted on across channels, without walking every message.
+Apa saja yang kamu reaksi atau vote di berbagai channel, tanpa menelusuri setiap pesan.
 
 ```js
 const groups = await sock.newsletterMyAddOns({ limit: 100 })
@@ -3412,7 +3412,7 @@ for (const group of groups) {
 }
 ```
 
-`pollVote.hashes` are the SHA-256 option hashes, hex encoded — match them against the poll's options to know which one you picked.
+`pollVote.hashes` itu hash SHA-256 dari opsinya, dienkode hex — cocokkan dengan opsi polling-nya untuk tahu yang mana yang kamu pilih.
 
 ### Memposting dan Bereaksi
 
@@ -3426,7 +3426,7 @@ await sock.newsletterReactMessage(
 )
 ```
 
-Remove a reaction by using an empty value:
+Hapus reaksinya dengan memberi nilai kosong:
 
 ```js
 await sock.newsletterReactMessage(
@@ -3438,7 +3438,7 @@ await sock.newsletterReactMessage(
 
 #### Pin / Unpin Pesan
 
-Takes the message `server_id`, not the message key.
+Menerima `server_id` pesannya, bukan message key-nya.
 
 ```js
 await sock.newsletterPinMessages('123456789@newsletter', [175])
@@ -3452,11 +3452,11 @@ await sock.newsletterLabelAiContent('123456789@newsletter', 175)
 await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)
 ```
 
-`messageType` is the third argument and defaults to `MESSAGE`; pass `STATUS` to label a channel status.
+`messageType` argumen ketiga dan bawaannya `MESSAGE`; beri `STATUS` untuk melabeli status channel.
 
 #### Vote di Polling Channel
 
-Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats.
+Vote channel dikirim tanpa enkripsi sebagai hash opsi, berbeda dari vote terenkripsi yang dipakai di chat.
 
 ```js
 await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])
@@ -3471,7 +3471,7 @@ const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
 })
 ```
 
-The response groups voters per `vote_hash`, each with a `voter_list.edges` array.
+Responsnya mengelompokkan pemberi vote per `vote_hash`, masing-masing dengan array `voter_list.edges`.
 
 #### Pengirim Reaksi
 
@@ -3483,27 +3483,27 @@ const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175
 
 #### Memposting Status Channel
 
-A channel can publish its own status — the ring around the channel avatar, playable like a story. It is a real WhatsApp feature with its own stanza, not a `status@broadcast` post addressed to a channel.
+Channel bisa menerbitkan statusnya sendiri — cincin di sekitar avatar channel-nya, bisa diputar seperti story. Itu fitur WhatsApp sungguhan dengan stanza-nya sendiri, bukan postingan `status@broadcast` yang dialamatkan ke channel.
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
   image: { url: './poster.jpg' },
-  caption: 'New drop today'
+  caption: 'Rilisan baru hari ini'
 })
 
 await sock.sendNewsletterStatus('123456789@newsletter', {
-  text: 'Thanks for 10k followers'
+  text: 'Terima kasih untuk 10 ribu follower'
 })
 ```
 
-React to one, or take a reaction back:
+Bereaksi ke salah satunya, atau menarik reaksinya kembali:
 
 ```js
 await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, '🔥')
 await sock.sendNewsletterStatusReaction('123456789@newsletter', 175, undefined)
 ```
 
-Delete one:
+Menghapus salah satunya:
 
 ```js
 await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
@@ -3511,62 +3511,62 @@ await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
 
 ##### Status Channel vs `status@broadcast`
 
-They look the same to a viewer and are completely different on the wire.
+Keduanya tampak sama bagi penonton dan sama sekali berbeda di wire.
 
-| | `status@broadcast` | Channel status |
+| | `status@broadcast` | Status channel |
 |---|---|---|
 | Stanza | `<status to="status@broadcast" id t>` | `<status to="…@newsletter" id>` |
-| Payload | `<enc>` nodes, one per recipient device | `<plaintext>` — the raw protobuf |
-| Encryption | end-to-end, sender-key fanout | none, channels are not E2EE |
-| Audience | your contact list, `statusJidList` | everyone following the channel |
-| Who may post | anyone | channel admins with the producer capability |
-| Media | normal media upload | newsletter upload, referenced by `media_id` |
+| Payload | node `<enc>`, satu per perangkat penerima | `<plaintext>` — protobuf mentahnya |
+| Enkripsi | ujung-ke-ujung, fanout sender-key | tidak ada, channel bukan E2EE |
+| Audiens | daftar kontakmu, `statusJidList` | semua yang mengikuti channel-nya |
+| Siapa yang boleh memposting | siapa saja | admin channel dengan kemampuan producer |
+| Media | unggahan media biasa | unggahan newsletter, dirujuk lewat `media_id` |
 
-The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
+Library-nya mengurus beda medianya untukmu: `sendNewsletterStatus` mengunggah lewat jalur newsletter dan menaruh handle yang dikembalikan ke `media_id` secara otomatis. Jenis yang didukung adalah teks, gambar, video, gif, dan audio — dokumen dan stiker ditolak. WhatsApp Web sendiri hanya menerbitkan gambar dan video, jadi dua yang lain mendapat peringatan dan bisa ditolak server.
 
 ##### Dari Mana Server Id Datangnya
 
-The `<ack>` that answers a published status carries `from`, `class`, `id` and `t` — and no server id at all. That is not a failure; the id arrives a moment later, on the `<status>` stanza the server echoes back to the publisher, marked `is_sender="true"`.
+`<ack>` yang menjawab status yang diterbitkan membawa `from`, `class`, `id`, dan `t` — dan sama sekali tidak membawa server id. Itu bukan kegagalan; id-nya datang sesaat kemudian, di stanza `<status>` yang digemakan server kembali ke penerbitnya, ditandai `is_sender="true"`.
 
-`sendNewsletterStatus` waits for that echo and fills it in, so the id you need to react to or revoke your own status is on the result:
+`sendNewsletterStatus` menunggu gema itu lalu mengisinya, jadi id yang kamu butuhkan untuk bereaksi atau menarik statusmu sendiri ada di hasilnya:
 
 ```js
 const posted = await sock.sendNewsletterStatus('123456789@newsletter', {
   image: { url: 'https://example.com/drop.jpg' },
-  caption: 'New drop today'
+  caption: 'Rilisan baru hari ini'
 })
 
-posted.newsletterStatusServerId   // 175 — from the echo, not the ack
-posted.newsletterStatusAck        // the ack itself, which never has one
-posted.newsletterStatusDelivered  // the raw <status> node the id came from
+posted.newsletterStatusServerId   // 175 — dari gemanya, bukan dari ack-nya
+posted.newsletterStatusAck        // ack-nya sendiri, yang tidak pernah punya id itu
+posted.newsletterStatusDelivered  // node <status> mentah tempat id-nya datang
 
 await sock.sendNewsletterStatusReaction('123456789@newsletter', posted.newsletterStatusServerId, '🔥')
 ```
 
-The wait is capped and never blocks the send: if no echo arrives, `newsletterStatusServerId` is `undefined` and everything else is unchanged. Tune it with `serverIdTimeoutMs`, or skip it with `resolveServerId: false` when you only care that the status went out.
+Penungguannya dibatasi dan tidak pernah menghalangi pengirimannya: kalau gemanya tidak datang, `newsletterStatusServerId` bernilai `undefined` dan yang lain tidak berubah. Atur dengan `serverIdTimeoutMs`, atau lewati dengan `resolveServerId: false` kalau kamu hanya peduli statusnya terkirim.
 
 ##### Memeriksa Apakah Channel Boleh Memposting
 
-WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:
+WhatsApp menggerbangi pembuatan status channel pada kemampuan per-channel yang diberikan server, bukan pada pengaturan yang bisa kamu balik. Periksa dulu sebelum membangun alur posting:
 
 ```js
 const { canPost, canPostMusic, capabilities } = await sock.newsletterCanPostStatus('123456789@newsletter')
 ```
 
-`canPost` is `CHANNEL_STATUS_PRODUCER` in the capability list. The full gate WhatsApp Web applies is: the `channel_status_creation` flag is on, you are admin or owner, the channel is not suspended or terminated, and the channel holds `CHANNEL_STATUS_PRODUCER`. Only the last one is visible to a client, and it is the one that actually varies per channel — the rollout flag is off by default on Web, which is why the button is missing there while the phone shows it.
+`canPost` itu `CHANNEL_STATUS_PRODUCER` di daftar kemampuannya. Gerbang lengkap yang diterapkan WhatsApp Web adalah: flag `channel_status_creation` aktif, kamu admin atau pemiliknya, channel-nya tidak disuspensi atau dihentikan, dan channel-nya memegang `CHANNEL_STATUS_PRODUCER`. Hanya yang terakhir yang terlihat oleh klien, dan itu yang benar-benar berbeda per channel — flag rollout-nya mati secara bawaan di Web, itu sebabnya button-nya tidak ada di situ sementara di ponsel ada.
 
 ##### Status Pertanyaan
 
-A channel status can carry a question box, and followers answer it.
+Status channel bisa membawa kotak pertanyaan, dan follower-nya yang menjawab.
 
 ```js
 await sock.sendNewsletterStatus('123456789@newsletter', {
   image: { url: './bg.jpg' },
-  question: { text: 'Ask me anything' }
+  question: { text: 'Tanya apa saja' }
 })
 ```
 
-Answers come back as `questionResponseMessage`. Reshare one on top of a new status with `interactionType: 'question_reshare'` plus `parentServerId` and `responseServerId`; publish your own answer with `interactionType: 'question_response'` and `parentServerId`. A question status has to sit on media — WhatsApp Web never publishes a text-only one.
+Jawabannya kembali sebagai `questionResponseMessage`. Bagikan ulang salah satunya di atas status baru dengan `interactionType: 'question_reshare'` plus `parentServerId` dan `responseServerId`; terbitkan jawabanmu sendiri dengan `interactionType: 'question_response'` dan `parentServerId`. Status pertanyaan harus duduk di atas media — WhatsApp Web tidak pernah menerbitkan yang cuma teks.
 
 #### Membaca Status Channel
 
@@ -3580,9 +3580,9 @@ for (const status of list.statuses) {
 }
 ```
 
-Page backwards with `{ before: serverId }` or forwards with `{ after: serverId }`.
+Telusuri ke belakang dengan `{ before: serverId }` atau ke depan dengan `{ after: serverId }`.
 
-To poll only what changed since a timestamp, use the updates feed — it goes to the channel jid, not to the server:
+Untuk hanya menanyakan apa yang berubah sejak satu timestamp, pakai feed pembaruannya — ia dikirim ke jid channel-nya, bukan ke server:
 
 ```js
 const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
@@ -3593,12 +3593,12 @@ const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
 
 #### Atribusi Status Channel
 
-Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.
+Elaina Baileys membuka `StatusAttribution.Type.NEWSLETTER_STATUS` dengan metadata pembagian ulang channel yang sudah ada di WAProto.
 
 ```js
 await sock.sendMessage('status@broadcast', {
   image: { url: 'https://example.com/status.jpg' },
-  caption: 'Shared from Elaina Updates',
+  caption: 'Dibagikan dari Elaina Updates',
   newsletterStatus: {
     newsletterJid: '123456789@newsletter',
     messageId: 42,
@@ -3610,7 +3610,7 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-The attribution can also be created manually.
+Atribusinya juga bisa dibuat manual.
 
 ```js
 const attribution = makeNewsletterStatusAttribution({
@@ -3619,7 +3619,7 @@ const attribution = makeNewsletterStatusAttribution({
 })
 
 await sock.sendMessage('status@broadcast', {
-  text: 'Newsletter status',
+  text: 'Status channel',
   contextInfo: {
     statusAttributions: [attribution]
   }
@@ -3630,7 +3630,7 @@ await sock.sendMessage('status@broadcast', {
 
 #### Siapa Yang Mengirim Pesan Channel
 
-A channel message carries the posting admin's display name and picture in a `<meta>` block that used to be dropped on the floor. It is now decoded into `newsletterMeta`.
+Pesan channel membawa nama tampilan dan foto admin yang memposting di dalam blok `<meta>` yang dulu dibuang begitu saja. Sekarang itu didekode ke `newsletterMeta`.
 
 ```js
 sock.ev.on('messages.upsert', ({ messages }) => {
@@ -3638,22 +3638,22 @@ sock.ev.on('messages.upsert', ({ messages }) => {
     if (!msg.newsletterMeta) continue
     console.log(msg.newsletterMeta.adminProfile.name)               // 'Rexx Hayanasi'
     console.log(msg.newsletterMeta.adminProfile.pictureDirectPath)
-    console.log(msg.newsletterMeta.paidPartnership)                 // sponsored post
-    console.log(msg.newsletterMeta.aiContent)                       // self-declared AI content
+    console.log(msg.newsletterMeta.paidPartnership)                 // postingan bersponsor
+    console.log(msg.newsletterMeta.aiContent)                       // konten AI yang dideklarasikan sendiri
     console.log(msg.newsletterMeta.editTimestamp)
   }
 })
 ```
 
-There is **no username here** — WhatsApp only ships `id`, `name` and `picture` for a channel admin. `name` is the admin profile name the channel owner set, which is not the same as the account's `@username`, and it is only present when the channel turned admin profiles on. `pushName` falls back to it so existing code that reads `msg.pushName` starts showing the admin instead of nothing.
+**Tidak ada username di sini** — WhatsApp hanya membawa `id`, `name`, dan `picture` untuk admin channel. `name` itu nama profil admin yang disetel pemilik channel, yang tidak sama dengan `@username` akunnya, dan itu hanya ada kalau channel-nya menyalakan profil admin. `pushName` jatuh ke situ supaya kode lama yang membaca `msg.pushName` mulai menampilkan admin-nya ketimbang tidak menampilkan apa-apa.
 
-Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
+Pesan yang diposting bot sendiri ke sebuah channel sekarang tiba dengan `key.fromMe: true` (WhatsApp menandainya `is_sender`), plus `key.isNewsletterSender`. Sebelum ini mereka tampak seperti pesan orang lain, sehingga bot bisa menjawab postingan channel-nya sendiri.
 
 ### Pertanyaan
 
 #### Jawaban Pertanyaan
 
-Answers to a channel question, with the follower behind each one.
+Jawaban untuk pertanyaan channel, beserta follower di belakang masing-masing.
 
 ```js
 const { responses } = await sock.newsletterQuestionResponses('123456789@newsletter', 175, {
