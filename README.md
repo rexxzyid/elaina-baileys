@@ -1230,7 +1230,7 @@ MB.checkNativeFlowButtons([{ name: 'single_select' }])
 
 Each member on `MB` is the same function as the named export, not a copy, so nothing changes if you already import them individually — `MB.dividerSection === dividerSection`. The builder classes also carry the same members as statics (`AIRich.dividerSection`, `Button.checkNativeFlowButtons`), which is handy when the class is already the only thing you imported.
 
-The examples in this README use `MB.Button`, `MB.Carousel` and `MB.ButtonV2`, and plain `AIRich` inside the AIRich section where that class is the whole subject. Both reach the same objects — pick one and stay with it. The long-hand list still works and nothing is deprecated:
+Every example in this chapter is written this way, `MB` and nothing else, down to the A2UI and HTML-app pages. The long-hand list still works and nothing is deprecated, so an existing bot needs no changes:
 
 ```js
 import {
@@ -1507,16 +1507,14 @@ await carousel.send(jid)
 
 `AIRich` is the integrated rich-response builder for multiple layouts and content types
 
-It does not go through `sock.sendMessage`, and it cannot. `send` relays the message and then immediately sends a `protocolMessage` edit of it — the unified response only draws once that second stanza lands. That is two stanzas out of one call, which is not a thing `sendMessage` can return; it hands you one `WebMessageInfo` for one message. So a rich response is built up on an instance and relayed by the builder itself, and every example below starts at `new AIRich(sock)` and ends at `await rich.send(jid)`.
+It does not go through `sock.sendMessage`, and it cannot. `send` relays the message and then immediately sends a `protocolMessage` edit of it — the unified response only draws once that second stanza lands. That is two stanzas out of one call, which is not a thing `sendMessage` can return; it hands you one `WebMessageInfo` for one message. So a rich response is built up on an instance and relayed by the builder itself, and every example below starts at `new MB.AIRich(sock)` and ends at `await rich.send(jid)`.
 
-**One import covers the whole surface.** All 149 section builders, item builders and enums are also statics on `AIRich`, so `AIRich.htmlSection(…)`, `AIRich.mapSection(…)`, `AIRich.TaskStatus.RUNNING` work without a second name on the import line. They are the same functions, not copies — the named exports still work unchanged if you prefer them. The statics exist so a bot does not collect a paragraph of imports to draw one card.
-
-The examples below use the statics for anything that goes *into* a build, and a plain import for the few helpers that do not belong to one — `decodeAIRich`, `readRichMessage`, `readEmbeddedSections`, `readEmbeddedTabs`, `sendHtmlApp`, `sendA2UI`. Those reach through `AIRich` too; reading `decodeAIRich(msg)` is simply clearer than `AIRich.decodeAIRich(msg)` when no builder is involved.
+**`import { MB }` is the only import in this section**, including the HTML app and A2UI pages and the readers — `MB.htmlSection(…)`, `MB.sendHtmlApp(…)`, `MB.a2uiText(…)`, `MB.decodeAIRich(…)`, `MB.TaskStatus.RUNNING`. See [One import, the whole builder](#one-import-the-whole-builder). The named exports still work unchanged if you prefer them; they are the same functions, not copies.
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock)
+const rich = new MB.AIRich(sock)
 rich.addText('Halo')
 await rich.send(jid)
 ```
@@ -1526,9 +1524,9 @@ await rich.send(jid)
 ### Text + Code + Table
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock)
+const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
   .setFooter('Generated with AIRich')
   .addText('Hello! This is a rich response.')
@@ -1634,7 +1632,7 @@ isSupportedInteractiveMessageVersion(type, payload) {
 getBizNativeFlowName = ({ interactiveMessage: m }) => {
   const p = m?.nativeFlowMessage?.buttons
   if (p?.length > 0 && !buttonsViolateButtonImprovementsConstraints(p.map(b => ({ nativeFlowButton: b }))))
-      return getNativeFlowNameByButtonName(p[0].name)          // ← the only branch a bot reaches
+      return MB.getNativeFlowNameByButtonName(p[0].name)          // ← the only branch a bot reaches
   if (e.buttonsMessage?.buttons?.length === 1) return …          // legacy buttonsMessage
   const f = !(p?.length) && (body.text || header.title || footer.text || header.imageMessage) && !m?.shopStorefrontMessage
   if (f) return MIXED                                            // ← only when there are NO buttons
@@ -1659,7 +1657,7 @@ buttonsViolateButtonImprovementsConstraints = e => {
   const firstIsQR = isQuickReply(e[0])
   if (e.length > (firstIsQR ? QUICK_REPLY_LIMIT : OTHER_LIMIT)) return true
   return !e.slice(1).every(b => {
-    const mapped = getNativeFlowNameByButtonName(b.nativeFlowButton?.name)
+    const mapped = MB.getNativeFlowNameByButtonName(b.nativeFlowButton?.name)
     return (mapped != null ? SUPPORTED.includes(mapped) : true) && firstIsQR === isQuickReply(b)
   })
 }
@@ -1773,12 +1771,12 @@ This is where the rich response is actually composable. Four lists travel togeth
 A Bloks widget can also live **inside** a rich response instead of beside it, as a section rather than an `interactiveMessage` field:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
 rich.addText('*Statistik hari ini*')
-rich.addSection(AIRich.bloksSection('im_a2ui', { type: 'info_card', title: 'Penjualan', body: 'Rp 1.250.000' }))
+rich.addSection(MB.bloksSection('im_a2ui', { type: 'info_card', title: 'Penjualan', body: 'Rp 1.250.000' }))
 
 await rich.send(jid)
 ```
@@ -1798,9 +1796,9 @@ That emits `FOABloksPrimitive`, which is one of the eighteen names WA Web draws 
 | `[x^2]<https://img.test>` | a rendered formula | `GenAILatexItem` |
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
 rich.addText('buka [Setelan](>whatsapp://settings), atau lihat [situsnya](https://nixel.dev)')
 
@@ -1827,9 +1825,9 @@ Those three are options on one call, not a sequence to run as-is — pick the fl
 `AI_RICH_INLINE_ENTITIES` lists all four. The list is closed on purpose — the Web parser dispatches on `__typename` and **throws** `inline entity <name>` on anything outside it, so a fifth invented name breaks the whole message rather than degrading.
 
 ```js
-import { AIRich, decodeAIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const info = decodeAIRich(m.message)
+const info = MB.decodeAIRich(m.message)
 const inline = info.sections.flatMap(s => s.view_model?.primitive?.inline_entities ?? [])
 console.log(inline.map(e => e.metadata.__typename))
 ```
@@ -1839,9 +1837,9 @@ console.log(inline.map(e => e.metadata.__typename))
 Every `add*` call accepts `id`, `insertAt`, and `replace`, so a sent message can keep changing instead of being resent.
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock)
+const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
   .addText('Working on it…', { id: 'intro' })
 
@@ -1875,12 +1873,12 @@ Bad targets throw typed errors instead of failing silently — `ItemNotFoundErro
 `sections` and `items` expose what a builder holds, so content built in one instance can be dropped into another.
 
 ```js
-const cards = new AIRich(sock)
+const cards = new MB.AIRich(sock)
   .addProduct({ title: 'Elaina', brand: 'Baileys', product_url: 'https://example.com' })
   .addPost({ username: 'elaina', caption: 'Hello', url: 'https://example.com' })
   .items
 
-rich.addSection(AIRich.newLayout('HScroll', cards), { id: 'mixed' })
+rich.addSection(MB.newLayout('HScroll', cards), { id: 'mixed' })
 await rich.sendEdit()
 ```
 
@@ -1900,20 +1898,20 @@ const buttonV2 = new MB.ButtonV2(sock).loadFrom(m.message)
 MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog).
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock)
+const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
   .setFooter('Generated with AIRich')
 
 rich.addText('*Laporan render*')
-rich.addSection(AIRich.dividerSection(), { id: 'rule' })
-rich.addSection(AIRich.spacerSection({ spacing: 3 }))
-rich.addSection(AIRich.imageSection('https://example.com/photo.jpg'))
-rich.addSection(AIRich.taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: AIRich.TaskStatus.RUNNING }))
-rich.addSection(AIRich.latexSection('E = mc^2'))
-rich.addSection(AIRich.thinkingSection('Searching the web…', { icon: AIRich.ThinkingIcon.WEB_SEARCH }))
-rich.addSection(AIRich.progressSection('Almost done', { inProgress: false }))
+rich.addSection(MB.dividerSection(), { id: 'rule' })
+rich.addSection(MB.spacerSection({ spacing: 3 }))
+rich.addSection(MB.imageSection('https://example.com/photo.jpg'))
+rich.addSection(MB.taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: MB.TaskStatus.RUNNING }))
+rich.addSection(MB.latexSection('E = mc^2'))
+rich.addSection(MB.thinkingSection('Searching the web…', { icon: MB.ThinkingIcon.WEB_SEARCH }))
+rich.addSection(MB.progressSection('Almost done', { inProgress: false }))
 
 await rich.send(jid)
 ```
@@ -1956,15 +1954,15 @@ Two names sit oddly in the middle: `GenAIFollowUpSuggestionPillPrimitive` and `G
 Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(AIRich.mapSection({
+rich.addSection(MB.mapSection({
   staticMapUrl: 'https://example.com/static-map.png',
   motivation: 'Tempat makan dekat kamu',
   items: [
-    AIRich.placeItem({
+    MB.placeItem({
       id: '1',
       name: 'Warung Sederhana',
       rating: 4.6,
@@ -1975,10 +1973,10 @@ rich.addSection(AIRich.mapSection({
   ]
 }))
 
-rich.addSection(AIRich.sportsSection({
+rich.addSection(MB.sportsSection({
   gameId: 'g-1',
-  league: AIRich.SportsLeague.EURO,
-  status: AIRich.SportsGameStatus.LIVE,
+  league: MB.SportsLeague.EURO,
+  status: MB.SportsGameStatus.LIVE,
   statusDetail: "72'",
   homeTeam: { name: 'Indonesia', abbreviation: 'IDN' },
   awayTeam: { name: 'Vietnam', abbreviation: 'VIE' },
@@ -1986,16 +1984,16 @@ rich.addSection(AIRich.sportsSection({
   awayScore: 1
 }))
 
-rich.addSection(AIRich.actionListSection([
-  AIRich.actionListRow({ title: 'Buka peta', url: 'https://maps.example.com' }),
-  AIRich.actionListRow({ title: 'Telepon', action: 'tel:+62800000000' })
+rich.addSection(MB.actionListSection([
+  MB.actionListRow({ title: 'Buka peta', url: 'https://maps.example.com' }),
+  MB.actionListRow({ title: 'Telepon', action: 'tel:+62800000000' })
 ]))
 
-rich.addSection(AIRich.searchPlannerSection({
+rich.addSection(MB.searchPlannerSection({
   queryUrl: 'https://search.example.com?q=cuaca',
   steps: [
-    AIRich.plannerStep({ title: 'Cari cuaca', status: AIRich.SearchPlannerStepStatus.COMPLETED }),
-    AIRich.plannerStep({ title: 'Ringkas hasil', status: AIRich.SearchPlannerStepStatus.IN_PROGRESS })
+    MB.plannerStep({ title: 'Cari cuaca', status: MB.SearchPlannerStepStatus.COMPLETED }),
+    MB.plannerStep({ title: 'Ringkas hasil', status: MB.SearchPlannerStepStatus.IN_PROGRESS })
   ]
 }))
 
@@ -2032,9 +2030,9 @@ await rich.send(jid)
 `rich.addMap` emits both halves at once, the same way `addTable` and `addCode` pair a section with their metadata:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
 rich.addText('*Tempat makan dekat kamu*')
 rich.addMap([
@@ -2050,16 +2048,16 @@ Each place needs a numeric `latitude` and `longitude` — anything else throws r
 Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(AIRich.mediaGridSection([
-  AIRich.mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
-  AIRich.mediaItem({ previewUrl: 'https://example.com/2-small.jpg', fullUrl: 'https://example.com/2.jpg' })
+rich.addSection(MB.mediaGridSection([
+  MB.mediaItem({ previewUrl: 'https://example.com/1-small.jpg', fullUrl: 'https://example.com/1.jpg' }),
+  MB.mediaItem({ previewUrl: 'https://example.com/2-small.jpg', fullUrl: 'https://example.com/2.jpg' })
 ]))
 
-rich.addSection(AIRich.contextualSourcesSection([
+rich.addSection(MB.contextualSourcesSection([
   { url: 'https://example.com/a', title: 'Sumber A', favicon: 'https://example.com/a.ico' }
 ]))
 
@@ -2073,12 +2071,12 @@ Two layouts join the eight already supported: `multipleResponseSection(responses
 For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Elaina AI')
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
 
-rich.addSection(AIRich.customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
-rich.addSection(AIRich.customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
+rich.addSection(MB.customSection('GenAISourcedItem', { sourced_item_type: 'THREADS_POST' }))
+rich.addSection(MB.customSection('GenAITopicLinkItem', { title: 'Bali' }, { layout: 'HScroll' }))
 
 await rich.send(jid)
 ```
@@ -2102,19 +2100,19 @@ Nothing about the sender, the message id, the timestamp or the recipient is in i
 `forwardRichResponse` relays without touching any of them:
 
 ```js
-import { forwardRichResponse, verifyRichResponseSignature } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
 sock.ev.on('messages.upsert', async ({ messages }) => {
   for (const msg of messages) {
-    if (verifyRichResponseSignature(msg).status !== 'passed') continue
-    await forwardRichResponse(sock, '120363xxxx@g.us', msg, { quoted: msg })
+    if (MB.verifyRichResponseSignature(msg).status !== 'passed') continue
+    await MB.forwardRichResponse(sock, '120363xxxx@g.us', msg, { quoted: msg })
   }
 })
 ```
 
 `contextInfo` is not part of the signed payload, so quoting, mentions and the rest are free to change. The unified response bytes, the proof and `forwardedAiBotMessageInfo.botJid` are not.
 
-`AIRich.loadFrom` keeps the proof too. When the incoming message carries a real certificate chain, the original bytes and the original verification metadata go straight back out on `build` — no re-serialising, no placeholder. `rich.isSignaturePreserved` says whether that is still true.
+`MB.loadFrom` keeps the proof too. When the incoming message carries a real certificate chain, the original bytes and the original verification metadata go straight back out on `build` — no re-serialising, no placeholder. `rich.isSignaturePreserved` says whether that is still true.
 
 The corollary matters more than the feature: **any edit voids it.** `addText`, `addSection`, `delete`, `addFooterSection`, `clearFooterSections`, `addEmbeddedScreen`, `setResponseId`, `refreshResponseId` and `setResponseMeta` all drop the preserved signature, because the bytes it covers no longer match. After any of them the build falls back to freshly serialised JSON and placeholder metadata, exactly as it did before.
 
@@ -2147,11 +2145,11 @@ All four are set per account by the server. A response can be structurally perfe
 An AI Rich, A2UI or Bloks message arrives with nothing where a bot usually looks — `conversation` is empty, `extendedTextMessage` is absent, and `getContentType` reports only the wrapper (`botForwardedMessage` or `interactiveMessage`). `readRichMessage` normalises all of them into one shape.
 
 ```js
-import { readRichMessage } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
 sock.ev.on('messages.upsert', ({ messages }) => {
     for (const msg of messages) {
-        const rich = readRichMessage(msg)
+        const rich = MB.readRichMessage(msg)
         if (!rich) continue
         console.log(rich.kind, rich.text)
     }
@@ -2181,13 +2179,13 @@ It unwraps view-once and the other envelopes first, so a card inside `viewOnceMe
 > The payload shape below is confirmed: a hand-written `bloksWidget` of this form renders on Android, and the client answers a malformed one with a named `A2UIValidationException`. The `sendA2UI` helper is **not** confirmed — cards sent through it have not been seen to render, and the cause is still open. Until that is settled, build the `bloksWidget` by hand if you need this to work.
 
 ```js
-import { a2uiColumn, a2uiImage, a2uiText, sendA2UI } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-await sendA2UI(sock, jid, [
-    a2uiColumn('root', ['card_image', 'card_title', 'card_body']),
-    a2uiImage('card_image', 'https://example.com/header.jpg'),
-    a2uiText('card_title', 'Welcome!', { variant: 'h1' }),
-    a2uiText('card_body', 'Nice to have you here.')
+await MB.sendA2UI(sock, jid, [
+    MB.a2uiColumn('root', ['card_image', 'card_title', 'card_body']),
+    MB.a2uiImage('card_image', 'https://example.com/header.jpg'),
+    MB.a2uiText('card_title', 'Welcome!', { variant: 'h1' }),
+    MB.a2uiText('card_body', 'Nice to have you here.')
 ], {
     buttons: [{
         name: 'cta_url',
@@ -2233,11 +2231,11 @@ The A2UI card and the native-flow buttons live in the same `interactiveMessage`,
 Pass `typename` to send the section under a different name:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock).setTitle('Dashboard')
+const rich = new MB.AIRich(sock).setTitle('Dashboard')
 
-rich.addSection(AIRich.htmlSection(html, { typename: AIRich.AI_RICH_HTML_PRIMITIVE_CLASS }))
+rich.addSection(MB.htmlSection(html, { typename: MB.AI_RICH_HTML_PRIMITIVE_CLASS }))
 
 await rich.send(jid)
 ```
@@ -2257,10 +2255,10 @@ The WebView it renders in is offline and has no storage — see [what it actuall
 One call, no envelope assembly.
 
 ```js
-import { sendHtmlApp } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 import { readFileSync } from 'node:fs'
 
-await sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
+await MB.sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
   title: 'NIXEL DINO',
   label: 'Dino Runner',
   trustedSources: ['nixel.dev']
@@ -2268,7 +2266,7 @@ await sendHtmlApp(sock, m.chat, readFileSync('./dino.html', 'utf8'), {
 ```
 
 ```
-sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
+MB.sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 ```
 
 | Argument | Required | Meaning |
@@ -2285,9 +2283,9 @@ sendHtmlApp(sock, jid, html, options?) => Promise<WAMessage>
 | `height` | none | pin the page to this many pixels so the host stops re-measuring it |
 | `id` | none | section id, so you can `replace` it later on the same builder |
 
-Anything else is forwarded to `AIRich.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
+Anything else is forwarded to `MB.send`, so `bypassDownload`, `forwarded`, `notification`, `includesUnifiedResponse`, `includesSubmessages`, `messageId` and `additionalNodes` all work.
 
-**`bypassDownload` defaults to `false` here**, unlike `AIRich.send` where it is `true`. With it on, every send relays twice — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content — and the client renders the card, then re-renders it. For a static card that is a flicker; for a page running an animation loop it restarts the whole WebView. So a mini app sends once by default. Turn it back on if a card fails to appear without it.
+**`bypassDownload` defaults to `false` here**, unlike `MB.send` where it is `true`. With it on, every send relays twice — the real message, then an immediate edit (`protocolMessage` type 14) carrying identical content — and the client renders the card, then re-renders it. For a static card that is a flicker; for a page running an animation loop it restarts the whole WebView. So a mini app sends once by default. Turn it back on if a card fails to appear without it.
 
 | Passed | Relays | Effect |
 |---|---|---|
@@ -2317,18 +2315,18 @@ plus `messageType: 1`, a fresh `botResponseId`, and the `verificationMetadata` b
 Use the section builder when the HTML sits alongside other sections on a builder you control.
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const rich = new AIRich(sock)
+const rich = new MB.AIRich(sock)
 rich.setTitle('Dashboard')
 rich.addText('Penjualan hari ini')
-rich.addSection(AIRich.dividerSection())
-rich.addSection(AIRich.htmlSection(chartHtml, { trustedSources: ['nixel.dev'] }), { id: 'chart' })
+rich.addSection(MB.dividerSection())
+rich.addSection(MB.htmlSection(chartHtml, { trustedSources: ['nixel.dev'] }), { id: 'chart' })
 await rich.send(m.chat)
 ```
 
 ```
-AIRich.htmlSection(html, { trustedSources?, height? }) => section
+MB.htmlSection(html, { trustedSources?, height? }) => section
 ```
 
 | Builder | Primitive | Fields |
@@ -2393,7 +2391,7 @@ The page runs inside a bubble in a scrolling chat list, not in a tab of its own.
 Pass `height` and the library handles it, whatever the page does:
 
 ```js
-await sendHtmlApp(sock, m.chat, html, { height: 300 })
+await MB.sendHtmlApp(sock, m.chat, html, { height: 300 })
 ```
 
 It prepends `lockHeight(300)`, which pins `html`/`body` to that many pixels and moves the page's own content into a `#__wrap` scroll container on `DOMContentLoaded`. The container is what makes it work: pinning `body` alone is not enough, because `overflow:hidden` clips the view without shrinking `scrollHeight`, and the host still measures the overflow.
@@ -2470,8 +2468,8 @@ document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventD
 `decodeAIRich` handles the primitive like any other — there is no whitelist to update:
 
 ```js
-const rich = decodeAIRich(msg)
-const section = rich?.sections.find(s => s.view_model?.primitive?.__typename === AIRich.AI_RICH_HTML_PRIMITIVE)
+const rich = MB.decodeAIRich(msg)
+const section = rich?.sections.find(s => s.view_model?.primitive?.__typename === MB.AI_RICH_HTML_PRIMITIVE)
 if (section) {
   const html = section.view_model.primitive.payload
 }
@@ -2482,10 +2480,10 @@ Do not reach for `sections[0]` — the HTML lands wherever you added it, so a ca
 Enum values, read from the client rather than guessed:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 ```
 
-`AI_RICH_LAYOUTS` lists all eight layout names accepted by `AIRich.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
+`AI_RICH_LAYOUTS` lists all eight layout names accepted by `MB.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
 
 ### Embedded Screens
 
@@ -2499,7 +2497,7 @@ Two things to know before you build one:
 #### A complete example
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const gameHtml = `
 <body style="margin:0;background:transparent;color:#eee;font-family:Arial">
@@ -2513,14 +2511,14 @@ const gameHtml = `
 
 const scoreHtml = '<body style="margin:0;color:#eee;font-family:Arial"><h3>Best: 00000</h3></body>'
 
-const rich = new AIRich(sock)
-  .addSection(AIRich.htmlSection('<b>Dino Runner</b> — tap to play'))
+const rich = new MB.AIRich(sock)
+  .addSection(MB.htmlSection('<b>Dino Runner</b> — tap to play'))
 
-rich.addEmbeddedScreen(AIRich.embeddedScreen({
+rich.addEmbeddedScreen(MB.embeddedScreen({
   title: 'Preview',
   tabs: [
-    AIRich.embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [AIRich.htmlSection(gameHtml)] }),
-    AIRich.embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [AIRich.htmlSection(scoreHtml)] })
+    MB.embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [MB.htmlSection(gameHtml)] }),
+    MB.embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [MB.htmlSection(scoreHtml)] })
   ]
 }))
 
@@ -2530,9 +2528,9 @@ await rich.send(m.chat)
 A screen without tabs is just as valid — pass `content` instead, and the sheet shows one page:
 
 ```js
-rich.addEmbeddedScreen(AIRich.embeddedScreen({
+rich.addEmbeddedScreen(MB.embeddedScreen({
   title: 'Rincian',
-  content: [AIRich.htmlSection(detailHtml)]
+  content: [MB.htmlSection(detailHtml)]
 }))
 ```
 
@@ -2540,7 +2538,7 @@ You can pass both. The tab container is appended **after** whatever plain `conte
 
 #### What goes on the wire
 
-`AIRich.send` base64-encodes all of this into `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. The example above produces:
+`MB.send` base64-encodes all of this into `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. The example above produces:
 
 ```jsonc
 {
@@ -2595,7 +2593,7 @@ Read the nesting from the outside in: **screen → `content[]` → `tabs[]` → 
 If you would rather assemble the payload by hand — or you are porting one you received from another bot — this is the equivalent `relayMessage` call. Nothing here is magic; it is exactly what `AIRich` produces:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
 await sock.relayMessage(m.chat, {
   messageContextInfo: {
@@ -2604,7 +2602,7 @@ await sock.relayMessage(m.chat, {
     botMetadata: {
       messageDisclaimerText: '',
       botResponseId: 'f090cd0f-bad1-4a4a-b0c3-b8f8e852c197',
-      verificationMetadata: AIRich.generateVerificationMetadata()
+      verificationMetadata: MB.generateVerificationMetadata()
     }
   },
   botForwardedMessage: {
@@ -2687,13 +2685,13 @@ Where these come from, so you can check them yourself:
 Sections always get their typename. The screen and the tabs stay untyped unless you ask for it:
 
 ```js
-import { AIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-AIRich.embeddedScreen({ typename: AIRich.EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
-AIRich.embeddedTab({ typename: AIRich.EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
+MB.embeddedScreen({ typename: MB.EMBEDDED_SCREEN_TYPENAME, tabs: [tab] })
+MB.embeddedTab({ typename: MB.EMBEDDED_SCREEN_TAB_TYPENAME, sections: [...] })
 
 // a build that expects a different container name
-AIRich.embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
+MB.embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
 ```
 
 That last line matters. As with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape, so payloads in the wild carry all sorts of container names and still render. `tabsTypename` exists so you can match whatever a given build expects instead of being locked to one string.
@@ -2734,20 +2732,20 @@ Anything left `undefined` is dropped, never sent as `null`. Passing a non-array 
 #### Reading one back
 
 ```js
-import { decodeAIRich, readEmbeddedSections, readEmbeddedTabs, readRichMessage } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const info = decodeAIRich(m.message)
+const info = MB.decodeAIRich(m.message)
 
 info.embeddedScreens   // the raw screens, exactly as they arrived
 info.embeddedTabs      // every tab, flattened, from either nesting shape
 info.embeddedSections  // every section inside those screens
 
 // or per screen
-readEmbeddedTabs(info.embeddedScreens[0])
-readEmbeddedSections(info.embeddedScreens[0])
+MB.readEmbeddedTabs(info.embeddedScreens[0])
+MB.readEmbeddedSections(info.embeddedScreens[0])
 
 // pull the HTML a tab is carrying
-const html = readEmbeddedSections(info.embeddedScreens[0])
+const html = MB.readEmbeddedSections(info.embeddedScreens[0])
   .map(section => section.view_model?.primitive?.payload)
   .filter(Boolean)
 ```
@@ -2768,9 +2766,9 @@ const html = readEmbeddedSections(info.embeddedScreens[0])
 `decodeAIRich` unpacks the base64 `unifiedResponse` so you can see exactly which primitives a message uses — useful for reproducing something another bot sent.
 
 ```js
-import { decodeAIRich } from '@rexxhayanasi/elaina-baileys'
+import { MB } from '@rexxhayanasi/elaina-baileys'
 
-const info = decodeAIRich(m.message)
+const info = MB.decodeAIRich(m.message)
 console.log(info.layouts)     // [ 'Single', 'HScroll' ]
 console.log(info.typenames)   // [ 'GenAIMarkdownTextUXPrimitive', 'GenAIProductItemCardPrimitive' ]
 console.log(info.sections)

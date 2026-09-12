@@ -1201,6 +1201,14 @@ test('airich-namespace', async () => {
     }
     assert.equal(typeof Toolkit.resize, 'function', 'own statics are never overwritten by the namespace');
     assert.equal(AIRich.DEFAULT_BOT_JID, '867051314767696@bot');
+
+    for (const name of ['sendHtmlApp', 'sendHtmlDocument', 'sendHtmlArtifact', 'sendA2UI', 'sendBloksWidget',
+        'a2uiText', 'a2uiImage', 'a2uiColumn', 'a2uiRow', 'a2uiCard', 'a2uiSurface', 'a2uiWidget',
+        'decodeAIRich', 'decodeBloksWidget', 'readRichMessage', 'readEmbeddedSections', 'readEmbeddedTabs',
+        'forwardRichResponse', 'verifyRichResponseSignature', 'prepareFileArtifact', 'htmlSection', 'bloksWidget']) {
+        assert.equal(typeof MB[name], 'function', `MB.${name} has to be callable without a second import`);
+        assert.equal(MB[name], AIRich[name], `AIRich.${name} has to be the same function`);
+    }
 });
 
 test('toolkit-image-source', async () => {
