@@ -1339,7 +1339,7 @@ MB.checkNativeFlowButtons([{ name: 'single_select' }])
 
 Tiap anggota `MB` adalah fungsi yang sama dengan named export-nya, bukan salinan, jadi tidak ada yang berubah kalau kamu sudah mengimpornya satu-satu — `MB.dividerSection === dividerSection`. Kelas builder-nya juga membawa anggota yang sama sebagai static (`AIRich.dividerSection`, `Button.checkNativeFlowButtons`), yang berguna kalau kelasnya sudah jadi satu-satunya yang kamu impor.
 
-Every example in this chapter is written this way, `MB` and nothing else, down to the A2UI and HTML-app pages. The long-hand list still works and nothing is deprecated, so an existing bot needs no changes:
+Semua contoh di bab ini ditulis seperti itu, `MB` dan tidak ada yang lain, sampai ke halaman A2UI dan mini app HTML. Daftar panjangnya masih jalan dan tidak ada yang dideprekasi, jadi bot yang sudah ada tidak perlu diubah:
 
 ```js
 import {
@@ -1363,7 +1363,7 @@ import {
 
 ## 💸 Split Payment dan Pengingat
 
-Both render on Android as their own bubbles. Amounts are the human number — the wire value is scaled by `offset` (1000 by default), and passing the scaled figure by hand overcharges by a thousand.
+Dua-duanya tergambar di Android sebagai bubble-nya sendiri. Nominalnya angka manusia — nilai di wire diskalakan dengan `offset` (bawaan 1000), dan menyerahkan angka yang sudah diskalakan dengan tangan membuat tagihannya seribu kali lipat.
 
 ```js
 import { SplitPaymentStatus, ReminderFrequency } from '@rexxhayanasi/elaina-baileys'
@@ -1397,15 +1397,15 @@ await sock.sendMessage(jid, {
 })
 ```
 
-`splitId` is required and is what the update message names later. Participants default to `PENDING` and `createdAt` is stamped for you. The reminder defaults to `ACTIVE` and takes `WEEKLY`, `BI_WEEKLY`, `MONTHLY` or `QUARTERLY`; `payeeVpa`, `payeeJid` and `payerJid` are there for the UPI flow.
+`splitId` wajib, dan itulah yang disebut pesan pembaruannya nanti. Peserta default ke `PENDING` dan `createdAt` dicap untukmu. Pengingatnya default ke `ACTIVE` dan menerima `WEEKLY`, `BI_WEEKLY`, `MONTHLY`, atau `QUARTERLY`; `payeeVpa`, `payeeJid`, dan `payerJid` ada untuk alur UPI.
 
-Read them back with `readSplitPayment(msg)` and `readPaymentReminder(msg)`, which return `null` for anything else and hand amounts back as human numbers. `money(amount, code)` and `readMoney(value)` do the scaling on their own if you need it elsewhere.
+Baca kembali dengan `readSplitPayment(msg)` dan `readPaymentReminder(msg)`, yang mengembalikan `null` untuk apa pun selain itu dan menyerahkan nominalnya sebagai angka manusia. `money(amount, code)` dan `readMoney(value)` melakukan penskalaannya sendiri kalau kamu butuh di tempat lain.
 
-These are ordinary messages your own account sends, shown under your own name — they do not move money and they are not a payment request the network acts on. Treat a split card as the note it is.
+Ini pesan biasa yang dikirim akunmu sendiri, tampil di bawah namamu sendiri — tidak memindahkan uang dan bukan permintaan pembayaran yang ditindaklanjuti jaringan. Anggap kartu split ini sebagai catatan, karena memang itu.
 
 ## 📊 Gaya Link Preview di Status
 
-`statusLinkPreviewMetadata` sits at the top of the message, next to the text, and tells a status which link-preview card to draw:
+`statusLinkPreviewMetadata` duduk di bagian atas pesan, di sebelah teksnya, dan memberi tahu status kartu link preview mana yang harus digambar:
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -1414,11 +1414,11 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-The client publishes no names for these values, so this passes the number through unchanged rather than inventing an enum — `statusLinkPreview: 1` on its own works the same. A negative or non-integer style is refused.
+Klien tidak menerbitkan nama apa pun untuk nilai-nilai ini, jadi di sini angkanya diteruskan apa adanya ketimbang mengarang enum — `statusLinkPreview: 1` saja hasilnya sama. Style negatif atau bukan bilangan bulat ditolak.
 
 ## 🎬 Membaca Social Link Preview
 
-When Meta's own clients send a link preview for a reel or a post, they attach extra nodes beside the ordinary title and thumbnail: `linkPreviewMetadata` with the post type, inline video and duration, plus `endCardTiles` and `videoContentUrl`. `readSocialPreview(msg)` pulls all of that back out, and returns `null` for a message that carries none of it.
+Kalau klien Meta sendiri mengirim link preview untuk reel atau postingan, mereka menempelkan node tambahan di sebelah judul dan thumbnail yang biasa: `linkPreviewMetadata` berisi jenis postingan, video inline, dan durasinya, plus `endCardTiles` dan `videoContentUrl`. `readSocialPreview(msg)` menarik semua itu kembali keluar, dan mengembalikan `null` untuk pesan yang tidak membawa satu pun di antaranya.
 
 ```js
 import { readSocialPreview } from '@rexxhayanasi/elaina-baileys'
@@ -1431,15 +1431,15 @@ sock.ev.on('messages.upsert', ({ messages }) => {
 })
 ```
 
-**There is no send-side recipe here on purpose.** `socialPreview` and `videoEndCard` still exist and still encode correctly, but as of revision `1047301412` nothing draws them from a message you send, so documenting them as a way to build a card would be documenting a message that arrives blank.
+**Di sini sengaja tidak ada resep sisi pengirim.** `socialPreview` dan `videoEndCard` masih ada dan masih terenkode dengan benar, tapi sampai revisi `1047301412` tidak ada yang menggambarnya dari pesan yang kamu kirim, jadi mendokumentasikannya sebagai cara membuat kartu berarti mendokumentasikan pesan yang tiba kosong.
 
-The evidence, so you do not have to re-derive it: on WA Web the proto-to-model mapper for `extendedTextMessage` copies `matchedText`, `description`, `title`, `jpegThumbnail`, `previewType`, `doNotPlayInline`, `mediaKey`, `mediaKeyTimestamp`, `thumbnailDirectPath`, `thumbnailSha256` and `thumbnailEncSha256` — and nothing else. `linkPreviewMetadata`, `endCardTiles` and `videoContentUrl` are dropped at that boundary before any component could read them, and a count of direct reads across the bundle agrees: `matchedText` 66, `thumbnailDirectPath` 51, those three **0** each. On the app, `endCardTiles_` is not in any dex at all, so the tiles cannot even be decoded there.
+Buktinya, supaya kamu tidak perlu menurunkannya ulang: di WA Web, pemeta proto-ke-model untuk `extendedTextMessage` menyalin `matchedText`, `description`, `title`, `jpegThumbnail`, `previewType`, `doNotPlayInline`, `mediaKey`, `mediaKeyTimestamp`, `thumbnailDirectPath`, `thumbnailSha256`, dan `thumbnailEncSha256` — tidak ada yang lain. `linkPreviewMetadata`, `endCardTiles`, dan `videoContentUrl` dibuang di perbatasan itu sebelum ada komponen yang bisa membacanya, dan hitungan pembacaan langsung di seluruh bundle sepakat: `matchedText` 66, `thumbnailDirectPath` 51, ketiga itu **0** masing-masing. Di aplikasi, `endCardTiles_` sama sekali tidak ada di dex mana pun, jadi tile-nya bahkan tidak bisa didekode di sana.
 
-For a card that does draw, with a large thumbnail and no link pasted into the body, use [Rich Link Card](#-kartu-rich-link) or the `linkPreview` option on an ordinary text message.
+Untuk kartu yang memang tergambar, dengan thumbnail besar dan tanpa tautan yang ditempel di badan pesan, pakai [Kartu Rich Link](#-kartu-rich-link) atau opsi `linkPreview` pada pesan teks biasa.
 
 ## Button
 
-The `Button` builder is intended for native-flow interactive messages.
+Builder `Button` dipakai untuk pesan interaktif native-flow.
 
 ### Quick Reply + URL + Copy
 
@@ -1448,11 +1448,11 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const message = new MB.Button(sock)
   .setTitle('Elaina Menu')
-  .setBody('Choose an option below.')
+  .setBody('Pilih salah satu di bawah.')
   .setFooter('@rexxhayanasi/elaina-baileys')
   .addReply('Ping', 'ping')
-  .addUrl('Open Website', 'https://example.com')
-  .addCopy('Copy Code', 'ELAINA2026')
+  .addUrl('Buka Website', 'https://example.com')
+  .addCopy('Salin Kode', 'ELAINA2026')
 
 await message.send(jid)
 ```
@@ -1463,7 +1463,7 @@ await message.send(jid)
 const message = new MB.Button(sock)
   .setImage('https://example.com/elaina.jpg')
   .setTitle('Elaina')
-  .setBody('Interactive message with image header.')
+  .setBody('Pesan interaktif dengan header gambar.')
   .setFooter('Powered by Elaina Baileys')
   .addReply('Menu', 'menu')
   .addUrl('Website', 'https://example.com')
@@ -1486,7 +1486,7 @@ await message.send(jid)
 .addButton(name, params)
 ```
 
-The builder also provides:
+Builder-nya juga menyediakan:
 
 ```js
 .setTitle(text)
@@ -1509,29 +1509,29 @@ The builder also provides:
 
 ## Selection / List
 
-Create a native single-select list using `addSelection`, `makeSection`, and `makeRow`.
+Buat list single-select native dengan `addSelection`, `makeSection`, dan `makeRow`.
 
 ```js
 const list = new MB.Button(sock)
   .setTitle('Elaina Menu')
-  .setBody('Select one menu.')
+  .setBody('Pilih satu menu.')
   .setFooter('Elaina Baileys')
-  .addSelection('Open Menu')
-  .makeSection('Main Menu')
-  .makeRow('', 'Profile', 'Open profile menu', 'profile')
-  .makeRow('', 'Settings', 'Open settings menu', 'settings')
-  .makeSection('Other')
-  .makeRow('', 'About', 'About this bot', 'about')
+  .addSelection('Buka Menu')
+  .makeSection('Menu Utama')
+  .makeRow('', 'Profil', 'Buka menu profil', 'profile')
+  .makeRow('', 'Pengaturan', 'Buka menu pengaturan', 'settings')
+  .makeSection('Lainnya')
+  .makeRow('', 'Tentang', 'Tentang bot ini', 'about')
 
 await list.send(jid)
 ```
 
 > [!IMPORTANT]
-> `single_select` renders on **Android only**. WhatsApp Web and iOS have no code for it — the name does not exist in their native-flow list, so the message falls back to a plain text card and the list disappears. This is not something a library patch can fix. See [Native Flow Support](#dukungan-native-flow) for what does render everywhere.
+> `single_select` hanya tergambar di **Android**. WhatsApp Web dan iOS tidak punya kodenya — namanya tidak ada di daftar native-flow mereka, jadi pesannya jatuh ke kartu teks biasa dan list-nya hilang. Ini bukan hal yang bisa ditambal dari library. Lihat [Dukungan Native Flow](#dukungan-native-flow) untuk yang memang tergambar di mana-mana.
 
 ### Dukungan Native Flow
 
-WhatsApp Web keeps a fixed list of native-flow button names. Anything outside it is dropped and the message is downgraded to `phone_only_feature` — the text still arrives, the buttons do not.
+WhatsApp Web memegang daftar nama button native-flow yang tetap. Apa pun di luar daftar itu dibuang dan pesannya diturunkan jadi `phone_only_feature` — teksnya tetap sampai, button-nya tidak.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1542,26 +1542,26 @@ MB.checkNativeFlowButtons([{ name: 'single_select' }])
 MB.isWebSupportedButtonName('quick_reply')  // true
 ```
 
-Rendered everywhere: `quick_reply`, `cta_url`, `cta_call`, `cta_copy`, `cta_catalog`, `catalog_message`, `galaxy_message`, `order_status`, `payment_reminder`, `booking_confirmation`, `payment_request`, `api_signup`, `inapp_signup`, `cta_app`, `form_message`.
+Tergambar di mana-mana: `quick_reply`, `cta_url`, `cta_call`, `cta_copy`, `cta_catalog`, `catalog_message`, `galaxy_message`, `order_status`, `payment_reminder`, `booking_confirmation`, `payment_request`, `api_signup`, `inapp_signup`, `cta_app`, `form_message`.
 
-Android only: `single_select`, `send_location`, `address_message`, `cta_reminder`, `cta_cancel_reminder`.
+Hanya Android: `single_select`, `send_location`, `address_message`, `cta_reminder`, `cta_cancel_reminder`.
 
-Two limits, read from the client rather than guessed:
+Dua batas, dibaca dari klien, bukan dikira-kira:
 
-| First button | Maximum buttons |
+| Button pertama | Maksimum button |
 |---|---|
 | `quick_reply` | 10 |
-| anything else | 3 |
+| selain itu | 3 |
 
-Quick replies cannot be mixed with other button types in the same message — the client rejects the whole set, not just the odd button.
+Quick reply tidak bisa dicampur dengan jenis button lain dalam satu pesan — klien menolak seluruh kumpulannya, bukan cuma button yang menyimpang.
 
-If you need one menu that works on every platform, use up to 10 `addReply` buttons, or send the options as text and let the user answer. There is no protocol trick that makes a single-select list appear on Web.
+Kalau kamu butuh satu menu yang jalan di semua platform, pakai sampai 10 button `addReply`, atau kirim pilihannya sebagai teks dan biarkan pengguna menjawab. Tidak ada trik protokol yang membuat list single-select muncul di Web.
 
 ---
 
 ## ButtonV2
 
-`ButtonV2` provides a simpler classic button builder.
+`ButtonV2` menyediakan builder button klasik yang lebih sederhana.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1569,7 +1569,7 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 const message = new MB.ButtonV2(sock)
   .setTitle('Elaina')
   .setSubtitle('WhatsApp Bot')
-  .setBody('Choose an action.')
+  .setBody('Pilih satu tindakan.')
   .setFooter('Elaina Baileys')
   .setThumbnail('https://example.com/elaina.jpg')
   .addButton('Menu', 'menu')
@@ -1582,25 +1582,25 @@ await message.send(jid)
 
 ## Carousel
 
-Carousel cards can be created from `Button.toCard()` and then passed to `Carousel`.
+Kartu carousel bisa dibuat dari `Button.toCard()` lalu diserahkan ke `Carousel`.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const card1 = await new MB.Button(sock)
   .setImage('https://example.com/card1.jpg')
-  .setBody('First card')
-  .addReply('Select', 'card_1')
+  .setBody('Kartu pertama')
+  .addReply('Pilih', 'card_1')
   .toCard()
 
 const card2 = await new MB.Button(sock)
   .setImage('https://example.com/card2.jpg')
-  .setBody('Second card')
-  .addUrl('Open', 'https://example.com')
+  .setBody('Kartu kedua')
+  .addUrl('Buka', 'https://example.com')
   .toCard()
 
 const carousel = new MB.Carousel(sock)
-  .setBody('Choose one of the cards below.')
+  .setBody('Pilih salah satu kartu di bawah.')
   .setFooter('Elaina Carousel')
   .addCard([card1, card2])
 
@@ -1608,17 +1608,17 @@ await carousel.send(jid)
 ```
 
 > [!IMPORTANT]
-> Each carousel card must contain an image or video media attachment in its header.
+> Setiap kartu carousel wajib punya lampiran media gambar atau video di header-nya.
 
 ---
 
 ## AIRich
 
-`AIRich` is the integrated rich-response builder for multiple layouts and content types
+`AIRich` adalah builder respons rich bawaan untuk bermacam layout dan jenis konten.
 
-It does not go through `sock.sendMessage`, and it cannot. `send` relays the message and then immediately sends a `protocolMessage` edit of it — the unified response only draws once that second stanza lands. That is two stanzas out of one call, which is not a thing `sendMessage` can return; it hands you one `WebMessageInfo` for one message. So a rich response is built up on an instance and relayed by the builder itself, and every example below starts at `new MB.AIRich(sock)` and ends at `await rich.send(jid)`.
+Ia tidak lewat `sock.sendMessage`, dan memang tidak bisa. `send` merelay pesannya lalu langsung mengirim satu suntingan `protocolMessage` untuk pesan itu sendiri — unified response baru tergambar setelah stanza kedua itu mendarat. Itu dua stanza dari satu panggilan, dan bukan hal yang bisa dikembalikan `sendMessage`; ia memberimu satu `WebMessageInfo` untuk satu pesan. Jadi respons rich dibangun di atas sebuah instance lalu direlay oleh builder-nya sendiri, dan semua contoh di bawah mulai dari `new MB.AIRich(sock)` dan berakhir di `await rich.send(jid)`.
 
-**`import { MB }` is the only import in this section**, including the HTML app and A2UI pages and the readers — `MB.htmlSection(…)`, `MB.sendHtmlApp(…)`, `MB.a2uiText(…)`, `MB.decodeAIRich(…)`, `MB.TaskStatus.RUNNING`. See [One import, the whole builder](#satu-impor-seluruh-builder). The named exports still work unchanged if you prefer them; they are the same functions, not copies.
+**`import { MB }` adalah satu-satunya impor di bagian ini**, termasuk halaman mini app HTML, A2UI, dan semua pembacanya — `MB.htmlSection(…)`, `MB.sendHtmlApp(…)`, `MB.a2uiText(…)`, `MB.decodeAIRich(…)`, `MB.TaskStatus.RUNNING`. Lihat [Satu impor, seluruh builder](#satu-impor-seluruh-builder). Named export-nya tetap jalan tanpa perubahan kalau kamu lebih suka itu; keduanya fungsi yang sama, bukan salinan.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1628,7 +1628,7 @@ rich.addText('Halo')
 await rich.send(jid)
 ```
 
-`send` takes the same options as `build` — `quoted`, `messageId`, `forwardWrapper`, `notification` — and `sendEdit` replaces a message already on screen. Pass the bot's own jid with `botJid` when you want the forward attribution to name something other than the default.
+`send` menerima opsi yang sama dengan `build` — `quoted`, `messageId`, `forwardWrapper`, `notification` — dan `sendEdit` menggantikan pesan yang sudah tampil di layar. Serahkan jid bot sendiri lewat `botJid` kalau kamu mau atribusi forward-nya menyebut sesuatu selain bawaannya.
 
 ### Teks + Kode + Tabel
 
@@ -1637,35 +1637,35 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
-  .setFooter('Generated with AIRich')
-  .addText('Hello! This is a rich response.')
-  .addCode('javascript', `console.log('Hello Elaina')`)
+  .setFooter('Dibuat dengan AIRich')
+  .addText('Halo! Ini respons rich.')
+  .addCode('javascript', `console.log('Halo Elaina')`)
   .addTable([
-    ['Feature', 'Status'],
-    ['Button', 'Available'],
-    ['Carousel', 'Available'],
-    ['AIRich', 'Experimental']
+    ['Fitur', 'Status'],
+    ['Button', 'Tersedia'],
+    ['Carousel', 'Tersedia'],
+    ['AIRich', 'Eksperimental']
   ])
-  .addSuggest(['Show menu', 'Help me', 'About Elaina'])
+  .addSuggest(['Lihat menu', 'Bantu aku', 'Tentang Elaina'])
 
 await rich.send(jid)
 ```
 
 ### Kenapa bisa tidak muncul sama sekali
 
-An AI Rich message used to go out wrapped in `botForwardedMessage`, the way a real Meta AI forward does. The receiving client only unwraps that wrapper behind a gate:
+Dulu pesan AI Rich dikirim terbungkus `botForwardedMessage`, seperti yang dilakukan forward Meta AI yang asli. Klien penerima hanya membuka pembungkus itu di belakang sebuah gerbang:
 
 ```js
 : n && o("WAWebBotBaseGating").isRichResponseForwardReceivingEnabled() ? n : u || null
 ```
 
-where `n` is `botForwardedMessage`. That gate is the AB prop `ai_rich_response_forward_receiving_enabled` (id 16682), and its default in the client table is **false**. With it off the wrapper is never opened, so the message is not parsed as a rich response and nothing is drawn — not an unsupported placeholder, nothing.
+di mana `n` itu `botForwardedMessage`. Gerbang itu adalah AB prop `ai_rich_response_forward_receiving_enabled` (id 16682), dan bawaannya di tabel klien **false**. Kalau mati, pembungkusnya tidak pernah dibuka, jadi pesannya tidak di-parse sebagai respons rich dan tidak ada yang digambar — bukan placeholder tidak didukung, tapi tidak ada apa-apa.
 
-So `build` and `send` now put `richResponseMessage` at the top level instead. The type mapper accepts it with no gate at all (`e === "richResponseMessage" ? MSG_TYPE.RICH_RESPONSE`), and the parse path runs normally; the same prop then only decides whether the forward attribution in `contextInfo` is carried, which is cosmetic.
+Karena itu `build` dan `send` sekarang menaruh `richResponseMessage` di tingkat atas. Pemeta jenis pesannya menerima itu tanpa gerbang sama sekali (`e === "richResponseMessage" ? MSG_TYPE.RICH_RESPONSE`), dan jalur parse-nya berjalan normal; prop yang sama lalu hanya menentukan apakah atribusi forward di `contextInfo` dibawa atau tidak, dan itu kosmetik.
 
-Pass `forwardWrapper: true` to `build`, `send`, `buildEdit` or `forwardRichResponse` to get the old wrapped shape back — worth doing only when you know the recipient has that prop switched on.
+Beri `forwardWrapper: true` ke `build`, `send`, `buildEdit`, atau `forwardRichResponse` untuk mendapatkan bentuk terbungkus yang lama — layak dilakukan hanya kalau kamu tahu penerimanya sudah menyalakan prop itu.
 
-Other available AIRich helpers include:
+Helper AIRich lain yang tersedia antara lain:
 
 ```js
 .addText(text)
