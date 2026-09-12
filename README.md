@@ -49,13 +49,13 @@
 
 ---
 
-## 📌 Overview
+## 📌 Ringkasan
 
 `@rexxhayanasi/elaina-baileys` is a modern ESM-focused Baileys fork for WhatsApp Multi-Device development.
 
 The package combines the socket layer, protocol utilities, LID-aware addressing support, and an integrated MessageBuilder in a single dependency. Buttons, native-flow messages, carousels, and AIRich layouts can be used directly from the package without installing a separate builder dependency.
 
-### ✨ Highlights
+### ✨ Yang Menonjol
 
 | Feature | Description |
 |---|---|
@@ -73,132 +73,241 @@ The package combines the socket layer, protocol utilities, LID-aware addressing 
 | 🗄️ Database Sessions | Keep the session in SQLite, PostgreSQL, MySQL, MongoDB, Redis or NekoDB instead of files. |
 | 📦 ESM | ESM-first package requiring Node.js 20+; Node.js 22 or newer is recommended. |
 
-### 🗺️ What Can It Do?
+### 🗺️ Apa Saja Yang Bisa Dilakukan?
 
 New here? This is the whole library at a glance. Each row links to the section that shows the code.
 
 | I want to… | Use | Read |
 |---|---|---|
-| Log in and stay logged in | `useMultiFileAuthState`, `usePostgresAuthState`, … | [Session Storage](#-session-storage) |
-| Log in without scanning a QR | pairing code | [Pairing Code](#-pairing-code) |
-| React to incoming messages | `messages.upsert` | [Receive Messages](#-receive-messages), [Events](#-events) |
-| Send text, images, video, files, location, polls | `sock.sendMessage` | [Send Messages](#-send-messages) |
-| Send buttons, lists, carousels | `Button`, `ButtonV2`, `Carousel` | [Integrated MessageBuilder](#-integrated-messagebuilder) |
-| Send a rich AI-style card | `AIRich`, A2UI | [AIRich](#airich), [A2UI Cards](#a2ui-cards) |
-| Read a rich message a bot sent me | `readRichMessage` | [Reading Rich Messages Back](#reading-rich-messages-back) |
-| Send several photos as one post | album message | [Album Message](#-album-message) |
+| Log in and stay logged in | `useMultiFileAuthState`, `usePostgresAuthState`, … | [Session Storage](#-penyimpanan-sesi) |
+| Log in without scanning a QR | pairing code | [Pairing Code](#-kode-pairing) |
+| React to incoming messages | `messages.upsert` | [Receive Messages](#-menerima-pesan), [Events](#-event) |
+| Send text, images, video, files, location, polls | `sock.sendMessage` | [Send Messages](#-mengirim-pesan) |
+| Send buttons, lists, carousels | `Button`, `ButtonV2`, `Carousel` | [Integrated MessageBuilder](#-messagebuilder-terintegrasi) |
+| Send a rich AI-style card | `AIRich`, A2UI | [AIRich](#airich), [A2UI Cards](#kartu-a2ui) |
+| Read a rich message a bot sent me | `readRichMessage` | [Reading Rich Messages Back](#membaca-balik-pesan-rich) |
+| Send several photos as one post | album message | [Album Message](#-pesan-album) |
 | Run a channel | newsletter helpers | [Newsletter / Channel](#-newsletter--channel) |
-| Manage a group | `groupCreate`, `groupParticipantsUpdate`, … | [Group Management](#-group-management) |
-| Manage a community | community helpers | [Communities](#-communities) |
-| Block, unblock, report spam | `updateBlockStatus`, `reportSpam` | [Privacy Settings](#-privacy-settings) |
-| Show typing, read receipts, presence | `sendPresenceUpdate`, `readMessages` | [Presence and Read Receipts](#-presence-and-read-receipts) |
-| Pin, archive, mute, star a chat | `chatModify` | [Chat State](#-chat-state) |
-| Use business labels and a catalog | label and catalog helpers | [Labels](#-labels), [Business and Catalog](#-business-and-catalog) |
-| Make a call link, reject a call | `createCallLink`, `rejectCall` | [Calls](#-calls) |
-| Ring someone and play audio | `makeVoipClient`, `voip.call` | [Placing a Voice Call](#placing-a-voice-call) |
-| Play a queue of songs on a call | `playlist`, `enqueue`, `idle` | [Playing a Queue](#playing-a-queue) |
-| Send video or share a screen on a call | `video: true`, `screenShare: true` | [Video Calls](#video-calls), [Screen Share](#screen-share) |
-| Call a whole group | `voip.callGroup` | [Group Calls](#group-calls) |
-| Change or read a profile picture | profile picture helpers | [Profile Picture](#-profile-picture) |
-| Schedule a message for later | scheduled messages | [Scheduled Messages](#-scheduled-messages) |
-| Keep up with WhatsApp Web changes | `npm run wa:update` | [Update WhatsApp Web Version](#-update-whatsapp-web-version) |
-| Know if my number is in trouble | account health signals | [Account Health Signals](#-account-health-signals) |
-| Understand LID vs PN jids | addressing helpers | [LID / PN / JID Addressing](#-lid--pn--jid-addressing) |
-| Know why `conversation` is empty | `normalizeMessageContent` | [Every Message Type](#-every-message-type) |
-| Fix something that broke | — | [Troubleshooting](#-troubleshooting) |
+| Manage a group | `groupCreate`, `groupParticipantsUpdate`, … | [Group Management](#-pengelolaan-grup) |
+| Manage a community | community helpers | [Communities](#-komunitas) |
+| Block, unblock, report spam | `updateBlockStatus`, `reportSpam` | [Privacy Settings](#-pengaturan-privasi) |
+| Show typing, read receipts, presence | `sendPresenceUpdate`, `readMessages` | [Presence and Read Receipts](#-presence-dan-tanda-dibaca) |
+| Pin, archive, mute, star a chat | `chatModify` | [Chat State](#-keadaan-chat) |
+| Use business labels and a catalog | label and catalog helpers | [Labels](#-label), [Business and Catalog](#-bisnis-dan-katalog) |
+| Make a call link, reject a call | `createCallLink`, `rejectCall` | [Calls](#-panggilan) |
+| Ring someone and play audio | `makeVoipClient`, `voip.call` | [Placing a Voice Call](#melakukan-panggilan-suara) |
+| Play a queue of songs on a call | `playlist`, `enqueue`, `idle` | [Playing a Queue](#memainkan-antrean-audio) |
+| Send video or share a screen on a call | `video: true`, `screenShare: true` | [Video Calls](#panggilan-video), [Screen Share](#berbagi-layar) |
+| Call a whole group | `voip.callGroup` | [Group Calls](#panggilan-grup) |
+| Change or read a profile picture | profile picture helpers | [Profile Picture](#-foto-profil) |
+| Schedule a message for later | scheduled messages | [Scheduled Messages](#-pesan-terjadwal) |
+| Keep up with WhatsApp Web changes | `npm run wa:update` | [Update WhatsApp Web Version](#-memperbarui-versi-whatsapp-web) |
+| Know if my number is in trouble | account health signals | [Account Health Signals](#-sinyal-kesehatan-akun) |
+| Understand LID vs PN jids | addressing helpers | [LID / PN / JID Addressing](#-pengalamatan-lid--pn--jid) |
+| Know why `conversation` is empty | `normalizeMessageContent` | [Every Message Type](#-semua-jenis-pesan) |
+| Fix something that broke | — | [Troubleshooting](#-penanganan-masalah) |
 
 ---
 
-## 📚 Table of Contents
+## 📚 Daftar Isi
 
-- [Requirements](#-requirements)
-- [Installation](#-installation)
-- [Import](#-import)
-- [Basic Connection](#-basic-connection)
-- [Session Storage](#-session-storage)
-  - [Multi-file (default)](#multi-file-default)
-  - [Single file](#single-file)
+- [Ringkasan](#-ringkasan)
+  - [Yang Menonjol](#-yang-menonjol)
+  - [Apa Saja Yang Bisa Dilakukan?](#-apa-saja-yang-bisa-dilakukan)
+- [Kebutuhan](#-kebutuhan)
+- [Pemasangan](#-pemasangan)
+  - [Paket yang disarankan](#paket-yang-disarankan)
+  - [Paket Media Opsional](#paket-media-opsional)
+- [Impor](#-impor)
+- [Koneksi Dasar](#-koneksi-dasar)
+  - [Opsi percobaan ulang dan pairing](#opsi-percobaan-ulang-dan-pairing)
+  - [Opsi socket](#opsi-socket)
+- [Penyimpanan Sesi](#-penyimpanan-sesi)
+  - [Multi-berkas (bawaan)](#multi-berkas-bawaan)
+  - [Satu berkas](#satu-berkas)
   - [SQLite](#sqlite)
   - [PostgreSQL, MySQL, MongoDB, Redis](#postgresql-mysql-mongodb-redis)
   - [NekoDB](#nekodb)
-  - [Caching Signal Keys](#caching-signal-keys)
-- [Pairing Code](#-pairing-code)
-- [Receive Messages](#-receive-messages)
-- [Events](#-events)
-- [LID / PN / JID Addressing](#-lid--pn--jid-addressing)
-- [Send Messages](#-send-messages)
+  - [Menyimpan Kunci Signal di Cache](#menyimpan-kunci-signal-di-cache)
+  - [Menyimpan Chat dan Pesan](#menyimpan-chat-dan-pesan)
+- [Kode Pairing](#-kode-pairing)
+  - [Permintaannya dikonfirmasi server](#permintaannya-dikonfirmasi-server)
+  - [Satu kode dalam satu waktu](#satu-kode-dalam-satu-waktu)
+  - [Kode Pairing Kustom](#kode-pairing-kustom)
+  - [Memeriksa pairing tanpa menyentuh bot yang jalan](#memeriksa-pairing-tanpa-menyentuh-bot-yang-jalan)
+- [Menerima Pesan](#-menerima-pesan)
+- [Event](#-event)
+  - [Koneksi dan kredensial](#koneksi-dan-kredensial)
+  - [Pesan](#pesan)
+  - [Chat dan kontak](#chat-dan-kontak)
+  - [Grup dan komunitas](#grup-dan-komunitas)
+  - [Channel](#channel)
+  - [Panggilan dan suara](#panggilan-dan-suara)
+  - [Lain-lain](#lain-lain)
+- [Pengalamatan LID / PN / JID](#-pengalamatan-lid--pn--jid)
+- [Mengirim Pesan](#-mengirim-pesan)
+  - [Teks](#teks)
+  - [Gambar](#gambar)
+  - [Video](#video)
+  - [Dokumen](#dokumen)
+  - [Lokasi](#lokasi)
+  - [Polling](#polling)
 - [External Ad Reply](#-external-ad-reply)
-- [Rich Link Card](#-rich-link-card)
-- [Split Payment and Reminders](#-split-payment-and-reminders)
-- [Status Link Style](#-status-link-style)
-- [Reading a Social Link Preview](#-reading-a-social-link-preview)
-- [Integrated MessageBuilder](#-integrated-messagebuilder)
-  - [One import, the whole builder](#one-import-the-whole-builder)
-  - [Button](#button)
-  - [Selection / List](#selection--list)
-  - [ButtonV2](#buttonv2)
-  - [Carousel](#carousel)
-  - [AIRich](#airich)
-    - [Inline Entities in Text](#inline-entities-in-text)
-    - [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog)
-    - [Forwarding a Real Meta AI Answer](#forwarding-a-real-meta-ai-answer)
-  - [Reading Rich Messages Back](#reading-rich-messages-back)
-  - [A2UI Cards](#a2ui-cards)
-  - [HTML Mini App](#html-mini-app)
-  - [Embedded Screens](#embedded-screens)
-- [Album Message](#-album-message)
-- [Status Updates](#-status-updates)
-  - [Background, Text Color and Font](#background-text-color-and-font)
-  - [Image, Video and Voice Status](#image-video-and-voice-status)
-  - [Status Stickers](#status-stickers)
-  - [Group Status](#group-status)
+  - [Kenapa kartunya bisa tidak muncul sama sekali](#kenapa-kartunya-bisa-tidak-muncul-sama-sekali)
+  - [Click-to-WhatsApp, bentuk yang benar-benar dikirim saat iklan diklik](#click-to-whatsapp-bentuk-yang-benar-benar-dikirim-saat-iklan-diklik)
+  - [Kartu dan label "via ad" itu dua hal berbeda](#kartu-dan-label-via-ad-itu-dua-hal-berbeda)
+  - [Jangan pernah menyetel `alwaysShowAdAttribution` dari bot](#jangan-pernah-menyetel-alwaysshowadattribution-dari-bot)
+- [Kartu Rich Link](#-kartu-rich-link)
+  - [Satu impor, seluruh builder](#satu-impor-seluruh-builder)
+- [Split Payment dan Pengingat](#-split-payment-dan-pengingat)
+- [Gaya Link Preview di Status](#-gaya-link-preview-di-status)
+- [Membaca Social Link Preview](#-membaca-social-link-preview)
+- [Button](#button)
+  - [Quick Reply + URL + Copy](#quick-reply--url--copy)
+  - [Button dengan Gambar](#button-dengan-gambar)
+  - [Daftar Helper Button](#daftar-helper-button)
+- [Selection / List](#selection--list)
+  - [Dukungan Native Flow](#dukungan-native-flow)
+- [ButtonV2](#buttonv2)
+- [Carousel](#carousel)
+- [AIRich](#airich)
+  - [Teks + Kode + Tabel](#teks--kode--tabel)
+  - [Kenapa bisa tidak muncul sama sekali](#kenapa-bisa-tidak-muncul-sama-sekali)
+  - [Apa Yang Bisa Dicampur Dengan Apa](#apa-yang-bisa-dicampur-dengan-apa)
+  - [Inline Entity di Dalam Teks](#inline-entity-di-dalam-teks)
+  - [Menyunting Pesan Yang Sudah Tampil](#menyunting-pesan-yang-sudah-tampil)
+  - [Mencampur Instance](#mencampur-instance)
+  - [Membaca Pesan Yang Sudah Ada](#membaca-pesan-yang-sudah-ada)
+  - [Primitif Yang Belum Punya Helper](#primitif-yang-belum-punya-helper)
+  - [Sisa Katalog Meta AI](#sisa-katalog-meta-ai)
+  - [Meneruskan Jawaban Meta AI Yang Asli](#meneruskan-jawaban-meta-ai-yang-asli)
+  - [Membaca Balik Pesan Rich](#membaca-balik-pesan-rich)
+  - [Kartu A2UI](#kartu-a2ui)
+  - [Mini App HTML](#mini-app-html)
+  - [Layar Tertanam](#layar-tertanam)
+  - [Memeriksa Pesan AI Rich Yang Diterima](#memeriksa-pesan-ai-rich-yang-diterima)
+- [Pesan Album](#-pesan-album)
+- [Status](#-status)
+  - [Latar, Warna Teks dan Font](#latar-warna-teks-dan-font)
+  - [Status Gambar, Video dan Suara](#status-gambar-video-dan-suara)
+  - [Stiker Status](#stiker-status)
+  - [Status Grup](#status-grup)
+  - [Apa Saja Yang Benar-Benar Bisa Digayakan](#apa-saja-yang-benar-benar-bisa-digayakan)
 - [Newsletter / Channel](#-newsletter--channel)
-  - [Creating and Editing a Channel](#creating-and-editing-a-channel)
-  - [Following a Channel](#following-a-channel)
-  - [Reading a Channel](#reading-a-channel)
-  - [Posting and Reacting](#posting-and-reacting)
-  - [Channel Status](#channel-status)
-  - [Questions](#questions)
-  - [Admins](#admins)
-  - [Finding Channels](#finding-channels)
-  - [Enforcements](#enforcements)
-- [Username & About](#-username--about)
-- [Group Management](#-group-management)
-- [Communities](#-communities)
-- [Privacy Settings](#-privacy-settings)
-  - [Blocking](#blocking)
-  - [Reporting Spam](#reporting-spam)
-- [Every Message Type](#-every-message-type)
-  - [Why conversation is sometimes empty](#why-conversation-is-sometimes-empty)
-  - [The other 84](#the-other-84)
-- [Presence and Read Receipts](#-presence-and-read-receipts)
-- [Chat State](#-chat-state)
-- [Labels](#-labels)
-- [Business and Catalog](#-business-and-catalog)
-- [Calls](#-calls)
-  - [Placing a Voice Call](#placing-a-voice-call)
-  - [Playing a Queue](#playing-a-queue)
-  - [Video Calls](#video-calls)
-  - [Screen Share](#screen-share)
-  - [Group Calls](#group-calls)
-- [Profile Picture](#-profile-picture)
-- [Useful Exports](#-useful-exports)
-- [Update WhatsApp Web Version](#-update-whatsapp-web-version)
-- [Scheduled Messages](#-scheduled-messages)
-- [Modern WhatsApp Message APIs](#-modern-whatsapp-message-apis)
-  - [Message Keys](#message-keys)
+  - [Membuat dan Menyunting Channel](#membuat-dan-menyunting-channel)
+  - [Mengikuti Channel](#mengikuti-channel)
+  - [Membaca Channel](#membaca-channel)
+  - [Memposting dan Bereaksi](#memposting-dan-bereaksi)
+  - [Status Channel](#status-channel)
+  - [Pertanyaan](#pertanyaan)
+  - [Admin](#admin)
+  - [Mencari Channel](#mencari-channel)
+  - [Penindakan](#penindakan)
+- [Username & Info](#-username--info)
+  - [Username](#username)
+  - [Info / Status Teks](#info--status-teks)
+  - [Pemberitahuan Ketentuan Layanan](#pemberitahuan-ketentuan-layanan)
+  - [Daftar Opt-Out Pemasaran](#daftar-opt-out-pemasaran)
+  - [Pengaturan Push](#pengaturan-push)
+  - [Link Preview Dari Sisi Server](#link-preview-dari-sisi-server)
+- [Pengelolaan Grup](#-pengelolaan-grup)
+  - [Membuat Grup](#membuat-grup)
+  - [Menambah Anggota](#menambah-anggota)
+  - [Mengeluarkan Anggota](#mengeluarkan-anggota)
+  - [Promote / Demote](#promote--demote)
+  - [Mengubah Deskripsi Grup](#mengubah-deskripsi-grup)
+  - [Subjek dan Pengaturan](#subjek-dan-pengaturan)
+  - [Siapa Yang Boleh Masuk dan Siapa Yang Boleh Menambah](#siapa-yang-boleh-masuk-dan-siapa-yang-boleh-menambah)
+  - [Antrean Permintaan Masuk](#antrean-permintaan-masuk)
+  - [Link Undangan](#link-undangan)
+  - [Pesan Sementara](#pesan-sementara)
+  - [Membaca Grup](#membaca-grup)
+- [Komunitas](#-komunitas)
+  - [Membuat dan Menautkan](#membuat-dan-menautkan)
+  - [Anggota dan Pengaturan](#anggota-dan-pengaturan)
+  - [Undangan dan Pembacaan](#undangan-dan-pembacaan)
+- [Pengaturan Privasi](#-pengaturan-privasi)
+  - [Pesan Sementara Bawaan](#pesan-sementara-bawaan)
+  - [Pemblokiran](#pemblokiran)
+  - [Melaporkan Spam](#melaporkan-spam)
+- [Semua Jenis Pesan](#-semua-jenis-pesan)
+  - [Kenapa `conversation` kadang kosong](#kenapa-conversation-kadang-kosong)
+  - [84 sisanya](#84-sisanya)
+  - [Membaca pesan rich](#membaca-pesan-rich)
+- [Presence dan Tanda Dibaca](#-presence-dan-tanda-dibaca)
+  - [Menandai Sudah Dibaca](#menandai-sudah-dibaca)
+  - [Memeriksa Nomor](#memeriksa-nomor)
+- [Keadaan Chat](#-keadaan-chat)
+  - [Riwayat dan Sinkronisasi Ulang](#riwayat-dan-sinkronisasi-ulang)
+- [Label](#-label)
+- [Bisnis dan Katalog](#-bisnis-dan-katalog)
+  - [Mengelola Produk](#mengelola-produk)
+  - [Profil dan Balasan Cepat](#profil-dan-balasan-cepat)
+  - [Mengambil Ulang Media Kedaluwarsa](#mengambil-ulang-media-kedaluwarsa)
+  - [Label Anggota Grup](#label-anggota-grup)
+- [Panggilan](#-panggilan)
+  - [Melakukan Panggilan Suara](#melakukan-panggilan-suara)
+  - [Memainkan Antrean Audio](#memainkan-antrean-audio)
+  - [Panggilan Video](#panggilan-video)
+  - [Berbagi Layar](#berbagi-layar)
+  - [Panggilan Grup](#panggilan-grup)
+  - [Keluar](#keluar)
+- [Foto Profil](#-foto-profil)
+  - [Mengambil URL Foto Profil](#mengambil-url-foto-profil)
+  - [Mengubah Foto Profil](#mengubah-foto-profil)
+  - [Menghapus Foto Profil](#menghapus-foto-profil)
+- [Ekspor Yang Berguna](#-ekspor-yang-berguna)
+- [Memperbarui Versi WhatsApp Web](#-memperbarui-versi-whatsapp-web)
+- [Pesan Terjadwal](#-pesan-terjadwal)
+- [API Pesan WhatsApp Modern](#-api-pesan-whatsapp-modern)
+  - [Message Key](#message-key)
+  - [Polling Foto](#polling-foto)
+  - [Pesan Pertanyaan](#pesan-pertanyaan)
+  - [Jawaban Pertanyaan Masuk](#jawaban-pertanyaan-masuk)
+  - [Balasan Pertanyaan](#balasan-pertanyaan)
+  - [Jawaban Pertanyaan di Status](#jawaban-pertanyaan-di-status)
+  - [Pesan Kutipan Status](#pesan-kutipan-status)
+  - [Interaksi Stiker Status](#interaksi-stiker-status)
+  - [Notifikasi Status](#notifikasi-status)
+  - [Undangan Admin Channel](#undangan-admin-channel)
+  - [Undangan Follower Channel V2](#undangan-follower-channel-v2)
+  - [Audiens Status Kustom (Teman Dekat)](#audiens-status-kustom-teman-dekat)
   - [Add Yours](#add-yours)
-  - [Status Mentions](#status-mentions)
-- [Account Health Signals](#-account-health-signals)
-- [Troubleshooting](#-troubleshooting)
-- [Found a Bug?](#-found-a-bug)
-- [Credits](#-credits)
+  - [Mention di Status](#mention-di-status)
+  - [Reaksi Status Grup](#reaksi-status-grup)
+  - [Menambah Opsi Polling](#menambah-opsi-polling)
+  - [Pesan Komentar](#pesan-komentar)
+  - [Pesan Undangan Acara](#pesan-undangan-acara)
+  - [Panggilan Terjadwal](#panggilan-terjadwal)
+  - [Penanda Broadcast Lokasi](#penanda-broadcast-lokasi)
+  - [Builder Tingkat Rendah](#builder-tingkat-rendah)
+- [Sinyal Kesehatan Akun](#-sinyal-kesehatan-akun)
+  - [Kuota Pesan ke Chat Baru](#kuota-pesan-ke-chat-baru)
+  - [Timelock Reachout](#timelock-reachout)
+  - [Memakainya Sebagai Pengaman](#memakainya-sebagai-pengaman)
+- [Penanganan Masalah](#-penanganan-masalah)
+  - [`Cannot read properties of undefined (reading 'undefined')` saat membalas](#cannot-read-properties-of-undefined-reading-undefined-saat-membalas)
+  - [Bot menjawab di semua grup kecuali satu](#bot-menjawab-di-semua-grup-kecuali-satu)
+  - [Kode pairing harus tepat 8 karakter](#kode-pairing-harus-tepat-8-karakter)
+  - [Kode pairing muncul tapi ponselnya tidak pernah menampilkan prompt](#kode-pairing-muncul-tapi-ponselnya-tidak-pernah-menampilkan-prompt)
+  - [Permintaan pairing ditolak dengan 409](#permintaan-pairing-ditolak-dengan-409)
+  - [`Socket is required`](#socket-is-required)
+  - [Button atau AIRich tergambar berbeda](#button-atau-airich-tergambar-berbeda)
+  - [Yang muncul LID, bukan JID nomor telepon](#yang-muncul-lid-bukan-jid-nomor-telepon)
+  - [Sesi ter-logout](#sesi-ter-logout)
+- [Menemukan Bug?](#-menemukan-bug)
+- [Kredit](#-kredit)
+  - [Pemelihara Proyek](#pemelihara-proyek)
+  - [Baileys / Upstream](#baileys--upstream)
+  - [Kontribusi Fork / Sumber](#kontribusi-fork--sumber)
+  - [MessageBuilder Terintegrasi](#messagebuilder-terintegrasi)
+  - [Kontributor Open Source](#kontributor-open-source)
 - [TQTO](#-tqto)
-- [License](#-license)
+- [Lisensi](#-lisensi)
 
 ---
 
-## ⚙️ Requirements
+## ⚙️ Kebutuhan
 
 - Node.js **20 or newer** — this is what `package.json` declares and what the `preinstall` check enforces, so anything older is refused at install time
 - **Node.js 22 or newer recommended**, and **24** for development and release workflows
@@ -213,7 +322,7 @@ node -v
 
 ---
 
-## 📦 Installation
+## 📦 Pemasangan
 
 Install directly from npm:
 
@@ -221,7 +330,7 @@ Install directly from npm:
 npm install @rexxhayanasi/elaina-baileys
 ```
 
-### Recommended package setup
+### Paket yang disarankan
 
 Use the package directly under its own name:
 
@@ -236,7 +345,7 @@ Use the package directly under its own name:
 
 This package is ESM-first. Use `import` syntax instead of `require()`.
 
-### Optional Media Packages
+### Paket Media Opsional
 
 The base install carries no image or video processing library, which keeps it around 45 MB smaller and leaves the choice of `sharp` build to you — no clash with a version your project already pins.
 
@@ -266,7 +375,7 @@ await hasOptionalMedia('fluent-ffmpeg')
 
 ---
 
-## 📥 Import
+## 📥 Impor
 
 ```js
 import makeWASocket from '@rexxhayanasi/elaina-baileys'
@@ -293,7 +402,7 @@ import makeWASocket, {
 
 ---
 
-## 🚀 Basic Connection
+## 🚀 Koneksi Dasar
 
 ```js
 import makeWASocket, {
@@ -335,7 +444,7 @@ async function startSock() {
 startSock()
 ```
 
-### Retry and pairing options
+### Opsi percobaan ulang dan pairing
 
 Beyond the usual Baileys options, these control how the socket handles undecryptable messages, rejected sends, and pairing:
 
@@ -350,7 +459,7 @@ Beyond the usual Baileys options, these control how the socket handles undecrypt
 
 `maxRetryQueueSize` is a safety valve, not a throughput knob. A burst of undecryptable messages would otherwise queue without limit and grow the heap; past the cap the extras are acked without a retry. Raising it does not rescue more messages — `retryRequestDelayMs` is the setting that does, at the cost of pressing the sender harder.
 
-### Socket options
+### Opsi socket
 
 Everything `makeWASocket` accepts, with its default:
 
@@ -389,7 +498,7 @@ Everything `makeWASocket` accepts, with its default:
 
 ---
 
-## 💾 Session Storage
+## 💾 Penyimpanan Sesi
 
 The auth state holds your credentials and Signal keys. Losing it means scanning the QR again; leaking it means someone else can use your account. Four stores ship with the package, all returning the same `{ state, saveCreds }` shape.
 
@@ -399,7 +508,7 @@ Whichever you pick, wire `saveCreds` to the `creds.update` event — nothing is 
 sock.ev.on('creds.update', saveCreds)
 ```
 
-### Multi-file (default)
+### Multi-berkas (bawaan)
 
 One folder, one file per key. Simple, dependency-free, and the right choice for a single bot on one machine.
 
@@ -411,7 +520,7 @@ const { state, saveCreds } = await useMultiFileAuthState('./session')
 
 It writes many small files — a busy account produces thousands of pre-key files. That is normal; deleting them mid-session breaks the session.
 
-### Single file
+### Satu berkas
 
 Everything in one JSON file. Easier to back up or move between hosts, slower once the key set grows because the whole file is rewritten on every change.
 
@@ -521,7 +630,7 @@ The first argument must be a connected NekoDB instance; the collection defaults 
 const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')
 ```
 
-### Caching Signal Keys
+### Menyimpan Kunci Signal di Cache
 
 Every store reads keys from disk or database on each decrypt. Wrapping the key store in a cache removes that round trip:
 
@@ -543,7 +652,7 @@ const sock = makeWASocket({
 
 Worth doing on every store, and close to required on the file-based ones for a busy group bot.
 
-### Keeping Chats and Messages
+### Menyimpan Chat dan Pesan
 
 The auth state stores keys, not conversations. For chats, contacts and message history, bind the in-memory store:
 
@@ -567,7 +676,7 @@ store.bind(sock.ev)
 
 ---
 
-## 🔐 Pairing Code
+## 🔐 Kode Pairing
 
 Pairing code can be requested after creating the socket.
 
@@ -588,7 +697,7 @@ await sock.requestPairingCode('081234567890')
 // country code followed by the national number, digits only
 ```
 
-### The request is confirmed by the server
+### Permintaannya dikonfirmasi server
 
 `requestPairingCode` waits for WhatsApp's answer and only returns once the server has registered the code. A rejection is thrown rather than swallowed, so a code you receive is a code the server actually knows about:
 
@@ -604,7 +713,7 @@ try {
 
 The two rejections you are most likely to meet are `rate-overlimit` — too many attempts, wait before retrying — and a not-allowed variant, meaning link-by-phone-number is not enabled for that account.
 
-### One code at a time
+### Satu kode dalam satu waktu
 
 A pairing response can only be decrypted by the keys that produced it, so a second request while one is still pending would destroy the first. That is refused with a `409`:
 
@@ -627,7 +736,7 @@ const code = await sock.requestPairingCode(phoneNumber)
 
 The guard clears itself once the code expires. WhatsApp rotates a pairing code every 3 minutes; adjust with `pairingCodeTimeoutMs` if you need a different window.
 
-### Custom Pairing Code
+### Kode Pairing Kustom
 
 A custom pairing code must contain exactly **8 characters**.
 
@@ -640,7 +749,7 @@ const code = await sock.requestPairingCode(
 console.log(code)
 ```
 
-### Checking pairing without touching a running bot
+### Memeriksa pairing tanpa menyentuh bot yang jalan
 
 `script/testpairing.js` runs one pairing request against a throwaway session directory, so credentials of a bot that is already connected are never replaced:
 
@@ -652,7 +761,7 @@ node script/testpairing.js 6281234567890 --check-only
 
 ---
 
-## 📩 Receive Messages
+## 📩 Menerima Pesan
 
 ```js
 sock.ev.on('messages.upsert', async ({ messages, type }) => {
@@ -686,7 +795,7 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 
 ---
 
-## 📡 Events
+## 📡 Event
 
 Everything the socket emits, through `sock.ev`. Subscribe individually, or batch with `sock.ev.process`.
 
@@ -699,14 +808,14 @@ sock.ev.process(async (events) => {
 
 `process` hands you one object per flush instead of one callback per event, which keeps a burst of history sync from thrashing your handler.
 
-### Connection and credentials
+### Koneksi dan kredensial
 
 | Event | Fires when |
 |---|---|
 | `connection.update` | connection state, QR, pairing code, reachout timelock |
 | `creds.update` | credentials changed — always wire this to `saveCreds` |
 
-### Messages
+### Pesan
 
 | Event | Fires when |
 |---|---|
@@ -720,7 +829,7 @@ sock.ev.process(async (events) => {
 | `messaging-history.set` | a history sync batch arrived |
 | `messaging-history.status` | history sync progress |
 
-### Chats and contacts
+### Chat dan kontak
 
 | Event | Fires when |
 |---|---|
@@ -733,7 +842,7 @@ sock.ev.process(async (events) => {
 | `labels.edit` / `labels.association` | business labels |
 | `lid-mapping.update` | a phone number was mapped to a LID |
 
-### Groups and communities
+### Grup dan komunitas
 
 | Event | Fires when |
 |---|---|
@@ -742,7 +851,7 @@ sock.ev.process(async (events) => {
 | `group.join-request` | someone asked to join |
 | `group.member-tag.update` | a member label changed |
 
-### Newsletters
+### Channel
 
 | Event | Fires when |
 |---|---|
@@ -752,7 +861,7 @@ sock.ev.process(async (events) => {
 | `newsletter-participants.update` | admin promoted or demoted |
 | `newsletter-admin-profile.update` | an admin changed their channel profile |
 
-### Calls and voice
+### Panggilan dan suara
 
 | Event | Fires when |
 |---|---|
@@ -760,7 +869,7 @@ sock.ev.process(async (events) => {
 | `voice.transcription` | a voice note was transcribed |
 | `voice.command` | a transcription matched the wake phrase |
 
-### Other
+### Lain-lain
 
 | Event | Fires when |
 |---|---|
@@ -771,7 +880,7 @@ sock.ev.process(async (events) => {
 
 ---
 
-## 🪪 LID / PN / JID Addressing
+## 🪪 Pengalamatan LID / PN / JID
 
 Recent WhatsApp protocol versions may identify users with LID addresses instead of only phone-number JIDs. Do not assume every incoming user identifier ends with `@s.whatsapp.net`.
 
@@ -814,9 +923,9 @@ console.log(decoded)
 
 ---
 
-## 💬 Send Messages
+## 💬 Mengirim Pesan
 
-### Text
+### Teks
 
 ```js
 await sock.sendMessage(jid, {
@@ -836,7 +945,7 @@ await sock.sendMessage(jid, {
 
 `viewOnce: true` and `viewOnceV2: true` wrap in `viewOnceMessage` / `viewOnceMessageV2` instead; those are the wrappers media uses. The plain `conversation` field cannot carry any of this — it is a bare string with nowhere to put the flag — so the text has to travel as `extendedTextMessage`, which this fork always does.
 
-### Image
+### Gambar
 
 ```js
 await sock.sendMessage(jid, {
@@ -854,7 +963,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Document
+### Dokumen
 
 ```js
 await sock.sendMessage(jid, {
@@ -864,7 +973,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Location
+### Lokasi
 
 ```js
 await sock.sendMessage(jid, {
@@ -877,7 +986,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Poll
+### Polling
 
 ```js
 await sock.sendMessage(jid, {
@@ -889,7 +998,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-#### Poll settings
+#### Pengaturan polling
 
 Every switch WhatsApp shows on its own poll composer is available here. The option names do not match the protobuf field names, so they are listed side by side:
 
@@ -936,7 +1045,7 @@ Every switch WhatsApp shows on its own poll composer is available here. The opti
 
 `canAddOption` is left out of the example on purpose — add it only once you have confirmed the recipient supports it, since it is the one most likely to turn the whole poll into an unsupported placeholder.
 
-Text options and image options can be mixed in the same poll, exactly as the composer allows. An option carrying an `image` turns the poll into a [photo poll](#photo-poll); once `canAddOption` is set, recipients extend it with [Poll Add Option](#poll-add-option).
+Text options and image options can be mixed in the same poll, exactly as the composer allows. An option carrying an `image` turns the poll into a [photo poll](#polling-foto); once `canAddOption` is set, recipients extend it with [Poll Add Option](#menambah-opsi-polling).
 
 `endDate` takes a `Date`, not a timestamp — it is converted to epoch milliseconds on the way out.
 
@@ -993,7 +1102,7 @@ await sock.sendMessage(jid, {
 
 `url` there fills `sourceUrl`, which is the link the card opens. It is not an image, so it is no longer copied into `thumbnailUrl` or `mediaUrl` — those are separate keys you set yourself when the picture really is fetched over the network. Give the card either an inline `thumbnail` buffer or a `thumbnailUrl`; with neither, the card draws without a picture and a warning goes to the logger.
 
-### Why the card may not appear at all
+### Kenapa kartunya bisa tidak muncul sama sekali
 
 The field is alive — current WhatsApp builds still parse `externalAdReply` and still walk it in validation. What changed is on the receiving side. Both clients drop the **whole message**, not just the card, when it arrives at a consumer account. WA Web:
 
@@ -1013,9 +1122,9 @@ Read the three conditions:
 
 Nothing in the payload changes this. It is not a matter of the right `mediaType`, a valid thumbnail, or `showAdAttribution`; the message is discarded after decryption, before render. If the card is what carries your content, send that content in the message body as well so the message survives on its own.
 
-The prop's default in the client table is `false`, so this is not on everywhere — it is switched on per account from the server. Rule it in or out before assuming it: send the same card to a WhatsApp Business number. If the Business copy shows the card and the consumer copy shows no message at all, that is this gate. If neither shows a card but both show the message, the card itself is malformed and [Rich Link Card](#-rich-link-card) is not what you need — check the thumbnail first.
+The prop's default in the client table is `false`, so this is not on everywhere — it is switched on per account from the server. Rule it in or out before assuming it: send the same card to a WhatsApp Business number. If the Business copy shows the card and the consumer copy shows no message at all, that is this gate. If neither shows a card but both show the message, the card itself is malformed and [Rich Link Card](#-kartu-rich-link) is not what you need — check the thumbnail first.
 
-### Click-to-WhatsApp, the shape an ad click really sends
+### Click-to-WhatsApp, bentuk yang benar-benar dikirim saat iklan diklik
 
 The examples above use `externalAdReply` as a decoration. Click-to-WhatsApp is what the field was built for: a person taps an ad on Facebook or Instagram, WhatsApp opens on the advertiser's thread, and the first message the person sends carries the ad it came from. Those extra keys are the ones a decorative card leaves empty.
 
@@ -1069,7 +1178,7 @@ What each of the CTWA-only keys is for:
 
 `AdType.CTWA` is `0`, so protobuf leaves it off the wire and it decodes back as `0` — that is the default, not a dropped field.
 
-### The card and the "via ad" label are two different things
+### Kartu dan label "via ad" itu dua hal berbeda
 
 On receive the client folds `contextInfo` into a `ctwaContext` on the message, and only some of the keys above survive that trip:
 
@@ -1105,7 +1214,7 @@ So a plain consumer account does render it, as long as `sourceUrl` is set and `m
 
 The **"Message via ad" label** is a separate element, and it keys off `contextInfo.alwaysShowAdAttribution` (field **48**) — not `externalAdReply.showAdAttribution`, which is a different field the label never reads. One render site checks the field alone; another goes through `shouldShowAdAttribution`, which adds `isSMB() || getABPropConfigValue("wa_ctwa_web_thread_ad_attribution_enabled")` (`2898`, default `false`) and refuses outright for a forwarded message.
 
-### Never set `alwaysShowAdAttribution` from a bot
+### Jangan pernah menyetel `alwaysShowAdAttribution` dari bot
 
 Setting it costs you the whole message, with no prop involved:
 
@@ -1129,7 +1238,7 @@ So the card half of CTWA is ordinary and safe; the ad-attribution half is what B
 
 ---
 
-## 🖼️ Rich Link Card
+## 🖼️ Kartu Rich Link
 
 The card WhatsApp itself draws for a link. Same big picture, title and subtitle as `externalAdReply`, but built out of `extendedTextMessage`, which is the ordinary link preview every user sends all day — no ad fields, so the suppression above cannot touch it.
 
@@ -1203,11 +1312,11 @@ An `upload` function has to be available for the large card, since the thumbnail
 
 ---
 
-# 🧱 Integrated MessageBuilder
+# 🧱 MessageBuilder Terintegrasi
 
 MessageBuilder v4.7 is included directly inside `@rexxhayanasi/elaina-baileys`.
 
-### One import, the whole builder
+### Satu impor, seluruh builder
 
 The builder surface is 175 names spread over four modules, which is how a bot ends up with a paragraph of imports to draw one card. `MB` (long name: `MessageBuilder`) carries all of them — the five builder classes, every section and item factory, every enum, the native-flow checks, the signature helpers. Nothing else has to go on the import line:
 
@@ -1252,7 +1361,7 @@ import {
 
 ---
 
-## 💸 Split Payment and Reminders
+## 💸 Split Payment dan Pengingat
 
 Both render on Android as their own bubbles. Amounts are the human number — the wire value is scaled by `offset` (1000 by default), and passing the scaled figure by hand overcharges by a thousand.
 
@@ -1294,7 +1403,7 @@ Read them back with `readSplitPayment(msg)` and `readPaymentReminder(msg)`, whic
 
 These are ordinary messages your own account sends, shown under your own name — they do not move money and they are not a payment request the network acts on. Treat a split card as the note it is.
 
-## 📊 Status Link Style
+## 📊 Gaya Link Preview di Status
 
 `statusLinkPreviewMetadata` sits at the top of the message, next to the text, and tells a status which link-preview card to draw:
 
@@ -1307,7 +1416,7 @@ await sock.sendMessage('status@broadcast', {
 
 The client publishes no names for these values, so this passes the number through unchanged rather than inventing an enum — `statusLinkPreview: 1` on its own works the same. A negative or non-integer style is refused.
 
-## 🎬 Reading a Social Link Preview
+## 🎬 Membaca Social Link Preview
 
 When Meta's own clients send a link preview for a reel or a post, they attach extra nodes beside the ordinary title and thumbnail: `linkPreviewMetadata` with the post type, inline video and duration, plus `endCardTiles` and `videoContentUrl`. `readSocialPreview(msg)` pulls all of that back out, and returns `null` for a message that carries none of it.
 
@@ -1326,7 +1435,7 @@ sock.ev.on('messages.upsert', ({ messages }) => {
 
 The evidence, so you do not have to re-derive it: on WA Web the proto-to-model mapper for `extendedTextMessage` copies `matchedText`, `description`, `title`, `jpegThumbnail`, `previewType`, `doNotPlayInline`, `mediaKey`, `mediaKeyTimestamp`, `thumbnailDirectPath`, `thumbnailSha256` and `thumbnailEncSha256` — and nothing else. `linkPreviewMetadata`, `endCardTiles` and `videoContentUrl` are dropped at that boundary before any component could read them, and a count of direct reads across the bundle agrees: `matchedText` 66, `thumbnailDirectPath` 51, those three **0** each. On the app, `endCardTiles_` is not in any dex at all, so the tiles cannot even be decoded there.
 
-For a card that does draw, with a large thumbnail and no link pasted into the body, use [Rich Link Card](#-rich-link-card) or the `linkPreview` option on an ordinary text message.
+For a card that does draw, with a large thumbnail and no link pasted into the body, use [Rich Link Card](#-kartu-rich-link) or the `linkPreview` option on an ordinary text message.
 
 ## Button
 
@@ -1348,7 +1457,7 @@ const message = new MB.Button(sock)
 await message.send(jid)
 ```
 
-### Button with Image
+### Button dengan Gambar
 
 ```js
 const message = new MB.Button(sock)
@@ -1362,7 +1471,7 @@ const message = new MB.Button(sock)
 await message.send(jid)
 ```
 
-### Available Button Helpers
+### Daftar Helper Button
 
 ```js
 .addReply(displayText, id)
@@ -1418,9 +1527,9 @@ await list.send(jid)
 ```
 
 > [!IMPORTANT]
-> `single_select` renders on **Android only**. WhatsApp Web and iOS have no code for it — the name does not exist in their native-flow list, so the message falls back to a plain text card and the list disappears. This is not something a library patch can fix. See [Native Flow Support](#native-flow-support) for what does render everywhere.
+> `single_select` renders on **Android only**. WhatsApp Web and iOS have no code for it — the name does not exist in their native-flow list, so the message falls back to a plain text card and the list disappears. This is not something a library patch can fix. See [Native Flow Support](#dukungan-native-flow) for what does render everywhere.
 
-### Native Flow Support
+### Dukungan Native Flow
 
 WhatsApp Web keeps a fixed list of native-flow button names. Anything outside it is dropped and the message is downgraded to `phone_only_feature` — the text still arrives, the buttons do not.
 
@@ -1509,7 +1618,7 @@ await carousel.send(jid)
 
 It does not go through `sock.sendMessage`, and it cannot. `send` relays the message and then immediately sends a `protocolMessage` edit of it — the unified response only draws once that second stanza lands. That is two stanzas out of one call, which is not a thing `sendMessage` can return; it hands you one `WebMessageInfo` for one message. So a rich response is built up on an instance and relayed by the builder itself, and every example below starts at `new MB.AIRich(sock)` and ends at `await rich.send(jid)`.
 
-**`import { MB }` is the only import in this section**, including the HTML app and A2UI pages and the readers — `MB.htmlSection(…)`, `MB.sendHtmlApp(…)`, `MB.a2uiText(…)`, `MB.decodeAIRich(…)`, `MB.TaskStatus.RUNNING`. See [One import, the whole builder](#one-import-the-whole-builder). The named exports still work unchanged if you prefer them; they are the same functions, not copies.
+**`import { MB }` is the only import in this section**, including the HTML app and A2UI pages and the readers — `MB.htmlSection(…)`, `MB.sendHtmlApp(…)`, `MB.a2uiText(…)`, `MB.decodeAIRich(…)`, `MB.TaskStatus.RUNNING`. See [One import, the whole builder](#satu-impor-seluruh-builder). The named exports still work unchanged if you prefer them; they are the same functions, not copies.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1521,7 +1630,7 @@ await rich.send(jid)
 
 `send` takes the same options as `build` — `quoted`, `messageId`, `forwardWrapper`, `notification` — and `sendEdit` replaces a message already on screen. Pass the bot's own jid with `botJid` when you want the forward attribution to name something other than the default.
 
-### Text + Code + Table
+### Teks + Kode + Tabel
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1542,7 +1651,7 @@ const rich = new MB.AIRich(sock)
 await rich.send(jid)
 ```
 
-### Why it may not appear at all
+### Kenapa bisa tidak muncul sama sekali
 
 An AI Rich message used to go out wrapped in `botForwardedMessage`, the way a real Meta AI forward does. The receiving client only unwraps that wrapper behind a gate:
 
@@ -1578,11 +1687,11 @@ Other available AIRich helpers include:
 .addSubmessage(submessage)
 ```
 
-### What Mixes With What
+### Apa Yang Bisa Dicampur Dengan Apa
 
 A rich response and an interactive message look like they should combine, and the bot menus that pair `nativeFlowMessage` with `bloksWidget` suggest anything can. Read the client and it splits cleanly into one thing that cannot mix and two that can.
 
-#### Top-level content keys never mix
+#### Kunci konten tingkat atas tidak pernah bisa dicampur
 
 `richResponseMessage` is field **97** of `Message`. `interactiveMessage` is **45**, `extendedTextMessage` is **6**, `conversation` is **1**. Protobuf happily encodes two of them side by side, and both survive the round trip — but every resolver picks exactly one, in field order, and the rest is dead weight on the wire:
 
@@ -1594,7 +1703,7 @@ proto.Message.encode({ richResponseMessage, interactiveMessage }).finish()
 
 So there is no "rich response with buttons". Send two messages, or pick one shape.
 
-#### Inside `interactiveMessage`, three slots mix and three compete
+#### Di dalam `interactiveMessage`, tiga slot ikut dan tiga saling berebut
 
 The client resolves the interactive type by walking its own enum and taking the first field that is present:
 
@@ -1624,7 +1733,7 @@ isSupportedInteractiveMessageVersion(type, payload) {
 
 `messageVersion` is **mandatory** on the slot that won, and must be `1` or less. Leave it out and the message is unsupported before any of the above runs — there is no version 9. The `nativeFlow` content key sets it for you.
 
-#### The button constraints, and why they decide everything
+#### Constraint tombol, dan kenapa itu menentukan segalanya
 
 `nativeFlowMessage.name` is **not** what the client reads. The flow name is worked out from the buttons, and only if they pass a check:
 
@@ -1669,7 +1778,7 @@ Three rules fall out of it:
 2. **At most 10 buttons if the first is `quick_reply`, at most 3 otherwise.**
 3. A later button whose name maps to a known flow must be one of the fifteen above. An unrecognised name passes this particular rule.
 
-**All of that is WA Web only.** `buttonsViolateButtonImprovementsConstraints` and `isValidNativeFlowName` appear nowhere in the Android APK — not in any dex. The app reaches its own unsupported decision in `FMessageInteractiveFactory/isUnknownInteractiveMessage`, and the predicates around it (`interactiveMessageCase_`, and a `buttons.size() == 1` test used only for the payment flows) look at the oneof case and the first button's name. There is no count limit and no same-kind rule. So a message carrying `cta_url`, `cta_call`, `send_location`, `quick_reply` and `single_select` together does draw on a phone — which is also the only place several of those names exist at all, per [Native Flow Support](#native-flow-support).
+**All of that is WA Web only.** `buttonsViolateButtonImprovementsConstraints` and `isValidNativeFlowName` appear nowhere in the Android APK — not in any dex. The app reaches its own unsupported decision in `FMessageInteractiveFactory/isUnknownInteractiveMessage`, and the predicates around it (`interactiveMessageCase_`, and a `buttons.size() == 1` test used only for the payment flows) look at the oneof case and the first button's name. There is no count limit and no same-kind rule. So a message carrying `cta_url`, `cta_call`, `send_location`, `quick_reply` and `single_select` together does draw on a phone — which is also the only place several of those names exist at all, per [Native Flow Support](#dukungan-native-flow).
 
 Break one of the rules and the flow name comes back `undefined`, which on Web is fatal one step later:
 
@@ -1755,7 +1864,7 @@ There is one way out of the whole check, and it is the reason a menu with an A2U
 
 Keep `bloksWidget.fallback` byte-identical to `text`. The client hides the bubble text only when the widget is enabled **and** the two match (`if (S && k === msg.bloksWidget?.fallback) k = null`), so the same payload draws the widget where the prop is on and the plain text where it is not, instead of showing the content twice.
 
-#### Inside `richResponseMessage`, everything mixes
+#### Di dalam `richResponseMessage`, semuanya bisa dicampur
 
 This is where the rich response is actually composable. Four lists travel together and none of them competes:
 
@@ -1783,7 +1892,7 @@ await rich.send(jid)
 
 That emits `FOABloksPrimitive`, which is one of the eighteen names WA Web draws too — so unlike the `interactiveMessage.bloksWidget` route it is not behind `im_bloks_widget_enable`.
 
-### Inline Entities in Text
+### Inline Entity di Dalam Teks
 
 `addText` and `addTable` scan the string for four markdown-ish shapes and turn them into **inline entities** — the pieces the client renders as links, citations and formulas inside a paragraph rather than as separate sections.
 
@@ -1832,7 +1941,7 @@ const inline = info.sections.flatMap(s => s.view_model?.primitive?.inline_entiti
 console.log(inline.map(e => e.metadata.__typename))
 ```
 
-### Editing a Live Message
+### Menyunting Pesan Yang Sudah Tampil
 
 Every `add*` call accepts `id`, `insertAt`, and `replace`, so a sent message can keep changing instead of being resent.
 
@@ -1868,7 +1977,7 @@ rich.delete('pic')
 
 Bad targets throw typed errors instead of failing silently — `ItemNotFoundError`, `DuplicateIdError`, `InvalidTargetError`, and `ContentValidationError`, all extending `AIRichError` with a `code` field.
 
-### Mixing Instances
+### Mencampur Instance
 
 `sections` and `items` expose what a builder holds, so content built in one instance can be dropped into another.
 
@@ -1882,7 +1991,7 @@ rich.addSection(MB.newLayout('HScroll', cards), { id: 'mixed' })
 await rich.sendEdit()
 ```
 
-### Reading an Existing Message
+### Membaca Pesan Yang Sudah Ada
 
 `loadFrom` rebuilds a builder from a message you received, so an incoming interactive message can be edited and resent.
 
@@ -1893,9 +2002,9 @@ const carousel = new MB.Carousel(sock).loadFrom(m.message)
 const buttonV2 = new MB.ButtonV2(sock).loadFrom(m.message)
 ```
 
-### Primitives MessageBuilder Has No Helper For
+### Primitif Yang Belum Punya Helper
 
-MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#the-rest-of-the-meta-ai-catalog).
+MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#sisa-katalog-meta-ai).
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1928,13 +2037,13 @@ await rich.send(jid)
 
 Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is a Meta subscription upsell card, and `FOABloksPrimitive` names a Bloks screen the client fetches from Meta's servers rather than reading out of the message — neither of which a bot can populate.
 
-### The Rest of the Meta AI Catalog
+### Sisa Katalog Meta AI
 
 An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp client parses roughly forty primitives, and `AI_RICH_PRIMITIVES` now lists all of them, with `AI_RICH_ITEMS` for the item nodes a layout carries.
 
 One caveat worth knowing before you build a card around any of them: the full catalog draws in the WhatsApp app, which is where your recipients are. WA Web desktop is the one that lags — it ships renderers for eighteen of the names and maps the rest to an empty node. The message still arrives either way and the other sections still render, so a desktop viewer sees a gap rather than a failure.
 
-#### The subset that also draws on desktop
+#### Bagian yang juga tergambar di desktop
 
 `AI_RICH_PRIMITIVES_WEB_RENDERED` is the part of the catalog WA Web can draw too, so a card built only out of these names looks the same in the app and in a browser. The list is read off `getPlainTextFromUnifiedResponse`, the one module that enumerates every primitive the Web client knows, plus `WAWebUnifiedResponseUtils` for two more. As of revision `1047301412` it is eighteen primitives, alongside three layouts:
 
@@ -1951,7 +2060,7 @@ The rest of `AI_RICH_PRIMITIVES` — maps, video, reminders, sports, search-plan
 
 Two names sit oddly in the middle: `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have a parser only in `cometComposedTextV2GenAiUxPrimitiveParser`, Facebook Comet's renderer, and none in any `WAWeb*` module — but both names are in the Android dex, so the app is where to test them. On desktop they land in the empty node like everything else outside the table above.
 
-Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entities-in-text). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
+Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entity-di-dalam-teks). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2023,7 +2132,7 @@ await rich.send(jid)
 | `accountLinkingSection` / `accountLinkingApp` | `GenAI3PAccountLinkingUpsellPrimitive` | `integration_type`, `integration_status`, `cta_url`, `bottomsheet.apps` |
 | `calendarWidgetSection` / `calendarEvent` | `GenAI3PExtWidgetPrimitive` | `header`, `sections` of dates and events, `ctas`, `toast` |
 
-#### Maps draw from the submessage, not the section
+#### Peta digambar dari submessage, bukan dari section
 
 `GenAIMapPrimitive` is the Meta AI app's own map node. The WhatsApp client reads a map somewhere else entirely: out of the protobuf submessage list, as `AIRichResponseSubMessageType.AI_RICH_RESPONSE_MAP` (7) carrying `mapMetadata`. A section on its own arrives and renders nothing.
 
@@ -2085,7 +2194,7 @@ Enums for all of the above ship alongside the builders: `MapQueryStatus`, `Place
 
 `FooterActionType` also gained `COPY_LINK`, `REMIX_MEDIA` and `USE_TEMPLATE`.
 
-### Forwarding a Real Meta AI Answer
+### Meneruskan Jawaban Meta AI Yang Asli
 
 Everything above builds a rich response from scratch. There is a second path that behaves differently in one important way: relaying a message that genuinely came from Meta AI.
 
@@ -2127,7 +2236,7 @@ So: relay or load-and-resend when you want the proof to survive, and treat `AIRi
 
 Certificate revocation is not checked. The client fetches a CRL from Meta and treats an unavailable or stale list as revoked; `verifyRichResponseSignature` skips that step, so a `passed` here means the chain and signature are good, not that the certificate is still live.
 
-#### What a self-built response cannot have
+#### Yang tidak bisa dimiliki respons bikinan sendiri
 
 A signature over content Meta did not produce is not something a bot can mint — it needs a leaf certificate issued under that root. `AIRich` fills `verificationMetadata` with placeholder bytes so the field is present and well-formed; `verifyRichResponseSignature` on your own output returns `failed`, correctly.
 
@@ -2140,7 +2249,7 @@ Whether that costs you anything depends on server-side switches you cannot see:
 
 All four are set per account by the server. A response can be structurally perfect and still come out as a fallback bubble, and there is no way to tell from the sending side.
 
-### Reading Rich Messages Back
+### Membaca Balik Pesan Rich
 
 An AI Rich, A2UI or Bloks message arrives with nothing where a bot usually looks — `conversation` is empty, `extendedTextMessage` is absent, and `getContentType` reports only the wrapper (`botForwardedMessage` or `interactiveMessage`). `readRichMessage` normalises all of them into one shape.
 
@@ -2171,7 +2280,7 @@ It returns `null` for anything that is not one of these, so it is safe to call o
 
 It unwraps view-once and the other envelopes first, so a card inside `viewOnceMessageV2` reads the same as a bare one.
 
-### A2UI Cards
+### Kartu A2UI
 
 `interactiveMessage.bloksWidget` with `type: "im_a2ui"` renders a card the client draws **from a declarative spec carried in the message**. No HTML, no hosting, and unlike the rest of Bloks nothing is fetched from Meta — the components travel in `data` and the client lays them out.
 
@@ -2222,7 +2331,7 @@ The wrapper `a2uiSurface` builds the payload itself if you want to hand-write co
 
 The A2UI card and the native-flow buttons live in the same `interactiveMessage`, which is how the card gets a button row beneath it. `decodeBloksWidget(msg)` reads one back, with `params` already parsed.
 
-### HTML Mini App
+### Mini App HTML
 
 `htmlSection` carries a whole HTML document — styles and `<script>` included — that the WhatsApp app renders in a WebView inside the chat bubble. It is how an interactive page, a small canvas game, or a live chart reaches a user without hosting anything. It is part of `AI_RICH_PRIMITIVES` and not part of `AI_RICH_PRIMITIVES_WEB_RENDERED`: the name appears nowhere in the WA Web bundle, so a desktop viewer gets an empty node where the page would be.
 
@@ -2248,7 +2357,7 @@ The default stays `GenAIaeacdsnwHtmlPrimitive` because that is the name observed
 | Web / Desktop | section comes through empty; `label` still shows |
 | iOS | untested |
 
-The WebView it renders in is offline and has no storage — see [what it actually gives you](#what-the-webview-actually-gives-you) before designing around it.
+The WebView it renders in is offline and has no storage — see [what it actually gives you](#apa-yang-sebenarnya-disediakan-webview) before designing around it.
 
 #### sendHtmlApp
 
@@ -2335,7 +2444,7 @@ MB.htmlSection(html, { trustedSources?, height? }) => section
 
 It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSources` that is not an array, so a malformed card fails at build time instead of arriving blank.
 
-#### What the WebView Actually Gives You
+#### Apa Yang Sebenarnya Disediakan WebView
 
 Measured on an Android device, not inferred. The page is injected into a blank frame, so it runs in an opaque origin:
 
@@ -2382,7 +2491,7 @@ So a mini app here **ships everything it needs and remembers nothing on its own*
 
 What does work: `canvas` 2D, WebGL and WebGL2, `OffscreenCanvas`, WebAssembly, Web Audio, `requestAnimationFrame`, and video or audio decoded from a `data:` URI.
 
-#### Writing HTML That Behaves in a WebView
+#### Menulis HTML Yang Berperilaku Benar di WebView
 
 The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Five things that are harmless in a browser are not harmless here.
 
@@ -2463,7 +2572,7 @@ document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventD
 
 **One escaping trap.** If you build the HTML as a JavaScript string literal, `"\d"` becomes `d` and `"\s"` becomes `s` before the page ever sees them — a regex like `/dino_best=(\d+)/` silently turns into one that matches literal `d` characters and never fires. Write `\\d` and `\\s`, or read the document from a file as in the first example and sidestep it.
 
-#### Reading One Back
+#### Membaca Balik Mini App
 
 `decodeAIRich` handles the primitive like any other — there is no whitelist to update:
 
@@ -2485,7 +2594,7 @@ import { MB } from '@rexxhayanasi/elaina-baileys'
 
 `AI_RICH_LAYOUTS` lists all eight layout names accepted by `MB.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
 
-### Embedded Screens
+### Layar Tertanam
 
 An embedded screen is a **second surface carried by the same message**. The bubble in the chat stays small — a line of text, a preview card — and tapping it opens a full sheet that has its own sections, or several tabs of them. It is how one message can be both a short answer and a whole mini app.
 
@@ -2494,7 +2603,7 @@ Two things to know before you build one:
 - **WhatsApp Web does not render it.** Its parser hits the field and gives up, logging `CometComposedTextV2UnsupportedURType typename="embedded_screens"`. This is an Android and iOS surface. Test it on a phone.
 - **Tabs are nested inside `content`, not beside it.** The screen holds `content[]`; each entry is either a section (it has `view_model`) or a tab container (it has `tabs`). Getting this backwards is the single most common reason a screen opens blank.
 
-#### A complete example
+#### Contoh lengkap
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2536,7 +2645,7 @@ rich.addEmbeddedScreen(MB.embeddedScreen({
 
 You can pass both. The tab container is appended **after** whatever plain `content` you gave, so the flat sections render first and the tab strip below them.
 
-#### What goes on the wire
+#### Apa yang benar-benar dikirim
 
 `MB.send` base64-encodes all of this into `botForwardedMessage.message.richResponseMessage.unifiedResponse.data`. The example above produces:
 
@@ -2588,7 +2697,7 @@ You can pass both. The tab container is appended **after** whatever plain `conte
 
 Read the nesting from the outside in: **screen → `content[]` → `tabs[]` → `sections[]` → `view_model` → `primitive`**. Every level except the tab and the screen itself carries a `__typename`, and the builder fills all of them in.
 
-#### The same thing without the builder
+#### Hal yang sama tanpa builder
 
 If you would rather assemble the payload by hand — or you are porting one you received from another bot — this is the equivalent `relayMessage` call. Nothing here is magic; it is exactly what `AIRich` produces:
 
@@ -2667,7 +2776,7 @@ await sock.relayMessage(m.chat, {
 
 The builder is worth using anyway — it generates the ids, drops empty fields instead of sending `null`, and keeps the typenames in one place — but the payload is plain JSON and there is nothing stopping you from writing it out.
 
-#### The typenames
+#### Typename-nya
 
 | Constant | Value | Where it goes |
 | --- | --- | --- |
@@ -2696,7 +2805,7 @@ MB.embeddedScreen({ tabs: [tab], tabsTypename: 'FOAIDButtonSheets' })
 
 That last line matters. As with `htmlSection`, **Android does not compare `__typename`** — Pando reinterprets the tree node by field shape, so payloads in the wild carry all sorts of container names and still render. `tabsTypename` exists so you can match whatever a given build expects instead of being locked to one string.
 
-#### Options
+#### Opsi
 
 `embeddedScreen({ … })`:
 
@@ -2729,7 +2838,7 @@ Anything left `undefined` is dropped, never sent as `null`. Passing a non-array 
 
 `EMBEDDED_SCREEN_PRESENTATION` (`HALF_HEIGHT`, `FULL_HEIGHT`) is exported too. Both values and the field `overwrite_first_screen_presentation` are in the Android client, but which object carries that field is not determinable from the client alone, so the builder does not set it — add it yourself if you know where a given build wants it.
 
-#### Reading one back
+#### Membaca balik layar tertanam
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2752,16 +2861,16 @@ const html = MB.readEmbeddedSections(info.embeddedScreens[0])
 
 `readRichMessage(m).html` also collects HTML that sits inside an embedded screen, so a page delivered through a tab is no longer invisible to it. `readEmbeddedTabs` reads both shapes — nested under `content`, and the older flat `tabs` at screen level — so a payload from another bot parses either way.
 
-#### When the sheet comes up blank
+#### Kalau sheet-nya terbuka kosong
 
 | Symptom | Cause |
 | --- | --- |
 | Nothing opens at all | You are looking at WhatsApp Web. It does not render embedded screens; use a phone. |
 | The sheet opens empty | Tabs were placed beside `content` instead of inside it. Pass them to `embeddedScreen({ tabs })` and let it nest them. |
 | The tab strip shows, pages are blank | A section is missing its `view_model`, or the primitive is missing `payload`. Log `readEmbeddedSections(screen)` and look at the shape. |
-| Text renders, HTML does not | the viewer is on WA Web desktop, which has no renderer for the HTML section. See [HTML Mini App](#html-mini-app) for the primitive and its `trusted_sources`. |
+| Text renders, HTML does not | the viewer is on WA Web desktop, which has no renderer for the HTML section. See [HTML Mini App](#mini-app-html) for the primitive and its `trusted_sources`. |
 
-### Inspecting a Received AI Rich Message
+### Memeriksa Pesan AI Rich Yang Diterima
 
 `decodeAIRich` unpacks the base64 `unifiedResponse` so you can see exactly which primitives a message uses — useful for reproducing something another bot sent.
 
@@ -2779,7 +2888,7 @@ console.log(info.sections)
 
 ---
 
-## 🖼️ Album Message
+## 🖼️ Pesan Album
 
 Send multiple images or videos as one album.
 
@@ -2811,7 +2920,7 @@ An album requires at least two image/video media items.
 
 ---
 
-## 📸 Status Updates
+## 📸 Status
 
 A status goes to the special jid `status@broadcast`, and the people who receive it are the ones you list in `statusJidList`. That list is the whole audience mechanism — there is no separate privacy setting to flip from here.
 
@@ -2823,7 +2932,7 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-### Background, Text Color and Font
+### Latar, Warna Teks dan Font
 
 A **text** status is an `extendedTextMessage` with three styling fields, and all three are options on the third argument, not part of the content:
 
@@ -2844,7 +2953,7 @@ await sock.sendMessage('status@broadcast', { text: 'Halo semua' }, {
 | `textColor` | `textArgb` | 7, `FIXED32` |
 | `font` | `font` | 9, enum |
 
-#### Colors
+#### Warna
 
 Both colors take the same shapes:
 
@@ -2857,7 +2966,7 @@ Both colors take the same shapes:
 
 Leave an option out and nothing is written to the message at all — the client picks its own.
 
-#### Fonts
+#### Font
 
 `StatusFont` is `ExtendedTextMessage.FontType`. These eight are the entire accepted set — WhatsApp Web validates against exactly this list and drops anything else, so a ninth value is the same as sending no font at all.
 
@@ -2897,7 +3006,7 @@ await sock.sendMessage('status@broadcast', {
 > [!NOTE]
 > The fonts ship inside the Android APK, under `assets/fonts/`. The WhatsApp Web bundle parses the field and validates the eight values but has **no font-family mapping for any of them** — so a status you style will look styled on a phone and plain on Web. That is the client, not the message.
 
-### Image, Video and Voice Status
+### Status Gambar, Video dan Suara
 
 Media statuses are ordinary media messages sent to `status@broadcast`:
 
@@ -2926,7 +3035,7 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-### Status Stickers
+### Stiker Status
 
 An image or video status can carry tappable stickers — a place, a channel, a link, a song. They ride on the media message as `interactiveAnnotations`, and each one is positioned by a rectangle given in **fractions of the media**, not pixels: the client multiplies every coordinate by the rendered width and height.
 
@@ -2986,7 +3095,7 @@ for (const sticker of readStickers(msg.message)) {
 
 `readStickers` returns `[]` for anything without annotations, so it is safe on every message.
 
-#### Sending a Track
+#### Mengirim Lagu
 
 An ordinary audio message with the cover art, title and artist in `externalAdReply`. Nothing here depends on Meta's music catalog, so it renders for any file you have:
 
@@ -3022,11 +3131,11 @@ await sock.sendMessage(jid, {
 
 Set the mimetype yourself when you do. A voice note is opus in an ogg container, the default here is `audio/mpeg`, and nothing in this library transcodes — handing an mp3 to `ptt: true` gets you a warning in the log and a bubble that may not play. The waveform is still computed for you when ffmpeg is around.
 
-The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition, and [Rich Link Card](#-rich-link-card) for a cover that renders with no ad field involved — as its own message beside the audio, since a preview belongs to text and an audio bubble has no room for one.
+The card here is an `externalAdReply`, so it carries that field's delivery risk: a consumer recipient whose account has the suppression prop on drops the entire audio message, not merely the artwork. See [External Ad Reply](#-external-ad-reply) for the exact condition, and [Rich Link Card](#-kartu-rich-link) for a cover that renders with no ad field involved — as its own message beside the audio, since a preview belongs to text and an audio bubble has no room for one.
 
 Reading music that arrives is `readMusicMessage(msg.message)`, which returns `null` for anything that is not one.
 
-### Group Status
+### Status Grup
 
 A group status is the same message with `groupStatus: true` on it. That wraps the finished message in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer attach the `<meta is_group_status="true">` node the client looks for:
 
@@ -3072,7 +3181,7 @@ await sock.sendMessage(groupJid, {
 }
 ```
 
-#### Which fonts a group status can use
+#### Font apa saja yang bisa dipakai status grup
 
 The same eight as a normal status, because it is the same `extendedTextMessage` underneath — the wrapper is added afterwards and changes nothing about the styling. There is no group-only face and no extra one to unlock.
 
@@ -3087,7 +3196,7 @@ The same eight as a normal status, because it is the same `extendedTextMessage` 
 | `EXO2_EXTRABOLD` | 9 | geometric sans at its heaviest weight |
 | `COURIERPRIME_BOLD` | 10 | monospace typewriter |
 
-Three things carry over unchanged from [Background, Text Color and Font](#background-text-color-and-font), where each face is described in full:
+Three things carry over unchanged from [Background, Text Color and Font](#latar-warna-teks-dan-font), where each face is described in full:
 
 - **3, 4 and 5 do not exist.** The values jump 2 → 6. The client validates against the eight above and drops anything else, so an unknown value behaves exactly like sending no font.
 - **`font` takes the raw number too**, if you would rather not import — `font: 8` is `CALISTOGA_REGULAR`.
@@ -3119,12 +3228,12 @@ await sock.sendMessage(groupJid, {
 }, { backgroundColor: '#7C3AED' })
 ```
 
-Because the payload is wrapped, `message.conversation` is `undefined` on the receiving end and the real content sits a layer down. Run it through `normalizeMessageContent` before reading it, the same as any other wrapper — see [Every Message Type](#-every-message-type).
+Because the payload is wrapped, `message.conversation` is `undefined` on the receiving end and the real content sits a layer down. Run it through `normalizeMessageContent` before reading it, the same as any other wrapper — see [Every Message Type](#-semua-jenis-pesan).
 
 > [!NOTE]
 > `groupStatusMessageV2` is `Message` field 103; the older `groupStatusMessage` is field 96. Both are `FutureProofMessage` wrappers and the relay layer adds the meta node for either, but `groupStatus: true` always builds V2. WhatsApp Web only ever *parses* these — it has no send path for a group status at all, so this is posted from a phone in the official client.
 
-### What Can Actually Be Styled
+### Apa Saja Yang Benar-Benar Bisa Digayakan
 
 Worth being blunt about, because it is the most common wrong assumption:
 
@@ -3140,15 +3249,15 @@ A group status is not a separate row: `groupStatus: true` wraps whichever of tho
 
 `ImageMessage` and `VideoMessage` have **no color or font fields in the protobuf** — not in the WhatsApp Web spec, not in the Android one. The colored text you see over a photo in the app is burned into the image by the media editor before it is uploaded, so if you want that from a bot, draw it into the picture yourself and send a plain image.
 
-To put a custom audience badge on any of these, see [Custom Status Audience](#custom-status-audience-close-friends).
+To put a custom audience badge on any of these, see [Custom Status Audience](#audiens-status-kustom-teman-dekat).
 
 ---
 
 ## 📢 Newsletter / Channel
 
-### Creating and Editing a Channel
+### Membuat dan Menyunting Channel
 
-#### Create Newsletter
+#### Membuat Channel
 
 ```js
 const newsletter = await sock.newsletterCreate(
@@ -3159,7 +3268,7 @@ const newsletter = await sock.newsletterCreate(
 console.log(newsletter)
 ```
 
-#### Update Name
+#### Mengubah Nama
 
 ```js
 await sock.newsletterUpdateName(
@@ -3168,7 +3277,7 @@ await sock.newsletterUpdateName(
 )
 ```
 
-#### Update Description
+#### Mengubah Deskripsi
 
 ```js
 await sock.newsletterUpdateDescription(
@@ -3177,7 +3286,7 @@ await sock.newsletterUpdateDescription(
 )
 ```
 
-#### Update Picture
+#### Mengubah Foto
 
 ```js
 await sock.newsletterUpdatePicture(
@@ -3186,7 +3295,7 @@ await sock.newsletterUpdatePicture(
 )
 ```
 
-#### Reaction Settings
+#### Pengaturan Reaksi
 
 ```js
 await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
@@ -3194,7 +3303,7 @@ await sock.newsletterUpdateReactions('123456789@newsletter', 'BASIC')
 
 `ALL` allows any emoji, `BASIC` the default set only, `NONE` disables reactions, `BLOCKLIST` uses the server-side blocklist. Anything else is rejected before the request leaves.
 
-### Following a Channel
+### Mengikuti Channel
 
 #### Follow / Unfollow
 
@@ -3210,7 +3319,7 @@ await sock.newsletterMute('123456789@newsletter')
 await sock.newsletterUnmute('123456789@newsletter')
 ```
 
-#### Mute Admin or Follower Activity
+#### Membisukan Aktivitas Admin atau Follower
 
 WhatsApp Web replaced the old mute/unmute pair with one setting that separates admin notifications from follower notifications.
 
@@ -3221,16 +3330,16 @@ await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFIC
 
 `newsletterMute` and `newsletterUnmute` are shorthands for the same mutation with `ADMIN_NOTIFICATIONS`, which is exactly what the mute toggle in WhatsApp Web sends. They used to call a separate pair of operations that no longer exists in either client, so they now return the same `{ id, state }` the setting call returns.
 
-#### Fetch Subscribed Newsletters
+#### Mengambil Daftar Channel Yang Diikuti
 
 ```js
 const newsletters = await sock.newsletterSubscribed()
 console.log(newsletters)
 ```
 
-### Reading a Channel
+### Membaca Channel
 
-#### Fetch Newsletter Metadata
+#### Mengambil Metadata Channel
 
 ```js
 const metadata = await sock.newsletterMetadata(
@@ -3259,7 +3368,7 @@ metadata.thread_metadata.wamo_sub          // { plan_id }
 metadata.status_metadata                   // { last_status_server_id, last_status_sent_time }
 ```
 
-#### Incremental Message Updates
+#### Pembaruan Pesan Bertahap
 
 Poll only what changed on a channel since a timestamp, instead of refetching history.
 
@@ -3270,13 +3379,13 @@ const { messages } = await sock.newsletterFetchMessageUpdates('123456789@newslet
 })
 ```
 
-#### Followers
+#### Follower
 
 ```js
 const followers = await sock.newsletterFollowers('123456789@newsletter', { count: 100 })
 ```
 
-#### Insights
+#### Insight
 
 Admin analytics for a channel you own.
 
@@ -3289,7 +3398,7 @@ const insights = await sock.newsletterInsights('123456789@newsletter', {
 
 `metrics_status` is `OK` or `MISSING`; `MISSING` means the server has no data for the requested window yet.
 
-#### Your Own Reactions and Votes
+#### Reaksi dan Vote Milik Sendiri
 
 What you reacted or voted on across channels, without walking every message.
 
@@ -3307,9 +3416,9 @@ for (const group of groups) {
 
 `pollVote.hashes` are the SHA-256 option hashes, hex encoded — match them against the poll's options to know which one you picked.
 
-### Posting and Reacting
+### Memposting dan Bereaksi
 
-#### React to Newsletter Message
+#### Bereaksi ke Pesan Channel
 
 ```js
 await sock.newsletterReactMessage(
@@ -3329,7 +3438,7 @@ await sock.newsletterReactMessage(
 )
 ```
 
-#### Pin / Unpin Messages
+#### Pin / Unpin Pesan
 
 Takes the message `server_id`, not the message key.
 
@@ -3338,7 +3447,7 @@ await sock.newsletterPinMessages('123456789@newsletter', [175])
 await sock.newsletterUnpinMessages('123456789@newsletter', 175)
 ```
 
-#### Content Labels
+#### Label Konten
 
 ```js
 await sock.newsletterLabelAiContent('123456789@newsletter', 175)
@@ -3347,7 +3456,7 @@ await sock.newsletterLabelPaidPartnership('123456789@newsletter', 175)
 
 `messageType` is the third argument and defaults to `MESSAGE`; pass `STATUS` to label a channel status.
 
-#### Vote on a Channel Poll
+#### Vote di Polling Channel
 
 Channel votes are sent unencrypted as option hashes, unlike the encrypted votes used in chats.
 
@@ -3355,7 +3464,7 @@ Channel votes are sent unencrypted as option hashes, unlike the encrypted votes 
 await sock.newsletterSendPollVote('123456789@newsletter', pollServerId, ['Jakarta'])
 ```
 
-#### Poll Voters
+#### Pemberi Vote Polling
 
 ```js
 const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
@@ -3366,15 +3475,15 @@ const voters = await sock.newsletterPollVoters('123456789@newsletter', 175, {
 
 The response groups voters per `vote_hash`, each with a `voter_list.edges` array.
 
-#### Reaction Senders
+#### Pengirim Reaksi
 
 ```js
 const senders = await sock.newsletterReactionSenders('123456789@newsletter', 175)
 ```
 
-### Channel Status
+### Status Channel
 
-#### Post a Channel Status
+#### Memposting Status Channel
 
 A channel can publish its own status — the ring around the channel avatar, playable like a story. It is a real WhatsApp feature with its own stanza, not a `status@broadcast` post addressed to a channel.
 
@@ -3402,7 +3511,7 @@ Delete one:
 await sock.revokeNewsletterStatus('123456789@newsletter', statusId)
 ```
 
-##### Channel Status vs `status@broadcast`
+##### Status Channel vs `status@broadcast`
 
 They look the same to a viewer and are completely different on the wire.
 
@@ -3417,7 +3526,7 @@ They look the same to a viewer and are completely different on the wire.
 
 The library handles the media difference for you: `sendNewsletterStatus` uploads through the newsletter path and puts the returned handle into `media_id` automatically. Supported types are text, image, video, gif, and audio — documents and stickers are rejected. WhatsApp Web itself only publishes image and video, so the other two get a warning and may be refused by the server.
 
-##### Where the Server Id Comes From
+##### Dari Mana Server Id Datangnya
 
 The `<ack>` that answers a published status carries `from`, `class`, `id` and `t` — and no server id at all. That is not a failure; the id arrives a moment later, on the `<status>` stanza the server echoes back to the publisher, marked `is_sender="true"`.
 
@@ -3438,7 +3547,7 @@ await sock.sendNewsletterStatusReaction('123456789@newsletter', posted.newslette
 
 The wait is capped and never blocks the send: if no echo arrives, `newsletterStatusServerId` is `undefined` and everything else is unchanged. Tune it with `serverIdTimeoutMs`, or skip it with `resolveServerId: false` when you only care that the status went out.
 
-##### Check Whether the Channel May Post
+##### Memeriksa Apakah Channel Boleh Memposting
 
 WhatsApp gates channel status creation on a per-channel capability the server grants, not on a setting you can flip. Check it before building a posting flow:
 
@@ -3448,7 +3557,7 @@ const { canPost, canPostMusic, capabilities } = await sock.newsletterCanPostStat
 
 `canPost` is `CHANNEL_STATUS_PRODUCER` in the capability list. The full gate WhatsApp Web applies is: the `channel_status_creation` flag is on, you are admin or owner, the channel is not suspended or terminated, and the channel holds `CHANNEL_STATUS_PRODUCER`. Only the last one is visible to a client, and it is the one that actually varies per channel — the rollout flag is off by default on Web, which is why the button is missing there while the phone shows it.
 
-##### Question Statuses
+##### Status Pertanyaan
 
 A channel status can carry a question box, and followers answer it.
 
@@ -3461,7 +3570,7 @@ await sock.sendNewsletterStatus('123456789@newsletter', {
 
 Answers come back as `questionResponseMessage`. Reshare one on top of a new status with `interactionType: 'question_reshare'` plus `parentServerId` and `responseServerId`; publish your own answer with `interactionType: 'question_response'` and `parentServerId`. A question status has to sit on media — WhatsApp Web never publishes a text-only one.
 
-#### Read Channel Statuses
+#### Membaca Status Channel
 
 ```js
 const list = await sock.getNewsletterStatuses('123456789@newsletter', { count: 20 })
@@ -3484,7 +3593,7 @@ const updates = await sock.getNewsletterStatusUpdates('123456789@newsletter', {
 })
 ```
 
-#### Newsletter Status Attribution
+#### Atribusi Status Channel
 
 Elaina Baileys exposes `StatusAttribution.Type.NEWSLETTER_STATUS` with the channel reshare metadata already present in WAProto.
 
@@ -3521,7 +3630,7 @@ await sock.sendMessage('status@broadcast', {
 })
 ```
 
-#### Who Sent a Channel Message
+#### Siapa Yang Mengirim Pesan Channel
 
 A channel message carries the posting admin's display name and picture in a `<meta>` block that used to be dropped on the floor. It is now decoded into `newsletterMeta`.
 
@@ -3542,9 +3651,9 @@ There is **no username here** — WhatsApp only ships `id`, `name` and `picture`
 
 Messages the bot itself posted to a channel now arrive with `key.fromMe: true` (WhatsApp marks them `is_sender`), plus `key.isNewsletterSender`. Before this they looked like someone else's messages, so a bot could answer its own channel post.
 
-### Questions
+### Pertanyaan
 
-#### Question Responses
+#### Jawaban Pertanyaan
 
 Answers to a channel question, with the follower behind each one.
 
@@ -3564,7 +3673,7 @@ for (const r of responses) {
 
 `filter` accepts `contacts`, `replied`, or `starred`; `searchText` searches the answers; `before` pages backwards.
 
-#### Hide a Question Response
+#### Menyembunyikan Jawaban Pertanyaan
 
 Moderates a follower's answer to a channel question.
 
@@ -3575,9 +3684,9 @@ await sock.newsletterQuestionResponseState('123456789@newsletter', questionServe
 
 ---
 
-### Admins
+### Admin
 
-#### Admin Capabilities
+#### Kemampuan Admin
 
 Which channel features the server has enabled for you. This is the gate WhatsApp Web itself checks before offering a feature.
 
@@ -3589,7 +3698,7 @@ console.log(capabilities)
 
 Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
 
-#### Admin Profiles
+#### Profil Admin
 
 A channel admin can set a name and photo of their own that ride along with every update they post, so followers see who wrote it instead of only the channel. WhatsApp calls the channel-level switch **Show admin profile**.
 
@@ -3619,7 +3728,7 @@ sock.ev.on('newsletter-admin-profile.update', ({ id, adminProfile }) => {
 
 Setting your own admin name or photo is **not possible from any client API**. WhatsApp Web only ever receives admin profiles: there is no mutation for it, `newsletterUpdate` accepts only name, description, picture and reaction settings, and the "Show admin profile" switch in the Web UI is rendered without a handler. It is set from the phone, and only on channels that hold the `ADMIN_PROFILE` capability.
 
-#### Admin Invites
+#### Undangan Admin
 
 ```js
 await sock.newsletterCreateAdminInvite('123456789@newsletter', '6281234567890@s.whatsapp.net')
@@ -3627,23 +3736,23 @@ await sock.newsletterRevokeAdminInvite('123456789@newsletter', '6281234567890@s.
 await sock.newsletterAcceptAdminInvite('123456789@newsletter')
 ```
 
-#### Pending Admin Invites
+#### Undangan Admin Yang Menggantung
 
 ```js
 const pending = await sock.newsletterPendingAdminInvites('123456789@newsletter')
 // [ { id: '628xxxxxxxxx@s.whatsapp.net', phoneNumber: '628xxxxxxxxx' } ]
 ```
 
-### Finding Channels
+### Mencari Channel
 
-#### Discovery
+#### Penemuan
 
 ```js
 const recommended = await sock.newsletterRecommended({ limit: 20, countryCodes: ['ID'] })
 const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20 })
 ```
 
-#### Directory
+#### Direktori
 
 Channel discovery, the same queries the Updates tab uses. Categories are `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS` and `SPECIAL_EVENTS` through `SPECIAL_EVENTS_5`.
 
@@ -3659,9 +3768,9 @@ const found = await sock.newsletterDirectorySearch('elaina', { limit: 20 })
 const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'], countryCode: 'ID' })
 ```
 
-### Enforcements
+### Penindakan
 
-#### Enforcements and Appeals
+#### Penindakan dan Banding
 
 When a channel feature quietly disappears — the admin profile setting, the status ring, the ability to post — the cause is often an enforcement on the channel, not a missing rollout. This reads what WhatsApp is holding against it.
 
@@ -3700,7 +3809,7 @@ const reports = await sock.newsletterReports()
 await sock.newsletterAppealReport(reports[0].report_id, 'RESPONSE_VIOLATES_GUIDELINES')
 ```
 
-## 🪪 Username & About
+## 🪪 Username & Info
 
 WhatsApp Web moved usernames and the About text to MEX queries. These call the same persisted queries the Web client uses.
 
@@ -3723,7 +3832,7 @@ const { available, suggestions } = await sock.checkUsernameAvailability('elaina'
 
 `setUsername` resolves `true` only when the server answers `SUCCESS`. `state` is `ACTIVE` or `RESERVED`; pass `{ reserved: true }` when claiming a reserved name.
 
-#### Username Rules
+#### Aturan Username
 
 `setUsername` and `checkUsernameAvailability` reject a bad name locally before it reaches the server, so you get the reason instead of a generic failure. The rules are read straight out of the Web client:
 
@@ -3752,7 +3861,7 @@ displayUsername('rexx')            // '@rexx'
 
 A leading `@` is stripped for you, so `setUsername('@elaina')` and `setUsername('elaina')` are the same call.
 
-### About / Text Status
+### Info / Status Teks
 
 ```js
 await sock.updateTextStatus('Building bots', { emoji: '🤖', ephemeralDurationSec: 0 })
@@ -3766,7 +3875,7 @@ console.log(about.status)
 
 The classic `updateProfileStatus` IQ still works and is untouched.
 
-### Terms of Service Notices
+### Pemberitahuan Ketentuan Layanan
 
 WhatsApp gates some features behind a notice the user has to move through. These read the notice list and report progress back, the same IQs the Web client uses.
 
@@ -3779,7 +3888,7 @@ await sock.updateUserNoticeStage('20601216', 5)
 
 `stage` is the server's own counter for that notice — read the current value from `fetchUserNotices` before advancing it.
 
-### Marketing Opt-Out List
+### Daftar Opt-Out Pemasaran
 
 ```js
 const list = await sock.fetchOptOutList({ category: 'marketing' })
@@ -3792,13 +3901,13 @@ await sock.updateOptOut({
 })
 ```
 
-### Push Settings
+### Pengaturan Push
 
 ```js
 const settings = await sock.fetchPushSettings()
 ```
 
-### Server-side Link Preview
+### Link Preview Dari Sisi Server
 
 Lets WhatsApp generate the preview instead of scraping the page yourself.
 
@@ -3809,9 +3918,9 @@ const preview = await sock.fetchServerLinkPreview('https://example.com')
 
 ---
 
-## 👥 Group Management
+## 👥 Pengelolaan Grup
 
-### Create Group
+### Membuat Grup
 
 ```js
 const group = await sock.groupCreate(
@@ -3825,7 +3934,7 @@ const group = await sock.groupCreate(
 console.log(group.id)
 ```
 
-### Add Participant
+### Menambah Anggota
 
 ```js
 await sock.groupParticipantsUpdate(
@@ -3835,7 +3944,7 @@ await sock.groupParticipantsUpdate(
 )
 ```
 
-### Remove Participant
+### Mengeluarkan Anggota
 
 ```js
 await sock.groupParticipantsUpdate(
@@ -3852,7 +3961,7 @@ await sock.groupParticipantsUpdate(groupJid, [userJid], 'promote')
 await sock.groupParticipantsUpdate(groupJid, [userJid], 'demote')
 ```
 
-### Update Group Description
+### Mengubah Deskripsi Grup
 
 ```js
 await sock.groupUpdateDescription(
@@ -3861,7 +3970,7 @@ await sock.groupUpdateDescription(
 )
 ```
 
-### Subject and Settings
+### Subjek dan Pengaturan
 
 ```js
 await sock.groupUpdateSubject(groupJid, 'New name')
@@ -3870,7 +3979,7 @@ await sock.groupSettingUpdate(groupJid, 'announcement')
 
 `groupSettingUpdate` takes one of `announcement` (only admins may send), `not_announcement`, `locked` (only admins may edit group info) or `unlocked`.
 
-### Who May Join and Who May Add
+### Siapa Yang Boleh Masuk dan Siapa Yang Boleh Menambah
 
 ```js
 await sock.groupMemberAddMode(groupJid, 'admin_add')
@@ -3879,7 +3988,7 @@ await sock.groupJoinApprovalMode(groupJid, 'on')
 
 `groupMemberAddMode` is `admin_add` or `all_member_add`. `groupJoinApprovalMode` is `on` or `off`; with it on, people who use the invite link land in a request queue instead of the group.
 
-### The Join Request Queue
+### Antrean Permintaan Masuk
 
 ```js
 const pending = await sock.groupRequestParticipantsList(groupJid)
@@ -3887,7 +3996,7 @@ await sock.groupRequestParticipantsUpdate(groupJid, [userJid], 'approve')
 await sock.groupRequestParticipantsUpdate(groupJid, [userJid], 'reject')
 ```
 
-### Invite Links
+### Link Undangan
 
 ```js
 const code = await sock.groupInviteCode(groupJid)
@@ -3901,7 +4010,7 @@ await sock.groupAcceptInvite(code)
 
 `groupGetInviteInfo` reads the group behind a code without joining. There is also a direct invite pair — `groupRevokeInviteV4(groupJid, invitedJid)` and `groupAcceptInviteV4` — for the invite sent to one person rather than a link.
 
-### Disappearing Messages
+### Pesan Sementara
 
 ```js
 await sock.groupToggleEphemeral(groupJid, 7 * 24 * 60 * 60)
@@ -3910,7 +4019,7 @@ await sock.groupToggleEphemeral(groupJid, 0)
 
 The duration is in seconds; `0` turns it off. WhatsApp's own options are 24 hours, 7 days and 90 days.
 
-### Reading Groups
+### Membaca Grup
 
 ```js
 const metadata = await sock.groupMetadata(groupJid)
@@ -3923,11 +4032,11 @@ await sock.groupLeave(groupJid)
 
 ---
 
-## 🏘️ Communities
+## 🏘️ Komunitas
 
 A community is a parent that owns groups. Every method mirrors its group counterpart, plus the linking calls that have no group equivalent.
 
-### Create and Link
+### Membuat dan Menautkan
 
 ```js
 const community = await sock.communityCreate('Elaina Community', 'What this community is for')
@@ -3942,7 +4051,7 @@ const linked = await sock.communityFetchLinkedGroups(community.id)
 
 `communityCreateGroup` makes a group already attached to the community. `communityLinkGroup` attaches one that exists — you must be admin of both.
 
-### Members and Settings
+### Anggota dan Pengaturan
 
 ```js
 await sock.communityParticipantsUpdate(communityJid, [userJid], 'promote')
@@ -3956,7 +4065,7 @@ await sock.communityToggleEphemeral(communityJid, 7 * 24 * 60 * 60)
 
 The actions and values match the group ones above.
 
-### Invites and Reading
+### Undangan dan Pembacaan
 
 ```js
 const code = await sock.communityInviteCode(communityJid)
@@ -3971,7 +4080,7 @@ await sock.communityLeave(communityJid)
 
 ---
 
-## 🔒 Privacy Settings
+## 🔒 Pengaturan Privasi
 
 ```js
 const settings = await sock.fetchPrivacySettings(true)
@@ -3997,7 +4106,7 @@ await sock.updateOnlinePrivacy('match_last_seen')
 await sock.updateDisableLinkPreviewsPrivacy(true)
 ```
 
-### Default Disappearing Messages
+### Pesan Sementara Bawaan
 
 ```js
 await sock.updateDefaultDisappearingMode(7 * 24 * 60 * 60)
@@ -4006,7 +4115,7 @@ const durations = await sock.fetchDisappearingDuration(jidA, jidB)
 
 The default applies to new chats. `fetchDisappearingDuration` takes any number of jids and reports what each is set to.
 
-### Blocking
+### Pemblokiran
 
 ```js
 await sock.updateBlockStatus(jid, 'block')
@@ -4014,7 +4123,7 @@ await sock.updateBlockStatus(jid, 'unblock')
 const blocked = await sock.fetchBlocklist()
 ```
 
-### Reporting Spam
+### Melaporkan Spam
 
 ```js
 import { SPAM_FLOWS } from '@rexxhayanasi/elaina-baileys'
@@ -4031,13 +4140,13 @@ await sock.reportSpam(groupJid, {
 
 ---
 
-## 📨 Every Message Type
+## 📨 Semua Jenis Pesan
 
 `message.message` is a box with exactly one key set, and the key names the
 kind. There are **115** of them. Two things trip up almost everyone starting
 out, so read this part before hunting for a bug that is not there.
 
-### Why `conversation` is sometimes empty
+### Kenapa `conversation` kadang kosong
 
 **31 of the 115 are wrappers.** They carry no content of their own — they hold
 another message inside. A view-once photo is not `imageMessage`, it is
@@ -4091,7 +4200,7 @@ no message type at all, and its sticker parser does not read `audioMessage`
 back out. Treat them as fields to recognise when they start arriving, not as
 something to send.
 
-### The other 84
+### 84 sisanya
 
 These carry the content. You will use a handful constantly and never touch
 most of the rest, but knowing they exist saves you from assuming a message is
@@ -4116,16 +4225,16 @@ malformed when it is simply a kind you have not met.
 changes and app-state syncs all arrive as one, distinguished by its `type`.
 A bot that ignores it will look like it never notices a deleted message.
 
-### Reading a rich message
+### Membaca pesan rich
 
 A message from another bot — AI Rich, A2UI, Bloks — leaves `conversation`
 empty and `getContentType` reporting only the wrapper. `readRichMessage`
 normalises all of them into one shape; see
-[Reading Rich Messages Back](#reading-rich-messages-back).
+[Reading Rich Messages Back](#membaca-balik-pesan-rich).
 
 ---
 
-## 👀 Presence and Read Receipts
+## 👀 Presence dan Tanda Dibaca
 
 ```js
 await sock.presenceSubscribe(jid)
@@ -4140,7 +4249,7 @@ await sock.sendPresenceUpdate('unavailable')
 
 You only receive someone's presence after `presenceSubscribe` on their jid. `available` and `unavailable` are your own global state and take no jid; the rest are per-chat typing indicators. `recording` goes on the wire as `composing` with `media: audio`, which is what produces "recording audio…".
 
-### Marking as Read
+### Menandai Sudah Dibaca
 
 ```js
 await sock.readMessages([msg.key])
@@ -4151,7 +4260,7 @@ await sock.sendReceipts([msg.key], 'read')
 
 `readMessages` is the one to reach for. `sendReceipt` and `sendReceipts` are the lower layer underneath it, with the receipt type spelled out — `read`, `read-self`, `played` or `undefined` for a plain delivery receipt.
 
-### Checking a Number
+### Memeriksa Nomor
 
 ```js
 const results = await sock.onWhatsApp('6281234567890', '6289876543210')
@@ -4162,7 +4271,7 @@ for (const entry of results) {
 
 ---
 
-## 🗂️ Chat State
+## 🗂️ Keadaan Chat
 
 `chatModify` writes to app state, so a change syncs to the phone and to every other linked device.
 
@@ -4180,7 +4289,7 @@ await sock.chatModify({ contact: { fullName: 'Elaina' } }, jid)
 
 `mute` is a duration in milliseconds, and `null` unmutes. Several of these need `lastMessages` — the server uses it to place the change in the chat's timeline, and it throws without it.
 
-### History and Resync
+### Riwayat dan Sinkronisasi Ulang
 
 ```js
 await sock.fetchMessageHistory(50, oldestMsgKey, oldestMsgTimestamp)
@@ -4192,7 +4301,7 @@ await sock.resyncAppState(['regular_high'], false)
 
 ---
 
-## 🏷️ Labels
+## 🏷️ Label
 
 Labels are a WhatsApp Business feature.
 
@@ -4208,7 +4317,7 @@ await sock.removeMessageLabel(jid, messageId, labelId)
 
 ---
 
-## 🛍️ Business and Catalog
+## 🛍️ Bisnis dan Katalog
 
 ```js
 const profile = await sock.getBusinessProfile(jid)
@@ -4221,7 +4330,7 @@ const order = await sock.getOrderDetails(orderId, tokenBase64)
 
 `updateBusinessProfile` is also exported under its original misspelling, `updateBussinesProfile`; both are the same function.
 
-### Managing Products
+### Mengelola Produk
 
 ```js
 const created = await sock.productCreate({
@@ -4237,7 +4346,7 @@ await sock.productUpdate(created.id, { price: 20000 })
 await sock.productDelete([created.id])
 ```
 
-### Profile and Quick Replies
+### Profil dan Balasan Cepat
 
 ```js
 await sock.updateProfileName('Elaina')
@@ -4250,7 +4359,7 @@ await sock.removeContact(jid)
 
 `removeContact` is `chatModify({ contact: null })` under a friendlier name, so it syncs to the phone like any other contact edit.
 
-### Refetching Expired Media
+### Mengambil Ulang Media Kedaluwarsa
 
 ```js
 const refreshed = await sock.updateMediaMessage(msg)
@@ -4258,7 +4367,7 @@ const refreshed = await sock.updateMediaMessage(msg)
 
 WhatsApp's media URLs expire. When a download fails on an old message, this asks the sender's device for a fresh `directPath` and returns the message with it filled in — then download again.
 
-### Group Member Labels
+### Label Anggota Grup
 
 ```js
 await sock.updateMemberLabel(groupJid, memberLabel)
@@ -4268,7 +4377,7 @@ Sends a `GROUP_MEMBER_LABEL_CHANGE` protocol message, which is how the per-group
 
 ---
 
-## 📞 Calls
+## 📞 Panggilan
 
 ```js
 import { CALL_AUDIO_PREFIX, CALL_VIDEO_PREFIX } from '@rexxhayanasi/elaina-baileys'
@@ -4284,7 +4393,7 @@ await sock.rejectCall(callId, callFrom)
 
 `createCallLink` takes `audio` or `video` and returns just the token. The two prefixes are exported because they do not match the media name — video links live under `/video/` but audio links under `/voice/`. Pass an `event` with a `startTime` in unix seconds to schedule the call instead of opening it now.
 
-### Placing a Voice Call
+### Melakukan Panggilan Suara
 
 The VoIP stack runs the WhatsApp Web calling engine in-process and rides **the socket you are already logged in with**. There is no second pairing and no second QR: pair once, and the same session places calls.
 
@@ -4326,7 +4435,7 @@ sock.ev.on('connection.update', async ({ connection }) => {
 })
 ```
 
-### Playing a Queue
+### Memainkan Antrean Audio
 
 Every call takes a playlist, and the queue drives the call rather than the other way round: play a song, hang up when it ends; or play, wait while the next track is being found, play that one, then hang up.
 
@@ -4365,7 +4474,7 @@ await call.waitForEnd()
 
 `enqueue` also takes an array, `skip()` drops the current track, `play()` replaces the queue with one track now, and `queued()` and `nowPlaying()` report what is left and what is running. Audio buffered from a finished track is played out before the next one starts, so a song is never cut off mid-tail by the queue advancing.
 
-### Video Calls
+### Panggilan Video
 
 Both one to one and group calls take video. The frames come from ffmpeg the same way the audio does, so a video source is a file, a URL, a still image, or an `lavfi:` generator.
 
@@ -4399,7 +4508,7 @@ The engine picks the resolution and frame rate when the call connects and the fe
 
 Audio and video are two ffmpeg processes with two clocks. Playing the same file through both will drift; if you need them locked together, pass the same file only to `playlist` and leave the picture on a still image.
 
-### Screen Share
+### Berbagi Layar
 
 The same video, sent as a screen share instead of a camera. It is a separate wasm entry point, so the recipient sees it labelled as a shared screen rather than as the bot turning its camera on.
 
@@ -4418,7 +4527,7 @@ Which to prefer depends on what you are sending, and it is worth testing both on
 - **Screen share** suits still content — slides, lyrics, a card. The encoder favours sharpness over motion, and a 16:9 source is not padded into a portrait camera frame.
 - **The camera path** suits moving pictures, and reaches everyone. Screen share is gated by `calling_screen_share_milestone_version`: a recipient on an older WhatsApp gets a "please update" dialog instead of your content. In a group there is also a participant cap for sharing, and typically only one participant may share at a time.
 
-### Group Calls
+### Panggilan Grup
 
 ```js
 const call = await voip.callGroup('12345-67890@g.us', {
@@ -4449,7 +4558,7 @@ Those three files are WhatsApp Web's own, vendored byte for byte. A supply-chain
 
 Nothing is written to stdout unless you ask: pass `debug: true` for the built-in tracing, or `logger: (...args) => …` to route it into your own logger.
 
-### Logging Out
+### Keluar
 
 ```js
 await sock.logout()
@@ -4459,16 +4568,16 @@ This unlinks the device on WhatsApp's side, so the stored credentials become use
 
 ---
 
-## 📷 Profile Picture
+## 📷 Foto Profil
 
-### Fetch Profile Picture URL
+### Mengambil URL Foto Profil
 
 ```js
 const url = await sock.profilePictureUrl(jid, 'image')
 console.log(url)
 ```
 
-### Update Profile Picture
+### Mengubah Foto Profil
 
 ```js
 await sock.updateProfilePicture(jid, {
@@ -4476,7 +4585,7 @@ await sock.updateProfilePicture(jid, {
 })
 ```
 
-### Remove Profile Picture
+### Menghapus Foto Profil
 
 ```js
 await sock.removeProfilePicture(jid)
@@ -4484,7 +4593,7 @@ await sock.removeProfilePicture(jid)
 
 ---
 
-## 🧰 Useful Exports
+## 🧰 Ekspor Yang Berguna
 
 Some commonly used exports include:
 
@@ -4527,7 +4636,7 @@ console.log(MessageBuilder.VERSION)
 
 ---
 
-## 🔄 Update WhatsApp Web Version
+## 🔄 Memperbarui Versi WhatsApp Web
 
 One command performs the whole check:
 
@@ -4614,7 +4723,7 @@ If your repository intentionally does not track a lockfile for this library pack
 
 ---
 
-## ⏰ Scheduled Messages
+## ⏰ Pesan Terjadwal
 
 WhatsApp schedules a message by sending it **immediately, encrypted**, and letting the server hand out the key at the chosen time. The envelope is `conditionalRevealMessage`; the key travels in a `<meta type="scheduled_message">` node beside the message.
 
@@ -4675,7 +4784,7 @@ The reveal key is AES-256-GCM, 32 bytes, with a 12-byte IV and the tag appended 
 > [!WARNING]
 > Every gate for this feature is off by default in the client WhatsApp ships (`scheduled_messages_sender_enabled`, `scheduled_messages_receiver_enabled`, `channels_scheduling_updates_enabled`). These builders match the wire format the client uses, but until WhatsApp enables the feature for an account the server may reject or ignore the request. Treat it as experimental.
 
-## 🧪 Modern WhatsApp Message APIs
+## 🧪 API Pesan WhatsApp Modern
 Elaina Baileys exposes helpers for newer protobuf message types already present in the bundled WAProto. These APIs are experimental because WhatsApp can gate rendering or server acceptance by account, platform, or rollout.
 
 ```js
@@ -4686,7 +4795,7 @@ import {
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
-### Message Keys
+### Message Key
 
 Almost everything in this chapter takes a **message key** — `addYours`, `statusMention`, `statusNotification`, `groupStatusReaction`, `statusQuoted`, `pollAddOption`, and so on. The examples write `myStatus.key` or `promptStatus.key` and that is easy to skim past, so here is where those actually come from.
 
@@ -4701,7 +4810,7 @@ A key is four fields, and it identifies one message anywhere on the account:
 }
 ```
 
-#### A message you sent
+#### Pesan yang kamu kirim
 
 `sendMessage` returns the message it sent. Keep it and read `.key`:
 
@@ -4724,7 +4833,7 @@ const myGroupStatus = await sock.sendMessage(groupJid, { text: 'halo grup', grou
 
 That return value is the whole `WebMessageInfo`, so `myStatus.message` and `myStatus.messageTimestamp` are there too if you need them.
 
-#### A message you received
+#### Pesan yang kamu terima
 
 Every incoming message arrives with its key already attached, on the `messages.upsert` event:
 
@@ -4763,7 +4872,7 @@ await sock.sendMessage('status@broadcast', {
 
 A key you kept stays valid — it is just four strings, so storing it in a database or a JSON file works fine. Nothing here needs the original message body.
 
-#### A message someone replied to
+#### Pesan yang dibalas orang
 
 When a message quotes another one, the quoted key is in its `contextInfo`:
 
@@ -4777,7 +4886,7 @@ const quotedKey = context && {
 }
 ```
 
-#### Which key goes where
+#### Key mana untuk apa
 
 The mistake that costs the most time is passing your own key where the other person's belongs, or the reverse. This is who owns each one:
 
@@ -4793,11 +4902,11 @@ The mistake that costs the most time is passing your own key where the other per
 
 Every maker checks the key before building anything, and throws a `TypeError` naming the exact field — `addYours.key must be an object` when it is missing, `addYours.key.id is required` when it is there but half-built. Either way it fails at build time rather than going out and being quietly ignored.
 
-### Photo Poll
+### Polling Foto
 
 Give an option an `image` and the poll is sent as a photo poll: the option images go out as associated messages and each option carries the hash the server expects.
 
-These work in groups and one-to-one chats as well as channels, and `hideVoter` and `endDate` can be combined with them — the poll stays on `pollCreationMessageV3`, which is the version the option images attach to. See [Poll settings](#poll-settings).
+These work in groups and one-to-one chats as well as channels, and `hideVoter` and `endDate` can be combined with them — the poll stays on `pollCreationMessageV3`, which is the version the option images attach to. See [Poll settings](#pengaturan-polling).
 
 ```js
 await sock.sendMessage(jid, {
@@ -4814,9 +4923,9 @@ await sock.sendMessage(jid, {
 
 Each option image is uploaded and then sent as its own `pollCreationOptionImageMessage`, linked back to the poll by `MEDIA_POLL` association. A poll with two image options is three messages on the wire.
 
-Plain string options still send a normal text poll, and the two can be mixed. The rest of the poll switches — multiple answers, hidden voters, add-option, end time — are listed under [Poll settings](#poll-settings).
+Plain string options still send a normal text poll, and the two can be mixed. The rest of the poll switches — multiple answers, hidden voters, add-option, end time — are listed under [Poll settings](#pengaturan-polling).
 
-### Question Message
+### Pesan Pertanyaan
 
 ```js
 await sock.sendMessage(jid, {
@@ -4845,7 +4954,7 @@ await sock.sendMessage('123456789@newsletter', {
 
 `questiontype` is `question` when posting a question, `response` when a follower answers it, and `reply` when the channel replies to an answer.
 
-### Question Response
+### Jawaban Pertanyaan Masuk
 
 A follower answering a question. Sent with `questiontype="response"`.
 
@@ -4858,7 +4967,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Question Reply
+### Balasan Pertanyaan
 
 The channel replying to an answer, quoting it by the question's server id. Sent with `questiontype="reply"`.
 
@@ -4873,7 +4982,7 @@ await sock.sendMessage('123456789@newsletter', {
 })
 ```
 
-### Status Question Answer
+### Jawaban Pertanyaan di Status
 
 ```js
 await sock.sendMessage(jid, {
@@ -4884,7 +4993,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Status Quoted Message
+### Pesan Kutipan Status
 
 ```js
 await sock.sendMessage(jid, {
@@ -4896,7 +5005,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Status Sticker Interaction
+### Interaksi Stiker Status
 
 ```js
 await sock.sendMessage(jid, {
@@ -4908,7 +5017,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Status Notification
+### Notifikasi Status
 
 Supported notification types are `UNKNOWN` 0, `STATUS_ADD_YOURS` 1, `STATUS_RESHARE` 2, `STATUS_QUESTION_ANSWER_RESHARE` 3 and `STATUS_GROUP_STATUS_REPLY` 4, exported as `StatusNotificationType`.
 
@@ -4924,7 +5033,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Newsletter Admin Invite
+### Undangan Admin Channel
 
 ```js
 await sock.sendMessage(userJid, {
@@ -4939,7 +5048,7 @@ await sock.sendMessage(userJid, {
 
 `jpegThumbnail` and `contextInfo` can also be supplied.
 
-### Newsletter Follower Invite V2
+### Undangan Follower Channel V2
 
 ```js
 await sock.sendMessage(userJid, {
@@ -4951,7 +5060,7 @@ await sock.sendMessage(userJid, {
 })
 ```
 
-### Custom Status Audience (Close Friends)
+### Audiens Status Kustom (Teman Dekat)
 
 This is the status that shows a badge with an emoji and a list name, and opens a dialog reading **"You're in {name}'s custom audience"** — *"Anda ada di audiens kustom {nama}"*. The emoji and the name are yours to pick, which is where the "custom emoji" part comes from.
 
@@ -4964,7 +5073,7 @@ It is **not** `groupStatusMessageV2`. Two different features get mixed up here, 
 
 They are independent. A status can be one, the other, or both.
 
-#### The custom audience
+#### Audiens kustomnya
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -4998,7 +5107,7 @@ await sock.sendMessage('status@broadcast', { text: 'halo', statusAudience: {} },
 > [!IMPORTANT]
 > `statusAudience` is the **label**, not the lock. Who actually receives the status is decided by `statusJidList` — the people you fan it out to. Setting the metadata without narrowing that list posts to everyone with a "Besties" badge on it.
 
-#### The group status
+#### Status grupnya
 
 `groupStatus: true` wraps whatever you send in `groupStatusMessageV2` and sets `contextInfo.isGroupStatus`, which is what makes the relay layer add the `is_group_status` meta node:
 
@@ -5041,9 +5150,9 @@ produces:
 }
 ```
 
-Note that `message.conversation` is `undefined` there — the text is two layers down. Run it through `normalizeMessageContent` first, as with every other wrapper (see [Every Message Type](#-every-message-type)).
+Note that `message.conversation` is `undefined` there — the text is two layers down. Run it through `normalizeMessageContent` first, as with every other wrapper (see [Every Message Type](#-semua-jenis-pesan)).
 
-#### Fields
+#### Field-nya
 
 `contextInfo.statusAudienceMetadata` is field **69** of `ContextInfo`:
 
@@ -5073,7 +5182,7 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList: bestiesJids })
 ```
 
-#### Reading one you received
+#### Membaca yang kamu terima
 
 ```js
 import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
@@ -5086,7 +5195,7 @@ if (audience) {
 }
 ```
 
-#### When the name stays "Close friends"
+#### Kalau namanya tetap "Close friends"
 
 The emoji and the name travel in the same submessage, so if one of them arrives the other did too. Check what you actually put on the wire before blaming the phone — `sendMessage` returns the message it sent:
 
@@ -5127,7 +5236,7 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-`promptStatus` is **their** status — the one carrying the prompt, as it arrived on `messages.upsert`. You have to keep its key when it comes in; see [Message Keys](#message-keys).
+`promptStatus` is **their** status — the one carrying the prompt, as it arrived on `messages.upsert`. You have to keep its key when it comes in; see [Message Keys](#message-key).
 
 That writes `messageContextInfo.messageAssociation` (tag 10) with `associationType: STATUS_ADD_YOURS` (8) and your `parentMessageKey`:
 
@@ -5168,7 +5277,7 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-#### Any other association
+#### Asosiasi lainnya
 
 `addYours` is a shorthand over the general mechanism, which is worth knowing because the same field threads status polls, questions, reactions and album items:
 
@@ -5187,7 +5296,7 @@ await sock.sendMessage('status@broadcast', {
 
 `AssociationType` is the client's own enum: `MEDIA_ALBUM` 1, `STATUS_POLL` 4, `STATUS_EXTERNAL_RESHARE` 6, `MEDIA_POLL` 7, `STATUS_ADD_YOURS` 8, `STATUS_NOTIFICATION` 9, `STICKER_ANNOTATION` 11, `STATUS_LINK_ACTION` 13, `STATUS_ADD_YOURS_AI_IMAGINE` 15, `STATUS_QUESTION` 16, `STATUS_ADD_YOURS_DIWALI` 17, `STATUS_REACTION` 18, `POLL_ADD_OPTION` 20, among others. Unlike `addYours`, the general form defaults to `UNKNOWN` rather than guessing for you.
 
-#### Telling the original poster
+#### Memberi tahu pemosting aslinya
 
 Posting the answer does not by itself notify whoever wrote the prompt. That is a separate `statusNotification`, and `STATUS_ADD_YOURS` is one of its types:
 
@@ -5204,7 +5313,7 @@ await sock.sendMessage(promptAuthorJid, {
 > [!NOTE]
 > The Add Yours **sticker** — the prompt itself, with its own text — is composed on Android and its wire layout is not expressed anywhere in the WhatsApp Web bundle. Only the association is, so that is all this library builds. Answering an existing prompt works; authoring a new prompt from a bot does not, and nothing here guesses at the tags for it.
 
-### Status Mentions
+### Mention di Status
 
 Mentioning people in a status is two messages: the status itself goes to `status@broadcast` with a `mentioned_users` meta node, and each mentioned chat gets a small pointer message so the mention surfaces there — `statusMentionMessage` for a person, `groupStatusMentionMessage` for a group, both wrapping a `protocolMessage` of type `STATUS_MENTION_MESSAGE` (25).
 
@@ -5229,7 +5338,7 @@ await sock.sendMessage(userJid, { statusMention: { key: myStatus.key } })
 await sock.sendMessage(groupJid, { statusMention: { key: myStatus.key, group: true } })
 ```
 
-`myStatus.key` is **yours** — `sendMessage` hands back the message it just sent, so keep that return value. See [Message Keys](#message-keys).
+`myStatus.key` is **yours** — `sendMessage` hands back the message it just sent, so keep that return value. See [Message Keys](#message-key).
 
 Or build it without sending, for a custom relay:
 
@@ -5242,7 +5351,7 @@ const content = makeStatusMentionMessage({ key: myStatus.key, group: false })
 
 Both wrappers are `FutureProofMessage`s — `statusMentionMessage` is `Message` field 87, `groupStatusMentionMessage` field 92 — so a received one needs `normalizeMessageContent` like any other wrapper.
 
-### Group Status Reaction
+### Reaksi Status Grup
 
 ```js
 await sock.sendMessage(groupJid, {
@@ -5255,9 +5364,9 @@ await sock.sendMessage(groupJid, {
 
 The reaction is wrapped in `groupStatusMessageV2`, allowing the existing relay layer to include group-status metadata.
 
-### Poll Add Option
+### Menambah Opsi Polling
 
-The original poll must have been created with `canAddOption: true` (see [Poll settings](#poll-settings)). One message carries one option — `addOption` is a single value in the protobuf, not a list, so send several messages to add several options.
+The original poll must have been created with `canAddOption: true` (see [Poll settings](#pengaturan-polling)). One message carries one option — `addOption` is a single value in the protobuf, not a list, so send several messages to add several options.
 
 ```js
 await sock.sendMessage(jid, {
@@ -5270,7 +5379,7 @@ await sock.sendMessage(jid, {
 
 `addOption` can be supplied directly when you already have the protobuf option object.
 
-### Comment Message
+### Pesan Komentar
 
 `content` accepts text or protobuf message fields. Raw protobuf content can be supplied as `message`.
 
@@ -5285,7 +5394,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Event Invite Message
+### Pesan Undangan Acara
 
 ```js
 await sock.sendMessage(jid, {
@@ -5299,7 +5408,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Scheduled Call
+### Panggilan Terjadwal
 
 ```js
 const created = await sock.sendMessage(jid, {
@@ -5322,7 +5431,7 @@ await sock.sendMessage(jid, {
 })
 ```
 
-### Location Broadcast Identifier
+### Penanda Broadcast Lokasi
 
 WhatsApp Desktop recognizes `location@broadcast` separately from `status@broadcast`. Elaina Baileys exposes the identifier and detector without treating it as normal status fanout.
 
@@ -5331,7 +5440,7 @@ console.log(LOCATION_BROADCAST_JID)
 console.log(isJidLocationBroadcast('location@broadcast'))
 ```
 
-### Low-Level Builders
+### Builder Tingkat Rendah
 
 ```js
 import {
@@ -5362,11 +5471,11 @@ These helpers return protobuf-compatible message content that can be passed to `
 
 ---
 
-## 🛡️ Account Health Signals
+## 🛡️ Sinyal Kesehatan Akun
 
 WhatsApp tracks how an account reaches out to people it has not spoken to before, and it tells the client where it stands. Reading those two signals is far more reliable than guessing at a safe delay.
 
-### New-Chat Message Quota
+### Kuota Pesan ke Chat Baru
 
 ```js
 const cap = await sock.fetchNewChatMessageCap()
@@ -5382,7 +5491,7 @@ const cap = await sock.fetchNewChatMessageCap()
 
 Only first contact with a new chat consumes quota. Replying inside a conversation the other person started does not.
 
-### Reachout Timelock
+### Timelock Reachout
 
 ```js
 const lock = await sock.fetchAccountReachoutTimelock()
@@ -5399,7 +5508,7 @@ sock.ev.on('connection.update', ({ reachoutTimeLock }) => {
 })
 ```
 
-### Using Them as a Guard
+### Memakainya Sebagai Pengaman
 
 ```js
 const guard = async () => {
@@ -5420,9 +5529,9 @@ Check it before a run and again every batch — `SECOND_WARNING` is the last sta
 > [!NOTE]
 > Sending in bulk through an unofficial client is outside WhatsApp's Terms of Service whatever the recipients agreed to. The sanctioned route for opt-in bulk messaging is the WhatsApp Business Platform. These signals reduce the odds of tripping automated limits; they do not make an account safe.
 
-## 🐞 Troubleshooting
+## 🐞 Penanganan Masalah
 
-### `Cannot read properties of undefined (reading 'undefined')` when replying
+### `Cannot read properties of undefined (reading 'undefined')` saat membalas
 
 The full trace looks like this:
 
@@ -5460,7 +5569,7 @@ const quotable = !!getContentType(normalizeMessageContent(m.message))
 await sock.sendMessage(m.key.remoteJid, { text: 'halo' }, quotable ? { quoted: m } : {})
 ```
 
-### The bot answers in every group but one
+### Bot menjawab di semua grup kecuali satu
 
 A group where nothing gets through — not one reply, while every other group is fine — is almost always a **sender key** problem, not your handler. Group messages are encrypted once with a group sender key and fanned out; that key has to reach each member device separately, and the library remembers who already has it in `sender-key-memory`, keyed **per group**. That is why the symptom is one group and not the account.
 
@@ -5496,7 +5605,7 @@ Before blaming the sender key, rule out the two cheaper causes:
 | Does `messageStubType` say `CIPHERTEXT`? | The message arrived but could not be read. Same as above; it usually clears itself within a message or two. |
 | Does `sendMessage` throw for that jid? | Then it is the group metadata fetch, not encryption — check the error rather than the key. |
 
-### Pairing code must be exactly 8 characters
+### Kode pairing harus tepat 8 karakter
 
 When using a custom pairing code:
 
@@ -5506,7 +5615,7 @@ await sock.requestPairingCode(phone, 'ELAINA01')
 
 The custom value must contain exactly eight characters.
 
-### A pairing code appears but the phone never shows a prompt
+### Kode pairing muncul tapi ponselnya tidak pernah menampilkan prompt
 
 Check what the request threw before assuming the notification is at fault. `requestPairingCode` now waits for the server and reports a rejection instead of returning a code that was never registered:
 
@@ -5522,9 +5631,9 @@ If none of these fire and the code is registered, type it manually through **Wha
 
 Verify from outside your bot with `node script/testpairing.js <number> --check-only`.
 
-### A pairing request is refused with 409
+### Permintaan pairing ditolak dengan 409
 
-Another code is still pending. Wait it out or call `sock.cancelPairingCode()` first — see [Pairing Code](#-pairing-code).
+Another code is still pending. Wait it out or call `sock.cancelPairingCode()` first — see [Pairing Code](#-kode-pairing).
 
 ### `Socket is required`
 
@@ -5536,7 +5645,7 @@ const button = new MB.Button(sock)
 
 Do not create them without passing `sock`.
 
-### Buttons or AIRich render differently
+### Button atau AIRich tergambar berbeda
 
 Interactive WhatsApp payloads may depend on:
 
@@ -5547,17 +5656,17 @@ Interactive WhatsApp payloads may depend on:
 
 Always test experimental message formats before production use.
 
-### LID appears instead of a phone-number JID
+### Yang muncul LID, bukan JID nomor telepon
 
 This is expected on newer WhatsApp addressing flows. Check `participantAlt` or `remoteJidAlt` when available instead of blindly converting `@lid` into `@s.whatsapp.net`.
 
-### Session logged out
+### Sesi ter-logout
 
 If WhatsApp returns `DisconnectReason.loggedOut`, remove the invalid local session and pair the account again.
 
 ---
 
-## 🐞 Found a Bug?
+## 🐞 Menemukan Bug?
 
 If you encounter a bug or compatibility issue, you can contact the maintainer or follow the WhatsApp Channel for project updates.
 
@@ -5572,11 +5681,11 @@ If you encounter a bug or compatibility issue, you can contact the maintainer or
 
 ---
 
-## 🙏 Credits
+## 🙏 Kredit
 
 This project exists thanks to the work of many developers and open-source projects.
 
-### Project Maintainer
+### Pemelihara Proyek
 
 - **RexxHayanasi** — maintainer, fork development, integration, fixes, features, and project branding.
 
@@ -5585,12 +5694,12 @@ This project exists thanks to the work of many developers and open-source projec
 - **WhiskeySockets/Baileys** — upstream Baileys project and core WhatsApp Web implementation.
 - **adiwajshing** — original Baileys author and early ecosystem work.
 
-### Fork / Source Contributions
+### Kontribusi Fork / Sumber
 
 - **Lia Wynn / ItsLia** — fork lineage and prior Baileys modifications retained where applicable.
 - **Kyuu / kiuur** — project contributor and support.
 
-### Integrated MessageBuilder
+### MessageBuilder Terintegrasi
 
 The integrated MessageBuilder is based on **NIXCODE / Advanced WhatsApp Interactive Message Builder**.
 
@@ -5599,7 +5708,7 @@ The integrated MessageBuilder is based on **NIXCODE / Advanced WhatsApp Interact
 
 The original builder attribution and licensing notices must be respected when modifying or redistributing its source. The builder is integrated into this package so users do not need to install `baileys-mbuilder` separately.
 
-### Open Source Contributors
+### Kontributor Open Source
 
 Thanks to every upstream Baileys contributor, library author, tester, issue reporter, and developer whose work helped make this project possible.
 
@@ -5695,7 +5804,7 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 
 ---
 
-## 📄 License
+## 📄 Lisensi
 
 This project is distributed under the license included with the repository/package.
 
