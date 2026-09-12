@@ -1898,11 +1898,11 @@ Itu memancarkan `FOABloksPrimitive`, salah satu dari delapan belas nama yang jug
 
 | Kamu menulis | Menjadi | `__typename` |
 | --- | --- | --- |
-| `[label](https://x.test)` | a tappable link | `GenAIInlineLinkItem` |
-| `[label](!https://x.test)` | the same, marked untrusted | `GenAIInlineLinkItem` |
-| `[label](>whatsapp://settings)` | a deeplink into an app | `GenAIDeeplinkItem` |
-| `[](https://x.test)` | a numbered source citation | `GenAISearchCitationItem` |
-| `[x^2]<https://img.test>` | a rendered formula | `GenAILatexItem` |
+| `[label](https://x.test)` | tautan yang bisa diketuk | `GenAIInlineLinkItem` |
+| `[label](!https://x.test)` | sama, tapi ditandai tidak dipercaya | `GenAIInlineLinkItem` |
+| `[label](>whatsapp://settings)` | deeplink ke sebuah aplikasi | `GenAIDeeplinkItem` |
+| `[](https://x.test)` | kutipan sumber bernomor | `GenAISearchCitationItem` |
+| `[x^2]<https://img.test>` | rumus yang digambar | `GenAILatexItem` |
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1914,14 +1914,12 @@ rich.addText('buka [Setelan](>whatsapp://settings), atau lihat [situsnya](https:
 await rich.send(jid)
 ```
 
-The two prefixes are markers on the **target**, not the label, and they are stripped before sending:
+Dua prefiks itu penanda pada **targetnya**, bukan pada labelnya, dan dilepas sebelum dikirim:
 
-- `!` — the link is not trusted, so `is_trusted: false` goes out with it.
-- `>` — this is a deeplink, so it goes out as `deeplink_url` on a `GenAIDeeplinkItem` instead of `url` on a `GenAIInlineLinkItem`.
+- `!` — tautannya tidak dipercaya, jadi `is_trusted: false` ikut dikirim.
+- `>` — ini deeplink, jadi dikirim sebagai `deeplink_url` pada `GenAIDeeplinkItem`, bukan `url` pada `GenAIInlineLinkItem`.
 
-A deeplink is for a scheme the phone hands to an app (`whatsapp://`, `fb://`, `instagram://`) rather than a web page. The client parses the two into different node types, so sending an app scheme as an ordinary link is not the same thing.
-
-Each kind can be switched off on its own, and they are independent:
+Deeplink itu untuk skema yang diserahkan ponsel ke sebuah aplikasi (`whatsapp://`, `fb://`, `instagram://`), bukan ke halaman web. Klien mem-parse keduanya menjadi jenis node yang berbeda, jadi mengirim skema aplikasi sebagai tautan biasa bukan hal yang sama.
 
 ```js
 rich.addText(text, { deeplink: false })
@@ -1929,9 +1927,9 @@ rich.addText(text, { hyperlink: false, citation: false, latex: false })
 rich.addText(text, { extract: false })
 ```
 
-Those three are options on one call, not a sequence to run as-is — pick the flags you want and send as above.
+Tiga baris itu opsi pada satu panggilan, bukan urutan untuk dijalankan apa adanya — pilih flag yang kamu mau lalu kirim seperti di atas.
 
-`AI_RICH_INLINE_ENTITIES` lists all four. The list is closed on purpose — the Web parser dispatches on `__typename` and **throws** `inline entity <name>` on anything outside it, so a fifth invented name breaks the whole message rather than degrading.
+`AI_RICH_INLINE_ENTITIES` mendaftar keempatnya. Daftarnya sengaja tertutup — parser Web memilih jalur berdasarkan `__typename` dan **melempar** `inline entity <name>` untuk apa pun di luarnya, jadi nama kelima yang dikarang merusak seluruh pesannya, bukan menurunkannya pelan-pelan.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -1943,48 +1941,48 @@ console.log(inline.map(e => e.metadata.__typename))
 
 ### Menyunting Pesan Yang Sudah Tampil
 
-Every `add*` call accepts `id`, `insertAt`, and `replace`, so a sent message can keep changing instead of being resent.
+Setiap panggilan `add*` menerima `id`, `insertAt`, dan `replace`, jadi pesan yang sudah terkirim bisa terus berubah ketimbang dikirim ulang.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
-  .addText('Working on it…', { id: 'intro' })
+  .addText('Sedang dikerjakan…', { id: 'intro' })
 
 await rich.send(jid)
 
-rich.addImage('', { status: 'GENERATING', update_text: 'Generating image…', insertAt: 'intro', id: 'pic' })
+rich.addImage('', { status: 'GENERATING', update_text: 'Membuat gambar…', insertAt: 'intro', id: 'pic' })
 await rich.sendEdit()
 
 rich.addImage('https://example.com/result.jpg', { replace: 'pic' })
 await rich.sendEdit()
 ```
 
-`sendEdit()` reuses the key of the last `send()`, so no jid or message id is needed for the common case; pass them explicitly to edit some other message. `buildEdit(jid, id)` returns the edit payload without sending it.
+`sendEdit()` memakai ulang key dari `send()` terakhir, jadi untuk kasus yang umum tidak perlu jid atau id pesan; serahkan keduanya secara eksplisit kalau mau menyunting pesan lain. `buildEdit(jid, id)` mengembalikan payload suntingannya tanpa mengirimnya.
 
-Item bookkeeping:
+Pembukuan item:
 
 ```js
 rich.getIds()          // [ 'intro', 'pic' ]
 rich.hasId('pic')      // true
-rich.peek('pic')       // the node behind that id
-rich.assignId(0, 'first')  // names an item that has no id yet
+rich.peek('pic')       // node di balik id itu
+rich.assignId(0, 'first')  // memberi nama item yang belum punya id
 rich.delete('pic')
 ```
 
-`assignId` refuses to rename an item that already carries an id, and refuses an id another item is using.
+`assignId` menolak mengganti nama item yang sudah punya id, dan menolak id yang sedang dipakai item lain.
 
-Bad targets throw typed errors instead of failing silently — `ItemNotFoundError`, `DuplicateIdError`, `InvalidTargetError`, and `ContentValidationError`, all extending `AIRichError` with a `code` field.
+Target yang salah melempar error bertipe ketimbang gagal tanpa suara — `ItemNotFoundError`, `DuplicateIdError`, `InvalidTargetError`, dan `ContentValidationError`, semuanya turunan `AIRichError` dengan field `code`.
 
 ### Mencampur Instance
 
-`sections` and `items` expose what a builder holds, so content built in one instance can be dropped into another.
+`sections` dan `items` membuka apa yang dipegang sebuah builder, jadi konten yang dibangun di satu instance bisa dijatuhkan ke instance lain.
 
 ```js
 const cards = new MB.AIRich(sock)
   .addProduct({ title: 'Elaina', brand: 'Baileys', product_url: 'https://example.com' })
-  .addPost({ username: 'elaina', caption: 'Hello', url: 'https://example.com' })
+  .addPost({ username: 'elaina', caption: 'Halo', url: 'https://example.com' })
   .items
 
 rich.addSection(MB.newLayout('HScroll', cards), { id: 'mixed' })
@@ -1993,7 +1991,7 @@ await rich.sendEdit()
 
 ### Membaca Pesan Yang Sudah Ada
 
-`loadFrom` rebuilds a builder from a message you received, so an incoming interactive message can be edited and resent.
+`loadFrom` membangun ulang sebuah builder dari pesan yang kamu terima, jadi pesan interaktif yang masuk bisa disunting dan dikirim lagi.
 
 ```js
 const rich = new MB.AIRich(sock).loadFrom(m.message)
@@ -2004,14 +2002,14 @@ const buttonV2 = new MB.ButtonV2(sock).loadFrom(m.message)
 
 ### Primitif Yang Belum Punya Helper
 
-MessageBuilder covers 11 of the primitives WA Web renders directly. The rest are exposed here as plain section builders you drop into `addSection`; the wider Meta AI catalog is in [The Rest of the Meta AI Catalog](#sisa-katalog-meta-ai).
+MessageBuilder mencakup 11 dari primitif yang digambar langsung WA Web. Sisanya dibuka di sini sebagai pembangun section biasa yang kamu jatuhkan ke `addSection`; katalog Meta AI yang lebih luas ada di [Sisa Katalog Meta AI](#sisa-katalog-meta-ai).
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
 
 const rich = new MB.AIRich(sock)
   .setTitle('Elaina AI')
-  .setFooter('Generated with AIRich')
+  .setFooter('Dibuat dengan AIRich')
 
 rich.addText('*Laporan render*')
 rich.addSection(MB.dividerSection(), { id: 'rule' })
@@ -2019,48 +2017,48 @@ rich.addSection(MB.spacerSection({ spacing: 3 }))
 rich.addSection(MB.imageSection('https://example.com/photo.jpg'))
 rich.addSection(MB.taskSection({ taskId: 'job-1', title: 'Rendering', subtitle: 'frame 12/60', status: MB.TaskStatus.RUNNING }))
 rich.addSection(MB.latexSection('E = mc^2'))
-rich.addSection(MB.thinkingSection('Searching the web…', { icon: MB.ThinkingIcon.WEB_SEARCH }))
-rich.addSection(MB.progressSection('Almost done', { inProgress: false }))
+rich.addSection(MB.thinkingSection('Mencari di web…', { icon: MB.ThinkingIcon.WEB_SEARCH }))
+rich.addSection(MB.progressSection('Hampir selesai', { inProgress: false }))
 
 await rich.send(jid)
 ```
 
-| Builder | Primitive | Fields |
+| Builder | Primitif | Field |
 |---|---|---|
-| `dividerSection` | `GenAIDividerPrimitive` | `divider_type` — `HORIZONTAL_LINE` or `DOT` |
-| `spacerSection` | `GenAISpacerPrimitive` | `spacing`; 1 or less draws a rule, more draws that many blank lines |
-| `imageSection` | `GenAIImagePrimitive` | `full_image` / `preview_image`, each with `url` and `url_fallback` |
-| `taskSection` | `GenAITaskPrimitive` | `task_id`, `title`, `subtitle`, `status`; an empty `task_id` makes the client drop the item |
-| `latexSection` | `GenAILatexUXPrimitive` | `latex_expression`, optional rendered `latex_image` |
+| `dividerSection` | `GenAIDividerPrimitive` | `divider_type` — `HORIZONTAL_LINE` atau `DOT` |
+| `spacerSection` | `GenAISpacerPrimitive` | `spacing`; nilai 1 atau kurang menggambar garis, lebih dari itu menggambar sebanyak itu baris kosong |
+| `imageSection` | `GenAIImagePrimitive` | `full_image` / `preview_image`, masing-masing dengan `url` dan `url_fallback` |
+| `taskSection` | `GenAITaskPrimitive` | `task_id`, `title`, `subtitle`, `status`; `task_id` yang kosong membuat klien membuang item-nya |
+| `latexSection` | `GenAILatexUXPrimitive` | `latex_expression`, plus `latex_image` hasil render yang opsional |
 | `thinkingSection` | `GenAIBotThinkingStatusPrimitive` | `title`, `icon`, `is_in_progress`, `meta_search_apps`, `thought_duration_sec` |
-| `progressSection` | `GenAIBotProgressStatusPrimitive` | same fields as thinking |
+| `progressSection` | `GenAIBotProgressStatusPrimitive` | field-nya sama dengan thinking |
 
-Two primitives are deliberately left out: `GenAIMetaSubsQuotaUpsellPrimitive` is a Meta subscription upsell card, and `FOABloksPrimitive` names a Bloks screen the client fetches from Meta's servers rather than reading out of the message — neither of which a bot can populate.
+Dua primitif sengaja tidak disertakan: `GenAIMetaSubsQuotaUpsellPrimitive` itu kartu penawaran langganan Meta, dan `FOABloksPrimitive` menyebut satu layar Bloks yang diambil klien dari server Meta, bukan dibaca dari pesannya — dan keduanya tidak bisa diisi bot.
 
 ### Sisa Katalog Meta AI
 
-An `AIRichMessage` is the shape Meta AI itself sends, and a bot reaches it by forwarding one. So the catalog is much larger than what the sections above cover: the WhatsApp client parses roughly forty primitives, and `AI_RICH_PRIMITIVES` now lists all of them, with `AI_RICH_ITEMS` for the item nodes a layout carries.
+`AIRichMessage` adalah bentuk yang dikirim Meta AI sendiri, dan bot mencapainya dengan meneruskan salah satunya. Jadi katalognya jauh lebih besar daripada yang dicakup section di atas: klien WhatsApp mem-parse sekitar empat puluh primitif, dan `AI_RICH_PRIMITIVES` sekarang mendaftar semuanya, dengan `AI_RICH_ITEMS` untuk node item yang dibawa sebuah layout.
 
-One caveat worth knowing before you build a card around any of them: the full catalog draws in the WhatsApp app, which is where your recipients are. WA Web desktop is the one that lags — it ships renderers for eighteen of the names and maps the rest to an empty node. The message still arrives either way and the other sections still render, so a desktop viewer sees a gap rather than a failure.
+Satu catatan yang perlu diketahui sebelum kamu membangun kartu di sekitar salah satunya: katalog penuhnya tergambar di aplikasi WhatsApp, dan di situlah penerimamu berada. WA Web desktop yang tertinggal — ia membawa renderer untuk delapan belas nama dan memetakan sisanya ke node kosong. Pesannya tetap sampai bagaimanapun dan section lainnya tetap tergambar, jadi penonton di desktop melihat bolong, bukan kegagalan.
 
 #### Bagian yang juga tergambar di desktop
 
-`AI_RICH_PRIMITIVES_WEB_RENDERED` is the part of the catalog WA Web can draw too, so a card built only out of these names looks the same in the app and in a browser. The list is read off `getPlainTextFromUnifiedResponse`, the one module that enumerates every primitive the Web client knows, plus `WAWebUnifiedResponseUtils` for two more. As of revision `1047301412` it is eighteen primitives, alongside three layouts:
+`AI_RICH_PRIMITIVES_WEB_RENDERED` adalah bagian katalog yang juga bisa digambar WA Web, jadi kartu yang dibangun hanya dari nama-nama ini tampil sama di aplikasi dan di browser. Daftarnya dibaca dari `getPlainTextFromUnifiedResponse`, satu-satunya modul yang mencacah setiap primitif yang dikenal klien Web, plus `WAWebUnifiedResponseUtils` untuk dua nama lagi. Sampai revisi `1047301412` jumlahnya delapan belas primitif, ditambah tiga layout:
 
 | | |
 |---|---|
-| Text & structure | `GenAIMarkdownTextUXPrimitive`, `GenAICodeUXPrimitive`, `GenAILatexUXPrimitive`, `GenATableUXPrimitive`, `GenAIMetadataTextPrimitive`, `GenAIDividerPrimitive`, `GenAISpacerPrimitive` |
-| Media & cards | `GenAIImagePrimitive`, `GenAIImaginePrimitive`, `GenAIReelPrimitive`, `GenAIPostPrimitive`, `GenAIProductItemCardPrimitive`, `GenAISearchResultPrimitive` |
+| Teks & struktur | `GenAIMarkdownTextUXPrimitive`, `GenAICodeUXPrimitive`, `GenAILatexUXPrimitive`, `GenATableUXPrimitive`, `GenAIMetadataTextPrimitive`, `GenAIDividerPrimitive`, `GenAISpacerPrimitive` |
+| Media & kartu | `GenAIImagePrimitive`, `GenAIImaginePrimitive`, `GenAIReelPrimitive`, `GenAIPostPrimitive`, `GenAIProductItemCardPrimitive`, `GenAISearchResultPrimitive` |
 | Status | `GenAIBotThinkingStatusPrimitive`, `GenAIBotProgressStatusPrimitive` |
-| Upsell | `GenAIMetaSubsQuotaUpsellPrimitive` |
+| Penawaran | `GenAIMetaSubsQuotaUpsellPrimitive` |
 | FOA | `FOATextPrimitive`, `FOABloksPrimitive` |
-| Layouts | `GenAISingleLayoutViewModel`, `GenAIGridLayoutViewModel`, `GenAIHScrollLayoutViewModel` |
+| Layout | `GenAISingleLayoutViewModel`, `GenAIGridLayoutViewModel`, `GenAIHScrollLayoutViewModel` |
 
-The rest of `AI_RICH_PRIMITIVES` — maps, video, reminders, sports, search-planner steps, the 3P and Clippy surfaces, the HTML section, and the layouts `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid`, `RichListItem`, `MultipleResponse` and `IGSuggestedBloomCard` — draws in the app and comes out as an empty node in a browser.
+Sisa `AI_RICH_PRIMITIVES` — peta, video, pengingat, olahraga, langkah search-planner, permukaan 3P dan Clippy, section HTML, serta layout `VStack`, `ActionRow`, `AddonAction`, `FlexibleCountGrid`, `RichListItem`, `MultipleResponse`, dan `IGSuggestedBloomCard` — tergambar di aplikasi dan keluar sebagai node kosong di browser.
 
-Two names sit oddly in the middle: `GenAIFollowUpSuggestionPillPrimitive` and `GenAITaskPrimitive` have a parser only in `cometComposedTextV2GenAiUxPrimitiveParser`, Facebook Comet's renderer, and none in any `WAWeb*` module — but both names are in the Android dex, so the app is where to test them. On desktop they land in the empty node like everything else outside the table above.
+Dua nama duduk aneh di tengah: `GenAIFollowUpSuggestionPillPrimitive` dan `GenAITaskPrimitive` punya parser hanya di `cometComposedTextV2GenAiUxPrimitiveParser`, renderer Comet milik Facebook, dan tidak ada di modul `WAWeb*` mana pun — tapi kedua namanya ada di dex Android, jadi aplikasi itu tempat mengujinya. Di desktop keduanya mendarat di node kosong seperti semua yang di luar tabel di atas.
 
-Inline entities are the one place where an unknown name is fatal rather than ignored — see the warning under [Inline Entities in Text](#inline-entity-di-dalam-teks). `AI_RICH_INLINE_ENTITIES` stays closed at four for that reason.
+Inline entity satu-satunya tempat nama yang tidak dikenal jadi fatal, bukan diabaikan — lihat peringatan di [Inline Entity di Dalam Teks](#inline-entity-di-dalam-teks). `AI_RICH_INLINE_ENTITIES` tetap tertutup di empat karena alasan itu.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2109,9 +2107,9 @@ rich.addSection(MB.searchPlannerSection({
 await rich.send(jid)
 ```
 
-| Builder | Primitive | Key fields |
+| Builder | Primitif | Field utama |
 |---|---|---|
-| `mapSection` | `GenAIMapPrimitive` | `map_query_status`, `static_map`, `items`, `motivation` — for a map that actually draws use `rich.addMap`, see below |
+| `mapSection` | `GenAIMapPrimitive` | `map_query_status`, `static_map`, `items`, `motivation` — untuk peta yang benar-benar tergambar pakai `rich.addMap`, lihat di bawah |
 | `placeItem` | `GenAIPlaceDetailsItem` | `id`, `name`, `image_url`, `item_type`, `category`, `price_level`, `opening_status`, `opening_hours`, `rating`, `address`, `marketplace_metadata` |
 | `sportsSection` | `GenAISportsWidgetPrimitive` | `game_id`, `league`, `status`, `status_detail`, `start_time_utc_seconds`, `venue`, `group`, `content` |
 | `videoSection` | `GenAIVideoPrimitive` | `post_id`, `reels_url`, `reels_title`, `creator`, `video_delivery_response` |
@@ -2120,7 +2118,7 @@ await rich.send(jid)
 | `compactEntitySection` | `GenAICompactEntityPrimitive` | `title`, `subtitle`, `entity_id`, `entity_type`, `action_type` |
 | `actionListSection` / `actionListRow` | `GenAIActionListPrimitive` | `rows` of `title`, `subtitle`, `action`, `icon`, `url`, `row_type` |
 | `searchPlannerSection` / `plannerStep` | `GenAISearchPlannerStepsPrimitive` | `sources`, `steps`, `query_url`, `search_engine`, `facepile_favicons` |
-| `searchResultV2Section` | `GenAISearchResultV2Primitive` | same fields plus `response_id` |
+| `searchResultV2Section` | `GenAISearchResultV2Primitive` | field yang sama plus `response_id` |
 | `plannerSnippetSection` | `GenAISearchPlannerStepSnippetPrimitive` | `header`, `current_step`, `total_steps`, `status` |
 | `chainOfThoughtSection` | `GenAIChainOfThoughtStepPrimitive` | `header`, `subtitle`, `markdown_text` |
 | `searchAdSection` | `GenAISearchAdPrimitive` | `story_id`, `actor_name`, `actor_image_url`, `image_url`, `message` |
@@ -2134,9 +2132,9 @@ await rich.send(jid)
 
 #### Peta digambar dari submessage, bukan dari section
 
-`GenAIMapPrimitive` is the Meta AI app's own map node. The WhatsApp client reads a map somewhere else entirely: out of the protobuf submessage list, as `AIRichResponseSubMessageType.AI_RICH_RESPONSE_MAP` (7) carrying `mapMetadata`. A section on its own arrives and renders nothing.
+`GenAIMapPrimitive` itu node peta milik aplikasi Meta AI sendiri. Klien WhatsApp membaca peta dari tempat yang sama sekali lain: dari daftar submessage protobuf, sebagai `AIRichResponseSubMessageType.AI_RICH_RESPONSE_MAP` (7) yang membawa `mapMetadata`. Section yang berdiri sendiri memang tiba, tapi tidak menggambar apa-apa.
 
-`rich.addMap` emits both halves at once, the same way `addTable` and `addCode` pair a section with their metadata:
+`rich.addMap` memancarkan kedua paruhnya sekaligus, sama seperti `addTable` dan `addCode` memasangkan section dengan metadata-nya:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2152,9 +2150,9 @@ rich.addMap([
 await rich.send(jid)
 ```
 
-Each place needs a numeric `latitude` and `longitude` — anything else throws rather than dropping a pin at 0,0. Pins are numbered from one in the order you pass them. The map centres on the average of the places unless you pass `center`, and `latitudeDelta` / `longitudeDelta` (both `0.05` by default) set how much ground the frame covers. `showInfoList` draws the list under the map, `motivation` is the line above it, and `staticMapUrl` fills in the section half for clients reading that instead.
+Setiap tempat butuh `latitude` dan `longitude` berupa angka — selain itu dilempar error, bukan menjatuhkan pin di 0,0. Pin dinomori dari satu mengikuti urutan yang kamu serahkan. Petanya berpusat di rata-rata tempat-tempatnya kecuali kamu memberi `center`, dan `latitudeDelta` / `longitudeDelta` (bawaan `0.05` keduanya) menentukan seberapa luas area yang masuk frame. `showInfoList` menggambar daftarnya di bawah peta, `motivation` baris di atasnya, dan `staticMapUrl` mengisi paruh section untuk klien yang justru membaca itu.
 
-Items are nodes a layout carries rather than sections of their own, so build them and hand them to a layout:
+Item itu node yang dibawa sebuah layout, bukan section yang berdiri sendiri, jadi bangun dulu lalu serahkan ke sebuah layout:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2173,11 +2171,11 @@ rich.addSection(MB.contextualSourcesSection([
 await rich.send(jid)
 ```
 
-`mediaItem`, `placeEntityItem`, `socialEntityItem`, `productEntityItem`, `threadSurfingItem`, `sideBySideSurveyItem`, `accountLinkingApp`, `calendarEvent`, `actionListRow`, `plannerStep` and `transparencySignal` all return item nodes.
+`mediaItem`, `placeEntityItem`, `socialEntityItem`, `productEntityItem`, `threadSurfingItem`, `sideBySideSurveyItem`, `accountLinkingApp`, `calendarEvent`, `actionListRow`, `plannerStep`, dan `transparencySignal` semuanya mengembalikan node item.
 
-Two layouts join the eight already supported: `multipleResponseSection(responses, { layoutType })` builds `GenAIMultipleResponseLayoutViewModel`, and `bloomCardSection(primitives)` builds `GenAIIGSuggestedBloomCardLayoutViewModel`. `addonActionSection(primitives, { actionType, alignment })` fills in the `addon_action_alignment` field the earlier addon helper did not set.
+Dua layout bergabung dengan delapan yang sudah didukung: `multipleResponseSection(responses, { layoutType })` membangun `GenAIMultipleResponseLayoutViewModel`, dan `bloomCardSection(primitives)` membangun `GenAIIGSuggestedBloomCardLayoutViewModel`. `addonActionSection(primitives, { actionType, alignment })` mengisi field `addon_action_alignment` yang tidak disetel helper addon sebelumnya.
 
-For anything not modelled here, `customSection` sends a node straight through — the client dispatches on `__typename` and nothing else:
+Untuk apa pun yang belum dimodelkan di sini, `customSection` mengirim node-nya langsung — klien memilih jalur berdasarkan `__typename` dan tidak ada yang lain:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2190,23 +2188,23 @@ rich.addSection(MB.customSection('GenAITopicLinkItem', { title: 'Bali' }, { layo
 await rich.send(jid)
 ```
 
-Enums for all of the above ship alongside the builders: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType` and `UnifiedResponseMessageGroupKind`.
+Enum untuk semua yang di atas ikut bersama builder-nya: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType`, dan `UnifiedResponseMessageGroupKind`.
 
-`FooterActionType` also gained `COPY_LINK`, `REMIX_MEDIA` and `USE_TEMPLATE`.
+`FooterActionType` juga mendapat `COPY_LINK`, `REMIX_MEDIA`, dan `USE_TEMPLATE`.
 
 ### Meneruskan Jawaban Meta AI Yang Asli
 
-Everything above builds a rich response from scratch. There is a second path that behaves differently in one important way: relaying a message that genuinely came from Meta AI.
+Semua yang di atas membangun respons rich dari nol. Ada jalur kedua yang berperilaku berbeda dalam satu hal penting: merelay pesan yang benar-benar datang dari Meta AI.
 
-The client verifies forwarded bot messages against a root certificate it ships itself — `CN=Meta WA Feature Root CA`, ECDSA P-256, exported here as `BOT_SIGNATURE_ROOT_CERTIFICATE`. The payload that gets signed is short:
+Klien memverifikasi pesan bot yang diteruskan terhadap sertifikat root yang dibawanya sendiri — `CN=Meta WA Feature Root CA`, ECDSA P-256, diekspor di sini sebagai `BOT_SIGNATURE_ROOT_CERTIFICATE`. Payload yang ditandatangani pendek:
 
 ```
-version ("1")  ||  bot fbid  ||  unified response bytes
+version ("1")  ||  fbid bot  ||  byte unified response
 ```
 
-Nothing about the sender, the message id, the timestamp or the recipient is in it. That is what makes forwarding work at all: relay those three things unchanged and the proof still verifies, no matter who sends it on.
+Tidak ada apa pun tentang pengirim, id pesan, timestamp, atau penerima di dalamnya. Itulah yang membuat penerusan bisa bekerja sama sekali: relay ketiga hal itu tanpa diubah dan buktinya tetap terverifikasi, siapa pun yang meneruskannya.
 
-`forwardRichResponse` relays without touching any of them:
+`forwardRichResponse` merelay tanpa menyentuh satu pun di antaranya:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
