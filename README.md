@@ -2419,7 +2419,7 @@ ditambah `messageType: 1`, satu `botResponseId` baru, dan blok `verificationMeta
 
 #### htmlSection
 
-Use the section builder when the HTML sits alongside other sections on a builder you control.
+Pakai pembangun section-nya kalau HTML-nya duduk bersama section lain di builder yang kamu kendalikan.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2436,39 +2436,39 @@ await rich.send(m.chat)
 MB.htmlSection(html, { trustedSources?, height? }) => section
 ```
 
-| Builder | Primitive | Fields |
+| Builder | Primitif | Field |
 |---|---|---|
-| `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — the HTML document; `trusted_sources` — attribution origins |
+| `htmlSection` | `GenAIaeacdsnwHtmlPrimitive` | `payload` — dokumen HTML-nya; `trusted_sources` — origin untuk atribusi |
 
-It throws a `TypeError` on an empty or non-string `html`, and on a `trustedSources` that is not an array, so a malformed card fails at build time instead of arriving blank.
+Ia melempar `TypeError` kalau `html`-nya kosong atau bukan string, dan kalau `trustedSources`-nya bukan array, jadi kartu yang cacat gagal saat build ketimbang tiba kosong.
 
 #### Apa Yang Sebenarnya Disediakan WebView
 
-Measured on an Android device, not inferred. The page is injected into a blank frame, so it runs in an opaque origin:
+Diukur di perangkat Android, bukan dikira-kira. Halamannya disuntikkan ke frame kosong, jadi ia berjalan di origin opaque:
 
-| Signal | Value |
+| Sinyal | Nilainya |
 |---|---|
 | `location.origin` | `null` |
 | `location.protocol` | `about:` |
 | `document.baseURI` | `about:blank` |
 | `window.isSecureContext` | `false` |
-| `navigator.onLine` | `true` — it lies, ignore it |
+| `navigator.onLine` | `true` — ia bohong, abaikan saja |
 
-Every remote subresource fails: images from four unrelated hosts, `fetch`, `XMLHttpRequest`, a remote `<script>`, and an `<iframe>`. No `securitypolicyviolation` event fires for any of them.
+Setiap subresource remote gagal: gambar dari empat host berbeda, `fetch`, `XMLHttpRequest`, `<script>` remote, dan `<iframe>`. Tidak ada event `securitypolicyviolation` yang dipancarkan untuk satu pun di antaranya.
 
-`trustedSources` does not widen that. Tested on a device with one host listed in `trustedSources` and one absent: **both images failed**. Whatever the option does, it does not buy you a remote image, so images stay `data:` URIs.
+`trustedSources` tidak melonggarkan itu. Diuji di perangkat dengan satu host terdaftar di `trustedSources` dan satu tidak: **kedua gambarnya gagal**. Apa pun fungsi opsi itu, ia tidak memberimu gambar remote, jadi gambar tetap harus berupa URI `data:`.
 
-Loading is dead, but talking is not. Two transports were measured on the same device in the same bubble:
+Memuat sudah mati, tapi berbicara belum. Dua transport diukur di perangkat yang sama di bubble yang sama:
 
-| Transport | Result |
+| Transport | Hasilnya |
 |---|---|
-| `new WebSocket('wss://…')` | **connects** — `onopen` fires |
-| `RTCPeerConnection` + STUN | **gathers an `srflx` candidate**, so outbound UDP and NAT reflection work |
-| `fetch` / `XMLHttpRequest` / `<img>` / `<script>` / `<iframe>` | dead |
+| `new WebSocket('wss://…')` | **tersambung** — `onopen` dipancarkan |
+| `RTCPeerConnection` + STUN | **mengumpulkan kandidat `srflx`**, jadi UDP keluar dan refleksi NAT bekerja |
+| `fetch` / `XMLHttpRequest` / `<img>` / `<script>` / `<iframe>` | mati |
 
-So a mini app is offline for anything it wants to *load*, and online for anything it wants to *talk to*. That is the whole difference, and it is what makes a networked mini app possible at all. Why the two split that way has not been established, so do not reason from a mechanism here — go by the table.
+Jadi mini app itu offline untuk apa pun yang ingin ia *muat*, dan online untuk apa pun yang ingin ia *ajak bicara*. Itu seluruh bedanya, dan itulah yang membuat mini app berjaringan mungkin sama sekali. Kenapa keduanya terbagi begitu belum dipastikan, jadi jangan bernalar dari mekanisme di sini — ikuti tabelnya.
 
-The opaque origin then takes the storage with it. Every one of these throws `SecurityError`, `indexedDB.open()` included:
+Origin opaque itu lalu ikut membawa penyimpanannya. Setiap satu di antara ini melempar `SecurityError`, `indexedDB.open()` termasuk:
 
 ```
 localStorage   THROW SecurityError
@@ -2478,49 +2478,49 @@ indexedDB.open THROW SecurityError
 caches         undefined
 ```
 
-So a mini app here **ships everything it needs and remembers nothing on its own**. Plan for that:
+Jadi mini app di sini **membawa semua yang dibutuhkannya dan tidak mengingat apa pun sendiri**. Rencanakan untuk itu:
 
-- Embed media as `data:` URIs. A `data:` image loads fine; an `https:` one never will.
-- Do not ship storage fallbacks. Wrapping `localStorage` in `try/catch` is correct, but the catch always runs — a high score cannot survive the bubble being re-rendered on its own.
-- Persistence and any channel back to your bot go over a WebSocket to a server you run. The page talks to your server and your bot reads from the same place.
-- Nothing measured so far tells the page who is viewing it, and one message in a group is one page for everybody — so identity has to be baked in per message, or asked for on screen.
-- No `crypto.subtle`, since it requires a secure context. `wss://` is still encrypted by TLS; it is only the page that is not a secure context.
-- The whole app travels inside the message, so its size is your budget.
+- Tanam media sebagai URI `data:`. Gambar `data:` memuat dengan baik; yang `https:` tidak akan pernah.
+- Jangan mengirim cadangan penyimpanan. Membungkus `localStorage` dengan `try/catch` itu benar, tapi blok catch-nya selalu jalan — skor tertinggi tidak bisa selamat dari bubble-nya digambar ulang.
+- Persistensi dan kanal apa pun kembali ke botmu lewat WebSocket ke server yang kamu jalankan. Halamannya bicara ke server-mu dan botmu membaca dari tempat yang sama.
+- Sejauh yang terukur, tidak ada apa pun yang memberi tahu halaman itu siapa yang menontonnya, dan satu pesan di grup berarti satu halaman untuk semua orang — jadi identitasnya harus ditanam per pesan, atau diminta di layar.
+- Tidak ada `crypto.subtle`, karena itu butuh secure context. `wss://` tetap dienkripsi TLS; yang bukan secure context hanya halamannya.
+- Seluruh aplikasinya berjalan di dalam pesan, jadi ukurannya itu anggaranmu.
 
-What does work: `canvas` 2D, WebGL and WebGL2, `OffscreenCanvas`, WebAssembly, Web Audio, `requestAnimationFrame`, and video or audio decoded from a `data:` URI.
+Yang memang jalan: `canvas` 2D, WebGL dan WebGL2, `OffscreenCanvas`, WebAssembly, Web Audio, `requestAnimationFrame`, serta video atau audio yang didekode dari URI `data:`.
 
 #### Menulis HTML Yang Berperilaku Benar di WebView
 
-The page runs inside a bubble in a scrolling chat list, not in a tab of its own. Five things that are harmless in a browser are not harmless here.
+Halamannya berjalan di dalam bubble di daftar chat yang bisa di-scroll, bukan di tab sendiri. Lima hal yang tidak berbahaya di browser jadi berbahaya di sini.
 
-**Give the page a fixed height.** This is the one that makes a card visibly shudder. If the content height depends on the width — a `<canvas>` at `width:100%; height:auto`, an image with no dimensions, anything with `aspect-ratio` — then the host measures the bubble from the content while the content measures itself from the width the host just handed it, and the two chase each other. A page measured across widths 300px to 460px should report the same height every time.
+**Beri halamannya tinggi yang tetap.** Ini yang membuat kartunya terlihat bergetar. Kalau tinggi kontennya bergantung pada lebarnya — `<canvas>` dengan `width:100%; height:auto`, gambar tanpa dimensi, apa pun yang memakai `aspect-ratio` — maka host mengukur bubble-nya dari kontennya sementara kontennya mengukur dirinya dari lebar yang baru diserahkan host, dan keduanya saling berkejaran. Satu halaman yang diukur di lebar 300px sampai 460px seharusnya melaporkan tinggi yang sama setiap kali.
 
-Pass `height` and the library handles it, whatever the page does:
+Beri `height` dan library-nya yang mengurus, apa pun yang dilakukan halamannya:
 
 ```js
 await MB.sendHtmlApp(sock, m.chat, html, { height: 300 })
 ```
 
-It prepends `lockHeight(300)`, which pins `html`/`body` to that many pixels and moves the page's own content into a `#__wrap` scroll container on `DOMContentLoaded`. The container is what makes it work: pinning `body` alone is not enough, because `overflow:hidden` clips the view without shrinking `scrollHeight`, and the host still measures the overflow.
+Ia menyisipkan `lockHeight(300)` di depan, yang memaku `html`/`body` ke sebanyak itu piksel dan memindahkan konten halamannya sendiri ke kontainer scroll `#__wrap` pada `DOMContentLoaded`. Kontainer itulah yang membuatnya bekerja: memaku `body` saja tidak cukup, karena `overflow:hidden` memotong tampilannya tanpa mengecilkan `scrollHeight`, dan host tetap mengukur luapannya.
 
-**Or let the page say its own height.** The bridge the host injects carries exactly one method, and it works:
+**Atau biarkan halamannya menyebut tingginya sendiri.** Bridge yang disuntikkan host membawa tepat satu metode, dan itu bekerja:
 
 ```js
 window.AndroidBridge.updateSize(520)
 ```
 
-The bubble resizes to that many pixels. Confirmed on a device by tapping a button that made the call — so a mini app does not have to be pinned from the outside at all. Note the page must not also pin `html`/`body` in CSS, or the frame grows while the content stays where the stylesheet put it.
+Bubble-nya berubah ukuran menjadi sebanyak itu piksel. Terkonfirmasi di perangkat dengan mengetuk satu button yang melakukan panggilan itu — jadi mini app tidak harus dipaku dari luar sama sekali. Catat: halamannya tidak boleh ikut memaku `html`/`body` di CSS, atau frame-nya tumbuh sementara kontennya tetap di tempat yang ditaruh stylesheet.
 
-`checkHtmlApp` treats an `AndroidBridge.updateSize` call as settling the height, so a page that reports for itself no longer draws the "no height settled" warning.
+`checkHtmlApp` menganggap panggilan `AndroidBridge.updateSize` sebagai penyelesaian tingginya, jadi halaman yang melapor sendiri tidak lagi memunculkan peringatan "no height settled".
 
-To do it by hand instead, pin the outer height in pixels, give the canvas a fixed CSS size, and let anything longer scroll inside its own `overflow-y: auto` container rather than growing the page:
+Kalau mau melakukannya dengan tangan, paku tinggi luarnya dalam piksel, beri canvas-nya ukuran CSS yang tetap, dan biarkan apa pun yang lebih panjang di-scroll di dalam kontainer `overflow-y: auto` miliknya sendiri ketimbang menumbuhkan halamannya:
 
 ```css
 #wrap { width: 100%; height: 300px; overflow: hidden }
 #game { width: 312px; height: 106px }
 ```
 
-**Stop the animation loop.** A bare `requestAnimationFrame` chain keeps drawing while the bubble is mounted — after the game ends, after the user scrolls away, after the screen turns off. Gate it:
+**Hentikan loop animasinya.** Rantai `requestAnimationFrame` yang polos terus menggambar selama bubble-nya terpasang — setelah gamenya selesai, setelah pengguna scroll menjauh, setelah layarnya mati. Beri gerbang:
 
 ```js
 let rafId = null, running = true
@@ -2537,9 +2537,9 @@ document.addEventListener('visibilitychange', () => {
 })
 ```
 
-then end `loop()` with `if (running) rafId = requestAnimationFrame(loop)`.
+lalu akhiri `loop()` dengan `if (running) rafId = requestAnimationFrame(loop)`.
 
-**Close IndexedDB.** `indexedDB.open` without a matching `close()` leaves a connection behind every single time. Save on a hot path and they pile up:
+**Tutup IndexedDB.** `indexedDB.open` tanpa `close()` yang sepadan meninggalkan satu koneksi setiap kali, tanpa kecuali. Simpan di jalur yang sering dilewati dan koneksinya menumpuk:
 
 ```js
 rq.onsuccess = () => {
@@ -2551,7 +2551,7 @@ rq.onsuccess = () => {
 }
 ```
 
-**Scale the canvas to the device.** A `<canvas width="560">` shown at 352 CSS px on a `devicePixelRatio: 3` phone needs 1056 real pixels and gets 560 — visibly soft. Size the backing store and keep your game coordinates in constants:
+**Skalakan canvas-nya ke perangkatnya.** `<canvas width="560">` yang ditampilkan pada 352 px CSS di ponsel dengan `devicePixelRatio: 3` butuh 1056 piksel sungguhan dan hanya dapat 560 — kelihatan kabur. Atur ukuran backing store-nya dan simpan koordinat game-mu di konstanta:
 
 ```js
 const W = 560, H = 190
@@ -2561,18 +2561,18 @@ canvas.height = H * dpr
 ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 ```
 
-**Scope your input handler.** `document.addEventListener('pointerdown', e => e.preventDefault())` cancels the gesture for the whole document, including the padding around your app, so the host can lose the scroll it was about to start. Bind to the element that actually needs it:
+**Batasi cakupan handler input-mu.** `document.addEventListener('pointerdown', e => e.preventDefault())` membatalkan gestur untuk seluruh dokumen, termasuk padding di sekitar aplikasimu, sehingga host bisa kehilangan scroll yang baru akan dimulainya. Ikat ke elemen yang benar-benar membutuhkannya:
 
 ```js
 canvas.addEventListener('pointerdown', e => { e.preventDefault(); jump() })
 document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); jump() } })
 ```
 
-**One escaping trap.** If you build the HTML as a JavaScript string literal, `"\d"` becomes `d` and `"\s"` becomes `s` before the page ever sees them — a regex like `/dino_best=(\d+)/` silently turns into one that matches literal `d` characters and never fires. Write `\\d` and `\\s`, or read the document from a file as in the first example and sidestep it.
+**Satu jebakan escaping.** Kalau kamu membangun HTML-nya sebagai literal string JavaScript, `"\d"` menjadi `d` dan `"\s"` menjadi `s` sebelum halamannya melihatnya — regex seperti `/dino_best=(\d+)/` diam-diam berubah jadi regex yang mencocokkan karakter `d` literal dan tidak pernah berjalan. Tulis `\\d` dan `\\s`, atau baca dokumennya dari berkas seperti contoh pertama dan hindari masalahnya sekalian.
 
 #### Membaca Balik Mini App
 
-`decodeAIRich` handles the primitive like any other — there is no whitelist to update:
+`decodeAIRich` menangani primitif ini seperti yang lain — tidak ada whitelist yang perlu diperbarui:
 
 ```js
 const rich = MB.decodeAIRich(msg)
@@ -2582,24 +2582,24 @@ if (section) {
 }
 ```
 
-Do not reach for `sections[0]` — the HTML lands wherever you added it, so a card with text and a divider in front of it puts the page at index 2.
+Jangan mengambil `sections[0]` — HTML-nya mendarat di tempat kamu menambahkannya, jadi kartu dengan teks dan pembatas di depannya menaruh halamannya di indeks 2.
 
-Enum values, read from the client rather than guessed:
+Nilai enum-nya, dibaca dari klien ketimbang dikira-kira:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
 ```
 
-`AI_RICH_LAYOUTS` lists all eight layout names accepted by `MB.newLayout` — `Single`, `HScroll`, and `ActionRow` are the ones MessageBuilder uses; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, and `AddonAction` also exist.
+`AI_RICH_LAYOUTS` mendaftar kedelapan nama layout yang diterima `MB.newLayout` — `Single`, `HScroll`, dan `ActionRow` yang dipakai MessageBuilder; `VStack`, `Grid`, `FlexibleCountGrid`, `RichListItem`, dan `AddonAction` juga ada.
 
 ### Layar Tertanam
 
-An embedded screen is a **second surface carried by the same message**. The bubble in the chat stays small — a line of text, a preview card — and tapping it opens a full sheet that has its own sections, or several tabs of them. It is how one message can be both a short answer and a whole mini app.
+Layar tertanam adalah **permukaan kedua yang dibawa pesan yang sama**. Bubble di chat-nya tetap kecil — satu baris teks, satu kartu preview — dan mengetuknya membuka satu sheet penuh yang punya section-nya sendiri, atau beberapa tab berisi section. Begitulah satu pesan bisa sekaligus menjadi jawaban singkat dan satu mini app utuh.
 
-Two things to know before you build one:
+Dua hal yang perlu diketahui sebelum membangunnya:
 
-- **WhatsApp Web does not render it.** Its parser hits the field and gives up, logging `CometComposedTextV2UnsupportedURType typename="embedded_screens"`. This is an Android and iOS surface. Test it on a phone.
-- **Tabs are nested inside `content`, not beside it.** The screen holds `content[]`; each entry is either a section (it has `view_model`) or a tab container (it has `tabs`). Getting this backwards is the single most common reason a screen opens blank.
+- **WhatsApp Web tidak menggambarnya.** Parser-nya menemui field-nya lalu menyerah, mencatat `CometComposedTextV2UnsupportedURType typename="embedded_screens"`. Ini permukaan Android dan iOS. Uji di ponsel.
+- **Tab disarangkan di dalam `content`, bukan di sebelahnya.** Layarnya memegang `content[]`; tiap entri berupa section (ada `view_model`-nya) atau kontainer tab (ada `tabs`-nya). Membalik ini satu-satunya alasan paling umum sebuah layar terbuka kosong.
 
 #### Contoh lengkap
 
@@ -2619,20 +2619,20 @@ const gameHtml = `
 const scoreHtml = '<body style="margin:0;color:#eee;font-family:Arial"><h3>Best: 00000</h3></body>'
 
 const rich = new MB.AIRich(sock)
-  .addSection(MB.htmlSection('<b>Dino Runner</b> — tap to play'))
+  .addSection(MB.htmlSection('<b>Dino Runner</b> — ketuk untuk main'))
 
 rich.addEmbeddedScreen(MB.embeddedScreen({
   title: 'Preview',
   tabs: [
     MB.embeddedTab({ id: 'tab_0', tabHeader: 'Dino Runner', sections: [MB.htmlSection(gameHtml)] }),
-    MB.embeddedTab({ id: 'tab_1', tabHeader: 'Scores', sections: [MB.htmlSection(scoreHtml)] })
+    MB.embeddedTab({ id: 'tab_1', tabHeader: 'Skor', sections: [MB.htmlSection(scoreHtml)] })
   ]
 }))
 
 await rich.send(m.chat)
 ```
 
-A screen without tabs is just as valid — pass `content` instead, and the sheet shows one page:
+Layar tanpa tab sama validnya — beri `content` saja, dan sheet-nya menampilkan satu halaman:
 
 ```js
 rich.addEmbeddedScreen(MB.embeddedScreen({
