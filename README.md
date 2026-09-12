@@ -3964,18 +3964,18 @@ await sock.groupParticipantsUpdate(groupJid, [userJid], 'demote')
 ```js
 await sock.groupUpdateDescription(
   groupJid,
-  'Welcome to Elaina Community 💜'
+  'Selamat datang di Elaina Community 💜'
 )
 ```
 
 ### Subjek dan Pengaturan
 
 ```js
-await sock.groupUpdateSubject(groupJid, 'New name')
+await sock.groupUpdateSubject(groupJid, 'Nama baru')
 await sock.groupSettingUpdate(groupJid, 'announcement')
 ```
 
-`groupSettingUpdate` takes one of `announcement` (only admins may send), `not_announcement`, `locked` (only admins may edit group info) or `unlocked`.
+`groupSettingUpdate` menerima salah satu dari `announcement` (hanya admin yang boleh mengirim), `not_announcement`, `locked` (hanya admin yang boleh menyunting info grup), atau `unlocked`.
 
 ### Siapa Yang Boleh Masuk dan Siapa Yang Boleh Menambah
 
@@ -3984,7 +3984,7 @@ await sock.groupMemberAddMode(groupJid, 'admin_add')
 await sock.groupJoinApprovalMode(groupJid, 'on')
 ```
 
-`groupMemberAddMode` is `admin_add` or `all_member_add`. `groupJoinApprovalMode` is `on` or `off`; with it on, people who use the invite link land in a request queue instead of the group.
+`groupMemberAddMode` bernilai `admin_add` atau `all_member_add`. `groupJoinApprovalMode` bernilai `on` atau `off`; kalau aktif, orang yang memakai link undangan mendarat di antrean permintaan, bukan langsung di grupnya.
 
 ### Antrean Permintaan Masuk
 
@@ -4006,7 +4006,7 @@ const preview = await sock.groupGetInviteInfo(code)
 await sock.groupAcceptInvite(code)
 ```
 
-`groupGetInviteInfo` reads the group behind a code without joining. There is also a direct invite pair — `groupRevokeInviteV4(groupJid, invitedJid)` and `groupAcceptInviteV4` — for the invite sent to one person rather than a link.
+`groupGetInviteInfo` membaca grup di balik sebuah kode tanpa ikut masuk. Ada juga sepasang undangan langsung — `groupRevokeInviteV4(groupJid, invitedJid)` dan `groupAcceptInviteV4` — untuk undangan yang dikirim ke satu orang, bukan berupa link.
 
 ### Pesan Sementara
 
@@ -4015,7 +4015,7 @@ await sock.groupToggleEphemeral(groupJid, 7 * 24 * 60 * 60)
 await sock.groupToggleEphemeral(groupJid, 0)
 ```
 
-The duration is in seconds; `0` turns it off. WhatsApp's own options are 24 hours, 7 days and 90 days.
+Durasinya dalam detik; `0` mematikannya. Pilihan milik WhatsApp sendiri adalah 24 jam, 7 hari, dan 90 hari.
 
 ### Membaca Grup
 
@@ -4026,20 +4026,20 @@ const all = await sock.groupFetchAllParticipating()
 await sock.groupLeave(groupJid)
 ```
 
-`groupFetchAllParticipating` returns every group you are in, keyed by jid. It is one request for all of them, so prefer it over calling `groupMetadata` in a loop.
+`groupFetchAllParticipating` mengembalikan semua grup yang kamu ikuti, dikunci berdasarkan jid. Itu satu permintaan untuk semuanya, jadi pilih ini ketimbang memanggil `groupMetadata` di dalam loop.
 
 ---
 
 ## 🏘️ Komunitas
 
-A community is a parent that owns groups. Every method mirrors its group counterpart, plus the linking calls that have no group equivalent.
+Komunitas itu induk yang memiliki grup-grup. Setiap metodenya mencerminkan padanannya di grup, ditambah panggilan penautan yang tidak punya padanan di grup.
 
 ### Membuat dan Menautkan
 
 ```js
-const community = await sock.communityCreate('Elaina Community', 'What this community is for')
+const community = await sock.communityCreate('Elaina Community', 'Untuk apa komunitas ini')
 
-const group = await sock.communityCreateGroup('Announcements', [userJid], community.id)
+const group = await sock.communityCreateGroup('Pengumuman', [userJid], community.id)
 
 await sock.communityLinkGroup(existingGroupJid, community.id)
 await sock.communityUnlinkGroup(existingGroupJid, community.id)
@@ -4047,21 +4047,21 @@ await sock.communityUnlinkGroup(existingGroupJid, community.id)
 const linked = await sock.communityFetchLinkedGroups(community.id)
 ```
 
-`communityCreateGroup` makes a group already attached to the community. `communityLinkGroup` attaches one that exists — you must be admin of both.
+`communityCreateGroup` membuat grup yang sudah tertaut ke komunitasnya. `communityLinkGroup` menautkan grup yang sudah ada — kamu harus jadi admin di keduanya.
 
 ### Anggota dan Pengaturan
 
 ```js
 await sock.communityParticipantsUpdate(communityJid, [userJid], 'promote')
-await sock.communityUpdateSubject(communityJid, 'New name')
-await sock.communityUpdateDescription(communityJid, 'New description')
+await sock.communityUpdateSubject(communityJid, 'Nama baru')
+await sock.communityUpdateDescription(communityJid, 'Deskripsi baru')
 await sock.communitySettingUpdate(communityJid, 'announcement')
 await sock.communityMemberAddMode(communityJid, 'admin_add')
 await sock.communityJoinApprovalMode(communityJid, 'on')
 await sock.communityToggleEphemeral(communityJid, 7 * 24 * 60 * 60)
 ```
 
-The actions and values match the group ones above.
+Aksi dan nilainya sama dengan yang di grup di atas.
 
 ### Undangan dan Pembacaan
 
@@ -4084,9 +4084,9 @@ await sock.communityLeave(communityJid)
 const settings = await sock.fetchPrivacySettings(true)
 ```
 
-Pass `true` to bypass the cache. Each setting has its own updater, and the value goes to the server unchanged — an unknown one is rejected there, not here:
+Beri `true` untuk melewati cache-nya. Setiap pengaturan punya pengubahnya sendiri, dan nilainya dikirim ke server tanpa diubah — nilai yang tidak dikenal ditolak di sana, bukan di sini:
 
-| Call | Accepts |
+| Panggilan | Menerima |
 |---|---|
 | `updateLastSeenPrivacy(value)` | `all`, `contacts`, `contact_blacklist`, `none` |
 | `updateOnlinePrivacy(value)` | `all`, `match_last_seen` |
@@ -4096,7 +4096,7 @@ Pass `true` to bypass the cache. Each setting has its own updater, and the value
 | `updateGroupsAddPrivacy(value)` | `all`, `contacts`, `contact_blacklist` |
 | `updateCallPrivacy(value)` | `all`, `known` |
 | `updateMessagesPrivacy(value)` | `all`, `contacts` |
-| `updateDisableLinkPreviewsPrivacy(disabled)` | a boolean |
+| `updateDisableLinkPreviewsPrivacy(disabled)` | sebuah boolean |
 
 ```js
 await sock.updateLastSeenPrivacy('contacts')
@@ -4111,7 +4111,7 @@ await sock.updateDefaultDisappearingMode(7 * 24 * 60 * 60)
 const durations = await sock.fetchDisappearingDuration(jidA, jidB)
 ```
 
-The default applies to new chats. `fetchDisappearingDuration` takes any number of jids and reports what each is set to.
+Bawaannya berlaku untuk chat baru. `fetchDisappearingDuration` menerima jid sebanyak apa pun dan melaporkan pengaturan masing-masing.
 
 ### Pemblokiran
 
@@ -4134,23 +4134,23 @@ await sock.reportSpam(groupJid, {
 })
 ```
 
-`reportSpam` sends the chat-level report, the same one WhatsApp Web sends when you report a contact or a group without picking a message. `flow` tells the server where the report came from and defaults to `SPAM_FLOWS.OverflowMenuReport`; `SPAM_FLOWS` carries the values WhatsApp Web itself uses. `source` names the participant being reported inside a group, `subject` carries the entity name, and `isKnownChat` says whether the chat was already known to you. Reporting one specific message is not covered — that needs the franking tags the client derives when it receives the message.
+`reportSpam` mengirim laporan tingkat chat, yang sama dengan yang dikirim WhatsApp Web saat kamu melaporkan satu kontak atau grup tanpa memilih pesan tertentu. `flow` memberi tahu server dari mana laporannya datang dan bawaannya `SPAM_FLOWS.OverflowMenuReport`; `SPAM_FLOWS` membawa nilai yang dipakai WhatsApp Web sendiri. `source` menyebut anggota yang dilaporkan di dalam grup, `subject` membawa nama entitasnya, dan `isKnownChat` menyatakan apakah chat-nya sudah kamu kenal. Melaporkan satu pesan tertentu tidak dicakup — itu butuh tag franking yang diturunkan klien saat ia menerima pesannya.
 
 ---
 
 ## 📨 Semua Jenis Pesan
 
-`message.message` is a box with exactly one key set, and the key names the
-kind. There are **115** of them. Two things trip up almost everyone starting
-out, so read this part before hunting for a bug that is not there.
+`message.message` itu kotak dengan tepat satu kunci terisi, dan kuncinya yang
+menyebut jenisnya. Jumlahnya **115**. Dua hal menjegal hampir semua orang yang
+baru mulai, jadi baca bagian ini sebelum memburu bug yang sebenarnya tidak ada.
 
 ### Kenapa `conversation` kadang kosong
 
-**31 of the 115 are wrappers.** They carry no content of their own — they hold
-another message inside. A view-once photo is not `imageMessage`, it is
-`viewOnceMessageV2` containing an `imageMessage`. A group status reply is
-`groupStatusMessageV2` containing whatever was actually said. Read the outer
-key and you find nothing:
+**31 dari 115 itu pembungkus.** Mereka tidak membawa isi sendiri — mereka memegang
+pesan lain di dalamnya. Foto view-once itu bukan `imageMessage`, tapi
+`viewOnceMessageV2` yang memuat `imageMessage`. Balasan status grup itu
+`groupStatusMessageV2` yang memuat apa pun yang sebenarnya dikatakan. Baca kunci
+terluarnya dan kamu tidak menemukan apa-apa:
 
 ```js
 const m = messages[0]
@@ -4158,9 +4158,9 @@ console.log(m.message.conversation)          // undefined
 console.log(Object.keys(m.message))          // [ 'groupStatusMessageV2' ]
 ```
 
-`normalizeMessageContent` peels them off for you, up to five layers deep,
-because wrappers nest — an edited view-once photo inside an ephemeral chat is
-three of them stacked:
+`normalizeMessageContent` melepasnya untukmu, sampai lima lapis, karena
+pembungkusnya bersarang — foto view-once yang disunting di dalam chat sementara
+itu tiga pembungkus bertumpuk:
 
 ```js
 import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
@@ -4170,33 +4170,33 @@ const type = getContentType(content)        // 'imageMessage'
 const text = content?.conversation || content?.extendedTextMessage?.text
 ```
 
-Always normalise before you look. The full list of wrappers, so you can
-recognise one when you see it:
+Selalu normalkan sebelum kamu melihatnya. Daftar lengkap pembungkusnya, supaya
+kamu mengenalinya saat bertemu:
 
-| Group | Wrappers |
+| Kelompok | Pembungkus |
 |---|---|
-| Disappearing and view-once | `ephemeralMessage`, `viewOnceMessage`, `viewOnceMessageV2`, `viewOnceMessageV2Extension`, `limitSharingMessage` |
-| Edits and replies | `editedMessage`, `associatedChildMessage`, `questionMessage`, `questionReplyMessage` |
+| Sementara dan view-once | `ephemeralMessage`, `viewOnceMessage`, `viewOnceMessageV2`, `viewOnceMessageV2Extension`, `limitSharingMessage` |
+| Suntingan dan balasan | `editedMessage`, `associatedChildMessage`, `questionMessage`, `questionReplyMessage` |
 | Status | `statusMentionMessage`, `statusAddYours`, `groupStatusMessage`, `groupStatusMessageV2`, `groupStatusMentionMessage` |
-| Groups | `groupMentionedMessage` |
-| Bots | `botInvokeMessage`, `botTaskMessage`, `botForwardedMessage`, `botPlatformRegistrationSuccessMessage` |
-| Newsletter | `newsletterAdminProfileMessage`, `newsletterAdminProfileMessageV2`, `newsletterAdminProfileStatusMessage`, `newsletterScheduledMessage` |
-| Polls and media | `pollCreationMessageV4`, `pollCreationOptionImageMessage`, `documentWithCaptionMessage`, `lottieStickerMessage`, `audioStickerMessage`, `eventCoverImage`, `spoilerMessage` |
-| Settings | `acp2SettingMessage` |
+| Grup | `groupMentionedMessage` |
+| Bot | `botInvokeMessage`, `botTaskMessage`, `botForwardedMessage`, `botPlatformRegistrationSuccessMessage` |
+| Channel | `newsletterAdminProfileMessage`, `newsletterAdminProfileMessageV2`, `newsletterAdminProfileStatusMessage`, `newsletterScheduledMessage` |
+| Polling dan media | `pollCreationMessageV4`, `pollCreationOptionImageMessage`, `documentWithCaptionMessage`, `lottieStickerMessage`, `audioStickerMessage`, `eventCoverImage`, `spoilerMessage` |
+| Pengaturan | `acp2SettingMessage` |
 
-The list is kept honest by `npm run verify:proto`: it reads every
-`FutureProofMessage` field out of the live WhatsApp Web bundle and fails if
-`normalizeMessageContent` would leave one of them wrapped. That check is how
-`acp2SettingMessage` and `audioStickerMessage` were caught — both had been
-sitting in the protocol unwrapped, so a bot receiving one saw an opaque key
-and an empty `conversation`.
+Daftarnya dijaga tetap jujur oleh `npm run verify:proto`: ia membaca setiap field
+`FutureProofMessage` dari bundle WhatsApp Web yang hidup dan gagal kalau
+`normalizeMessageContent` akan membiarkan salah satunya tetap terbungkus.
+Pemeriksaan itulah yang menangkap `acp2SettingMessage` dan `audioStickerMessage`
+— keduanya sudah lama duduk di protokol tanpa dibuka, jadi bot yang menerima
+salah satunya hanya melihat kunci buram dan `conversation` yang kosong.
 
-`audioStickerMessage` (field 134) arrived with a sibling, `stickerMessage.audioMessage`
-(field 26, in a new `audio` oneof): a sticker that carries a voice clip. Both
-decode, and nothing draws them yet — WhatsApp Web maps `audioStickerMessage` to
-no message type at all, and its sticker parser does not read `audioMessage`
-back out. Treat them as fields to recognise when they start arriving, not as
-something to send.
+`audioStickerMessage` (field 134) datang bersama satu saudara,
+`stickerMessage.audioMessage` (field 26, di dalam oneof baru `audio`): stiker yang
+membawa klip suara. Keduanya bisa didekode, dan belum ada yang menggambarnya —
+WhatsApp Web memetakan `audioStickerMessage` ke tidak ada jenis pesan sama
+sekali, dan parser stikernya tidak membaca `audioMessage` kembali keluar. Anggap
+keduanya field untuk dikenali saat mulai berdatangan, bukan untuk dikirim.
 
 ### 84 sisanya
 
