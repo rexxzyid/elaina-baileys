@@ -3669,11 +3669,11 @@ for (const r of responses) {
 }
 ```
 
-`filter` accepts `contacts`, `replied`, or `starred`; `searchText` searches the answers; `before` pages backwards.
+`filter` menerima `contacts`, `replied`, atau `starred`; `searchText` mencari di jawabannya; `before` menelusuri ke belakang.
 
 #### Menyembunyikan Jawaban Pertanyaan
 
-Moderates a follower's answer to a channel question.
+Memoderasi jawaban seorang follower atas pertanyaan channel.
 
 ```js
 await sock.newsletterQuestionResponseState('123456789@newsletter', questionServerId, responseServerId, 'HIDDEN')
@@ -3686,7 +3686,7 @@ await sock.newsletterQuestionResponseState('123456789@newsletter', questionServe
 
 #### Kemampuan Admin
 
-Which channel features the server has enabled for you. This is the gate WhatsApp Web itself checks before offering a feature.
+Fitur channel mana saja yang sudah diaktifkan server untukmu. Ini gerbang yang diperiksa WhatsApp Web sendiri sebelum menawarkan sebuah fitur.
 
 ```js
 const capabilities = await sock.newsletterAdminCapabilities('123456789@newsletter')
@@ -3694,13 +3694,13 @@ console.log(capabilities)
 // [ 'INSIGHTS', 'ADMIN_NOTIFICATIONS', 'PHOTO_POLLS', 'QUESTIONS', 'QUIZ', 'THREAD_MENU' ]
 ```
 
-Requires admin or owner rights on the channel; other channels answer `Not Authorized`.
+Butuh hak admin atau pemilik di channel-nya; channel lain menjawab `Not Authorized`.
 
 #### Profil Admin
 
-A channel admin can set a name and photo of their own that ride along with every update they post, so followers see who wrote it instead of only the channel. WhatsApp calls the channel-level switch **Show admin profile**.
+Admin channel bisa menyetel nama dan foto miliknya sendiri yang ikut bersama setiap update yang ia posting, sehingga follower melihat siapa penulisnya, bukan cuma channel-nya. WhatsApp menamai sakelar tingkat channel-nya **Show admin profile**.
 
-Three parts of this are readable from the library:
+Tiga bagian dari ini bisa dibaca dari library:
 
 ```js
 const info = await sock.newsletterAdminInfo('123456789@newsletter')
@@ -3712,19 +3712,19 @@ const info = await sock.newsletterAdminInfo('123456789@newsletter')
 // }
 
 const caps = await sock.newsletterAdminCapabilities('123456789@newsletter')
-caps.includes('ADMIN_PROFILE')   // has WhatsApp granted the feature to this channel
+caps.includes('ADMIN_PROFILE')   // apakah WhatsApp sudah memberi fitur ini ke channel-nya
 ```
 
-Incoming updates carry the posting admin in `newsletterMeta`, and the library now also surfaces the live change notification:
+Update yang masuk membawa admin yang memposting di `newsletterMeta`, dan library-nya sekarang juga memunculkan notifikasi perubahannya secara langsung:
 
 ```js
 sock.ev.on('newsletter-admin-profile.update', ({ id, adminProfile }) => {
   console.log(id, adminProfile)
-  // { id, name, pictureId, pictureDirectPath } — or null when an admin clears theirs
+  // { id, name, pictureId, pictureDirectPath } — atau null kalau seorang admin menghapus miliknya
 })
 ```
 
-Setting your own admin name or photo is **not possible from any client API**. WhatsApp Web only ever receives admin profiles: there is no mutation for it, `newsletterUpdate` accepts only name, description, picture and reaction settings, and the "Show admin profile" switch in the Web UI is rendered without a handler. It is set from the phone, and only on channels that hold the `ADMIN_PROFILE` capability.
+Menyetel nama atau foto admin milikmu sendiri **tidak mungkin dari API klien mana pun**. WhatsApp Web hanya pernah *menerima* profil admin: tidak ada mutasi untuk itu, `newsletterUpdate` hanya menerima pengaturan nama, deskripsi, foto, dan reaksi, dan sakelar "Show admin profile" di UI Web digambar tanpa handler. Itu disetel dari ponsel, dan hanya di channel yang memegang kemampuan `ADMIN_PROFILE`.
 
 #### Undangan Admin
 
@@ -3752,7 +3752,7 @@ const similar = await sock.newsletterSimilar('123456789@newsletter', { limit: 20
 
 #### Direktori
 
-Channel discovery, the same queries the Updates tab uses. Categories are `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS` and `SPECIAL_EVENTS` through `SPECIAL_EVENTS_5`.
+Penemuan channel, kueri yang sama dengan yang dipakai tab Pembaruan. Kategorinya `BUSINESS`, `ENTERTAINMENT`, `LIFESTYLE`, `NEWS`, `ORGANIZATIONS`, `PEOPLE`, `SPORTS`, dan `SPECIAL_EVENTS` sampai `SPECIAL_EVENTS_5`.
 
 ```js
 const list = await sock.newsletterDirectoryList({
@@ -3770,19 +3770,19 @@ const preview = await sock.newsletterDirectoryCategories({ categories: ['NEWS'],
 
 #### Penindakan dan Banding
 
-When a channel feature quietly disappears — the admin profile setting, the status ring, the ability to post — the cause is often an enforcement on the channel, not a missing rollout. This reads what WhatsApp is holding against it.
+Kalau satu fitur channel menghilang tanpa suara — pengaturan profil admin, cincin status, kemampuan memposting — penyebabnya sering kali penindakan terhadap channel-nya, bukan rollout yang belum sampai. Ini membaca apa yang sedang ditahan WhatsApp terhadapnya.
 
 ```js
 const enf = await sock.newsletterEnforcements('123456789@newsletter')
 
 console.log(enf.suspensions)
-console.log(enf.adminProfiles)            // enforcement aimed at the admin profile feature
+console.log(enf.adminProfiles)            // penindakan yang menyasar fitur profil admin
 console.log(enf.profilePictureDeletions)
 console.log(enf.violatingMessages)
 console.log(enf.geoSuspensions)
 ```
 
-Every entry carries the same shape:
+Setiap entri membawa bentuk yang sama:
 
 ```js
 {
@@ -3792,15 +3792,15 @@ Every entry carries the same shape:
   source: '...',
   appealState: '...',
   appealCreatedAt: undefined,
-  appealReasonOptions: [ { reason: 'RM_COPS', label: 'I own the rights' } ],
+  appealReasonOptions: [ { reason: 'RM_COPS', label: 'Saya pemegang haknya' } ],
   appealFormUrl: 'https://...',
   policy: { headline, subtitle, overview, explanation, adminDisclaimer }
 }
 ```
 
-`appealReasonOptions` and `appealFormUrl` are the appeal path WhatsApp itself offers — there is no other way to ask for a decision to be reviewed. An empty result in every bucket means the channel is clean and whatever is missing is a rollout, not a penalty.
+`appealReasonOptions` dan `appealFormUrl` itu jalur banding yang ditawarkan WhatsApp sendiri — tidak ada cara lain meminta satu keputusan ditinjau ulang. Hasil kosong di setiap keranjang berarti channel-nya bersih dan apa pun yang hilang itu soal rollout, bukan hukuman.
 
-Reports you filed, and appealing their outcome:
+Laporan yang kamu ajukan, dan mengajukan banding atas hasilnya:
 
 ```js
 const reports = await sock.newsletterReports()
@@ -3809,7 +3809,7 @@ await sock.newsletterAppealReport(reports[0].report_id, 'RESPONSE_VIOLATES_GUIDE
 
 ## 🪪 Username & Info
 
-WhatsApp Web moved usernames and the About text to MEX queries. These call the same persisted queries the Web client uses.
+WhatsApp Web memindahkan username dan teks Info ke kueri MEX. Yang di sini memanggil kueri persisted yang sama dengan yang dipakai klien Web.
 
 ### Username
 
@@ -3822,31 +3822,31 @@ await sock.setUsernamePin('1234')
 await sock.removeUsername()
 ```
 
-Check a name before claiming it:
+Cek sebuah nama sebelum mengklaimnya:
 
 ```js
 const { available, suggestions } = await sock.checkUsernameAvailability('elaina')
 ```
 
-`setUsername` resolves `true` only when the server answers `SUCCESS`. `state` is `ACTIVE` or `RESERVED`; pass `{ reserved: true }` when claiming a reserved name.
+`setUsername` menghasilkan `true` hanya kalau server menjawab `SUCCESS`. `state` bernilai `ACTIVE` atau `RESERVED`; beri `{ reserved: true }` saat mengklaim nama yang direservasi.
 
 #### Aturan Username
 
-`setUsername` and `checkUsernameAvailability` reject a bad name locally before it reaches the server, so you get the reason instead of a generic failure. The rules are read straight out of the Web client:
+`setUsername` dan `checkUsernameAvailability` menolak nama yang salah secara lokal sebelum sampai ke server, jadi kamu mendapat alasannya ketimbang kegagalan umum. Aturannya dibaca langsung dari klien Web:
 
-| Rule | Error |
+| Aturan | Error |
 |---|---|
-| Only `a-z`, `A-Z`, `0-9`, `_`, `.` | `INVALID_CHARACTER` |
-| 3 to 35 characters | `INVALID_LENGTH` |
-| At least one letter | `INVALID_NO_LETTERS` |
-| No leading or trailing `.`, no `..` | `INVALID_PERIODS` |
-| Cannot start with `www.` | `INVALID_WWW_PREFIX` |
-| Cannot end with `.com .org .net .int .edu .gov .mil .arpa .html .htm .txt .xml` | `INVALID_DOMAIN_SUFFIX` |
-| Cannot contain `whatsapp`, `instagram`, `facebook`, `oculus` | `INVALID_WORD` |
+| Hanya `a-z`, `A-Z`, `0-9`, `_`, `.` | `INVALID_CHARACTER` |
+| 3 sampai 35 karakter | `INVALID_LENGTH` |
+| Minimal satu huruf | `INVALID_NO_LETTERS` |
+| Tidak diawali atau diakhiri `.`, tidak ada `..` | `INVALID_PERIODS` |
+| Tidak boleh diawali `www.` | `INVALID_WWW_PREFIX` |
+| Tidak boleh diakhiri `.com .org .net .int .edu .gov .mil .arpa .html .htm .txt .xml` | `INVALID_DOMAIN_SUFFIX` |
+| Tidak boleh mengandung `whatsapp`, `instagram`, `facebook`, `oculus` | `INVALID_WORD` |
 
-The PIN is exactly four digits.
+PIN-nya tepat empat digit.
 
-Validate without calling the server:
+Validasi tanpa memanggil server:
 
 ```js
 import { validateUsername, isUsernamePin, displayUsername } from '@rexxhayanasi/elaina-baileys'
@@ -3857,25 +3857,25 @@ isUsernamePin('1234')              // true
 displayUsername('rexx')            // '@rexx'
 ```
 
-A leading `@` is stripped for you, so `setUsername('@elaina')` and `setUsername('elaina')` are the same call.
+`@` di depan dilepas untukmu, jadi `setUsername('@elaina')` dan `setUsername('elaina')` itu panggilan yang sama.
 
 ### Info / Status Teks
 
 ```js
-await sock.updateTextStatus('Building bots', { emoji: '🤖', ephemeralDurationSec: 0 })
+await sock.updateTextStatus('Sedang bikin bot', { emoji: '🤖', ephemeralDurationSec: 0 })
 
 const mine = await sock.fetchTextStatus(['6281234567890@s.whatsapp.net'])
 const about = await sock.fetchAbout('6281234567890@s.whatsapp.net')
 console.log(about.status)
 ```
 
-`updateTextStatus()` with no text clears it. `fetchTextStatus` takes one or many JIDs and answers per JID with the text, emoji, last update time and ephemeral duration. `fetchAbout` reads a single user's About through `xwa2_users_updates_since`.
+`updateTextStatus()` tanpa teks akan menghapusnya. `fetchTextStatus` menerima satu atau banyak JID dan menjawab per JID dengan teks, emoji, waktu pembaruan terakhir, dan durasi sementaranya. `fetchAbout` membaca Info satu pengguna lewat `xwa2_users_updates_since`.
 
-The classic `updateProfileStatus` IQ still works and is untouched.
+IQ `updateProfileStatus` yang klasik masih jalan dan tidak disentuh.
 
 ### Pemberitahuan Ketentuan Layanan
 
-WhatsApp gates some features behind a notice the user has to move through. These read the notice list and report progress back, the same IQs the Web client uses.
+WhatsApp menggerbangi sebagian fitur di balik pemberitahuan yang harus dilalui pengguna. Yang di sini membaca daftar pemberitahuannya dan melaporkan kemajuannya, dengan IQ yang sama seperti yang dipakai klien Web.
 
 ```js
 const notices = await sock.fetchUserNotices()
@@ -3884,7 +3884,7 @@ const notices = await sock.fetchUserNotices()
 await sock.updateUserNoticeStage('20601216', 5)
 ```
 
-`stage` is the server's own counter for that notice — read the current value from `fetchUserNotices` before advancing it.
+`stage` itu penghitung milik server untuk pemberitahuan tersebut — baca nilai saat ini dari `fetchUserNotices` sebelum memajukannya.
 
 ### Daftar Opt-Out Pemasaran
 
@@ -3907,7 +3907,7 @@ const settings = await sock.fetchPushSettings()
 
 ### Link Preview Dari Sisi Server
 
-Lets WhatsApp generate the preview instead of scraping the page yourself.
+Membiarkan WhatsApp yang membangkitkan preview-nya ketimbang kamu mengorek halamannya sendiri.
 
 ```js
 const preview = await sock.fetchServerLinkPreview('https://example.com')
