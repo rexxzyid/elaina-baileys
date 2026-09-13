@@ -5473,7 +5473,7 @@ Helper ini mengembalikan konten pesan yang kompatibel dengan protobuf dan bisa d
 
 ## 🛡️ Sinyal Kesehatan Akun
 
-WhatsApp tracks how an account reaches out to people it has not spoken to before, and it tells the client where it stands. Reading those two signals is far more reliable than guessing at a safe delay.
+WhatsApp melacak bagaimana satu akun menghubungi orang yang belum pernah diajaknya bicara, dan ia memberi tahu kliennya posisinya di mana. Membaca dua sinyal itu jauh lebih bisa dipegang daripada menebak jeda yang aman.
 
 ### Kuota Pesan ke Chat Baru
 
@@ -5487,9 +5487,9 @@ const cap = await sock.fetchNewChatMessageCap()
 // }
 ```
 
-`status` is WhatsApp's own escalation ladder for messaging **new** chats: `NONE` → `FIRST_WARNING` → `SECOND_WARNING` → `CAPPED`. `remaining` is what is left in the current cycle, and `cycleEnd` is when it resets.
+`status` itu tangga eskalasi milik WhatsApp sendiri untuk mengirim ke chat **baru**: `NONE` → `FIRST_WARNING` → `SECOND_WARNING` → `CAPPED`. `remaining` itu sisa di siklus sekarang, dan `cycleEnd` kapan ia direset.
 
-Only first contact with a new chat consumes quota. Replying inside a conversation the other person started does not.
+Hanya kontak pertama dengan chat baru yang memakan kuota. Membalas di dalam percakapan yang dimulai orang lain tidak.
 
 ### Timelock Reachout
 
@@ -5498,9 +5498,9 @@ const lock = await sock.fetchAccountReachoutTimelock()
 // { isActive: true, timeEnforcementEnds: Date, enforcementType: 'BIZ_QUALITY' }
 ```
 
-`isActive` means the account is already restricted from reaching out, and `timeEnforcementEnds` is when that lifts. `enforcementType` says why — `BIZ_QUALITY` is the quality-based one, the `BIZ_COMMERCE_VIOLATION_*` values are policy categories.
+`isActive` berarti akunnya sudah dibatasi dari menghubungi orang, dan `timeEnforcementEnds` kapan itu dilepas. `enforcementType` menyebut alasannya — `BIZ_QUALITY` yang berbasis kualitas, nilai `BIZ_COMMERCE_VIOLATION_*` itu kategori kebijakan.
 
-Both signals also arrive unprompted:
+Kedua sinyalnya juga datang tanpa diminta:
 
 ```js
 sock.ev.on('connection.update', ({ reachoutTimeLock }) => {
@@ -5513,27 +5513,27 @@ sock.ev.on('connection.update', ({ reachoutTimeLock }) => {
 ```js
 const guard = async () => {
   const lock = await sock.fetchAccountReachoutTimelock()
-  if (lock.isActive) return { send: false, reason: 'reachout timelock until ' + lock.timeEnforcementEnds }
+  if (lock.isActive) return { send: false, reason: 'timelock reachout sampai ' + lock.timeEnforcementEnds }
 
   const cap = await sock.fetchNewChatMessageCap()
-  if (cap.capped) return { send: false, reason: 'new-chat quota exhausted until ' + new Date(cap.cycleEnd * 1000) }
-  if (cap.warned) return { send: false, reason: 'WhatsApp already warned this account: ' + cap.status }
-  if (cap.remaining !== undefined && cap.remaining < 10) return { send: false, reason: 'only ' + cap.remaining + ' left this cycle' }
+  if (cap.capped) return { send: false, reason: 'kuota chat baru habis sampai ' + new Date(cap.cycleEnd * 1000) }
+  if (cap.warned) return { send: false, reason: 'WhatsApp sudah memperingatkan akun ini: ' + cap.status }
+  if (cap.remaining !== undefined && cap.remaining < 10) return { send: false, reason: 'sisa cuma ' + cap.remaining + ' di siklus ini' }
 
   return { send: true, remaining: cap.remaining }
 }
 ```
 
-Check it before a run and again every batch — `SECOND_WARNING` is the last state before the cap lands, so stopping there is the difference between a pause and a block.
+Periksa sebelum satu putaran dan periksa lagi setiap batch — `SECOND_WARNING` keadaan terakhir sebelum kuotanya mendarat, jadi berhenti di situ itu beda antara jeda dan blokir.
 
 > [!NOTE]
-> Sending in bulk through an unofficial client is outside WhatsApp's Terms of Service whatever the recipients agreed to. The sanctioned route for opt-in bulk messaging is the WhatsApp Business Platform. These signals reduce the odds of tripping automated limits; they do not make an account safe.
+> Mengirim massal lewat klien tidak resmi itu di luar Ketentuan Layanan WhatsApp, apa pun yang sudah disetujui penerimanya. Jalur yang disahkan untuk pengiriman massal berbasis opt-in adalah WhatsApp Business Platform. Sinyal-sinyal ini mengurangi peluang memicu batas otomatis; mereka tidak membuat satu akun jadi aman.
 
 ## 🐞 Penanganan Masalah
 
 ### `Cannot read properties of undefined (reading 'undefined')` saat membalas
 
-The full trace looks like this:
+Jejak lengkapnya seperti ini:
 
 ```
 TypeError: Cannot read properties of undefined (reading 'undefined')
@@ -5543,24 +5543,24 @@ TypeError: Cannot read properties of undefined (reading 'undefined')
     at async Object.before (.../plugins/system/_firstchat.js:18:9)
 ```
 
-You passed `quoted` a message with **no readable content**. The quote path normalised it, got nothing back, and indexed `undefined` with `undefined`. Three ways to end up there, all common:
+Kamu menyerahkan ke `quoted` sebuah pesan yang **tidak punya isi yang bisa dibaca**. Jalur kutipannya menormalkannya, tidak mendapat apa-apa, lalu mengindeks `undefined` dengan `undefined`. Tiga cara sampai ke situ, semuanya umum:
 
-| What you quoted | Why it has no content |
+| Yang kamu kutip | Kenapa tidak ada isinya |
 | --- | --- |
-| A message that did not decrypt | `messageStubType` is `CIPHERTEXT`; the key is real but `message` is not there |
-| A message read back from a store | Some stores keep the key and drop the body |
-| A hand-built `{ key }` | No `message` field at all |
+| Pesan yang gagal didekripsi | `messageStubType`-nya `CIPHERTEXT`; key-nya asli tapi `message`-nya tidak ada |
+| Pesan yang dibaca kembali dari sebuah store | Sebagian store menyimpan key-nya dan membuang badannya |
+| `{ key }` yang dibangun tangan | Tidak ada field `message` sama sekali |
 
-It is guarded now — the send goes out **without** the quote and logs once:
+Sekarang sudah diberi pengaman — pengirimannya berjalan **tanpa** kutipannya dan mencatat satu kali:
 
 ```
 WARN  nothing quotable here, sending without the quote
       jid: "120363000000000000@g.us"  quotedId: "3EB0…"  quotedContentType: undefined
 ```
 
-That matters more than it sounds. A bot that quotes the message it is replying to, in a chat where messages are not decrypting, used to throw on **every single send** — so it went completely silent in that one chat while every other chat looked fine. The failure was in building the reply, not in the group.
+Itu lebih penting daripada kedengarannya. Bot yang mengutip pesan yang dibalasnya, di chat yang pesannya tidak bisa didekripsi, dulu melempar error di **setiap pengiriman** — jadi ia bungkam total di satu chat itu sementara semua chat lain kelihatan baik-baik saja. Kegagalannya ada di pembangunan balasannya, bukan di grupnya.
 
-If you would rather not send at all than send unquoted, check before you call:
+Kalau kamu lebih memilih tidak mengirim sama sekali daripada mengirim tanpa kutipan, periksa dulu sebelum memanggil:
 
 ```js
 import { normalizeMessageContent, getContentType } from '@rexxhayanasi/elaina-baileys'
@@ -5571,11 +5571,11 @@ await sock.sendMessage(m.key.remoteJid, { text: 'halo' }, quotable ? { quoted: m
 
 ### Bot menjawab di semua grup kecuali satu
 
-A group where nothing gets through — not one reply, while every other group is fine — is almost always a **sender key** problem, not your handler. Group messages are encrypted once with a group sender key and fanned out; that key has to reach each member device separately, and the library remembers who already has it in `sender-key-memory`, keyed **per group**. That is why the symptom is one group and not the account.
+Grup yang tidak ada satu pun pesan tembus — tidak satu balasan pun, sementara semua grup lain baik-baik saja — hampir selalu masalah **sender key**, bukan handler-mu. Pesan grup dienkripsi sekali dengan satu sender key grup lalu difanout; key itu harus sampai ke tiap perangkat anggota secara terpisah, dan library-nya mengingat siapa yang sudah memilikinya di `sender-key-memory`, dikunci **per grup**. Itu sebabnya gejalanya satu grup dan bukan seluruh akun.
 
-Until this release there was a way for that memory to lie. Encryption is attempted per device and a single device failing is swallowed — the send still goes out to everyone else — but every device was marked as holding the key regardless. A device that never received it was recorded as done, so it was never sent one again, and it could not read anything the bot said in that group from then on. It recovered only if that device happened to send a retry receipt for that exact group.
+Sampai rilis ini ada satu cara ingatan itu bisa berbohong. Enkripsinya dicoba per perangkat dan satu perangkat yang gagal ditelan — pengirimannya tetap berjalan ke semua yang lain — tapi setiap perangkat ditandai sebagai sudah memegang key-nya terlepas dari itu. Perangkat yang tidak pernah menerimanya tercatat sebagai selesai, jadi ia tidak pernah dikirimi lagi, dan sejak itu ia tidak bisa membaca apa pun yang dikatakan bot di grup itu. Ia hanya pulih kalau perangkat itu kebetulan mengirim tanda terima percobaan ulang untuk grup yang tepat itu.
 
-Now a device is marked only once its key node is actually in the stanza, and the rest are logged and retried on the next send:
+Sekarang satu perangkat ditandai hanya setelah node key-nya benar-benar ada di dalam stanza, dan sisanya dicatat lalu diulang di pengiriman berikutnya:
 
 ```
 WARN  sender key did not reach every device, leaving them unmarked so the next send retries
@@ -5583,7 +5583,7 @@ WARN  sender key did not reach every device, leaving them unmarked so the next s
       skipped: [ "628000:12@s.whatsapp.net" ]
 ```
 
-If a group is already stuck from before the fix, clear its memory once and the next message redistributes the key to everyone:
+Kalau satu grup sudah tersangkut dari sebelum perbaikan ini, bersihkan ingatannya sekali dan pesan berikutnya akan mendistribusikan ulang key-nya ke semua orang:
 
 ```js
 const reset = await sock.resetGroupSenderKey('120363000000000000@g.us')
@@ -5593,82 +5593,82 @@ console.log(reset)
 await sock.sendMessage('120363000000000000@g.us', { text: 'halo' })
 ```
 
-It only accepts a group jid, and it does not delete sessions or keys — it just forgets who was told, so the next send tells everyone again. Safe to run on any group at any time; the cost is one larger stanza.
+Ia hanya menerima jid grup, dan ia tidak menghapus sesi atau kunci — ia sekadar melupakan siapa yang sudah diberi tahu, jadi pengiriman berikutnya memberi tahu semua orang lagi. Aman dijalankan di grup mana pun kapan pun; biayanya satu stanza yang lebih besar.
 
-**Read the `cleared` count, it is the diagnosis.** A number above zero means there really was a stale record and the next send should fix the group. `cleared: 0` means nothing was stored for that jid at all — so the sender key was never the problem, and the cause is one of the three below. Clearing again will not help.
+**Baca angka `cleared`, itu diagnosisnya.** Angka di atas nol berarti memang ada catatan basi dan pengiriman berikutnya seharusnya memperbaiki grupnya. `cleared: 0` berarti sama sekali tidak ada yang tersimpan untuk jid itu — jadi sender key-nya bukan masalahnya, dan penyebabnya salah satu dari tiga di bawah. Membersihkan lagi tidak akan membantu.
 
-Before blaming the sender key, rule out the two cheaper causes:
+Sebelum menyalahkan sender key, kesampingkan dulu dua penyebab yang lebih murah:
 
-| Check | What it means |
+| Yang diperiksa | Artinya |
 | --- | --- |
-| Do the group's messages reach `messages.upsert` at all? | If nothing arrives, it is inbound decryption, not sending. Look for `failed to decrypt message` in the log — the library answers those with a retry request on its own. |
-| Does `messageStubType` say `CIPHERTEXT`? | The message arrived but could not be read. Same as above; it usually clears itself within a message or two. |
-| Does `sendMessage` throw for that jid? | Then it is the group metadata fetch, not encryption — check the error rather than the key. |
+| Apakah pesan grupnya sampai ke `messages.upsert` sama sekali? | Kalau tidak ada yang datang, itu dekripsi masuk, bukan pengiriman. Cari `failed to decrypt message` di log — library-nya menjawab itu dengan permintaan ulang secara otomatis. |
+| Apakah `messageStubType` berbunyi `CIPHERTEXT`? | Pesannya tiba tapi tidak bisa dibaca. Sama seperti di atas; biasanya bersih sendiri dalam satu dua pesan. |
+| Apakah `sendMessage` melempar error untuk jid itu? | Berarti itu pengambilan metadata grupnya, bukan enkripsinya — periksa error-nya, bukan key-nya. |
 
 ### Kode pairing harus tepat 8 karakter
 
-When using a custom pairing code:
+Saat memakai kode pairing kustom:
 
 ```js
 await sock.requestPairingCode(phone, 'ELAINA01')
 ```
 
-The custom value must contain exactly eight characters.
+Nilai kustomnya harus berisi tepat delapan karakter.
 
 ### Kode pairing muncul tapi ponselnya tidak pernah menampilkan prompt
 
-Check what the request threw before assuming the notification is at fault. `requestPairingCode` now waits for the server and reports a rejection instead of returning a code that was never registered:
+Periksa apa yang dilempar permintaannya sebelum menganggap notifikasinya yang salah. `requestPairingCode` sekarang menunggu server dan melaporkan penolakan ketimbang mengembalikan kode yang tidak pernah terdaftar:
 
-| Message | Meaning |
+| Pesan | Artinya |
 |---|---|
-| `rate-overlimit` (`429`) | too many attempts — wait, retrying makes it worse |
-| `not-allowed` / feature errors | link-by-phone-number is not enabled for that account |
-| `must be in international format` (`400`) | the number is not `<country code><national number>` |
-| `accepted without registering` | the server replied without a pairing ref |
-| `never answered` | no reply arrived at all |
+| `rate-overlimit` (`429`) | terlalu banyak percobaan — tunggu, mencoba lagi malah memperburuk |
+| `not-allowed` / error fitur | tautan-lewat-nomor-telepon tidak aktif untuk akun itu |
+| `must be in international format` (`400`) | nomornya bukan `<kode negara><nomor nasional>` |
+| `accepted without registering` | server menjawab tanpa ref pairing |
+| `never answered` | tidak ada jawaban yang datang sama sekali |
 
-If none of these fire and the code is registered, type it manually through **WhatsApp → Linked Devices → Link with phone number**. If it is accepted there, the registration was fine and only the push notification did not arrive, which is decided server-side.
+Kalau tidak ada satu pun dari ini yang muncul dan kodenya terdaftar, masukkan manual lewat **WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon**. Kalau diterima di situ, registrasinya baik-baik saja dan hanya notifikasi push-nya yang tidak datang, dan itu ditentukan di sisi server.
 
-Verify from outside your bot with `node script/testpairing.js <number> --check-only`.
+Verifikasi dari luar botmu dengan `node script/testpairing.js <nomor> --check-only`.
 
 ### Permintaan pairing ditolak dengan 409
 
-Another code is still pending. Wait it out or call `sock.cancelPairingCode()` first — see [Pairing Code](#-kode-pairing).
+Masih ada kode lain yang menggantung. Tunggu sampai habis atau panggil `sock.cancelPairingCode()` dulu — lihat [Kode Pairing](#-kode-pairing).
 
 ### `Socket is required`
 
-Builder classes require an active Baileys socket:
+Kelas builder butuh socket Baileys yang aktif:
 
 ```js
 const button = new MB.Button(sock)
 ```
 
-Do not create them without passing `sock`.
+Jangan membuatnya tanpa menyerahkan `sock`.
 
 ### Button atau AIRich tergambar berbeda
 
-Interactive WhatsApp payloads may depend on:
+Payload interaktif WhatsApp bisa bergantung pada:
 
-- WhatsApp application version
-- Web protocol changes
-- Account/server rollout
-- Message type compatibility
+- Versi aplikasi WhatsApp
+- Perubahan protokol Web
+- Rollout akun/server
+- Kompatibilitas jenis pesan
 
-Always test experimental message formats before production use.
+Selalu uji format pesan eksperimental sebelum dipakai di produksi.
 
 ### Yang muncul LID, bukan JID nomor telepon
 
-This is expected on newer WhatsApp addressing flows. Check `participantAlt` or `remoteJidAlt` when available instead of blindly converting `@lid` into `@s.whatsapp.net`.
+Ini wajar di alur pengalamatan WhatsApp yang lebih baru. Periksa `participantAlt` atau `remoteJidAlt` kalau tersedia, ketimbang membabi buta mengubah `@lid` menjadi `@s.whatsapp.net`.
 
 ### Sesi ter-logout
 
-If WhatsApp returns `DisconnectReason.loggedOut`, remove the invalid local session and pair the account again.
+Kalau WhatsApp mengembalikan `DisconnectReason.loggedOut`, hapus sesi lokal yang tidak valid lalu pairing akunnya lagi.
 
 ---
 
 ## 🐞 Menemukan Bug?
 
-If you encounter a bug or compatibility issue, you can contact the maintainer or follow the WhatsApp Channel for project updates.
+Kalau kamu menemukan bug atau masalah kompatibilitas, kamu bisa menghubungi pemeliharanya atau mengikuti WhatsApp Channel untuk update proyeknya.
 
 <p align="center">
   <a href="https://wa.me/6285924647929">
@@ -5683,43 +5683,43 @@ If you encounter a bug or compatibility issue, you can contact the maintainer or
 
 ## 🙏 Kredit
 
-This project exists thanks to the work of many developers and open-source projects.
+Proyek ini ada berkat kerja banyak pengembang dan proyek open source.
 
 ### Pemelihara Proyek
 
-- **RexxHayanasi** — maintainer, fork development, integration, fixes, features, and project branding.
+- **RexxHayanasi** — pemelihara, pengembangan fork, integrasi, perbaikan, fitur, dan penamaan proyek.
 
 ### Baileys / Upstream
 
-- **WhiskeySockets/Baileys** — upstream Baileys project and core WhatsApp Web implementation.
-- **adiwajshing** — original Baileys author and early ecosystem work.
+- **WhiskeySockets/Baileys** — proyek Baileys upstream dan implementasi inti WhatsApp Web.
+- **adiwajshing** — penulis Baileys yang pertama dan kerja awal ekosistemnya.
 
 ### Kontribusi Fork / Sumber
 
-- **Lia Wynn / ItsLia** — fork lineage and prior Baileys modifications retained where applicable.
-- **Kyuu / kiuur** — project contributor and support.
+- **Lia Wynn / ItsLia** — garis keturunan fork dan modifikasi Baileys sebelumnya yang masih dipakai di mana relevan.
+- **Kyuu / kiuur** — kontributor dan pendukung proyek.
 
 ### MessageBuilder Terintegrasi
 
-The integrated MessageBuilder is based on **NIXCODE / Advanced WhatsApp Interactive Message Builder**.
+MessageBuilder bawaan ini berbasis **NIXCODE / Advanced WhatsApp Interactive Message Builder**.
 
-- **Nixel** — original creator of the MessageBuilder implementation. [WhatsApp](https://wa.me/6285188349341) · [Channel](https://whatsapp.com/channel/0029VbCV1ck8fewpdNb2TY2k)
-- **Ahmad tumbuh kembang** — MessageBuilder contributor.
+- **Nixel** — pencipta awal implementasi MessageBuilder-nya. [WhatsApp](https://wa.me/6285188349341) · [Channel](https://whatsapp.com/channel/0029VbCV1ck8fewpdNb2TY2k)
+- **Ahmad tumbuh kembang** — kontributor MessageBuilder.
 
-The original builder attribution and licensing notices must be respected when modifying or redistributing its source. The builder is integrated into this package so users do not need to install `baileys-mbuilder` separately.
+Atribusi dan pemberitahuan lisensi builder aslinya wajib dihormati saat memodifikasi atau mendistribusikan ulang sumbernya. Builder-nya diintegrasikan ke paket ini supaya pengguna tidak perlu memasang `baileys-mbuilder` secara terpisah.
 
 ### Kontributor Open Source
 
-Thanks to every upstream Baileys contributor, library author, tester, issue reporter, and developer whose work helped make this project possible.
+Terima kasih kepada setiap kontributor Baileys upstream, penulis library, penguji, pelapor masalah, dan pengembang yang kerjanya membantu proyek ini jadi mungkin.
 
-> Forking and modifying open-source projects is welcome. Please preserve applicable copyright, license, attribution, and contributor notices.
+> Mem-fork dan memodifikasi proyek open source itu dipersilakan. Mohon pertahankan pemberitahuan hak cipta, lisensi, atribusi, dan kontributor yang berlaku.
 
 ---
 
 ## 💜 TQTO
 
 <details>
-<summary><strong>Thanks To</strong></summary>
+<summary><strong>Terima Kasih Kepada</strong></summary>
 
 Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan kontribusi dalam pengembangan proyek ini.
 
@@ -5729,10 +5729,10 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
 - Seluruh contributor dan komunitas open source yang membantu perkembangan Baileys.
 
 </details>
-<h2 align="center">✨ Contributors & Credits</h2>
+<h2 align="center">✨ Kontributor & Kredit</h2>
 
 <p align="center">
-  Thanks to everyone who contributed to this project.
+  Terima kasih kepada semua yang berkontribusi ke proyek ini.
 </p>
 
 <table align="center">
@@ -5749,7 +5749,7 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
         <b>RexxHayanasi</b>
       </a>
       <br />
-      <sub>Project Maintainer</sub>
+      <sub>Pemelihara Proyek</sub>
     </td>
     <td align="center" width="180">
       <a href="https://github.com/kiuur">
@@ -5763,7 +5763,7 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
         <b>Kyuu</b>
       </a>
       <br />
-      <sub>Contributor</sub>
+      <sub>Kontributor</sub>
     </td>
     <td align="center" width="180">
       <a href="https://github.com/ValdazGT">
@@ -5777,7 +5777,7 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
         <b>ValdazGT</b>
       </a>
       <br />
-      <sub>MBuilder · Owner</sub>
+      <sub>MBuilder · Pemilik</sub>
     </td>
     <td align="center" width="180">
       <a href="https://github.com/itsliaaa">
@@ -5791,33 +5791,33 @@ Terima kasih kepada semua pihak yang telah memberikan dukungan, inspirasi, dan k
         <b>ITSLIAAA</b>
       </a>
       <br />
-      <sub>messages-send.js Reference</sub>
+      <sub>Rujukan messages-send.js</sub>
       <br />
-      <sub>Early Migration Reference</sub>
+      <sub>Rujukan Migrasi Awal</sub>
     </td>
   </tr>
 </table>
 
 <p align="center">
-  <sub>Built and maintained with contributions from the community ❤️</sub>
+  <sub>Dibangun dan dipelihara dengan kontribusi dari komunitas ❤️</sub>
 </p>
 
 ---
 
 ## 📄 Lisensi
 
-This project is distributed under the license included with the repository/package.
+Proyek ini didistribusikan di bawah lisensi yang disertakan bersama repo/paketnya.
 
-Elaina-specific modifications are maintained by **RexxHayanasi**. Portions of the codebase are derived from Baileys and other open-source work and therefore retain applicable upstream copyright, license, and attribution notices.
+Modifikasi khusus Elaina dipelihara oleh **RexxHayanasi**. Sebagian kode diturunkan dari Baileys dan kerja open source lainnya, karena itu tetap membawa pemberitahuan hak cipta, lisensi, dan atribusi upstream yang berlaku.
 
-Do not remove third-party copyright or attribution notices required by their respective licenses.
+Jangan menghapus pemberitahuan hak cipta atau atribusi pihak ketiga yang diwajibkan lisensinya masing-masing.
 
 ---
 
 <div align="center">
   <b>💫 @rexxhayanasi/elaina-baileys</b>
   <br>
-  <sub>Built with respect for the Baileys open-source ecosystem.</sub>
+  <sub>Dibangun dengan hormat kepada ekosistem open source Baileys.</sub>
 </div>
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
