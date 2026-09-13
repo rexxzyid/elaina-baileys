@@ -17,7 +17,8 @@ import { SCHEDULED_MSG_META_TYPE, SCHEDULED_MSG_REVEAL_KEY_BYTES, SCHEDULED_MSG_
 import { getMessageReportingToken, shouldIncludeReportingToken } from '../lib/Utils/reporting-utils.js';
 import { buildSpamListNode, readSpamReportResult } from '../lib/Socket/chats.js';
 import { buildMemberLabelMessage } from '../lib/Socket/messages-send.js';
-import { MEMBER_LABEL_MAX_LENGTH } from '../lib/Defaults/index.js';
+import { DEFAULT_CACHE_MAX_KEYS, MEMBER_LABEL_MAX_LENGTH } from '../lib/Defaults/index.js';
+import { TTLCache } from '../lib/Utils/ttl-cache.js';
 import { SPAM_FLOWS } from '../lib/Types/index.js';
 
 const JPEG_320x200_BASE64 = '/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCADIAUADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAIF/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AmAQ2gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/2Q==';
@@ -1013,6 +1014,57 @@ test('spam-report', async () => {
     assert.equal(SPAM_FLOWS.OneToOneChatSpamBannerReport, '1_1_spam_banner_report');
     assert.equal(SPAM_FLOWS.NewsletterInfoReport, 'newsletter_info_report');
     assert.throws(() => { SPAM_FLOWS.Block = 'x'; }, TypeError, 'the table is frozen');
+});
+
+test('ttl-cache', async () => {
+    /**
+     * node-cache counted stdTTL in seconds and lru-cache counts ttl in milliseconds,
+     * so the wrapper multiplies. Getting this wrong expires every cache 1000x early.
+     */
+    const quick = new TTLCache({ stdTTL: 0.03 });
+    quick.set('a', 1);
+    assert.equal(quick.get('a'), 1);
+    await new Promise(resolve => setTimeout(resolve, 60));
+    assert.equal(quick.get('a'), undefined, 'stdTTL is seconds, not milliseconds');
+    assert.equal(quick.has('a'), false);
+
+    const forever = new TTLCache();
+    forever.set('a', 1);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    assert.equal(forever.get('a'), 1, 'no stdTTL means no expiry');
+
+    /** node-cache threw ECACHEFULL at maxKeys, this evicts the oldest instead. */
+    const bounded = new TTLCache({ maxKeys: 2 });
+    bounded.set('a', 1);
+    bounded.set('b', 2);
+    assert.doesNotThrow(() => bounded.set('c', 3), 'a full cache must not throw');
+    assert.equal(bounded.get('a'), undefined, 'the oldest entry goes');
+    assert.equal(bounded.get('c'), 3, 'the newest entry stays');
+
+    /** Every name the socket calls has to survive the swap. */
+    const cache = new TTLCache({ stdTTL: 60 });
+    cache.mset([{ key: 'x', value: 1 }, { key: 'y', value: 2 }, { key: 'z', val: 3 }]);
+    assert.deepEqual(cache.mget(['x', 'y', 'missing']), { x: 1, y: 2 });
+    assert.equal(cache.get('z'), 3, 'mset accepts node-cache val as well as value');
+    assert.equal(cache.del('x'), 1);
+    assert.equal(cache.del(['y', 'missing']), 1);
+    assert.equal(cache.take('z'), 3);
+    assert.equal(cache.has('z'), false, 'take removes what it returns');
+
+    cache.set('k', 1);
+    assert.deepEqual(cache.keys(), ['k']);
+    assert.equal(cache.size, 1);
+    cache.flushAll();
+    assert.equal(cache.size, 0);
+
+    for (const name of ['get', 'set', 'has', 'del', 'take', 'mget', 'mset', 'keys', 'flushAll', 'getStats', 'close', 'on', 'off', 'removeAllListeners']) {
+        assert.equal(typeof cache[name], 'function', `${name} is part of the surface bots already call`);
+    }
+    assert.equal(typeof cache.getStats().keys, 'number');
+    assert.doesNotThrow(() => cache.close(), 'close is a no-op, there is no timer to stop');
+
+    assert.equal(new TTLCache({ maxKeys: 0 }).constructor, TTLCache, 'a zero ceiling falls back to the default');
+    assert.equal(DEFAULT_CACHE_MAX_KEYS > 0, true);
 });
 
 test('spam-report-result', async () => {

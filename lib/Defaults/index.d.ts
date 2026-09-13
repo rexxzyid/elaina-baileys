@@ -149,4 +149,5 @@ import { makeLibSignalRepository } from '../Signal/libsignal.js';
 export {};
 export const MAX_OUTBOUND_RESEND_ENTRIES: number;
 export const MEMBER_LABEL_MAX_LENGTH: number;
+export const DEFAULT_CACHE_MAX_KEYS: number;
 export const PAIRING_RESPONSE_GRACE_MS: number;

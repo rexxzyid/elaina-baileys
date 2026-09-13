@@ -4747,6 +4747,43 @@ console.log(MESSAGE_BUILDER_VERSION)
 console.log(MessageBuilder.VERSION)
 ```
 
+### Cache Internal
+
+Semua cache berumur pendek di dalam library — daftar device, hitungan retry, tawaran panggilan, pesan keluar yang diingat untuk resend, kunci signal yang di-cache — berjalan di atas `TTLCache`, pembungkus tipis di atas `lru-cache` yang sudah jadi dependency.
+
+```js
+import { TTLCache } from '@rexxhayanasi/elaina-baileys'
+
+const cache = new TTLCache({ stdTTL: 300, maxKeys: 5000 })
+cache.set('62811@s.whatsapp.net', [0, 1])
+cache.get('62811@s.whatsapp.net')
+```
+
+`stdTTL` dihitung dalam **detik**, sama dengan yang dulu dipakai `node-cache`, dan `TTLCache` menyediakan nama metode yang sama persis: `get`, `set`, `has`, `del`, `take`, `mget`, `mset`, `keys`, `flushAll`, `getStats`, `close`. Jadi bot yang sudah menyerahkan cache sendiri lewat `userDevicesCache`, `msgRetryCounterCache`, `callOfferCache`, `mediaCache`, `outboundResendCache`, atau `placeholderResendCache` tidak perlu diubah — kontraknya duck-typed dan `node-cache` asli pun tetap diterima.
+
+Dua hal yang berbeda dari `node-cache`, dan dua-duanya disengaja:
+
+| | `node-cache` | `TTLCache` |
+| --- | --- | --- |
+| Saat penuh | melempar `ECACHEFULL` dan penulisannya hilang | membuang entri paling lama tidak dipakai, yang baru tetap masuk |
+| Batas isi | tanpa batas kecuali `maxKeys` diisi | selalu ada plafon, bawaannya `DEFAULT_CACHE_MAX_KEYS` (20.000) |
+
+Yang pertama itu perbaikan nyata: `outboundResendCache` dibatasi 512 entri, dan dulu pesan ke-513 **tidak jadi diingat** karena penulisannya melempar lalu ditelan `try/catch`. Sekarang yang dibuang justru yang paling lama, dan resend-after-nack selalu soal pesan yang baru — jadi arah pembuangannya yang benar.
+
+Yang kedua menutup kebocoran memori pada bot yang hidup berminggu-minggu: cache tanpa batas yang dikunci per-jid tumbuh terus. Kalau plafonnya kepenuhan sebelum TTL habis, yang terjadi cuma satu USync ulang atau satu hitungan retry yang reset — tidak ada state yang rusak. Naikkan lewat `maxKeys` kalau bot-mu memang besar.
+
+Alasan pindahnya bukan cuma kecepatan. Sampai versi `1.3.10` cache-nya memakai `@cacheable/node-cache`, yang menarik sepuluh paket transitif (`cacheable`, `keyv`, `@keyv/serialize`, `@cacheable/memory`, `@cacheable/utils`, `@keyv/bigmap`, `hookified`, `hashery`, `qified`). Pada 4 Agustus 2026 akun maintainer keluarga paket itu dibobol dan enam versi trojan sempat terbit — `@cacheable/node-cache@3.1.2`, `cacheable@2.5.1`, `keyv@6.0.0`, `@cacheable/utils@2.5.1`, `@cacheable/memory@2.2.1`, `@keyv/bigmap@6.0.0` — dengan hook `preinstall` yang mengunduh runtime Bun lalu menjalankan payload terobfuskasi (MAL-2026-11560 dan seterusnya; keenamnya sudah di-unpublish). Versi yang dipaku fork ini tidak pernah termasuk, tapi range transitif `cacheable@^2.3.1` **memang** mencakup salah satunya, dan lockfile tidak ikut terkirim ke pengguna paket. Menghapus satu dependency itu menghapus sepuluh paket sekaligus: pohonnya turun dari 65 ke 55.
+
+Pengukuran di 200.000 operasi dengan pola akses yang sama seperti pemakaian nyata:
+
+| Operasi | `@cacheable/node-cache` | `TTLCache` |
+| --- | --- | --- |
+| `set` | 448 ms · 37,4 MB | **96 ms · 10,4 MB** |
+| `get` | 49 ms | **28 ms** |
+| `has` | **18,5 ms** | 31 ms |
+
+`set` dan `get` jalur terpanas dan dua-duanya jauh lebih cepat; `has` lebih lambat karena `lru-cache` ikut memeriksa kedaluwarsa saat dipanggil, dan ia cuma dipakai enam kali di seluruh library, tidak di dalam loop.
+
 ---
 
 ## 🔄 Memperbarui Versi WhatsApp Web
