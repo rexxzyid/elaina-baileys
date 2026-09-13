@@ -3,6 +3,8 @@ export declare const MapItemMarkerType: Readonly<Record<string, string>>;
 export declare const PlaceDetailsItemType: Readonly<Record<string, string>>;
 export declare const PlaceOpeningStatus: Readonly<Record<string, string>>;
 export declare const PlacePriceLevel: Readonly<Record<string, string>>;
+export declare const ClippyArtifactType: Readonly<{ MINI_APP: 'MINI_APP'; STATIC_HTML: 'STATIC_HTML' }>;
+export declare const QuotaUpsellMeterUsageType: Readonly<{ META_AI_THINK_HARD: 'META_AI_THINK_HARD' }>;
 export declare const SportsLeague: Readonly<Record<string, string>>;
 export declare const SportsGameStatus: Readonly<Record<string, string>>;
 export declare const SportsSeasonType: Readonly<Record<string, string>>;
@@ -335,6 +337,22 @@ export declare function bloomCardSection(primitives?: any[]): any;
 export declare function addonActionSection(primitives?: any[], options?: {
     actionType?: string;
     alignment?: string;
+}): any;
+
+export declare function quotaUpsellButton(button?: {
+    label?: string;
+    action?: string;
+    deeplink?: string;
+}): any;
+
+export declare function quotaUpsellSection(options?: {
+    title?: string;
+    body?: string;
+    bodyLine1?: string;
+    bodyLine2?: string;
+    meterUsageType?: string;
+    benefitType?: string;
+    buttons?: any[];
 }): any;
 
 export interface SignedRichResponse {

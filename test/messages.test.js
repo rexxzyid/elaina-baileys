@@ -1170,7 +1170,7 @@ test('airich-namespace', async () => {
 
     const members = [...Object.keys(extras), ...Object.keys(metaai)].filter(name => name !== 'default');
     assert.equal(new Set(members).size, members.length, 'extras and metaai must not export the same name twice');
-    assert.equal(members.length, 155, 'the README quotes this count, update both together');
+    assert.equal(members.length, 161, 'the README quotes this count, update both together');
 
     for (const name of members) {
         assert.equal(AIRich[name], (extras[name] ?? metaai[name]), `AIRich.${name} has to be the same member as the named export`);
@@ -1192,7 +1192,7 @@ test('airich-namespace', async () => {
         assert.equal(typeof MB[name], 'function', `MB.${name} has to be the class`);
     }
     assert.equal(MB.AIRich, AIRich, 'MB holds the same class, not a copy');
-    assert.equal(Object.keys(MB).length, 181, 'the README quotes this count, update both together');
+    assert.equal(Object.keys(MB).length, 187, 'the README quotes this count, update both together');
 
     const lib = await import('../lib/index.js');
     for (const builder of [Button, ButtonV2, Carousel, AIRich, Toolkit]) {
@@ -1254,6 +1254,61 @@ test('airich-node-catalog', async () => {
     assert.equal(MB.AI_RICH_NESTED_UNIFIED_RESPONSE_TYPENAME, 'GenAINestedUnifiedResponse');
     assert.equal(MB.EMBEDDED_SCREEN_SINGLE_TYPENAME, 'FOAEmbeddedSingleScreen');
     assert.equal(MB.AI_RICH_UNIFIED_RESPONSE_TYPENAME_APP, 'GenAIUnifiedResponse');
+
+    assert.equal(MB.AI_RICH_PRIMITIVE_INTERFACE, 'GenAIUXPrimitive');
+    assert.equal(MB.AI_RICH_PRIMITIVES.includes(MB.AI_RICH_PRIMITIVE_INTERFACE), false,
+        'cometComposedTextV2GenAiUxPrimitiveParser dispatches on every concrete name, so GenAIUXPrimitive is the interface and never a __typename on the wire');
+    assert.equal(MB.AI_RICH_PRIMITIVES.length, 45, 'the README quotes this count, update both together');
+
+    for (const name of MB.AI_RICH_PRIMITIVES_WITHOUT_SCHEMA) {
+        assert.equal(MB.AI_RICH_PRIMITIVES.includes(name), true, `${name} is still a concrete primitive`);
+    }
+});
+
+test('airich-quota-upsell', async () => {
+    const MB = (await import('../lib/index.js')).MB;
+
+    const section = MB.quotaUpsellSection({
+        title: 'Meta AI Plus',
+        body: 'Kuota gambarmu habis',
+        bodyLine1: 'Upgrade untuk 100 gambar lagi',
+        bodyLine2: 'Batal kapan saja',
+        meterUsageType: 'META_AI_IMAGINE',
+        benefitType: 'IMAGINE_QUOTA',
+        buttons: [MB.quotaUpsellButton({ label: 'Upgrade', action: 'UPGRADE', deeplink: 'https://meta.ai/plus' })]
+    });
+
+    const primitive = section.view_model.primitive;
+    assert.equal(section.__typename, 'GenAIUnifiedResponseSection');
+    assert.equal(primitive.__typename, 'GenAIMetaSubsQuotaUpsellPrimitive');
+    assert.deepEqual(Object.keys(primitive).sort(), [
+        '__typename', 'benefit_type', 'body', 'body_line1', 'body_line2', 'buttons', 'meter_usage_type', 'title'
+    ], 'every name is read by cometComposedTextV2GenAiMetaSubsQuotaUpsellPrimitiveParser');
+    assert.deepEqual(primitive.buttons[0], {
+        label: 'Upgrade',
+        action: 'UPGRADE',
+        deeplink: 'https://meta.ai/plus',
+        __typename: 'GenAIMetaSubsQuotaUpsellButton'
+    });
+
+    assert.equal(MB.quotaUpsellSection().view_model.primitive.buttons, undefined, 'an empty button list is dropped, not sent as []');
+    assert.equal(MB.QuotaUpsellMeterUsageType.META_AI_THINK_HARD, 'META_AI_THINK_HARD');
+    assert.equal(MB.ClippyArtifactType.STATIC_HTML, 'STATIC_HTML');
+});
+
+test('airich-section-typename', async () => {
+    const { AIRich } = await import('../lib/index.js');
+
+    const bare = { view_model: { __typename: 'GenAISingleLayoutViewModel', primitive: { __typename: 'GenAIMarkdownTextUXPrimitive', text: 'halo' } } };
+    assert.equal(AIRich.normalizeSection(bare).__typename, 'GenAIUnifiedResponseSection');
+    assert.equal(Object.keys(AIRich.normalizeSection(bare))[0], '__typename', 'the stamp goes first, the way newLayout writes it');
+
+    const already = AIRich.newLayout('Single', { __typename: 'GenAIDividerPrimitive' });
+    assert.equal(AIRich.normalizeSection(already), already, 'a section that already carries one is returned untouched');
+
+    const rich = new AIRich({}).addSection(bare).addFooterSection({ view_model: { __typename: 'GenAISingleLayoutViewModel', primitive: { __typename: 'GenAIDividerPrimitive' } } });
+    assert.equal(rich.sections[0].__typename, 'GenAIUnifiedResponseSection', 'a builder that omits the section typename still gets a valid section');
+    assert.equal(bare.__typename, undefined, 'the caller object is never mutated');
 });
 
 test('airich-deep-decode', async () => {

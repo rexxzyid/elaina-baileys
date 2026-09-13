@@ -3,6 +3,8 @@ export declare const AI_RICH_PRIMITIVES: readonly string[];
 export declare const AI_RICH_INLINE_ENTITIES: readonly string[];
 export declare const AI_RICH_ITEMS: readonly string[];
 export declare const AI_RICH_PRIMITIVES_WEB_RENDERED: readonly string[];
+export declare const AI_RICH_PRIMITIVE_INTERFACE: 'GenAIUXPrimitive';
+export declare const AI_RICH_PRIMITIVES_WITHOUT_SCHEMA: readonly string[];
 export declare const AI_RICH_HTML_PRIMITIVE: 'GenAIaeacdsnwHtmlPrimitive';
 
 export declare const DividerType: Readonly<{ DOT: 'DOT'; HORIZONTAL_LINE: 'HORIZONTAL_LINE' }>;

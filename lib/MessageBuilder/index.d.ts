@@ -112,6 +112,7 @@ export declare class AIRich extends BaseBuilder {
   static generateVerificationMetadata(): any;
   static wrapRichResponse(richResponseMessage: any, forwardWrapper?: boolean): any;
   static newLayout(name: string, data: any, extra?: Record<string, any>): any;
+  static normalizeSection(section: any): any;
   /** True while the loaded proof and its signed bytes are still going out untouched. */
   readonly isSignaturePreserved: boolean;
   loadFrom(msg: any): this;
@@ -186,6 +187,7 @@ export declare class AIRich extends BaseBuilder {
   static readonly SECTION_TYPENAME: 'GenAIUnifiedResponseSection';
   static readonly UNIFIED_RESPONSE_TYPENAME: 'XMSGGenAIUnifiedResponse';
   static newLayout(name: string, data: any, extra?: Record<string, any>): any;
+  static normalizeSection(section: any): any;
   static generateVerificationMetadata(): any;
 }
 

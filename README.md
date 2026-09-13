@@ -1318,7 +1318,7 @@ MessageBuilder v4.7 sudah disertakan langsung di dalam `@rexxhayanasi/elaina-bai
 
 ### Satu impor, seluruh builder
 
-Permukaan builder-nya terdiri dari 181 nama yang tersebar di empat modul, dan itulah kenapa satu bot bisa berakhir dengan satu paragraf impor cuma untuk menggambar satu kartu. `MB` (nama panjangnya: `MessageBuilder`) membawa semuanya — kelima kelas builder, semua pabrik section dan item, semua enum, pemeriksa native flow, helper tanda tangan. Tidak ada lagi yang perlu ikut di baris impor:
+Permukaan builder-nya terdiri dari 187 nama yang tersebar di empat modul, dan itulah kenapa satu bot bisa berakhir dengan satu paragraf impor cuma untuk menggambar satu kartu. `MB` (nama panjangnya: `MessageBuilder`) membawa semuanya — kelima kelas builder, semua pabrik section dan item, semua enum, pemeriksa native flow, helper tanda tangan. Tidak ada lagi yang perlu ikut di baris impor:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2033,7 +2033,7 @@ await rich.send(jid)
 | `thinkingSection` | `GenAIBotThinkingStatusPrimitive` | `title`, `icon`, `is_in_progress`, `meta_search_apps`, `thought_duration_sec` |
 | `progressSection` | `GenAIBotProgressStatusPrimitive` | field-nya sama dengan thinking |
 
-Dua primitif sengaja tidak disertakan: `GenAIMetaSubsQuotaUpsellPrimitive` itu kartu penawaran langganan Meta, dan `FOABloksPrimitive` menyebut satu layar Bloks yang diambil klien dari server Meta, bukan dibaca dari pesannya — dan keduanya tidak bisa diisi bot.
+Satu primitif di tabel renderer Web tidak punya pabrik di sini: `FOABloksPrimitive` menyebut satu layar Bloks yang diambil klien dari server Meta, bukan dibaca dari pesannya, jadi tidak ada field yang bisa diisi bot. `GenAIMetaSubsQuotaUpsellPrimitive` dulu juga ikut dikecualikan dengan alasan yang sama, dan itu salah: parser-nya membaca seluruh kartunya dari wire. Pabriknya ada sekarang — lihat [Kartu Penawaran Langganan](#kartu-penawaran-langganan).
 
 ### Sisa Katalog Meta AI
 
@@ -2212,6 +2212,48 @@ await rich.send(jid)
 
 Dua layout bergabung dengan delapan yang sudah didukung: `multipleResponseSection(responses, { layoutType })` membangun `GenAIMultipleResponseLayoutViewModel`, dan `bloomCardSection(primitives)` membangun `GenAIIGSuggestedBloomCardLayoutViewModel`. `addonActionSection(primitives, { actionType, alignment })` mengisi field `addon_action_alignment` yang tidak disetel helper addon sebelumnya.
 
+#### Kartu penawaran langganan
+
+`quotaUpsellSection` membangun `GenAIMetaSubsQuotaUpsellPrimitive`, kartu yang dipakai Meta untuk menawarkan langganan waktu kuota habis. Nama field-nya dibaca langsung dari `cometComposedTextV2GenAiMetaSubsQuotaUpsellPrimitiveParser` di bundle WA Web, jadi ini salah satu dari sedikit primitif yang bentuknya terverifikasi sampai ke tombolnya:
+
+```js
+import { MB } from '@rexxhayanasi/elaina-baileys'
+
+const rich = new MB.AIRich(sock).setTitle('Elaina AI')
+
+rich.addSection(MB.quotaUpsellSection({
+  title: 'Meta AI Plus',
+  body: 'Kuota gambarmu sudah habis',
+  bodyLine1: 'Upgrade untuk 100 gambar lagi',
+  bodyLine2: 'Batal kapan saja',
+  meterUsageType: 'META_AI_IMAGINE',
+  benefitType: 'IMAGINE_QUOTA',
+  buttons: [MB.quotaUpsellButton({ label: 'Upgrade', action: 'UPGRADE', deeplink: 'https://meta.ai/plus' })]
+}))
+
+await rich.send(jid)
+```
+
+| Field wire | Isi |
+|---|---|
+| `title` | judul kartunya |
+| `body`, `body_line1`, `body_line2` | tiga baris badan yang digambar terpisah |
+| `meter_usage_type` | meter mana yang habis |
+| `benefit_type` | benefit yang ditawarkan |
+| `buttons` | daftar `GenAIMetaSubsQuotaUpsellButton`, masing-masing `label`, `action`, `deeplink` |
+
+Satu jebakan yang memang ada di parser-nya: kartunya dibuang utuh kalau `meter_usage_type` bernilai `META_AI_THINK_HARD` atau `benefit_type` memuat `THINK_HARD`. Nilainya diekspor sebagai `QuotaUpsellMeterUsageType` supaya tidak terpakai tanpa sengaja. Daftar tombol yang kosong tidak dikirim sebagai `[]` — field-nya hilang sama sekali.
+
+#### `GenAIUXPrimitive` itu interface, bukan primitif
+
+Namanya ada di dex sebagai `GenAIUXPrimitiveImpl.kt` dan sempat ikut terdaftar di `AI_RICH_PRIMITIVES`. Itu keliru. `cometComposedTextV2GenAiUxPrimitiveParser` adalah dispatcher yang mencacah setiap nama konkret, dan parser layout — `CometComposedTextV2GenAISingleLayoutViewModelParser.react` untuk `view_model.primitive`, `...GenAIGridLayoutViewModelParser.react` untuk `view_model.primitives` — memanggil dispatcher itu untuk setiap isinya. Jadi `GenAIUXPrimitive` adalah tipe interface dari field tersebut, bukan `__typename` yang pernah muncul di wire; mengirimnya mendarat di `buildUnsupportedURTypeNode`. Sekarang ia duduk sendiri di `AI_RICH_PRIMITIVE_INTERFACE`, dan `AI_RICH_PRIMITIVES` tinggal **45** nama yang benar-benar bisa dikirim.
+
+#### Dua primitif yang bentuknya belum terbaca
+
+`AI_RICH_PRIMITIVES_WITHOUT_SCHEMA` menyebut `GenAIClippyWidgetPrimitive` dan `GenAIClippyFollowUpPrimitive`. Keduanya nyata — dex membawa `<nama>Impl.kt` untuk masing-masing — tapi nama field-nya tidak bisa dibaca dari mana pun. Bundle WA Web tidak memuat typename-nya sama sekali, dan di dex string namanya tidak direferensikan kode apa pun, jadi tidak ada pembacaan field yang bisa diikuti. Satu-satunya keping yang terverifikasi adalah enum `ClippyArtifactType` (`MINI_APP`, `STATIC_HTML`).
+
+Karena itu tidak ada pabrik untuk keduanya: menebak nama field sama dengan mengarang, dan yang ditebak tidak akan tergambar. Kalau kamu mau mencoba bentuknya sendiri, `customSection` mengirimkannya apa adanya.
+
 Untuk apa pun yang belum dimodelkan di sini, `customSection` mengirim node-nya langsung — klien memilih jalur berdasarkan `__typename` dan tidak ada yang lain:
 
 ```js
@@ -2224,6 +2266,8 @@ rich.addSection(MB.customSection('GenAITopicLinkItem', { title: 'Bali' }, { layo
 
 await rich.send(jid)
 ```
+
+`addSection` dan `addFooterSection` menambal satu hal yang mudah terlewat kalau section-nya dibangun di luar pabrik ini: section tanpa `__typename` distempel `GenAIUnifiedResponseSection` sebelum masuk. Objek yang kamu serahkan tidak diubah, yang sudah membawa typename dilewatkan apa adanya, dan `AIRich.normalizeSection(section)` terbuka kalau kamu butuh menambalnya sendiri. Tanpa stempel itu klien tidak punya apa pun untuk mendispatch section-nya, dan seluruh kartu keluar kosong.
 
 Enum untuk semua yang di atas ikut bersama builder-nya: `MapQueryStatus`, `PlaceDetailsItemType`, `PlaceOpeningStatus`, `PlacePriceLevel`, `SportsLeague`, `SportsGameStatus`, `SportsSeasonType`, `CompactEntityType`, `CompactEntityActionType`, `ActionListRowType`, `SocialEntityItemType`, `SourceApp`, `PostType`, `PostOrientation`, `ProductSourceType`, `SearchPlannerStepStatus`, `OrchestratorSearchEngine`, `ProfessionalConsentStatus`, `AccountLinkingIntegration`, `AccountLinkingStatus`, `CalendarEventOperation`, `CalendarEventState`, `WidgetCtaKind`, `WidgetCtaState`, `MultipleResponseLayoutType`, `ThreadSurfingEntityType`, `ThreadSurfingActionType`, `MediaShape`, `MediaHorizontalAlignment`, `MediaVerticalAlignment`, `AddonActionAlignment`, `ImageAssetQueryStatus`, `CodeBlockType`, `FollowUpSuggestionCategory`, `InformTreatmentRenderingType`, `UnifiedResponseSectionType`, dan `UnifiedResponseMessageGroupKind`.
 
