@@ -257,6 +257,7 @@ Baru di sini? Ini seluruh library dalam satu pandangan. Tiap baris menaut ke bag
   - [Mengubah Foto Profil](#mengubah-foto-profil)
   - [Menghapus Foto Profil](#menghapus-foto-profil)
 - [Ekspor Yang Berguna](#-ekspor-yang-berguna)
+  - [Cache Internal](#cache-internal)
 - [Memperbarui Versi WhatsApp Web](#-memperbarui-versi-whatsapp-web)
 - [Pesan Terjadwal](#-pesan-terjadwal)
 - [API Pesan WhatsApp Modern](#-api-pesan-whatsapp-modern)
@@ -4736,7 +4737,8 @@ import {
   Toolkit,
   MessageBuilder,
   MB,
-  MESSAGE_BUILDER_VERSION
+  MESSAGE_BUILDER_VERSION,
+  TTLCache
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
@@ -4749,17 +4751,46 @@ console.log(MessageBuilder.VERSION)
 
 ### Cache Internal
 
-Semua cache berumur pendek di dalam library — daftar device, hitungan retry, tawaran panggilan, pesan keluar yang diingat untuk resend, kunci signal yang di-cache — berjalan di atas `TTLCache`, pembungkus tipis di atas `lru-cache` yang sudah jadi dependency.
+> [!NOTE]
+> **Kamu tidak perlu mengimpor apa pun untuk ini.** Cache-nya internal, dan library yang membuatnya sendiri. Kalau bot-mu tidak pernah mengurus cache, tidak ada satu baris pun yang perlu diubah.
+
+Ada delapan cache berumur pendek di dalam library — daftar device, hitungan retry, tawaran panggilan, pesan keluar yang diingat untuk resend, debounce identity, kunci signal yang di-cache. Semuanya berjalan di atas `TTLCache`, pembungkus tipis di atas `lru-cache` yang memang sudah jadi dependency.
+
+Polanya sama di setiap tempat: kalau kamu tidak menyerahkan apa-apa, library yang bikin.
 
 ```js
-import { TTLCache } from '@rexxhayanasi/elaina-baileys'
-
-const cache = new TTLCache({ stdTTL: 300, maxKeys: 5000 })
-cache.set('62811@s.whatsapp.net', [0, 1])
-cache.get('62811@s.whatsapp.net')
+const userDevicesCache = config.userDevicesCache || new TTLCache({ stdTTL: 300 })
 ```
 
-`stdTTL` dihitung dalam **detik**, sama dengan yang dulu dipakai `node-cache`, dan `TTLCache` menyediakan nama metode yang sama persis: `get`, `set`, `has`, `del`, `take`, `mget`, `mset`, `keys`, `flushAll`, `getStats`, `close`. Jadi bot yang sudah menyerahkan cache sendiri lewat `userDevicesCache`, `msgRetryCounterCache`, `callOfferCache`, `mediaCache`, `outboundResendCache`, atau `placeholderResendCache` tidak perlu diubah — kontraknya duck-typed dan `node-cache` asli pun tetap diterima.
+Jadi `makeWASocket({ auth })` biasa sudah lengkap. Yang berubah cuma isi kotaknya, pintunya tidak.
+
+#### Kapan `TTLCache` perlu diimpor
+
+Cuma kalau kamu memang mau menyerahkan cache buatanmu sendiri — dan itu bukan hal baru, dari dulu memang bisa:
+
+```js
+import makeWASocket, { TTLCache } from '@rexxhayanasi/elaina-baileys'
+
+const sock = makeWASocket({
+  auth,
+  userDevicesCache: new TTLCache({ stdTTL: 600, maxKeys: 50000 })
+})
+```
+
+| Situasi | Kenapa perlu |
+| --- | --- |
+| Bot di grup sangat besar | naikkan `maxKeys` supaya daftar device tidak kebuang lebih dulu dari TTL-nya |
+| Satu cache dipakai beberapa socket | bikin sekali, serahkan ke semuanya |
+| Mau atur sendiri umur cache | ubah `stdTTL`, misalnya daftar device disimpan lebih lama |
+| Debug | pegang sendiri cache-nya lalu panggil `getStats()` atau `keys()` |
+
+Config yang menerimanya: `userDevicesCache`, `msgRetryCounterCache`, `callOfferCache`, `outboundResendCache`, `placeholderResendCache`, `mediaCache`, plus argumen ketiga `makeCacheableSignalKeyStore(store, logger, cache)`.
+
+#### Kalau bot-mu sudah menyerahkan cache sendiri
+
+Tetap jalan tanpa diubah, termasuk kalau yang kamu serahkan `new NodeCache(...)` dari `node-cache` atau `@cacheable/node-cache` milikmu sendiri. Library cuma memanggil delapan metode — `get`, `set`, `has`, `del`, `mget`, `mset`, `flushAll`, `close` — dan NodeCache punya semuanya. Kontraknya duck-typed, bukan `instanceof`.
+
+`stdTTL` dihitung dalam **detik**, sama seperti dulu, dan `TTLCache` sengaja dibuat superset: selain delapan metode di atas ia juga punya `take`, `keys`, `getStats`, serta `on`, `off`, dan `removeAllListeners` yang no-op — supaya kode yang menyentuh cache bawaan dengan gaya NodeCache tidak pecah.
 
 Dua hal yang berbeda dari `node-cache`, dan dua-duanya disengaja:
 
