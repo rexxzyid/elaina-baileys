@@ -5209,25 +5209,25 @@ console.log(sent.message.extendedTextMessage.contextInfo.statusAudienceMetadata)
 // StatusAudienceMetadata { audienceType: 1, listName: 'Besties', listEmoji: '💜' }
 ```
 
-If that prints your name, the payload is right. `listName` is tag 2 and `listEmoji` tag 3 of `ContextInfo.StatusAudienceMetadata`, matching the WhatsApp Web spec exactly, and both are plain strings with no length or character rules on our side.
+Kalau itu mencetak namamu, payload-nya sudah benar. `listName` itu tag 2 dan `listEmoji` tag 3 dari `ContextInfo.StatusAudienceMetadata`, cocok persis dengan spesifikasi WhatsApp Web, dan keduanya string biasa tanpa aturan panjang atau karakter dari sisi kita.
 
-If it prints `Close friends`, one of these is happening:
+Kalau yang tercetak `Close friends`, salah satu dari ini sedang terjadi:
 
-| Cause | Fix |
+| Penyebab | Perbaikannya |
 | --- | --- |
-| The key was never read | `statusAudience` is resolved by `sock.sendMessage`. Going straight to `generateWAMessageFromContent` and `relayMessage` skips it — set `contextInfo.statusAudienceMetadata` yourself there. |
-| It was spelled `listname` or `name` | The key is `listName`. An unknown key is not an error, it just leaves the default in place. |
-| Only the emoji was given | `{ listEmoji: '💜' }` keeps the default name, the same way `{ listName: 'Besties' }` keeps the default star. |
-| It rode along with a modern builder | `statusAudience` next to `groupStatusReaction`, `question`, `comment` and friends now throws instead of disappearing — those builders replace the whole content and have no contextInfo. |
+| Kuncinya tidak pernah dibaca | `statusAudience` diselesaikan oleh `sock.sendMessage`. Langsung ke `generateWAMessageFromContent` dan `relayMessage` melewatinya — setel `contextInfo.statusAudienceMetadata` sendiri di situ. |
+| Ditulis `listname` atau `name` | Kuncinya `listName`. Kunci yang tidak dikenal bukan error, ia cuma membiarkan bawaannya tetap di tempat. |
+| Hanya emoji-nya yang diberikan | `{ listEmoji: '💜' }` mempertahankan nama bawaannya, sama seperti `{ listName: 'Besties' }` mempertahankan bintang bawaannya. |
+| Ia ikut bersama builder modern | `statusAudience` di sebelah `groupStatusReaction`, `question`, `comment`, dan kawan-kawannya sekarang melempar error ketimbang menghilang — builder itu menggantikan seluruh kontennya dan tidak punya contextInfo. |
 
-And if the payload is right but the phone still shows the default, that is the client, not the message: the badge is a rollout-gated feature, and WhatsApp may fall back to the default label on a build that has the parser but not the UI. Try a viewer on a current Android build before changing the code.
+Dan kalau payload-nya benar tapi ponselnya tetap menampilkan bawaannya, itu kliennya, bukan pesannya: lencananya fitur yang digerbangi rollout, dan WhatsApp bisa jatuh ke label bawaan di build yang punya parser-nya tapi belum punya UI-nya. Coba penonton di build Android yang terbaru sebelum mengubah kodenya.
 
 > [!NOTE]
-> On WhatsApp Web the badge is behind a viewer-side rollout gate (`isStatusCloseFriendsViewerSideEnabled`), and Web has no sender-side path for it at all — it only reads the field. Android and iOS are where you will see it. As with everything in this chapter, WhatsApp can gate rendering per account.
+> Di WhatsApp Web lencananya berada di belakang gerbang rollout sisi penonton (`isStatusCloseFriendsViewerSideEnabled`), dan Web sama sekali tidak punya jalur sisi pengirim untuknya — ia hanya membaca field-nya. Android dan iOS tempat kamu akan melihatnya. Seperti semua di bab ini, WhatsApp bisa menggerbangi penggambarannya per akun.
 
 ### Add Yours
 
-"Add Yours" is not a message type — it is an **association**. Someone posts a status carrying an Add Yours prompt; when you post your own answer, your status carries a `messageAssociation` pointing back at theirs, and that is what threads the two together.
+"Add Yours" bukan jenis pesan — itu sebuah **asosiasi**. Seseorang memposting status yang membawa prompt Add Yours; saat kamu memposting jawabanmu sendiri, statusmu membawa `messageAssociation` yang menunjuk balik ke statusnya, dan itulah yang merangkai keduanya.
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -5236,9 +5236,9 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-`promptStatus` is **their** status — the one carrying the prompt, as it arrived on `messages.upsert`. You have to keep its key when it comes in; see [Message Keys](#message-key).
+`promptStatus` itu status **milik mereka** — yang membawa prompt-nya, seperti saat ia tiba di `messages.upsert`. Kamu harus menyimpan key-nya saat ia masuk; lihat [Message Key](#message-key).
 
-That writes `messageContextInfo.messageAssociation` (tag 10) with `associationType: STATUS_ADD_YOURS` (8) and your `parentMessageKey`:
+Itu menuliskan `messageContextInfo.messageAssociation` (tag 10) dengan `associationType: STATUS_ADD_YOURS` (8) dan `parentMessageKey` milikmu:
 
 ```jsonc
 {
@@ -5252,7 +5252,7 @@ That writes `messageContextInfo.messageAssociation` (tag 10) with `associationTy
 }
 ```
 
-It works on any status content, media included, because the association sits beside the message rather than inside it:
+Ini jalan di konten status apa pun, media termasuk, karena asosiasinya duduk di sebelah pesannya, bukan di dalamnya:
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -5262,13 +5262,13 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-There are three Add Yours flavours, and you can name the one you want:
+Ada tiga rasa Add Yours, dan kamu bisa menyebut yang kamu mau:
 
-| `type` | Value | Prompt it answers |
+| `type` | Nilai | Prompt yang dijawabnya |
 | --- | --- | --- |
-| `STATUS_ADD_YOURS` | 8 | the ordinary Add Yours sticker (default) |
-| `STATUS_ADD_YOURS_AI_IMAGINE` | 15 | the AI image prompt |
-| `STATUS_ADD_YOURS_DIWALI` | 17 | the seasonal Diwali prompt |
+| `STATUS_ADD_YOURS` | 8 | stiker Add Yours yang biasa (bawaan) |
+| `STATUS_ADD_YOURS_AI_IMAGINE` | 15 | prompt gambar AI |
+| `STATUS_ADD_YOURS_DIWALI` | 17 | prompt musiman Diwali |
 
 ```js
 await sock.sendMessage('status@broadcast', {
@@ -5279,7 +5279,7 @@ await sock.sendMessage('status@broadcast', {
 
 #### Asosiasi lainnya
 
-`addYours` is a shorthand over the general mechanism, which is worth knowing because the same field threads status polls, questions, reactions and album items:
+`addYours` itu bentuk singkat di atas mekanisme umumnya, dan itu layak diketahui karena field yang sama merangkai polling status, pertanyaan, reaksi, dan item album:
 
 ```js
 import { AssociationType } from '@rexxhayanasi/elaina-baileys'
@@ -5294,11 +5294,11 @@ await sock.sendMessage('status@broadcast', {
 }, { statusJidList })
 ```
 
-`AssociationType` is the client's own enum: `MEDIA_ALBUM` 1, `STATUS_POLL` 4, `STATUS_EXTERNAL_RESHARE` 6, `MEDIA_POLL` 7, `STATUS_ADD_YOURS` 8, `STATUS_NOTIFICATION` 9, `STICKER_ANNOTATION` 11, `STATUS_LINK_ACTION` 13, `STATUS_ADD_YOURS_AI_IMAGINE` 15, `STATUS_QUESTION` 16, `STATUS_ADD_YOURS_DIWALI` 17, `STATUS_REACTION` 18, `POLL_ADD_OPTION` 20, among others. Unlike `addYours`, the general form defaults to `UNKNOWN` rather than guessing for you.
+`AssociationType` itu enum milik klien sendiri: `MEDIA_ALBUM` 1, `STATUS_POLL` 4, `STATUS_EXTERNAL_RESHARE` 6, `MEDIA_POLL` 7, `STATUS_ADD_YOURS` 8, `STATUS_NOTIFICATION` 9, `STICKER_ANNOTATION` 11, `STATUS_LINK_ACTION` 13, `STATUS_ADD_YOURS_AI_IMAGINE` 15, `STATUS_QUESTION` 16, `STATUS_ADD_YOURS_DIWALI` 17, `STATUS_REACTION` 18, `POLL_ADD_OPTION` 20, dan lainnya. Berbeda dari `addYours`, bentuk umumnya default ke `UNKNOWN` ketimbang menebak untukmu.
 
 #### Memberi tahu pemosting aslinya
 
-Posting the answer does not by itself notify whoever wrote the prompt. That is a separate `statusNotification`, and `STATUS_ADD_YOURS` is one of its types:
+Memposting jawabannya tidak dengan sendirinya memberi tahu siapa pun yang menulis prompt-nya. Itu `statusNotification` yang terpisah, dan `STATUS_ADD_YOURS` salah satu jenisnya:
 
 ```js
 await sock.sendMessage(promptAuthorJid, {
@@ -5311,13 +5311,13 @@ await sock.sendMessage(promptAuthorJid, {
 ```
 
 > [!NOTE]
-> The Add Yours **sticker** — the prompt itself, with its own text — is composed on Android and its wire layout is not expressed anywhere in the WhatsApp Web bundle. Only the association is, so that is all this library builds. Answering an existing prompt works; authoring a new prompt from a bot does not, and nothing here guesses at the tags for it.
+> **Stiker** Add Yours — prompt-nya sendiri, dengan teksnya sendiri — disusun di Android dan tata letak wire-nya tidak diungkapkan di mana pun di bundle WhatsApp Web. Hanya asosiasinya yang ada, jadi itu saja yang dibangun library ini. Menjawab prompt yang sudah ada bisa; menulis prompt baru dari bot tidak bisa, dan tidak ada di sini yang menebak-nebak tag untuk itu.
 
 ### Mention di Status
 
-Mentioning people in a status is two messages: the status itself goes to `status@broadcast` with a `mentioned_users` meta node, and each mentioned chat gets a small pointer message so the mention surfaces there — `statusMentionMessage` for a person, `groupStatusMentionMessage` for a group, both wrapping a `protocolMessage` of type `STATUS_MENTION_MESSAGE` (25).
+Mention orang di status itu dua pesan: statusnya sendiri dikirim ke `status@broadcast` dengan node meta `mentioned_users`, dan setiap chat yang dimention mendapat satu pesan penunjuk kecil supaya mention-nya muncul di situ — `statusMentionMessage` untuk perorangan, `groupStatusMentionMessage` untuk grup, keduanya membungkus `protocolMessage` bertipe `STATUS_MENTION_MESSAGE` (25).
 
-**Pass an array of jids as the target and the whole flow is done for you:**
+**Serahkan array jid sebagai targetnya dan seluruh alurnya dikerjakan untukmu:**
 
 ```js
 await sock.sendMessage(
@@ -5327,9 +5327,9 @@ await sock.sendMessage(
 )
 ```
 
-That posts the status once — expanding any group in the list into its participants for the audience — then sends one mention pointer per jid, picking the group or the personal wrapper for each and attaching the right meta attribute (`is_group_status_mention` or `is_status_mention`). `delayMs` spaces the pointers out and defaults to 1500 ms.
+Itu memposting statusnya sekali — memperluas grup mana pun di daftarnya menjadi anggota-anggotanya untuk audiensnya — lalu mengirim satu penunjuk mention per jid, memilih pembungkus grup atau perorangan untuk masing-masing dan menempelkan atribut meta yang tepat (`is_group_status_mention` atau `is_status_mention`). `delayMs` memberi jarak antar penunjuknya dan bawaannya 1500 ms.
 
-To send the pointer on its own, against a status you already posted:
+Untuk mengirim penunjuknya sendiri, terhadap status yang sudah kamu posting:
 
 ```js
 const myStatus = await sock.sendMessage('status@broadcast', { text: 'halo semua' }, { statusJidList })
@@ -5338,9 +5338,9 @@ await sock.sendMessage(userJid, { statusMention: { key: myStatus.key } })
 await sock.sendMessage(groupJid, { statusMention: { key: myStatus.key, group: true } })
 ```
 
-`myStatus.key` is **yours** — `sendMessage` hands back the message it just sent, so keep that return value. See [Message Keys](#message-key).
+`myStatus.key` itu **milikmu** — `sendMessage` menyerahkan kembali pesan yang baru dikirimnya, jadi simpan nilai kembalian itu. Lihat [Message Key](#message-key).
 
-Or build it without sending, for a custom relay:
+Atau bangun tanpa mengirim, untuk relay buatan sendiri:
 
 ```js
 import { makeStatusMentionMessage } from '@rexxhayanasi/elaina-baileys'
@@ -5349,7 +5349,7 @@ const content = makeStatusMentionMessage({ key: myStatus.key, group: false })
 // { statusMentionMessage: { message: { protocolMessage: { key, type: 25 } } } }
 ```
 
-Both wrappers are `FutureProofMessage`s — `statusMentionMessage` is `Message` field 87, `groupStatusMentionMessage` field 92 — so a received one needs `normalizeMessageContent` like any other wrapper.
+Kedua pembungkusnya `FutureProofMessage` — `statusMentionMessage` itu field 87 dari `Message`, `groupStatusMentionMessage` field 92 — jadi yang diterima butuh `normalizeMessageContent` seperti pembungkus lainnya.
 
 ### Reaksi Status Grup
 
@@ -5362,33 +5362,33 @@ await sock.sendMessage(groupJid, {
 })
 ```
 
-The reaction is wrapped in `groupStatusMessageV2`, allowing the existing relay layer to include group-status metadata.
+Reaksinya dibungkus di `groupStatusMessageV2`, sehingga lapisan relay yang sudah ada bisa menyertakan metadata status grupnya.
 
 ### Menambah Opsi Polling
 
-The original poll must have been created with `canAddOption: true` (see [Poll settings](#pengaturan-polling)). One message carries one option — `addOption` is a single value in the protobuf, not a list, so send several messages to add several options.
+Polling aslinya harus dibuat dengan `canAddOption: true` (lihat [Pengaturan polling](#pengaturan-polling)). Satu pesan membawa satu opsi — `addOption` itu nilai tunggal di protobuf, bukan daftar, jadi kirim beberapa pesan untuk menambah beberapa opsi.
 
 ```js
 await sock.sendMessage(jid, {
   pollAddOption: {
     pollCreationMessageKey: pollMessage.key,
-    option: 'New option'
+    option: 'Opsi baru'
   }
 })
 ```
 
-`addOption` can be supplied directly when you already have the protobuf option object.
+`addOption` bisa diberikan langsung kalau kamu sudah punya objek opsi protobuf-nya.
 
 ### Pesan Komentar
 
-`content` accepts text or protobuf message fields. Raw protobuf content can be supplied as `message`.
+`content` menerima teks atau field pesan protobuf. Konten protobuf mentah bisa diberikan sebagai `message`.
 
 ```js
 await sock.sendMessage(jid, {
   comment: {
     targetMessageKey: targetMessage.key,
     content: {
-      text: 'Comment on this message'
+      text: 'Komentar untuk pesan ini'
     }
   }
 })
@@ -5400,10 +5400,10 @@ await sock.sendMessage(jid, {
 await sock.sendMessage(jid, {
   eventInvite: {
     eventId: 'elaina-event-001',
-    eventTitle: 'Elaina Community Event',
+    eventTitle: 'Acara Komunitas Elaina',
     startTime: new Date(Date.now() + 3600000),
     endTime: new Date(Date.now() + 7200000),
-    caption: 'See you there'
+    caption: 'Sampai jumpa di sana'
   }
 })
 ```
@@ -5415,12 +5415,12 @@ const created = await sock.sendMessage(jid, {
   scheduledCall: {
     scheduledTimestampMs: new Date(Date.now() + 3600000),
     callType: 'VIDEO',
-    title: 'Elaina Call'
+    title: 'Panggilan Elaina'
   }
 })
 ```
 
-Cancel a scheduled call with its message key.
+Membatalkan panggilan terjadwal lewat message key-nya.
 
 ```js
 await sock.sendMessage(jid, {
@@ -5433,7 +5433,7 @@ await sock.sendMessage(jid, {
 
 ### Penanda Broadcast Lokasi
 
-WhatsApp Desktop recognizes `location@broadcast` separately from `status@broadcast`. Elaina Baileys exposes the identifier and detector without treating it as normal status fanout.
+WhatsApp Desktop mengenali `location@broadcast` secara terpisah dari `status@broadcast`. Elaina Baileys membuka penanda dan pendeteksinya tanpa memperlakukannya sebagai fanout status biasa.
 
 ```js
 console.log(LOCATION_BROADCAST_JID)
@@ -5464,10 +5464,10 @@ import {
 } from '@rexxhayanasi/elaina-baileys'
 ```
 
-These helpers return protobuf-compatible message content that can be passed to `generateWAMessageFromContent` or custom relay logic.
+Helper ini mengembalikan konten pesan yang kompatibel dengan protobuf dan bisa diserahkan ke `generateWAMessageFromContent` atau logika relay buatanmu sendiri.
 
 > [!IMPORTANT]
-> The inspected WhatsApp Desktop build also exposes schema names related to bot history sharing and identity verification. They are intentionally not added until their protobuf field numbers, parent messages, and wire layout are confirmed. Elaina Baileys does not guess protobuf tags.
+> Build WhatsApp Desktop yang diperiksa juga membuka nama skema yang berkaitan dengan pembagian riwayat bot dan verifikasi identitas. Keduanya sengaja belum ditambahkan sampai nomor field protobuf, pesan induk, dan tata letak wire-nya terkonfirmasi. Elaina Baileys tidak menebak-nebak tag protobuf.
 
 ---
 
