@@ -52,7 +52,10 @@ export function makeNewsletterSocket(config: any): {
         role?: string;
         followTime?: number;
     }[]>;
-    newsletterSubscribed: () => Promise<any>;
+    newsletterSubscribed: (options?: {
+        fetchStatusMetadata?: boolean;
+        fetchWamoSub?: boolean;
+    }) => Promise<any>;
     newsletterMetadata: (type: 'invite' | 'jid', key: string, options?: {
         fetchCreationTime?: boolean;
         fetchFullImage?: boolean;
@@ -364,7 +367,12 @@ export function makeNewsletterSocket(config: any): {
         source?: string;
         subject?: string;
         isKnownChat?: boolean;
-    }) => Promise<void>;
+    }) => Promise<{
+        jid: string;
+        flow: string;
+        reported: true;
+        node: any;
+    }>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
     updateCallPrivacy: (value: any) => Promise<void>;
     updateMessagesPrivacy: (value: any) => Promise<void>;

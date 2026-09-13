@@ -91,6 +91,7 @@ Perintah pendukung:
 | `npm run check:proto` | Cek celah protobuf saja |
 | `npm run sync:proto` | Tambahkan field protobuf yang hilang ke WAProto |
 | `npm run verify:proto` | Round-trip encoder saja |
+| `npm run verify:mex` | Cocokkan setiap query `w:mex` dengan persisted query di bundle |
 | `npm run fetch:bundle -- <dir>` | Unduh bundle mentah ke direktori |
 
 Variabel lingkungan `PROTO_BUNDLE_DIR` membuat semua skrip membaca dari
@@ -210,6 +211,7 @@ Daftar ini berasal dari kesalahan nyata di repo ini. Baca sebelum mulai.
 
 - [ ] `npm run wa:update` selesai dan verdict-nya dipahami
 - [ ] `npm run verify:proto` lulus
+- [ ] `npm run verify:mex` lulus kalau kamu menyentuh `lib/Socket` atau `lib/Types/Mex.js`
 - [ ] `node --check` lolos untuk setiap file yang disentuh
 - [ ] Tidak ada file di `.wa-bundle/` yang ikut ter-commit
 - [ ] Pesan commit menjelaskan **kenapa**, bukan hanya **apa**

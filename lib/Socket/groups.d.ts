@@ -166,7 +166,12 @@ export function makeGroupsSocket(config: any): {
         source?: string;
         subject?: string;
         isKnownChat?: boolean;
-    }) => Promise<void>;
+    }) => Promise<{
+        jid: string;
+        flow: string;
+        reported: true;
+        node: any;
+    }>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
     updateCallPrivacy: (value: any) => Promise<void>;
     updateMessagesPrivacy: (value: any) => Promise<void>;

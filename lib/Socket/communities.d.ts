@@ -255,7 +255,20 @@ export function makeCommunitiesSocket(config: any): {
         shouldIncludeDeviceIdentity: boolean;
     }>;
     getUSyncDevices: (jids: any, useCache: any, ignoreZeroDevices: any) => Promise<any[]>;
-    updateMemberLabel: (jid: any, memberLabel: any) => Promise<any>;
+    updateMemberLabel: (jid: string, memberLabel?: string | null, options?: {
+        additionalNodes?: any[];
+    }) => Promise<{
+        jid: string;
+        label: string;
+        messageId: string;
+    }>;
+    removeMemberLabel: (jid: string, options?: {
+        additionalNodes?: any[];
+    }) => Promise<{
+        jid: string;
+        label: string;
+        messageId: string;
+    }>;
     updateMediaMessage: (message: any) => Promise<any>;
     sendMessage: (jid: any, content: any, options?: {}) => Promise<proto.WebMessageInfo | undefined>;
     executeWMexQuery: (variables: any, queryId: any, dataPath: any) => Promise<any>;
@@ -276,8 +289,19 @@ export function makeCommunitiesSocket(config: any): {
     }>;
     newsletterUpdate: (jid: any, updates: any) => Promise<any>;
     newsletterSubscribers: (jid: any) => Promise<any>;
-    newsletterSubscribed: () => Promise<any>;
-    newsletterMetadata: (type: any, key: any) => Promise<any>;
+    newsletterSubscribed: (options?: {
+        fetchStatusMetadata?: boolean;
+        fetchWamoSub?: boolean;
+    }) => Promise<any>;
+    newsletterMetadata: (type: 'jid' | 'invite', key: string, options?: {
+        fetchCreationTime?: boolean;
+        fetchFullImage?: boolean;
+        fetchViewerMetadata?: boolean;
+        fetchPinnedMessages?: boolean;
+        fetchStatusMetadata?: boolean;
+        fetchWamoSub?: boolean;
+        viewRole?: string;
+    }) => Promise<any>;
     newsletterFollow: (jid: any) => Promise<any>;
     newsletterUnfollow: (jid: any) => Promise<any>;
     newsletterMute: (jid: any) => Promise<any>;
@@ -451,7 +475,12 @@ export function makeCommunitiesSocket(config: any): {
         source?: string;
         subject?: string;
         isKnownChat?: boolean;
-    }) => Promise<void>;
+    }) => Promise<{
+        jid: string;
+        flow: string;
+        reported: true;
+        node: any;
+    }>;
     updateDisableLinkPreviewsPrivacy: (isPreviewsDisabled: any) => Promise<void>;
     updateCallPrivacy: (value: any) => Promise<void>;
     updateMessagesPrivacy: (value: any) => Promise<void>;

@@ -15,7 +15,9 @@ import { generateMessageID, generateMessageIDV2, encodeWAMessage } from '../lib/
 import { hasOptionalMedia, loadFfmpeg, loadSharp } from '../lib/Utils/optional-media.js';
 import { SCHEDULED_MSG_META_TYPE, SCHEDULED_MSG_REVEAL_KEY_BYTES, SCHEDULED_MSG_REVEAL_KEY_IV_BYTES, SCHEDULED_MSG_WINDOW, buildScheduledMsgMetaNode, buildUnscheduleProtocolMessage, decodeScheduledMessage, encodeScheduledMessage, generateRevealKey, isScheduledTimeValid } from '../lib/Utils/scheduled-message.js';
 import { getMessageReportingToken, shouldIncludeReportingToken } from '../lib/Utils/reporting-utils.js';
-import { buildSpamListNode } from '../lib/Socket/chats.js';
+import { buildSpamListNode, readSpamReportResult } from '../lib/Socket/chats.js';
+import { buildMemberLabelMessage } from '../lib/Socket/messages-send.js';
+import { MEMBER_LABEL_MAX_LENGTH } from '../lib/Defaults/index.js';
 import { SPAM_FLOWS } from '../lib/Types/index.js';
 
 const JPEG_320x200_BASE64 = '/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCADIAUADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAIF/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AmAQ2gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/2Q==';
@@ -1011,6 +1013,54 @@ test('spam-report', async () => {
     assert.equal(SPAM_FLOWS.OneToOneChatSpamBannerReport, '1_1_spam_banner_report');
     assert.equal(SPAM_FLOWS.NewsletterInfoReport, 'newsletter_info_report');
     assert.throws(() => { SPAM_FLOWS.Block = 'x'; }, TypeError, 'the table is frozen');
+});
+
+test('spam-report-result', async () => {
+    const sent = buildSpamListNode('62811111111@s.whatsapp.net', { flow: SPAM_FLOWS.AccountInfoReport });
+
+    const ok = readSpamReportResult(sent, { tag: 'iq', attrs: { type: 'result' }, content: undefined });
+    assert.deepEqual(
+        { jid: ok.jid, flow: ok.flow, reported: ok.reported },
+        { jid: '62811111111@s.whatsapp.net', flow: 'account_info_report', reported: true },
+        'reportSpam used to resolve undefined, so a caller could not tell a report from a no-op'
+    );
+
+    assert.throws(() => readSpamReportResult(sent, {
+        tag: 'iq',
+        attrs: { type: 'error' },
+        content: [{ tag: 'error', attrs: { code: '403', text: 'not-allowed' } }]
+    }), err => {
+        assert.equal(err.output.statusCode, 403);
+        assert.equal(err.data.text, 'not-allowed');
+        assert.equal(err.data.flow, 'account_info_report');
+        return true;
+    }, 'an error child used to pass silently');
+});
+
+test('member-label', async () => {
+    const { content, node, label } = buildMemberLabelMessage('12345-67890@g.us', 'Bendahara');
+
+    assert.equal(label, 'Bendahara');
+    assert.equal(content.protocolMessage.type, 30, 'GROUP_MEMBER_LABEL_CHANGE is protocol type 30');
+    assert.equal(content.protocolMessage.memberLabel.label, 'Bendahara');
+    assert.equal(typeof content.protocolMessage.memberLabel.labelTimestamp, 'number');
+    assert.deepEqual(node.attrs, { tag_reason: 'user_update', appdata: 'member_tag' });
+
+    const cleared = buildMemberLabelMessage('12345-67890@g.us', '');
+    assert.equal(cleared.label, '');
+    assert.equal(cleared.node.attrs.tag_reason, 'user_delete',
+        'WAWebWamEnumGroupMemberTagUpdateActionType separates UPDATE from DELETE_CONFIRM, and the reason table has user_delete for it');
+    assert.equal(buildMemberLabelMessage('12345-67890@g.us').node.attrs.tag_reason, 'user_delete');
+
+    const long = buildMemberLabelMessage('12345-67890@g.us', 'x'.repeat(80));
+    assert.equal(long.label.length, MEMBER_LABEL_MAX_LENGTH);
+
+    for (const bad of ['62811111111@s.whatsapp.net', '12345@newsletter', 'bukan-jid', undefined]) {
+        assert.throws(() => buildMemberLabelMessage(bad, 'Bendahara'), err => {
+            assert.equal(err.output.statusCode, 400);
+            return true;
+        }, 'menolak ' + JSON.stringify(bad));
+    }
 });
 
 test('event-time', async () => {

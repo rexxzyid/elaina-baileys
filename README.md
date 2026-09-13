@@ -3417,8 +3417,14 @@ await sock.newsletterUpdateUserSetting('123456789@newsletter', 'FOLLOWER_NOTIFIC
 
 ```js
 const newsletters = await sock.newsletterSubscribed()
-console.log(newsletters)
+
+const lengkap = await sock.newsletterSubscribed({
+  fetchStatusMetadata: true,
+  fetchWamoSub: true
+})
 ```
+
+Query-nya, `WAWebMexFetchAllNewslettersMetadataJobQuery`, mendeklarasikan `fetch_status_metadata` dan `fetch_wamo_sub` tanpa nilai bawaan, jadi keduanya harus ikut terkirim. Sampai versi `1.3.10` fork ini mengirim variabel kosong dan panggilannya gagal di server; sekarang keduanya selalu dikirim, `false` kecuali kamu meminta.
 
 ### Membaca Channel
 
@@ -4211,7 +4217,8 @@ const blocked = await sock.fetchBlocklist()
 ```js
 import { SPAM_FLOWS } from '@rexxhayanasi/elaina-baileys'
 
-await sock.reportSpam(jid)
+const laporan = await sock.reportSpam(jid)
+// { jid: '628xxxx@s.whatsapp.net', flow: 'overflow_menu_report', reported: true, node }
 
 await sock.reportSpam(groupJid, {
     flow: SPAM_FLOWS.GroupInfoReport,
@@ -4220,6 +4227,8 @@ await sock.reportSpam(groupJid, {
 ```
 
 `reportSpam` mengirim laporan tingkat chat, yang sama dengan yang dikirim WhatsApp Web saat kamu melaporkan satu kontak atau grup tanpa memilih pesan tertentu. `flow` memberi tahu server dari mana laporannya datang dan bawaannya `SPAM_FLOWS.OverflowMenuReport`; `SPAM_FLOWS` membawa nilai yang dipakai WhatsApp Web sendiri. `source` menyebut anggota yang dilaporkan di dalam grup, `subject` membawa nama entitasnya, dan `isKnownChat` menyatakan apakah chat-nya sudah kamu kenal. Melaporkan satu pesan tertentu tidak dicakup — itu butuh tag franking yang diturunkan klien saat ia menerima pesannya.
+
+Ia mengembalikan jid dan flow yang **benar-benar terkirim** — bukan yang kamu serahkan: suffix perangkat dilepas dari jid kontak dan `flow` diisi bawaannya kalau kamu tidak menyebutkan. Kalau server menjawab dengan `<error>`, panggilannya melempar `Boom` dengan kode dari server dan `data` berisi `jid`, `flow`, serta `text` alasannya. Sampai versi `1.3.10` fungsi ini selalu `resolve` ke `undefined`, jadi laporan yang ditolak tidak bisa dibedakan dari yang diterima.
 
 ---
 
@@ -4455,10 +4464,29 @@ URL media WhatsApp kedaluwarsa. Kalau unduhan gagal di pesan lama, ini meminta `
 ### Label Anggota Grup
 
 ```js
-await sock.updateMemberLabel(groupJid, memberLabel)
+await sock.updateMemberLabel(groupJid, 'Bendahara')
+// { jid: '12345-67890@g.us', label: 'Bendahara', messageId: '3EB0...' }
+
+await sock.removeMemberLabel(groupJid)
 ```
 
-Mengirim pesan protokol `GROUP_MEMBER_LABEL_CHANGE`, dan itulah cara label per-grup di sebelah nama anggota disetel.
+Label ini **milikmu sendiri di grup itu** — di aplikasi tombolnya berbunyi "Add your member tag". Kamu tidak bisa memasang label ke anggota lain; yang bisa kamu lakukan cuma menyetel labelmu sendiri, dan anggota lain menyetel labelnya masing-masing.
+
+Yang dikirim adalah pesan protokol `GROUP_MEMBER_LABEL_CHANGE` (tipe 30) berisi `memberLabel: { label, labelTimestamp }`, ditemani satu node `<meta appdata="member_tag">`. `tag_reason` di node itu ikut isi labelnya: `user_update` waktu menyetel, `user_delete` waktu mengosongkan — dua-duanya nama yang dipakai klien resmi, dan `removeMemberLabel` cuma jalan pintas ke label kosong.
+
+| Aturan | Perilaku |
+| --- | --- |
+| jid bukan grup | dilempar `Boom` 400, bukan dikirim ke server |
+| label lebih dari `MEMBER_LABEL_MAX_LENGTH` (30) | dipotong, bukan ditolak |
+| label kosong, `null`, atau tanpa argumen | menghapus label, `tag_reason: 'user_delete'` |
+
+Label anggota lain sampai lewat event, bukan lewat query:
+
+```js
+sock.ev.on('group.member-tag.update', ({ groupId, participant, label }) => {
+  console.log(participant, 'di', groupId, 'sekarang', label)
+})
+```
 
 ---
 
@@ -4755,6 +4783,7 @@ Perintah pendukungnya:
 | `npm run check:proto` | hanya pemeriksaan lubang protobuf |
 | `npm run sync:proto` | menambahkan field protobuf yang kurang ke `WAProto` |
 | `npm run verify:proto` | hanya encoder round-trip |
+| `npm run verify:mex` | mencocokkan setiap query `w:mex` dengan persisted query di bundle |
 | `npm run verify:assets` | checksum dan pemindaian resource VoIP yang dibawa |
 | `npm run fetch:bundle -- <dir>` | mengunduh bundle mentahnya |
 | `npm run update:version` | menaikkan revisi yang dipaku tanpa pemeriksaan apa pun |
@@ -4762,7 +4791,16 @@ Perintah pendukungnya:
 | `npm run sync:proto -- --gaps <berkas>` | menambal `WAProto` dari keluaran `--json` sebuah audit |
 | `npm run proto:update` | seluruh putarannya: sync, verifikasi, naikkan |
 
-`proto:update` menjalankan `sync:proto`, lalu `verify:proto`, lalu `wa:update --apply`, lalu `update:version`, dan urutan itu menanggung beban. `wa:update` keluar dengan kode bukan nol pada kesimpulan `needs-work` dan menolak `--apply`, jadi menutup lubang protobuf-nya harus lebih dulu atau rantainya berhenti sebelum sampai ke situ.
+`proto:update` menjalankan `sync:proto`, lalu `verify:proto`, lalu `verify:mex`, lalu `wa:update --apply`, lalu `update:version`, dan urutan itu menanggung beban. `wa:update` keluar dengan kode bukan nol pada kesimpulan `needs-work` dan menolak `--apply`, jadi menutup lubang protobuf-nya harus lebih dulu atau rantainya berhenti sebelum sampai ke situ.
+
+**Memeriksa query `w:mex`.** Newsletter, username, status teks, dan dua sinyal kesehatan akun semuanya berjalan lewat persisted query GraphQL — id angka yang disimpan di `lib/Types/Mex.js`. Kalau WhatsApp mengganti id-nya, menambah variabel wajib, atau mengganti nama field akarnya, panggilannya gagal di server dan tidak ada satu pun tes yang tahu. `verify:mex` membaca `params:{id,name}` dan `LocalArgument` setiap query dari snapshot bundle, lalu mencocokkannya dengan setiap pemanggilan `executeWMexQuery` di `lib/Socket`: id yang sudah tidak dilayani, variabel yang kurang atau tidak dideklarasikan, dan `dataPath` yang tidak ada di jawaban query-nya.
+
+```bash
+npm run verify:mex
+PROTO_BUNDLE_DIR=.wa-bundle/1047416414 npm run verify:mex
+```
+
+Tanpa `PROTO_BUNDLE_DIR` ia memakai snapshot revisi tertinggi di `.wa-bundle`. Inilah yang menemukan `newsletterSubscribed` mengirim variabel kosong dan `fetchNewChatMessageCap` memakai `INDIVIDUAL_NEW_CHAT_MSG` yang tidak ada di klien mana pun.
 
 **Mengaudit terhadap Android.** Semua yang di atas membaca bundle WhatsApp **Web**, jadi field yang dikenal klien Android tapi tidak dikenal Web sama sekali tidak pernah sampai ke `WAProto`. `audit:apk` menutup titik buta itu: arahkan ke direktori berisi `classes*.dex` hasil ekstraksi dan ia mem-parse kelas model protobuf-nya langsung dari dex — membaca setiap konstanta `*_FIELD_NUMBER` beserta nilainya — lalu melaporkan field mana dan tipe utuh mana yang hilang, beserta nomor field-nya.
 
@@ -5560,32 +5598,51 @@ Helper ini mengembalikan konten pesan yang kompatibel dengan protobuf dan bisa d
 
 WhatsApp melacak bagaimana satu akun menghubungi orang yang belum pernah diajaknya bicara, dan ia memberi tahu kliennya posisinya di mana. Membaca dua sinyal itu jauh lebih bisa dipegang daripada menebak jeda yang aman.
 
+Keduanya query `w:mex` yang sama persis dengan yang dijalankan WA Web, jadi jawabannya datang dari server WhatsApp, bukan dari hitungan lokal:
+
+| Fungsi | Query persisted | Kapan bisa dipanggil |
+| --- | --- | --- |
+| `fetchNewChatMessageCap()` | `WAWebMexFetchNewChatMessageCappingInfoJobQuery` (`27910975521856601`) | kapan saja setelah tersambung |
+| `fetchAccountReachoutTimelock()` | `WAWebMexFetchReachoutTimelockJobQuery` (`23983697327930364`) | kapan saja setelah tersambung |
+
 ### Kuota Pesan ke Chat Baru
 
 ```js
 const cap = await sock.fetchNewChatMessageCap()
-// {
-//   status: 'NONE' | 'FIRST_WARNING' | 'SECOND_WARNING' | 'CAPPED',
-//   capped: false, warned: false,
-//   totalQuota: 200, usedQuota: 41, remaining: 159,
-//   cycleStart, cycleEnd, serverTime, oteStatus, mvStatus, subscriptionStatus
-// }
 ```
 
-`status` itu tangga eskalasi milik WhatsApp sendiri untuk mengirim ke chat **baru**: `NONE` → `FIRST_WARNING` → `SECOND_WARNING` → `CAPPED`. `remaining` itu sisa di siklus sekarang, dan `cycleEnd` kapan ia direset.
+Yang kembali:
 
-Hanya kontak pertama dengan chat baru yang memakan kuota. Membalas di dalam percakapan yang dimulai orang lain tidak.
+| Field | Isi |
+| --- | --- |
+| `status` | `NONE` → `FIRST_WARNING` → `SECOND_WARNING` → `CAPPED`, tangga eskalasi milik WhatsApp sendiri |
+| `capped` | `true` kalau `status` sudah `CAPPED`, artinya kirim ke chat baru ditolak |
+| `warned` | `true` di `FIRST_WARNING` maupun `SECOND_WARNING` |
+| `totalQuota` | jatah chat baru untuk satu siklus |
+| `usedQuota` | yang sudah terpakai di siklus itu |
+| `remaining` | `totalQuota - usedQuota`, tidak pernah negatif; `undefined` kalau server tidak mengirim salah satunya |
+| `cycleStart`, `cycleEnd` | awal dan akhir siklus, **detik unix** — kalikan 1000 untuk `new Date` |
+| `serverTime` | jam server saat menjawab, dipakai untuk membandingkan `cycleEnd` tanpa percaya jam mesinmu |
+| `oteStatus`, `mvStatus`, `subscriptionStatus` | status verifikasi dan langganan yang ikut dibawa jawabannya |
+| `response` | jawaban mentahnya, kalau kamu mau membaca field yang belum dipetakan |
+
+Yang memakan kuota cuma **memulai** chat dengan nomor yang belum pernah kamu ajak bicara. Membalas di percakapan yang dimulai orang lain tidak dihitung, dan mengirim lagi ke chat yang sudah ada juga tidak.
+
+Perlu diketahui: query ini menanyakan satu jenis kuota saja, `INDIVIDUAL_NEW_CHAT_THREAD` — kuota **thread** chat baru, bukan jumlah pesan. Sampai versi `1.3.10` fork ini mengirim `INDIVIDUAL_NEW_CHAT_MSG`, nama yang tidak ada di klien mana pun, dan itulah kenapa panggilannya bisa balik dengan error atau angka kosong.
 
 ### Timelock Reachout
 
 ```js
 const lock = await sock.fetchAccountReachoutTimelock()
-// { isActive: true, timeEnforcementEnds: Date, enforcementType: 'BIZ_QUALITY' }
 ```
 
-`isActive` berarti akunnya sudah dibatasi dari menghubungi orang, dan `timeEnforcementEnds` kapan itu dilepas. `enforcementType` menyebut alasannya — `BIZ_QUALITY` yang berbasis kualitas, nilai `BIZ_COMMERCE_VIOLATION_*` itu kategori kebijakan.
+| Field | Isi |
+| --- | --- |
+| `isActive` | akunnya sedang dibatasi dari menghubungi orang baru |
+| `timeEnforcementEnds` | `Date` kapan pembatasannya dilepas, `undefined` kalau server mengirim `0` |
+| `enforcementType` | alasannya — `BIZ_QUALITY` berbasis kualitas, `BIZ_COMMERCE_VIOLATION_*` kategori kebijakan |
 
-Kedua sinyalnya juga datang tanpa diminta:
+Memanggilnya juga memancarkan `connection.update`, jadi satu pemanggilan cukup untuk memberi tahu seluruh bot. Kedua sinyalnya juga datang tanpa diminta:
 
 ```js
 sock.ev.on('connection.update', ({ reachoutTimeLock }) => {
