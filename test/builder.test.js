@@ -13,6 +13,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+const richOf = message => message?.botForwardedMessage?.message?.richResponseMessage ?? message?.richResponseMessage;
+const protocolOf = message => message?.botForwardedMessage?.message?.protocolMessage ?? message?.protocolMessage;
+
 test('a2ui', async () => {
     assert.equal(A2UI_VERSION, 'v0.9');
     assert.equal(A2UI_BASIC_CATALOG, 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json');
@@ -101,7 +104,7 @@ test('airich-map', async () => {
         { latitude: -6.215, longitude: 106.85, title: 'Bakso Pak Kumis', body: 'Bakso urat' }
     ];
 
-    const richResponse = async rich => (await rich.build('120363@g.us')).message.richResponseMessage;
+    const richResponse = async rich => richOf((await rich.build('120363@g.us')).message);
     const unified = response => JSON.parse(Buffer.from(response.unifiedResponse.data, 'base64').toString());
 
     /**
@@ -168,7 +171,7 @@ test('airich-map', async () => {
         rich.addMap(places, { staticMapUrl: 'https://example.com/map.png', motivation: 'tiga terdekat' });
         const built = await rich.build('120363@g.us');
         const decoded = proto.Message.decode(proto.Message.encode(built.message).finish());
-        const submessages = decoded.richResponseMessage.submessages;
+        const submessages = richOf(decoded).submessages;
 
         assert.equal(submessages.length, 2);
         assert.equal(submessages[0].messageType, 2, 'the text submessage stays first');
@@ -731,7 +734,7 @@ test('html-section', async () => {
     assert.equal(calls.length, 1);
     assert.equal(calls[0].jid, '2@s.whatsapp.net');
 
-    const rich = calls[0].message.richResponseMessage;
+    const rich = richOf(calls[0].message);
     assert.equal(rich.messageType, 1);
     assert.deepEqual(rich.submessages, [{ messageType: 2, messageText: 'Fiora Sylvie' }]);
     assert.equal(rich.contextInfo.isForwarded, true);
@@ -750,14 +753,14 @@ test('html-section', async () => {
 
     calls.length = 0;
     await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>ringkas</b>');
-    const bare = calls[0].message.richResponseMessage;
+    const bare = richOf(calls[0].message);
     assert.deepEqual(bare.submessages, []);
     assert.ok(bare.unifiedResponse.data);
 
     calls.length = 0;
     await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { bypassDownload: true });
     assert.equal(calls.length, 2);
-    assert.equal(calls[1].message.protocolMessage.type, 14);
+    assert.equal(protocolOf(calls[1].message).type, 14);
 
     calls.length = 0;
     await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { bypassDownload: false });
@@ -766,7 +769,7 @@ test('html-section', async () => {
     calls.length = 0;
     await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>x</b>', { includesUnifiedResponse: false });
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].message.richResponseMessage.unifiedResponse.data, '');
+    assert.equal(richOf(calls[0].message).unifiedResponse.data, '');
 
     calls.length = 0;
     await sendHtmlApp(sock, '2@s.whatsapp.net', '<b>tinggi</b>', { height: 300 });
@@ -1147,7 +1150,7 @@ test('forward-rich-response', async () => {
 
         const [relayed] = calls;
         const encoded = proto.Message.decode(proto.Message.encode(proto.Message.fromObject(relayed)).finish());
-        const rich = encoded.richResponseMessage;
+        const rich = richOf(encoded);
 
         assert.deepEqual(Buffer.from(rich.unifiedResponse.data), unifiedBytes, 'the signed bytes are untouched');
         assert.equal(rich.contextInfo.forwardedAiBotMessageInfo.botJid, '867051314767696@bot');
@@ -1169,7 +1172,7 @@ test('forward-rich-response', async () => {
             contextInfo: { mentionedJid: ['628@s.whatsapp.net'] }
         });
 
-        const rich = calls[0].richResponseMessage;
+        const rich = richOf(calls[0]);
         assert.equal(rich.contextInfo.stanzaId, 'Q1');
         assert.deepEqual(rich.contextInfo.mentionedJid, ['628@s.whatsapp.net']);
         assert.equal(rich.contextInfo.forwardedAiBotMessageInfo.botJid, '867051314767696@bot', 'the signed bot jid stays');
@@ -1220,7 +1223,7 @@ test('forward-rich-response', async () => {
         assert.equal(rich.isSignaturePreserved, true);
 
         const built = await rich.build('120363@g.us');
-        const out = built.message.richResponseMessage;
+        const out = richOf(built.message);
         assert.deepEqual(Buffer.from(out.unifiedResponse.data), unifiedBytes, 'byte for byte, not re-serialised');
         assert.deepEqual(
             Buffer.from(built.message.messageContextInfo.botMetadata.verificationMetadata.proofs[0].signature),
@@ -1254,7 +1257,7 @@ test('forward-rich-response', async () => {
         edited.loadFrom({ message: incoming() });
         edited.addText('tambahan');
         const built = await edited.build('120363@g.us');
-        const data = built.message.richResponseMessage.unifiedResponse.data;
+        const data = richOf(built.message).unifiedResponse.data;
         assert.notDeepEqual(Buffer.from(String(data), 'base64'), unifiedBytes);
     }
 
@@ -1405,14 +1408,14 @@ test('bot-signature', async () => {
 test('airich-wrapper', async () => {
     const build = (options) => new AIRich({}).addText('halo').build('628@s.whatsapp.net', options);
 
-    const plain = await build();
-    assert.ok(plain.message.richResponseMessage,
-        'the default is unwrapped, because botForwardedMessage is only unwrapped when ai_rich_response_forward_receiving_enabled is on and that prop defaults to false');
-    assert.equal(plain.message.botForwardedMessage, null);
-
-    const wrapped = await build({ forwardWrapper: true });
-    assert.ok(wrapped.message.botForwardedMessage?.message?.richResponseMessage, 'the old shape is still reachable on request');
+    const wrapped = await build();
+    assert.ok(wrapped.message.botForwardedMessage?.message?.richResponseMessage,
+        'the default wraps in botForwardedMessage, the only shape the phone clients draw');
     assert.equal(wrapped.message.richResponseMessage, null);
+
+    const plain = await build({ forwardWrapper: false });
+    assert.ok(plain.message.richResponseMessage, 'the bare shape is still reachable on request');
+    assert.equal(plain.message.botForwardedMessage, null);
 
     for (const [name, msg] of [['plain', plain], ['wrapped', wrapped]]) {
         assert.equal(decodeAIRich(msg.message)?.sections?.length, 1, `${name} still decodes`);
@@ -1422,9 +1425,10 @@ test('airich-wrapper', async () => {
     const built = await rich.build('628@s.whatsapp.net');
 
     const edit = await rich.buildEdit('628@s.whatsapp.net', built.key.id, { msg: built.message });
-    assert.equal(edit.message.protocolMessage.type, 14, 'the edit follows the same shape');
-    assert.equal(edit.message.botForwardedMessage, null);
+    assert.equal(edit.message.botForwardedMessage.message.protocolMessage.type, 14, 'the edit follows the same shape');
+    assert.equal(edit.message.protocolMessage, null);
 
-    const editWrapped = await rich.buildEdit('628@s.whatsapp.net', built.key.id, { msg: built.message, forwardWrapper: true });
-    assert.equal(editWrapped.message.botForwardedMessage.message.protocolMessage.type, 14);
+    const editPlain = await rich.buildEdit('628@s.whatsapp.net', built.key.id, { msg: built.message, forwardWrapper: false });
+    assert.equal(editPlain.message.protocolMessage.type, 14);
+    assert.equal(editPlain.message.botForwardedMessage, null);
 });

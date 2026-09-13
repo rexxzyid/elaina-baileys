@@ -1630,6 +1630,8 @@ await rich.send(jid)
 
 `send` menerima opsi yang sama dengan `build` — `quoted`, `messageId`, `forwardWrapper`, `notification` — dan `sendEdit` menggantikan pesan yang sudah tampil di layar. Serahkan jid bot sendiri lewat `botJid` kalau kamu mau atribusi forward-nya menyebut sesuatu selain bawaannya.
 
+Satu panggilan `send` mengirim dua stanza: pesannya, lalu suntingan `protocolMessage` type 14 yang membawa isi yang sama. Yang kedua itu yang membuat kartunya tergambar tanpa unduhan, jadi kalau ia gagal `send` ikut melempar — errornya membawa `relayedKey`, kunci stanza pertama yang sudah terlanjur keluar, supaya kamu bisa mengulang `sendEdit` sendiri. Sebelumnya kegagalan itu ditelan diam-diam dan `send` tetap mengembalikan kunci seolah semuanya beres, padahal yang sampai cuma pesan kosong.
+
 ### Teks + Kode + Tabel
 
 ```js
@@ -1653,17 +1655,19 @@ await rich.send(jid)
 
 ### Kenapa bisa tidak muncul sama sekali
 
-Dulu pesan AI Rich dikirim terbungkus `botForwardedMessage`, seperti yang dilakukan forward Meta AI yang asli. Klien penerima hanya membuka pembungkus itu di belakang sebuah gerbang:
+Pesan AI Rich dikirim terbungkus `botForwardedMessage`, persis seperti forward Meta AI yang asli, dan itu bawaannya.
+
+Sempat tidak begitu. `build` dan `send` pernah menaruh `richResponseMessage` di tingkat atas, alasannya di bundle WA Web pembungkusnya cuma dibuka di belakang satu gerbang:
 
 ```js
 : n && o("WAWebBotBaseGating").isRichResponseForwardReceivingEnabled() ? n : u || null
 ```
 
-di mana `n` itu `botForwardedMessage`. Gerbang itu adalah AB prop `ai_rich_response_forward_receiving_enabled` (id 16682), dan bawaannya di tabel klien **false**. Kalau mati, pembungkusnya tidak pernah dibuka, jadi pesannya tidak di-parse sebagai respons rich dan tidak ada yang digambar — bukan placeholder tidak didukung, tapi tidak ada apa-apa.
+`n` di situ `botForwardedMessage`, gerbangnya AB prop `ai_rich_response_forward_receiving_enabled` (id 16682), dan bawaannya memang **false** — di `WAWebABPropsConfigs` nilainya `[16682,"bool",!1,!0]` dan `getABPropConfigValue` membaca elemen ketiga.
 
-Karena itu `build` dan `send` sekarang menaruh `richResponseMessage` di tingkat atas. Pemeta jenis pesannya menerima itu tanpa gerbang sama sekali (`e === "richResponseMessage" ? MSG_TYPE.RICH_RESPONSE`), dan jalur parse-nya berjalan normal; prop yang sama lalu hanya menentukan apakah atribusi forward di `contextInfo` dibawa atau tidak, dan itu kosmetik.
+Tapi itu tabel WA **Web**, sedangkan yang membaca pesan-pesan ini ada di ponsel. Di dex Android nama prop itu tidak ada sama sekali; yang ada cuma nama kolom penyimpanan — `ai_rich_response_core_blob`, `ai_rich_response_message_type`, dan seterusnya. Di sana bentuk tanpa pembungkus tidak digambar: relay-nya berhasil, id pesannya kembali, dan yang muncul di layar tidak ada. Jadi bawaannya kembali terbungkus, sama dengan jalur kirim MessageBuilder v4.7 — dua stanza, `botForwardedMessage` di kedua-duanya, `protocolMessage` type 14 yang kedua.
 
-Beri `forwardWrapper: true` ke `build`, `send`, `buildEdit`, atau `forwardRichResponse` untuk mendapatkan bentuk terbungkus yang lama — layak dilakukan hanya kalau kamu tahu penerimanya sudah menyalakan prop itu.
+Beri `forwardWrapper: false` ke `build`, `send`, `buildEdit`, atau `forwardRichResponse` kalau kamu memang menargetkan WA Web dan tahu prop itu menyala di sana.
 
 Helper AIRich lain yang tersedia antara lain:
 

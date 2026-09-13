@@ -142,7 +142,7 @@ test('html-artifact', async () => {
     assert.deepEqual(decoded.typenames, ['GenAIFilePrimitive']);
     assert.equal(decoded.sections[0].view_model.primitive.preview_image.media_id, sent.mediaId);
     assert.deepEqual(
-        calls[0].message.richResponseMessage.submessages,
+        (calls[0].message.botForwardedMessage?.message?.richResponseMessage ?? calls[0].message.richResponseMessage).submessages,
         [{ messageType: 2, messageText: 'buka' }]
     );
 
