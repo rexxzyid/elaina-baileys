@@ -2128,7 +2128,7 @@ await rich.send(jid)
 | `transparencySection` / `transparencySignal` | `GenAIP13NTransparencyPrimitive` | `annotation`, `signals`, `response_id` |
 | `professionalConsentSection` | `GenAIProfessionalConsentPrimitive` | `title`, `body`, `status`, `provider_label`, `cta_label` |
 | `accountLinkingSection` / `accountLinkingApp` | `GenAI3PAccountLinkingUpsellPrimitive` | `integration_type`, `integration_status`, `cta_url`, `bottomsheet.apps` |
-| `calendarWidgetSection` / `calendarEvent` | `GenAI3PExtWidgetPrimitive` | `header`, `sections` of dates and events, `ctas`, `toast` |
+| `calendarWidgetSection` / `calendarEvent` | `GenAI3PExtWidgetPrimitive` | `header`, `sections` berisi tanggal dan acara, `ctas`, `toast` |
 
 #### Peta digambar dari submessage, bukan dari section
 
