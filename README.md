@@ -1318,7 +1318,7 @@ MessageBuilder v4.7 sudah disertakan langsung di dalam `@rexxhayanasi/elaina-bai
 
 ### Satu impor, seluruh builder
 
-Permukaan builder-nya terdiri dari 175 nama yang tersebar di empat modul, dan itulah kenapa satu bot bisa berakhir dengan satu paragraf impor cuma untuk menggambar satu kartu. `MB` (nama panjangnya: `MessageBuilder`) membawa semuanya — kelima kelas builder, semua pabrik section dan item, semua enum, pemeriksa native flow, helper tanda tangan. Tidak ada lagi yang perlu ikut di baris impor:
+Permukaan builder-nya terdiri dari 181 nama yang tersebar di empat modul, dan itulah kenapa satu bot bisa berakhir dengan satu paragraf impor cuma untuk menggambar satu kartu. `MB` (nama panjangnya: `MessageBuilder`) membawa semuanya — kelima kelas builder, semua pabrik section dan item, semua enum, pemeriksa native flow, helper tanda tangan. Tidak ada lagi yang perlu ikut di baris impor:
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'
@@ -2059,6 +2059,43 @@ Sisa `AI_RICH_PRIMITIVES` — peta, video, pengingat, olahraga, langkah search-p
 Dua nama duduk aneh di tengah: `GenAIFollowUpSuggestionPillPrimitive` dan `GenAITaskPrimitive` punya parser hanya di `cometComposedTextV2GenAiUxPrimitiveParser`, renderer Comet milik Facebook, dan tidak ada di modul `WAWeb*` mana pun — tapi kedua namanya ada di dex Android, jadi aplikasi itu tempat mengujinya. Di desktop keduanya mendarat di node kosong seperti semua yang di luar tabel di atas.
 
 Inline entity satu-satunya tempat nama yang tidak dikenal jadi fatal, bukan diabaikan — lihat peringatan di [Inline Entity di Dalam Teks](#inline-entity-di-dalam-teks). `AI_RICH_INLINE_ENTITIES` tetap tertutup di empat karena alasan itu.
+
+#### Sub-node di dalam primitifnya
+
+Karena pesan Meta AI **diteruskan** dari Meta AI dan bukan dibangun sendiri, yang penting bukan apakah sebuah nama tergambar, tapi apakah dekodernya mengenalinya. Tiga daftar di atas cuma menyebut node setingkat section. Di bawah setiap primitif masih ada objek bersarang dengan `__typename`-nya sendiri — baris tabel, ikon tim, jam buka sebuah tempat — dan `AI_RICH_NODES` mendaftar **41** di antaranya.
+
+Tiap entri di daftar itu punya bukti yang sama: APK membawa kelas model Kotlin `<nama>Impl.kt` untuknya. Itu juga pembeda yang memisahkannya dari flag AB dan nama telemetri, yang bentuknya mirip tapi tidak pernah punya kelas model.
+
+| Kelompok | Node |
+|---|---|
+| Tabel | `GenAITableRow`, `GenAITableCell` |
+| Tempat | `GenAIPlaceDetailsItemCategory`, `GenAIPlaceDetailsItemRating`, `GenAIPlaceDetailsItemOpeningHours`, `GenAIPlaceDetailsItemOpeningHoursTime`, `GenAIWidgetPlacesItemAddress`, `GenAIMarketplaceMetadata` |
+| Peta | `GenAIMapItemLocation`, `GenAIMapItemStaticMap` |
+| Olahraga | `GenAISportsTeamIcon`, `GenAISportsTeamRecord`, `GenAISoccerGameContent`, `GenAIAmericanFootballGameContent` |
+| Video & imagine | `GenAIVideoMusicClipInfo`, `GenAIVideoTextToSpeechInfo`, `GenAIImagineThumbnail`, `GenAIImaginePrimitiveStatusUpdate` |
+| Penalaran | `GenAIStepThoughtEntry`, `GenAIChainOfThoughtStepMarkdownText`, `GenAISearchPlannerStep`, `GenAISearchPlannerInstruction` |
+| Widget 3P | `GenAI3PExtWidgetCTA`, `GenAI3PExtWidgetToast`, `GenAI3PExtWidgetStandardHeader`, `GenAI3PExtArtifactConfirmation`, `GenAI3PExtConnectorPendingToolCall`, `GenAI3PExtCalendarAttendee`, `GenAI3PExtCalendarDateSection`, `GenAI3PExtCalendarEventList`, `GenAI3PAccountLinkingBottomsheet` |
+| Lain-lain | `GenAICodeBlockData`, `GenAITextInlineEntity`, `GenAIThreadSurfingPrompt`, `GenAIMetaSubsQuotaUpsellButton`, `GenAIP13nUiSignals`, `GenAIP13nUiSignalValue` |
+| Struktural | `GenAIUnifiedResponse`, `GenAINestedUnifiedResponse`, `FOAEmbeddedSingleScreen`, `GenAIEmbeddedContextualScreenContent` |
+
+Empat yang struktural itu yang paling berpengaruh ke kode, bukan cuma ke daftar:
+
+- **`GenAINestedUnifiedResponse`** — satu unified response di dalam unified response lain. Artinya satu primitif bisa memuat seluruh pohon respons lagi di bawahnya.
+- **`FOAEmbeddedSingleScreen`** dan **`GenAIEmbeddedContextualScreenContent`** — saudara `FOAEmbeddedScreenContentTabbed` untuk layar tertanam tanpa tab. Keduanya membawa `sections` langsung, bukan `tabs`.
+- **`GenAIUnifiedResponse`** — nama akarnya di aplikasi; di Web akarnya `XMSGGenAIUnifiedResponse`.
+
+Keduanya membuka dua lubang dekode yang nyata, dan dua-duanya sudah ditutup:
+
+```js
+const info = MB.decodeAIRich(msg)
+
+info.typenames      // hanya primitif di tingkat section, seperti sebelumnya
+info.allTypenames   // setiap __typename di seluruh pohon, sedalam apa pun
+```
+
+`info.typenames` berhenti di primitif terluar, jadi sebuah `GenAINestedUnifiedResponse` terbaca sebagai satu nama dan isinya tidak terlihat. `allTypenames` menelusuri seluruh pohonnya — aman terhadap siklus dan dibatasi 20.000 node — jadi widget olahraga di dalam respons bersarang beserta ikon timnya ikut terdaftar. `MB.collectTypenames(objekApaPun)` melakukan penelusuran yang sama untuk potongan yang kamu pegang sendiri.
+
+Lubang kedua ada di `readEmbeddedSections`: ia hanya mengambil entri `content` yang punya `view_model` atau `tabs`, jadi layar tertanam tanpa tab — yang menaruh `sections` langsung di entri itu — menghasilkan nol section, dan HTML di dalamnya tidak terlihat oleh `readRichMessage(m).html`. Sekarang entri yang membawa `sections` ikut diambil, dipilih berdasarkan bentuk field-nya dan bukan berdasarkan `__typename`, persis cara Pando menafsirkan pohonnya.
 
 ```js
 import { MB } from '@rexxhayanasi/elaina-baileys'

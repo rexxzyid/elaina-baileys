@@ -1170,7 +1170,7 @@ test('airich-namespace', async () => {
 
     const members = [...Object.keys(extras), ...Object.keys(metaai)].filter(name => name !== 'default');
     assert.equal(new Set(members).size, members.length, 'extras and metaai must not export the same name twice');
-    assert.equal(members.length, 149, 'the README quotes this count, update both together');
+    assert.equal(members.length, 155, 'the README quotes this count, update both together');
 
     for (const name of members) {
         assert.equal(AIRich[name], (extras[name] ?? metaai[name]), `AIRich.${name} has to be the same member as the named export`);
@@ -1192,7 +1192,7 @@ test('airich-namespace', async () => {
         assert.equal(typeof MB[name], 'function', `MB.${name} has to be the class`);
     }
     assert.equal(MB.AIRich, AIRich, 'MB holds the same class, not a copy');
-    assert.equal(Object.keys(MB).length, 175, 'the README quotes this count, update both together');
+    assert.equal(Object.keys(MB).length, 181, 'the README quotes this count, update both together');
 
     const lib = await import('../lib/index.js');
     for (const builder of [Button, ButtonV2, Carousel, AIRich, Toolkit]) {
@@ -1234,4 +1234,66 @@ test('toolkit-image-source', async () => {
     finally {
         await fs.rm(file, { force: true });
     }
+});
+
+test('airich-node-catalog', async () => {
+    const MB = (await import('../lib/index.js')).MB;
+
+    assert.equal(MB.AI_RICH_NODES.length, 41, 'every entry is backed by a <name>Impl.kt model class in the APK');
+    assert.equal(new Set(MB.AI_RICH_NODES).size, MB.AI_RICH_NODES.length, 'no duplicates');
+
+    const catalogued = new Set([...MB.AI_RICH_PRIMITIVES, ...MB.AI_RICH_ITEMS, ...MB.AI_RICH_LAYOUTS.map(n => `GenAI${n}LayoutViewModel`)]);
+    for (const name of MB.AI_RICH_NODES) {
+        assert.equal(catalogued.has(name), false, `${name} belongs in AI_RICH_NODES only, not in the section-level lists`);
+    }
+
+    for (const name of ['GenAINestedUnifiedResponse', 'FOAEmbeddedSingleScreen', 'GenAITableRow', 'GenAISportsTeamIcon', 'GenAIPlaceDetailsItemRating']) {
+        assert.equal(MB.AI_RICH_NODES.includes(name), true, `${name} has to be in the decode catalog`);
+    }
+
+    assert.equal(MB.AI_RICH_NESTED_UNIFIED_RESPONSE_TYPENAME, 'GenAINestedUnifiedResponse');
+    assert.equal(MB.EMBEDDED_SCREEN_SINGLE_TYPENAME, 'FOAEmbeddedSingleScreen');
+    assert.equal(MB.AI_RICH_UNIFIED_RESPONSE_TYPENAME_APP, 'GenAIUnifiedResponse');
+});
+
+test('airich-deep-decode', async () => {
+    const MB = (await import('../lib/index.js')).MB;
+
+    const unified = {
+        response_id: 'r1',
+        sections: [
+            { __typename: 'GenAIUnifiedResponseSection', view_model: { __typename: 'GenAISingleLayoutViewModel', primitive: { __typename: 'GenAIMarkdownTextUXPrimitive', text: 'halo' } } },
+            {
+                __typename: 'GenAIUnifiedResponseSection',
+                view_model: {
+                    __typename: 'GenAISingleLayoutViewModel',
+                    primitive: {
+                        __typename: 'GenAINestedUnifiedResponse',
+                        response: { sections: [{ view_model: { primitives: [{ __typename: 'GenAISportsWidgetPrimitive', home_team: { __typename: 'GenAISportsTeam' } }] } }] }
+                    }
+                }
+            }
+        ],
+        embedded_screens: [
+            { title: 'Rincian', content: [{ __typename: 'FOAEmbeddedSingleScreen', sections: [{ view_model: { primitive: { __typename: 'GenAIaeacdsnwHtmlPrimitive', payload: '<b>hi</b>' } } }] }] }
+        ]
+    };
+    const msg = { message: { richResponseMessage: { unifiedResponse: { data: Buffer.from(JSON.stringify(unified)).toString('base64') } } } };
+    const info = MB.decodeAIRich(msg);
+
+    assert.deepEqual(info.typenames, ['GenAIMarkdownTextUXPrimitive', 'GenAINestedUnifiedResponse'],
+        'the section-level list only ever sees the outermost primitive');
+    for (const name of ['GenAISportsWidgetPrimitive', 'GenAISportsTeam', 'GenAIaeacdsnwHtmlPrimitive', 'FOAEmbeddedSingleScreen']) {
+        assert.equal(info.allTypenames.includes(name), true, `${name} is only reachable by walking the whole tree`);
+    }
+
+    assert.equal(info.embeddedSections.length, 1, 'a single-screen content entry carries its sections directly, not under view_model or tabs');
+    assert.deepEqual(MB.readRichMessage(msg).html, ['<b>hi</b>'], 'so its HTML is no longer invisible');
+
+    assert.deepEqual(MB.collectTypenames(null), []);
+    assert.deepEqual(MB.collectTypenames({ a: { __typename: 'X' }, b: [{ __typename: 'Y' }] }), ['X', 'Y']);
+
+    const deep = { __typename: 'Root' };
+    deep.self = deep;
+    assert.equal(MB.collectTypenames(deep).includes('Root'), true, 'a cycle must not hang the walk');
 });

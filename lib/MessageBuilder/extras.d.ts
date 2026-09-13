@@ -186,6 +186,12 @@ export declare const EMBEDDED_SCREEN_TABBED_TYPENAME: string;
 export declare const EMBEDDED_SCREEN_TAB_TYPENAME: string;
 export declare const AI_RICH_SECTION_TYPENAME: string;
 export declare const AI_RICH_UNIFIED_RESPONSE_TYPENAME: string;
+export declare const AI_RICH_UNIFIED_RESPONSE_TYPENAME_APP: string;
+export declare const AI_RICH_NESTED_UNIFIED_RESPONSE_TYPENAME: string;
+export declare const EMBEDDED_SCREEN_SINGLE_TYPENAME: string;
+export declare const EMBEDDED_SCREEN_CONTEXTUAL_TYPENAME: string;
+export declare const AI_RICH_NODES: readonly string[];
+export declare function collectTypenames(root: any, options?: { limit?: number }): string[];
 
 export declare function embeddedTab(options?: {
     id?: string;
