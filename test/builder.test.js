@@ -648,15 +648,15 @@ test('file-section', async () => {
 });
 
 test('footer-action', async () => {
-    const section = footerActionSection(FooterActionType.OPEN_FULL_VIEW, { buttonText: 'Buka penuh', actionId: 'a-1' });
+    const section = footerActionSection(FooterActionType.OPEN_FULL_VIEW, { buttonText: 'Buka penuh', url: 'https://meta.ai/x' });
     assert.equal(section.view_model.__typename, 'GenAISingleLayoutViewModel');
     assert.equal(section.view_model.primitive.__typename, 'GenAIFooterActionPrimitive');
-    assert.equal(section.view_model.primitive.action_type, 'OPEN_FULL_VIEW');
-    assert.equal(section.view_model.primitive.action_id, 'a-1');
-    assert.equal(section.view_model.primitive.button_text, 'Buka penuh');
+    assert.equal(section.view_model.primitive.cta_type, 'OPEN_FULL_VIEW');
+    assert.equal(section.view_model.primitive.cta_text, 'Buka penuh');
+    assert.equal(section.view_model.primitive.cta_url, 'https://meta.ai/x');
 
-    assert.match(footerActionSection(FooterActionType.DOWNLOAD_MEDIA).view_model.primitive.action_id, /^[0-9a-f-]{36}$/);
-    assert.equal(footerActionSection(FooterActionType.DOWNLOAD_MEDIA).view_model.primitive.button_text, '');
+    assert.equal(footerActionSection(FooterActionType.DOWNLOAD_MEDIA).view_model.primitive.cta_text, '');
+    assert.equal('cta_url' in footerActionSection(FooterActionType.DOWNLOAD_MEDIA).view_model.primitive, false);
 
     assert.throws(() => footerActionSection('OPEN_WINDOW'), TypeError);
     assert.throws(() => footerActionSection(), TypeError);
@@ -673,7 +673,7 @@ test('footer-action', async () => {
     assert.deepEqual(decoded.typenames, ['GenAIaeacdsnwHtmlPrimitive']);
     assert.deepEqual(decoded.footerTypenames, ['GenAIFooterActionPrimitive']);
     assert.equal(decoded.footerSections.length, 1);
-    assert.equal(decoded.unified.footer_sections[0].view_model.primitive.action_type, 'OPEN_FULL_VIEW');
+    assert.equal(decoded.unified.footer_sections[0].view_model.primitive.cta_type, 'OPEN_FULL_VIEW');
 
     calls.length = 0;
     const polos = new AIRich(sock);

@@ -229,7 +229,7 @@ export declare function readEmbeddedSections(screen: any): any[];
 
 export declare function footerActionSection(actionType: string, options?: {
     buttonText?: string;
-    actionId?: string;
+    url?: string;
 }): any;
 
 export declare const A2UI_VERSION: 'v0.9';
