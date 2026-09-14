@@ -110,6 +110,8 @@ export declare class AIRich extends BaseBuilder {
   static tokenizer(code: string, lang?: string): any;
   static toTableMetadata(rows: any[], options?: Record<string, any>): any;
   static generateVerificationMetadata(): any;
+  static isMetaSignature(verificationMetadata: any): boolean;
+  static readonly PLACEHOLDER_MARKER: Buffer;
   static wrapRichResponse(richResponseMessage: any, forwardWrapper?: boolean): any;
   static newLayout(name: string, data: any, extra?: Record<string, any>): any;
   static normalizeSection(section: any): any;

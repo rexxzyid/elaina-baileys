@@ -1405,6 +1405,30 @@ test('bot-signature', async () => {
     }
 });
 
+test('airich-verification-flag', async () => {
+    /**
+     * A self-built card carries only the placeholder verificationMetadata, so on a
+     * recipient with ai_rich_response_unknown_sender_verification_masking_enabled it
+     * renders title-only. build() must say so plainly, and isMetaSignature must agree.
+     */
+    const built = await new AIRich({}).setTitle('Elaina AI').addMetadata('Sumber: BMKG').build('628@s.whatsapp.net');
+    assert.equal(built.aiVerification, 'placeholder', 'a hand-built card is never Meta-signed');
+
+    const meta = built.message.messageContextInfo.botMetadata.verificationMetadata;
+    assert.equal(AIRich.isMetaSignature(meta), false, 'the placeholder chain must not read as a real Meta signature');
+    assert.equal(Buffer.isBuffer(AIRich.PLACEHOLDER_MARKER), true);
+
+    let warned = 0;
+    AIRich._placeholderWarned = false;
+    const client = { logger: { warn: () => { warned += 1; } }, relayMessage: async () => {} };
+    const sock = new AIRich(client).setTitle('x').addMetadata('y');
+    await sock.send('628@s.whatsapp.net', { bypassDownload: false });
+    assert.equal(warned, 1, 'send warns once when the card will be masked');
+
+    await new AIRich(client).setTitle('x').addMetadata('z').send('628@s.whatsapp.net', { bypassDownload: false });
+    assert.equal(warned, 1, 'and only once per process, not on every send');
+});
+
 test('airich-wrapper', async () => {
     const build = (options) => new AIRich({}).addText('halo').build('628@s.whatsapp.net', options);
 

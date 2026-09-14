@@ -173,6 +173,7 @@ Baru di sini? Ini seluruh library dalam satu pandangan. Tiap baris menaut ke bag
 - [AIRich](#airich)
   - [Teks + Kode + Tabel](#teks--kode--tabel)
   - [Kenapa bisa tidak muncul sama sekali](#kenapa-bisa-tidak-muncul-sama-sekali)
+  - [Kenapa cuma judulnya yang muncul](#kenapa-cuma-judulnya-yang-muncul)
   - [Apa Yang Bisa Dicampur Dengan Apa](#apa-yang-bisa-dicampur-dengan-apa)
   - [Inline Entity di Dalam Teks](#inline-entity-di-dalam-teks)
   - [Menyunting Pesan Yang Sudah Tampil](#menyunting-pesan-yang-sudah-tampil)
@@ -1669,6 +1670,35 @@ Sempat tidak begitu. `build` dan `send` pernah menaruh `richResponseMessage` di 
 Tapi itu tabel WA **Web**, sedangkan yang membaca pesan-pesan ini ada di ponsel. Di dex Android nama prop itu tidak ada sama sekali; yang ada cuma nama kolom penyimpanan — `ai_rich_response_core_blob`, `ai_rich_response_message_type`, dan seterusnya. Di sana bentuk tanpa pembungkus tidak digambar: relay-nya berhasil, id pesannya kembali, dan yang muncul di layar tidak ada. Jadi bawaannya kembali terbungkus, sama dengan jalur kirim MessageBuilder v4.7 — dua stanza, `botForwardedMessage` di kedua-duanya, `protocolMessage` type 14 yang kedua.
 
 Beri `forwardWrapper: false` ke `build`, `send`, `buildEdit`, atau `forwardRichResponse` kalau kamu memang menargetkan WA Web dan tahu prop itu menyala di sana.
+
+### Kenapa cuma judulnya yang muncul
+
+Ini beda dari kasus di atas. Bubble-nya tampil, judulnya tampil, tapi badannya kosong — dan itu **bukan bug yang bisa ditambal di sini**. Dari dex Android `2.26.37.1`, pemilih baris percakapan (`LX/Dox;->A00`) punya tiga jalur untuk satu respons rich:
+
+1. **Termasker** — kalau pengirim tak dikenal **dan verifikasi tanda tangan gagal**, di balik prop `ai_rich_response_unknown_sender_verification_masking_enabled` (id 27635). Log klien: `ConversationRowAiUnknownSenderMasked: signature verification failed`.
+2. **Pratinjau** — pengirim tak dikenal dengan konten belum disetujui, prop `ai_rich_response_unknown_sender_preview_enabled` (id 27355).
+3. **Penuh** — `ConversationRowBotRichResponse`, badan digambar dari `unifiedResponse`.
+
+Yang menentukan jalur bukan isi pesan, tapi **status kepercayaan pengirim di mata penerima** — diambil klien dari tabel `wa_biz_integrity_signals` (`trust_tier`, `is_meta_verified`) lalu dicocokkan lewat `LX/ANE;->A00`. Nomor biasa yang mengirim kartu AI = pengirim tak dikenal, jadi masuk cabang 1, tanda tangannya dicek terhadap `CN=Meta WA Feature Root CA` (ECDSA P-256), dan gagal — karena kartu yang **kamu bangun sendiri** memang tidak punya tanda tangan Meta yang sah. Kunci privatnya cuma dipegang Meta; tidak ada field yang bisa ditambahkan untuk menembusnya. Prop-nya bawaan `false` tapi Meta menyalakannya per-akun dari server, jadi kartu buatan sendiri "rata-rata" termasker, bukan selalu.
+
+Karena itu jalurnya dibuat jujur, bukan dipalsukan. `build()` dan `send()` menandai tiap pesan:
+
+```js
+const msg = await rich.send(jid)
+msg.aiVerification   // 'placeholder' = buatan sendiri, bisa termasker
+                     // 'preserved'   = tanda tangan Meta asli ikut, tampil penuh
+```
+
+`send()` juga memperingatkan sekali per proses waktu kartunya `placeholder`. `AIRich.isMetaSignature(verificationMetadata)` mengeceknya langsung dari sebuah pesan.
+
+Yang **pasti tampil penuh** cuma dua:
+
+| Maksudmu | Pakai |
+| --- | --- |
+| Kartu kaya yang dijamin muncul ke siapa pun | `Button`, `ButtonV2`, `Carousel` (`interactiveMessage`) — jalur render beda, tidak lewat gerbang ini |
+| Meneruskan jawaban Meta AI yang asli | `forwardRichResponse(sock, jid, msg)` — byte dan tanda tangan Meta ikut apa adanya, jadi `aiVerification`-nya `preserved` |
+
+AIRich buatan sendiri tetap berguna untuk mengembangkan/menguji bentuk kartu dan untuk penerima yang prop-nya belum dinyalakan, tapi jangan mengandalkannya tampil penuh ke sembarang akun.
 
 Helper AIRich lain yang tersedia antara lain:
 
