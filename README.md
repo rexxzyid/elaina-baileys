@@ -2067,9 +2067,11 @@ Inline entity satu-satunya tempat nama yang tidak dikenal jadi fatal, bukan diab
 
 #### Sub-node di dalam primitifnya
 
-Karena pesan Meta AI **diteruskan** dari Meta AI dan bukan dibangun sendiri, yang penting bukan apakah sebuah nama tergambar, tapi apakah dekodernya mengenalinya. Tiga daftar di atas cuma menyebut node setingkat section. Di bawah setiap primitif masih ada objek bersarang dengan `__typename`-nya sendiri — baris tabel, ikon tim, jam buka sebuah tempat — dan `AI_RICH_NODES` mendaftar **41** di antaranya.
+Karena pesan Meta AI **diteruskan** dari Meta AI dan bukan dibangun sendiri, yang penting bukan apakah sebuah nama tergambar, tapi apakah dekodernya mengenalinya. Tiga daftar di atas cuma menyebut node setingkat section. Di bawah setiap primitif masih ada objek bersarang dengan `__typename`-nya sendiri — baris tabel, ikon tim, jam buka sebuah tempat — dan `AI_RICH_NODES` mendaftar **45** di antaranya.
 
 Tiap entri di daftar itu punya bukti yang sama: APK membawa kelas model Kotlin `<nama>Impl.kt` untuknya. Itu juga pembeda yang memisahkannya dari flag AB dan nama telemetri, yang bentuknya mirip tapi tidak pernah punya kelas model.
+
+Empat di antaranya baru masuk di beta Android `2.26.37.1`: `GenAIStepDeepResearchEntry`, `GenAIStepSkillEntry`, `GenAIStepSubagentEntry`, dan `GenAIStepWebLinkSource` — semuanya saudara `GenAIStepThoughtEntry` di permukaan penalaran, dan tidak satu pun muncul di bundle WA Web, jadi mereka murni nama untuk didekode.
 
 | Kelompok | Node |
 |---|---|
@@ -2078,7 +2080,7 @@ Tiap entri di daftar itu punya bukti yang sama: APK membawa kelas model Kotlin `
 | Peta | `GenAIMapItemLocation`, `GenAIMapItemStaticMap` |
 | Olahraga | `GenAISportsTeamIcon`, `GenAISportsTeamRecord`, `GenAISoccerGameContent`, `GenAIAmericanFootballGameContent` |
 | Video & imagine | `GenAIVideoMusicClipInfo`, `GenAIVideoTextToSpeechInfo`, `GenAIImagineThumbnail`, `GenAIImaginePrimitiveStatusUpdate` |
-| Penalaran | `GenAIStepThoughtEntry`, `GenAIChainOfThoughtStepMarkdownText`, `GenAISearchPlannerStep`, `GenAISearchPlannerInstruction` |
+| Penalaran | `GenAIStepThoughtEntry`, `GenAIStepDeepResearchEntry`, `GenAIStepSkillEntry`, `GenAIStepSubagentEntry`, `GenAIStepWebLinkSource`, `GenAIChainOfThoughtStepMarkdownText`, `GenAISearchPlannerStep`, `GenAISearchPlannerInstruction` |
 | Widget 3P | `GenAI3PExtWidgetCTA`, `GenAI3PExtWidgetToast`, `GenAI3PExtWidgetStandardHeader`, `GenAI3PExtArtifactConfirmation`, `GenAI3PExtConnectorPendingToolCall`, `GenAI3PExtCalendarAttendee`, `GenAI3PExtCalendarDateSection`, `GenAI3PExtCalendarEventList`, `GenAI3PAccountLinkingBottomsheet` |
 | Lain-lain | `GenAICodeBlockData`, `GenAITextInlineEntity`, `GenAIThreadSurfingPrompt`, `GenAIMetaSubsQuotaUpsellButton`, `GenAIP13nUiSignals`, `GenAIP13nUiSignalValue` |
 | Struktural | `GenAIUnifiedResponse`, `GenAINestedUnifiedResponse`, `FOAEmbeddedSingleScreen`, `GenAIEmbeddedContextualScreenContent` |

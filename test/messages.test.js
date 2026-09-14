@@ -1341,7 +1341,7 @@ test('toolkit-image-source', async () => {
 test('airich-node-catalog', async () => {
     const MB = (await import('../lib/index.js')).MB;
 
-    assert.equal(MB.AI_RICH_NODES.length, 41, 'every entry is backed by a <name>Impl.kt model class in the APK');
+    assert.equal(MB.AI_RICH_NODES.length, 45, 'every entry is backed by a <name>Impl.kt model class in the APK');
     assert.equal(new Set(MB.AI_RICH_NODES).size, MB.AI_RICH_NODES.length, 'no duplicates');
 
     const catalogued = new Set([...MB.AI_RICH_PRIMITIVES, ...MB.AI_RICH_ITEMS, ...MB.AI_RICH_LAYOUTS.map(n => `GenAI${n}LayoutViewModel`)]);
@@ -1349,7 +1349,8 @@ test('airich-node-catalog', async () => {
         assert.equal(catalogued.has(name), false, `${name} belongs in AI_RICH_NODES only, not in the section-level lists`);
     }
 
-    for (const name of ['GenAINestedUnifiedResponse', 'FOAEmbeddedSingleScreen', 'GenAITableRow', 'GenAISportsTeamIcon', 'GenAIPlaceDetailsItemRating']) {
+    for (const name of ['GenAINestedUnifiedResponse', 'FOAEmbeddedSingleScreen', 'GenAITableRow', 'GenAISportsTeamIcon', 'GenAIPlaceDetailsItemRating',
+        'GenAIStepDeepResearchEntry', 'GenAIStepSkillEntry', 'GenAIStepSubagentEntry', 'GenAIStepWebLinkSource']) {
         assert.equal(MB.AI_RICH_NODES.includes(name), true, `${name} has to be in the decode catalog`);
     }
 
