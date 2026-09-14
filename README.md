@@ -2260,6 +2260,14 @@ await rich.send(jid)
 
 Dua layout bergabung dengan delapan yang sudah didukung: `multipleResponseSection(responses, { layoutType })` membangun `GenAIMultipleResponseLayoutViewModel`, dan `bloomCardSection(primitives)` membangun `GenAIIGSuggestedBloomCardLayoutViewModel`. `addonActionSection(primitives, { actionType, alignment })` mengisi field `addon_action_alignment` yang tidak disetel helper addon sebelumnya.
 
+##### Kenapa `addonActionSection` bisa bikin WhatsApp force-close
+
+`AddonAction` bukan section konten biasa, dia overlay tombol interaktif (salin ke clipboard, kirim ke chat, follow-up prompt). Di dex `2.26.37.1` setiap item dibangun sebagai `MetaAiOverlayButton` (`LX/3z3->A0x`) yang butuh label atau ikon; kalau tidak ada, klien mencatat `Button has no label or icon.` lalu tombolnya dibuang. Kalau overlay-nya akhirnya kosong, jalur render grup mengakses tombol yang tidak ada dan aplikasi penerima force-close.
+
+`GenAIFooterActionPrimitive` (punya `cta_text` + `footer_action_type`) bukan tombol overlay, jadi menaruhnya di `addonActionSection` menghasilkan tombol tanpa label/ikon dan itulah yang memicu crash. Karena itu `addonActionSection` sekarang menolak lebih dulu: `actionType` wajib salah satu `AddonActionType`, `primitives` tidak boleh kosong, dan `GenAIFooterActionPrimitive` dilempar `TypeError` alih-alih dikirim mentah.
+
+`AddonAction` yang benar-benar tampil adalah milik Meta AI sendiri yang menempel pada artefak/embedded screen buatannya. Untuk mengirimnya, teruskan pesan AIRich asli dari bot Meta AI lewat `forwardRichResponse`, bukan menyintesisnya dari primitive umum.
+
 #### Kartu penawaran langganan
 
 `quotaUpsellSection` membangun `GenAIMetaSubsQuotaUpsellPrimitive`, kartu yang dipakai Meta untuk menawarkan langganan waktu kuota habis. Nama field-nya dibaca langsung dari `cometComposedTextV2GenAiMetaSubsQuotaUpsellPrimitiveParser` di bundle WA Web, jadi ini salah satu dari sedikit primitif yang bentuknya terverifikasi sampai ke tombolnya:

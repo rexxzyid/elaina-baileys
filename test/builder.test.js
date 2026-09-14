@@ -925,10 +925,15 @@ test('metaai-sections', async () => {
         assert.equal(many.view_model.layout_type, MultipleResponseLayoutType.IN_THREAD);
         assert.equal('layout_type' in many, false, 'layout fields sit on the view model');
 
-        const addon = addonActionSection([], { actionType: 'SEND_TO_CHAT' });
+        const addon = addonActionSection([{ __typename: 'GenAIMarkdownTextUXPrimitive', text: 'Salin' }], { actionType: 'SEND_TO_CHAT' });
+        assert.equal(addon.view_model.__typename, 'GenAIAddonActionLayoutViewModel');
         assert.equal(addon.view_model.addon_action_type, 'SEND_TO_CHAT');
         assert.equal(addon.view_model.addon_action_alignment, 'END');
-        assert.deepEqual(addon.view_model.primitives, []);
+        assert.equal(addon.view_model.primitives.length, 1);
+
+        assert.throws(() => addonActionSection([], { actionType: 'SEND_TO_CHAT' }), /at least one overlay button/);
+        assert.throws(() => addonActionSection([{ __typename: 'GenAIMarkdownTextUXPrimitive' }], { actionType: 'NOPE' }), /actionType must be one of/);
+        assert.throws(() => addonActionSection([{ cta_text: 'Salin', footer_action_type: 'COPY_LINK', __typename: 'GenAIFooterActionPrimitive' }], { actionType: 'COPY_TO_CLIPBOARD' }), /force-close/);
     }
 
     /** Items are plain nodes a layout carries; they are not sections themselves. */
