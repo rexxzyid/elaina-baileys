@@ -132,7 +132,7 @@ test('html-artifact', async () => {
 
     const botMetadata = calls[0].message.messageContextInfo.botMetadata;
     assert.equal(botMetadata.messageDisclaimerText, 'Mini App');
-    assert.ok(botMetadata.verificationMetadata);
+    assert.equal('verificationMetadata' in botMetadata, false, 'default omits the proof (state UNKNOWN, not the maskable FAILED)');
     const list = botMetadata.unifiedResponseMutation.mediaDetailsMetadataList;
     assert.equal(list.length, 1);
     assert.equal(list[0].id, sent.mediaId);

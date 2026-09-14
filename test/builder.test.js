@@ -744,7 +744,7 @@ test('html-section', async () => {
     const meta = calls[0].message.messageContextInfo.botMetadata;
     assert.equal(meta.messageDisclaimerText, 'NIXEL DINO');
     assert.ok(meta.botResponseId);
-    assert.ok(meta.verificationMetadata);
+    assert.equal('verificationMetadata' in meta, false, 'the default omits the proof so the state is UNKNOWN, not the maskable FAILED');
 
     const decoded = decodeAIRich({ message: calls[0].message });
     assert.deepEqual(decoded.typenames, [AI_RICH_HTML_PRIMITIVE]);
@@ -1180,19 +1180,21 @@ test('forward-rich-response', async () => {
     }
 
     /**
-     * hasProof only says the fields are populated. Whether the client accepts it is
-     * a separate question, and the placeholder MessageBuilder attaches never does.
+     * The default omits the proof, so there is nothing to verify — state UNKNOWN.
+     * verification: 'placeholder' brings back the old present-but-invalid proof; the
+     * client would read that as FAILED and mask it, which is why it is opt-in now.
      */
     {
         const sock = { user: { id: '1@s.whatsapp.net' }, relayMessage: async () => ({ key: { id: 'x' } }) };
-        const rich = new AIRich(sock);
-        rich.addText('halo');
-        const built = await rich.build('120363@g.us');
 
-        const signed = readSignedRichResponse(built);
-        assert.equal(signed.hasProof, true, 'the fields are filled in');
+        const omitted = await new AIRich(sock).addText('halo').build('120363@g.us');
+        assert.equal(readSignedRichResponse(omitted).hasProof, false, 'default carries no proof at all');
 
-        const verdict = verifyRichResponseSignature(built);
+        const placeheld = await new AIRich(sock).addText('halo').build('120363@g.us', { verification: 'placeholder' });
+        const signed = readSignedRichResponse(placeheld);
+        assert.equal(signed.hasProof, true, 'placeholder fills the fields');
+
+        const verdict = verifyRichResponseSignature(placeheld);
         assert.equal(verdict.status, 'failed', 'but it is not a signature Meta issued');
         assert.notDeepEqual(Buffer.from(signed.unifiedResponseBytes), unifiedBytes);
     }
@@ -1407,26 +1409,32 @@ test('bot-signature', async () => {
 
 test('airich-verification-flag', async () => {
     /**
-     * A self-built card carries only the placeholder verificationMetadata, so on a
-     * recipient with ai_rich_response_unknown_sender_verification_masking_enabled it
-     * renders title-only. build() must say so plainly, and isMetaSignature must agree.
+     * The masking row (LX/Dox in dex 2.26.37.x) only fires when the verification state is
+     * FAILED, i.e. a proof is present but invalid. The old placeholder produced exactly that.
+     * The default now omits the proof entirely, so the state is UNKNOWN and that branch is
+     * never reached. build() reports which of the three shapes went out.
      */
-    const built = await new AIRich({}).setTitle('Elaina AI').addMetadata('Sumber: BMKG').build('628@s.whatsapp.net');
-    assert.equal(built.aiVerification, 'placeholder', 'a hand-built card is never Meta-signed');
+    const omitted = await new AIRich({}).setTitle('Elaina AI').addMetadata('Sumber: BMKG').build('628@s.whatsapp.net');
+    assert.equal(omitted.aiVerification, 'omitted', 'the default no longer ships a fake proof');
+    assert.equal('verificationMetadata' in omitted.message.messageContextInfo.botMetadata, false, 'no proof field at all → state UNKNOWN, not FAILED');
 
-    const meta = built.message.messageContextInfo.botMetadata.verificationMetadata;
+    const placeholder = await new AIRich({}).setTitle('x').addMetadata('y').build('628@s.whatsapp.net', { verification: 'placeholder' });
+    assert.equal(placeholder.aiVerification, 'placeholder', 'the old fake-proof shape stays reachable on request');
+    const meta = placeholder.message.messageContextInfo.botMetadata.verificationMetadata;
     assert.equal(AIRich.isMetaSignature(meta), false, 'the placeholder chain must not read as a real Meta signature');
     assert.equal(Buffer.isBuffer(AIRich.PLACEHOLDER_MARKER), true);
 
     let warned = 0;
     AIRich._placeholderWarned = false;
     const client = { logger: { warn: () => { warned += 1; } }, relayMessage: async () => {} };
-    const sock = new AIRich(client).setTitle('x').addMetadata('y');
-    await sock.send('628@s.whatsapp.net', { bypassDownload: false });
-    assert.equal(warned, 1, 'send warns once when the card will be masked');
+    await new AIRich(client).setTitle('x').addMetadata('y').send('628@s.whatsapp.net', { bypassDownload: false, verification: 'placeholder' });
+    assert.equal(warned, 1, 'send warns once when someone forces the maskable placeholder');
 
-    await new AIRich(client).setTitle('x').addMetadata('z').send('628@s.whatsapp.net', { bypassDownload: false });
-    assert.equal(warned, 1, 'and only once per process, not on every send');
+    await new AIRich(client).setTitle('x').addMetadata('z').send('628@s.whatsapp.net', { bypassDownload: false, verification: 'placeholder' });
+    assert.equal(warned, 1, 'and only once per process');
+
+    await new AIRich(client).setTitle('x').addMetadata('w').send('628@s.whatsapp.net', { bypassDownload: false });
+    assert.equal(warned, 1, 'the default omit path does not warn');
 });
 
 test('airich-wrapper', async () => {

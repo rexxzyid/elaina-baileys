@@ -1673,23 +1673,34 @@ Beri `forwardWrapper: false` ke `build`, `send`, `buildEdit`, atau `forwardRichR
 
 ### Kenapa cuma judulnya yang muncul
 
-Ini beda dari kasus di atas. Bubble-nya tampil, judulnya tampil, tapi badannya kosong — dan itu **bukan bug yang bisa ditambal di sini**. Dari dex Android `2.26.37.1`, pemilih baris percakapan (`LX/Dox;->A00`) punya tiga jalur untuk satu respons rich:
+Bubble-nya tampil, judulnya tampil, tapi badannya kosong. Dari dex Android `2.26.37.1`, pemilih baris percakapan (`LX/Dox;->A00`) punya tiga jalur untuk satu respons rich:
 
-1. **Termasker** — kalau pengirim tak dikenal **dan verifikasi tanda tangan gagal**, di balik prop `ai_rich_response_unknown_sender_verification_masking_enabled` (id 27635). Log klien: `ConversationRowAiUnknownSenderMasked: signature verification failed`.
+1. **Termasker** — hanya kalau status verifikasi pesannya **FAILED**, di balik prop `ai_rich_response_unknown_sender_verification_masking_enabled` (id 27635). Log klien: `ConversationRowAiUnknownSenderMasked: signature verification failed`.
 2. **Pratinjau** — pengirim tak dikenal dengan konten belum disetujui, prop `ai_rich_response_unknown_sender_preview_enabled` (id 27355).
 3. **Penuh** — `ConversationRowBotRichResponse`, badan digambar dari `unifiedResponse`.
 
-Yang menentukan jalur bukan isi pesan, tapi **status kepercayaan pengirim di mata penerima** — diambil klien dari tabel `wa_biz_integrity_signals` (`trust_tier`, `is_meta_verified`) lalu dicocokkan lewat `LX/ANE;->A00`. Nomor biasa yang mengirim kartu AI = pengirim tak dikenal, jadi masuk cabang 1, tanda tangannya dicek terhadap `CN=Meta WA Feature Root CA` (ECDSA P-256), dan gagal — karena kartu yang **kamu bangun sendiri** memang tidak punya tanda tangan Meta yang sah. Kunci privatnya cuma dipegang Meta; tidak ada field yang bisa ditambahkan untuk menembusnya. Prop-nya bawaan `false` tapi Meta menyalakannya per-akun dari server, jadi kartu buatan sendiri "rata-rata" termasker, bukan selalu.
+Kuncinya di klasifikator `LX/ANE;->A00`: ia membaca status verifikasi pesan sebagai satu dari empat enum `LX/9sz;` — `UNKNOWN`, `VALID`, `FAILED`, `DOWNLOAD_CONSENT_ACCEPTED` — dan **default-nya `UNKNOWN`** kalau proof-nya tidak ada. Di seluruh pemilih baris, enum ini cuma pernah dibandingkan dengan satu nilai: **`FAILED`**. Jadi cabang masking hanya kena kalau proof-nya **ada tapi tidak sah**.
 
-Karena itu jalurnya dibuat jujur, bukan dipalsukan. `build()` dan `send()` menandai tiap pesan:
+Di situlah masalah versi lama: `AIRich` selalu memasang `verificationMetadata` placeholder (byte acak berpenanda), jadi statusnya selalu `FAILED` sehingga selalu termasker di akun yang prop-nya menyala. Tanda tangan sah cuma bisa dibuat Meta (`CN=Meta WA Feature Root CA`, ECDSA P-256), jadi placeholder tidak akan pernah jadi `VALID`.
+
+Perbaikannya: **jangan kirim proof sama sekali.** Tanpa proof, statusnya `UNKNOWN`, bukan `FAILED`, dan cabang masking tidak punya jalur untuk `UNKNOWN`. Itu sekarang bawaan `build`/`send` (`verification: 'auto'`):
+
+| `verification` | verificationMetadata | Status di klien | Efek di prop 27635 |
+|---|---|---|---|
+| `'auto'` (bawaan) | tidak dikirim (kecuali forward asli) | `UNKNOWN` | **tidak termasker** |
+| `'placeholder'` | proof palsu | `FAILED` | termasker |
+| forward Meta AI asli | tanda tangan Meta ikut | `VALID` | tampil penuh |
 
 ```js
-const msg = await rich.send(jid)
-msg.aiVerification   // 'placeholder' = buatan sendiri, bisa termasker
-                     // 'preserved'   = tanda tangan Meta asli ikut, tampil penuh
+const msg = await rich.send(jid)                          // auto: proof dihilangkan
+msg.aiVerification   // 'omitted'     = tanpa proof, status UNKNOWN (bawaan)
+                     // 'placeholder' = proof palsu, status FAILED (opt-in)
+                     // 'preserved'   = tanda tangan Meta asli, status VALID
 ```
 
-`send()` juga memperingatkan sekali per proses waktu kartunya `placeholder`. `AIRich.isMetaSignature(verificationMetadata)` mengeceknya langsung dari sebuah pesan.
+Sejujurnya soal batasnya: ini **melewati cabang masking (27635)**, dan itu penyebab tersering "cuma judul". Tapi ia **tidak** menembus cabang pratinjau (27355) — kalau akun penerima mengaktifkan gerbang unknown-sender itu, kartunya masih bisa dipangkas, dan tidak ada di payload yang mengubahnya karena itu soal apakah pengirimnya bot Meta terdaftar. `UNKNOWN` tidak pernah lebih buruk dari `FAILED`; di banyak akun ia yang membuat bedanya antara judul-saja dan tampil penuh. Ini disimpulkan dari alur kontrol di dex, bukan diuji di perangkat — jadi uji di akunmu, dan kalau masih terpangkas, dua jalur di bawah yang pasti.
+
+`send()` memperingatkan sekali per proses cuma kalau kamu **sengaja** memilih `verification: 'placeholder'`. `AIRich.isMetaSignature(verificationMetadata)` mengecek keaslian tanda tangan dari sebuah pesan.
 
 Yang **pasti tampil penuh** cuma dua:
 
