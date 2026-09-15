@@ -3487,6 +3487,7 @@ export namespace proto {
     }
 
     interface IContextInfo {
+        partnerDeepLinkToken?: (string|null);
         instagramThreadLink?: (proto.ContextInfo.IInstagramThreadLink|null);
         aiProvenance?: (proto.IAIProvenance|null);
         experienceIds?: (number[]|null);
@@ -3555,6 +3556,7 @@ export namespace proto {
     }
 
     class ContextInfo implements IContextInfo {
+        public partnerDeepLinkToken?: (string|null);
         public instagramThreadLink?: (proto.ContextInfo.IInstagramThreadLink|null);
         public aiProvenance?: (proto.IAIProvenance|null);
         public experienceIds: number[];

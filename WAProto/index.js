@@ -23924,6 +23924,7 @@ export const proto = $root.proto = (() => {
         ContextInfo.prototype.instagramThreadLink = null;
         ContextInfo.prototype.aiProvenance = null;
         ContextInfo.prototype.experienceIds = $util.emptyArray;
+        ContextInfo.prototype.partnerDeepLinkToken = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -24290,6 +24291,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(ContextInfo.prototype, "_partnerDeepLinkToken", {
+            get: $util.oneOfGetter($oneOfFields = ["partnerDeepLinkToken"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         ContextInfo.create = function create(properties) {
             return new ContextInfo(properties);
         };
@@ -24437,6 +24443,8 @@ export const proto = $root.proto = (() => {
                     w.uint32(m.experienceIds[i]);
                 w.ldelim();
             }
+            if (m.partnerDeepLinkToken != null && Object.hasOwnProperty.call(m, "partnerDeepLinkToken"))
+                w.uint32(666).string(m.partnerDeepLinkToken);
             return w;
         };
 
@@ -24724,6 +24732,10 @@ export const proto = $root.proto = (() => {
                                 m.experienceIds.push(r.uint32());
                         } else
                             m.experienceIds.push(r.uint32());
+                        break;
+                    }
+                case 83: {
+                        m.partnerDeepLinkToken = r.string();
                         break;
                     }
                 default:
@@ -25174,6 +25186,9 @@ export const proto = $root.proto = (() => {
                 for (var i = 0; i < d.experienceIds.length; ++i)
                     m.experienceIds[i] = d.experienceIds[i] >>> 0;
             }
+            if (d.partnerDeepLinkToken != null) {
+                m.partnerDeepLinkToken = String(d.partnerDeepLinkToken);
+            }
             return m;
         };
 
@@ -25517,6 +25532,11 @@ export const proto = $root.proto = (() => {
                 d.experienceIds = [];
                 for (var j = 0; j < m.experienceIds.length; ++j)
                     d.experienceIds[j] = m.experienceIds[j];
+            }
+            if (m.partnerDeepLinkToken != null && m.hasOwnProperty("partnerDeepLinkToken")) {
+                d.partnerDeepLinkToken = m.partnerDeepLinkToken;
+                if (o.oneofs)
+                    d._partnerDeepLinkToken = "partnerDeepLinkToken";
             }
             return d;
         };
