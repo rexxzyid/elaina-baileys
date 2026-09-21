@@ -19,6 +19,7 @@ export * from './MessageBuilder/extras.js';
 export * from './MessageBuilder/metaai.js';
 export * from './MessageBuilder/bot-signature.js';
 export * from './Voip/index.js';
+export * from './AntiBug/index.js';
 
 const builderMembers = [
     ...Object.entries(messageBuilderExtras),
