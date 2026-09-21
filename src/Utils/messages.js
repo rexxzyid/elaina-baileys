@@ -1549,7 +1549,8 @@ export const generateWAMessageContent = async (message, options) => {
         }
     }
     if ((hasOptionalProperty(message, 'mentions') && message.mentions?.length) ||
-        (hasOptionalProperty(message, 'mentionAll') && message.mentionAll)) {
+        (hasOptionalProperty(message, 'mentionAll') && message.mentionAll) ||
+        (hasOptionalProperty(message, 'groupMentions') && message.groupMentions?.length)) {
         const messageType = Object.keys(m)[0];
         const key = m[messageType];
         if (key && 'contextInfo' in key) {
@@ -1560,11 +1561,15 @@ export const generateWAMessageContent = async (message, options) => {
             if (message.mentionAll) {
                 key.contextInfo.nonJidMentions = 1;
             }
+            if (message.groupMentions?.length) {
+                key.contextInfo.groupMentions = message.groupMentions;
+            }
         }
         else if (key) {
             key.contextInfo = {
                 mentionedJid: message.mentions,
-                nonJidMentions: message.mentionAll ? 1 : 0
+                nonJidMentions: message.mentionAll ? 1 : 0,
+                groupMentions: message.groupMentions
             };
         }
     }
