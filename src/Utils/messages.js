@@ -1553,8 +1553,8 @@ export const generateWAMessageContent = async (message, options) => {
         (hasOptionalProperty(message, 'groupMentions') && message.groupMentions?.length)) {
         const messageType = Object.keys(m)[0];
         const key = m[messageType];
-        if (key && 'contextInfo' in key) {
-            key.contextInfo = key.contextInfo || {};
+        if (key && typeof key === 'object') {
+            key.contextInfo = ('contextInfo' in key && key.contextInfo) ? key.contextInfo : {};
             if (message.mentions?.length) {
                 key.contextInfo.mentionedJid = message.mentions;
             }
@@ -1562,15 +1562,25 @@ export const generateWAMessageContent = async (message, options) => {
                 key.contextInfo.nonJidMentions = 1;
             }
             if (message.groupMentions?.length) {
-                key.contextInfo.groupMentions = message.groupMentions;
+                const normalized = message.groupMentions
+                    .filter((gm) => gm?.groupJid)
+                    .map((gm) => ({
+                        groupJid: `${String(gm.groupJid).split('@')[0]}@g.us`,
+                        groupSubject: gm.groupSubject
+                    }));
+                key.contextInfo.groupMentions = normalized;
+                const field = 'text' in key ? 'text' : 'caption' in key ? 'caption' : null;
+                if (field) {
+                    let body = key[field] || '';
+                    for (const gm of normalized) {
+                        const token = `@${gm.groupJid}`;
+                        if (!body.includes(token)) {
+                            body = body.length ? `${body} ${token}` : token;
+                        }
+                    }
+                    key[field] = body;
+                }
             }
-        }
-        else if (key) {
-            key.contextInfo = {
-                mentionedJid: message.mentions,
-                nonJidMentions: message.mentionAll ? 1 : 0,
-                groupMentions: message.groupMentions
-            };
         }
     }
     if (hasOptionalProperty(message, 'contextInfo') && !!message.contextInfo) {

@@ -147,6 +147,7 @@ Baru di sini? Ini seluruh library dalam satu pandangan. Tiap baris menaut ke bag
 - [Pengalamatan LID / PN / JID](#-pengalamatan-lid--pn--jid)
 - [Mengirim Pesan](#-mengirim-pesan)
   - [Teks](#teks)
+  - [Mention (orang & grup)](#mention-orang--grup)
   - [Gambar](#gambar)
   - [Video](#video)
   - [Dokumen](#dokumen)
@@ -946,6 +947,35 @@ await sock.sendMessage(jid, {
 **Diukur di perangkat 2.26.34, yang tampil tetap "kamu menerima pesan yang tidak didukung versi WhatsApp-mu."** Payload-nya sama dengan yang ditulis klien untuk dirinya sendiri, jadi bentuknya bukan masalahnya — fiturnya ada di binary tapi belum hidup untuk pengirim biasa di build itu. Anggap belum tersedia sampai ada perangkat yang membuktikan sebaliknya.
 
 `viewOnce: true` dan `viewOnceV2: true` membungkusnya di `viewOnceMessage` / `viewOnceMessageV2`; itu pembungkus yang dipakai media. Field `conversation` yang polos tidak bisa membawa semua ini — ia cuma string tanpa tempat untuk menaruh flag-nya — jadi teksnya harus berjalan sebagai `extendedTextMessage`, dan fork ini selalu begitu.
+
+### Mention (orang & grup)
+
+**Mention orang** — taruh `@<nomor>` di teks dan daftarkan JID lengkapnya di `mentions`:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Halo @628123456789',
+  mentions: ['628123456789@s.whatsapp.net']
+})
+```
+
+`mentionAll: true` menyetel `contextInfo.nonJidMentions = 1` untuk pola mention-semua.
+
+**Mention grup** — sebut seluruh grup sebagai chip yang bisa diklik. WhatsApp mencocokkan token `@<groupJid>@g.us` di teks (regex klien: `/@\d+@g.us/`), lalu menggantinya di layar dengan `groupSubject`. Fork ini menyisipkan token itu otomatis kalau belum ada, jadi cukup:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Cek grup ini',
+  groupMentions: [{ groupJid: '120363XXXXXXXXXXXX@g.us', groupSubject: 'Nama Grup' }]
+})
+```
+
+Hasil wire: `text` menjadi `Cek grup ini @120363XXXXXXXXXXXX@g.us`, dan penerima melihat `Cek grup ini @Nama Grup` yang bisa diklik. Catatan:
+
+- `groupJid` dinormalisasi otomatis, boleh diisi full jid (`...@g.us`) atau nomornya saja.
+- Kalau kamu sudah menaruh token `@<groupJid>@g.us` sendiri di teks, ia tidak digandakan.
+- `groupSubject` adalah label yang **ditampilkan**, bukan yang dicocokkan — token di teks tetap memakai JID.
+- Bisa digabung dengan media (dipasang ke `caption`) dan dengan `mentions` biasa dalam satu pesan.
 
 ### Gambar
 
