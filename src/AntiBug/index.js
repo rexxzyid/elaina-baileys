@@ -14,7 +14,10 @@ export const ANTIBUG_DEFAULTS = {
     maxParamsJson: 262144,
     maxInvisibleRun: 500,
     maxCombiningRun: 100,
-    maxNewlines: 20000
+    maxNewlines: 20000,
+    maxPollOptions: 512,
+    maxContacts: 1024,
+    maxAiRichItems: 500
 };
 
 const INVISIBLE = /[​-‏‪-‮⁠-⁤⁪-⁯﻿￹-￻]/;
@@ -82,8 +85,7 @@ export const detectBug = (message, options = {}) => {
         reasons.push(`wrapper nesting ${wrapDepth}`);
     }
     let nodes = 0;
-    const seen = new WeakSet();
-    const walk = (value, depth) => {
+    const walk = (value, depth, ancestors) => {
         if (reasons.length > 40) {
             return;
         }
@@ -113,29 +115,38 @@ export const detectBug = (message, options = {}) => {
             }
             return;
         }
-        if (Array.isArray(value)) {
-            for (const item of value) {
-                walk(item, depth + 1);
+        if (typeof value === 'number') {
+            if (!Number.isFinite(value)) {
+                reasons.push('non-finite number');
             }
             return;
         }
         if (value && typeof value === 'object') {
-            if (seen.has(value)) {
+            if (ancestors.has(value)) {
                 reasons.push('circular structure');
                 return;
             }
-            seen.add(value);
-            for (const key of Object.keys(value)) {
-                walk(value[key], depth + 1);
+            ancestors.add(value);
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    walk(item, depth + 1, ancestors);
+                }
             }
+            else {
+                for (const key of Object.keys(value)) {
+                    walk(value[key], depth + 1, ancestors);
+                }
+            }
+            ancestors.delete(value);
         }
     };
-    walk(content, 0);
+    walk(content, 0, new WeakSet());
 
-    const collectContextInfo = (node) => {
-        if (!node || typeof node !== 'object') {
+    const collectContextInfo = (node, seen) => {
+        if (!node || typeof node !== 'object' || seen.has(node)) {
             return;
         }
+        seen.add(node);
         for (const key of Object.keys(node)) {
             const child = node[key];
             if (key === 'contextInfo' && child && typeof child === 'object') {
@@ -147,11 +158,11 @@ export const detectBug = (message, options = {}) => {
                 }
             }
             if (child && typeof child === 'object') {
-                collectContextInfo(child);
+                collectContextInfo(child, seen);
             }
         }
     };
-    collectContextInfo(content);
+    collectContextInfo(content, new WeakSet());
 
     const inspectInteractive = (node) => {
         if (!node || typeof node !== 'object') {
@@ -198,6 +209,48 @@ export const detectBug = (message, options = {}) => {
         }
     };
     inspectInteractive(content);
+
+    const inspectByType = (node, seen) => {
+        if (!node || typeof node !== 'object' || seen.has(node)) {
+            return;
+        }
+        seen.add(node);
+        for (const key of Object.keys(node)) {
+            const child = node[key];
+            if (!child || typeof child !== 'object') {
+                continue;
+            }
+            if (key === 'locationMessage' || key === 'liveLocationMessage') {
+                const lat = Number(child.degreesLatitude);
+                const lng = Number(child.degreesLongitude);
+                if (('degreesLatitude' in child) && (!Number.isFinite(lat) || lat < -90 || lat > 90)) {
+                    reasons.push('location latitude out of range');
+                }
+                if (('degreesLongitude' in child) && (!Number.isFinite(lng) || lng < -180 || lng > 180)) {
+                    reasons.push('location longitude out of range');
+                }
+            }
+            if (key === 'aiRichResponseMessage') {
+                if (Array.isArray(child.submessages) && child.submessages.length > limits.maxAiRichItems) {
+                    reasons.push(`aiRich submessages ${child.submessages.length} > ${limits.maxAiRichItems}`);
+                }
+                const items = child.unifiedResponse?.contentItems || child.unifiedResponse?.contentItemsMetadata?.items;
+                if (Array.isArray(items) && items.length > limits.maxAiRichItems) {
+                    reasons.push(`aiRich content items ${items.length} > ${limits.maxAiRichItems}`);
+                }
+            }
+            if (key === 'pollCreationMessage' || key === 'pollCreationMessageV2' || key === 'pollCreationMessageV3') {
+                if (Array.isArray(child.options) && child.options.length > limits.maxPollOptions) {
+                    reasons.push(`poll options ${child.options.length} > ${limits.maxPollOptions}`);
+                }
+            }
+            if (key === 'contactsArrayMessage' && Array.isArray(child.contacts) && child.contacts.length > limits.maxContacts) {
+                reasons.push(`contacts ${child.contacts.length} > ${limits.maxContacts}`);
+            }
+            inspectByType(child, seen);
+        }
+    };
+    inspectByType(content, new WeakSet());
 
     if (typeof options.byteLength === 'number' && options.byteLength > limits.maxBytes) {
         reasons.push(`encoded size ${options.byteLength} > ${limits.maxBytes}`);
