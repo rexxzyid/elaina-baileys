@@ -1583,6 +1583,29 @@ export const generateWAMessageContent = async (message, options) => {
             }
         }
     }
+    if (hasOptionalProperty(message, 'forwardedNewsletter') && !!message.forwardedNewsletter) {
+        const messageType = Object.keys(m)[0];
+        const key = m[messageType];
+        if (key && typeof key === 'object') {
+            const info = message.forwardedNewsletter;
+            const forwardedNewsletterMessageInfo = { newsletterJid: info.newsletterJid };
+            if (info.serverMessageId !== undefined) {
+                forwardedNewsletterMessageInfo.serverMessageId = Number(info.serverMessageId) || 0;
+            }
+            if (info.newsletterName !== undefined) {
+                forwardedNewsletterMessageInfo.newsletterName = info.newsletterName;
+            }
+            if (info.contentType !== undefined) {
+                forwardedNewsletterMessageInfo.contentType = info.contentType;
+            }
+            if (info.accessibilityText !== undefined) {
+                forwardedNewsletterMessageInfo.accessibilityText = info.accessibilityText;
+            }
+            key.contextInfo = ('contextInfo' in key && key.contextInfo) ? key.contextInfo : {};
+            key.contextInfo.forwardedNewsletterMessageInfo = forwardedNewsletterMessageInfo;
+            key.contextInfo.isForwarded = true;
+        }
+    }
     if (hasOptionalProperty(message, 'contextInfo') && !!message.contextInfo) {
         const messageType = Object.keys(m)[0];
         const key = m[messageType];

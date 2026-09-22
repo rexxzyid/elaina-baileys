@@ -148,6 +148,7 @@ Baru di sini? Ini seluruh library dalam satu pandangan. Tiap baris menaut ke bag
 - [Mengirim Pesan](#-mengirim-pesan)
   - [Teks](#teks)
   - [Mention (orang & grup)](#mention-orang--grup)
+  - [Teruskan dari channel (forwardedNewsletter)](#teruskan-dari-channel-forwardednewsletter)
   - [Gambar](#gambar)
   - [Video](#video)
   - [Dokumen](#dokumen)
@@ -976,6 +977,26 @@ Hasil wire: `text` menjadi `Cek grup ini @120363XXXXXXXXXXXX@g.us`, dan penerima
 - Kalau kamu sudah menaruh token `@<groupJid>@g.us` sendiri di teks, ia tidak digandakan.
 - `groupSubject` adalah label yang **ditampilkan**, bukan yang dicocokkan — token di teks tetap memakai JID.
 - Bisa digabung dengan media (dipasang ke `caption`) dan dengan `mentions` biasa dalam satu pesan.
+
+### Teruskan dari channel (forwardedNewsletter)
+
+Repost konten channel dengan label **"Diteruskan dari [Nama Channel]"**. Menyetel `contextInfo.forwardedNewsletterMessageInfo` dan menandai `isForwarded`:
+
+```js
+await sock.sendMessage(jid, {
+  text: 'Repost dari channel',
+  forwardedNewsletter: {
+    newsletterJid: '120363XXXXXXXXXXXX@newsletter',
+    serverMessageId: 42,
+    newsletterName: 'Nama Channel',
+    contentType: 0
+  }
+})
+```
+
+- `newsletterJid` wajib; sisanya opsional.
+- `contentType`: `0` = DEFAULT, `1` = CAROUSEL.
+- Bekerja pada teks maupun media (dipasang ke tipe pesan yang dibuat).
 
 ### Gambar
 
