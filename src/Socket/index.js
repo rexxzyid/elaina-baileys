@@ -19,6 +19,15 @@ const makeWASocket = (config) => {
     sock.revokeNewsletterStatus = makeNewsletterStatusRevokeSender(sock);
     sock.getNewsletterStatuses = makeNewsletterStatusFetcher(sock);
     sock.getNewsletterStatusUpdates = makeNewsletterStatusUpdatesFetcher(sock);
+    if (newConfig.AnchorGuard) {
+        import('@rexxhayanasi/elaina-anchorguard')
+            .then(({ createAntiBugGuard }) => {
+                sock.anchorGuard = createAntiBugGuard(sock, { logger: sock.logger, ...(newConfig.AnchorGuardConfig || {}) });
+            })
+            .catch((error) => {
+                sock.logger?.warn?.({ error: error.message }, 'AnchorGuard diaktifkan tapi paket @rexxhayanasi/elaina-anchorguard belum terpasang. Jalankan: npm install @rexxhayanasi/elaina-anchorguard');
+            });
+    }
     return sock;
 };
 export default makeWASocket;

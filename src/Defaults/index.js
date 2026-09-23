@@ -64,6 +64,8 @@ export const DEFAULT_CONNECTION_CONFIG = {
     keepAliveIntervalMs: 15000,
     logger: logger.child({ class: 'elaina' }),
     emitOwnEvents: true,
+    AnchorGuard: false,
+    AnchorGuardConfig: {},
     defaultQueryTimeoutMs: 60000,
     customUploadHosts: [],
     retryRequestDelayMs: 250,

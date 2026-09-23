@@ -480,6 +480,8 @@ Semua yang diterima `makeWASocket`, beserta bawaannya:
 | `getMessage` | `async () => undefined` | sediakan pesan lama supaya socket bisa menjawab permintaan ulang |
 | `cachedGroupMetadata` | `async () => undefined` | pakai ulang cache metadata grup milikmu sendiri |
 | `emitOwnEvents` | `true` | pancarkan event untuk tindakan yang dilakukan perangkat ini |
+| `AnchorGuard` | `false` | aktifkan proteksi anti-crash/anti-ban lewat paket `@rexxhayanasi/elaina-anchorguard` |
+| `AnchorGuardConfig` | `{}` | opsi yang diteruskan ke AnchorGuard (lihat di bawah) |
 | `fireInitQueries` | `true` | jalankan kueri awal (props, blocklist, privasi) |
 | `generateHighQualityLinkPreview` | `true` | ambil thumbnail link preview yang lebih besar |
 | `linkPreviewImageThumbnailWidth` | `192` | lebar thumbnail link preview |
@@ -499,6 +501,33 @@ Semua yang diterima `makeWASocket`, beserta bawaannya:
 | `makeSignalRepository` | bawaan | ganti implementasi penyimpanan protokol Signal |
 
 `getMessage` lebih penting daripada yang tersirat dari bawaannya: tanpa itu, penerima yang meminta pesan dikirim ulang tidak mendapat apa pun, dan pesannya tampil sebagai "menunggu pesan ini". Arahkan ke penyimpanan apa pun yang kamu punya.
+
+### AnchorGuard (anti-crash / anti-ban)
+
+Proteksi anti force-close dan anti spam-add tidak dibundel di dalam library; ia hidup sebagai paket terpisah [`@rexxhayanasi/elaina-anchorguard`](https://github.com/rexxzyid/Elaina-AnchorGuard). Pasang lalu aktifkan lewat toggle:
+
+```bash
+npm install @rexxhayanasi/elaina-anchorguard
+```
+
+```js
+const sock = makeWASocket({
+  auth: state,
+  AnchorGuard: true,
+  AnchorGuardConfig: {
+    autoDelete: true,
+    deleteMode: 'auto',
+    blockOnBug: true,
+    burstThreshold: 2,
+    kickOnBurst: true,
+    guardGroupAdds: true,
+    metaAiNumbers: true,
+    addWatchlist: []
+  }
+})
+```
+
+Saat `AnchorGuard: true`, socket otomatis memuat paketnya dan memasang guard (deteksi + hapus pesan crash, circuit-breaker burst, dan anti spam-add nomor Meta AI ke grup). Kalau paketnya belum terpasang, socket tetap jalan normal dan hanya mencatat peringatan. Instance guard tersedia di `sock.anchorGuard`. Semua opsi `AnchorGuardConfig` ada di README paket.
 
 ---
 
