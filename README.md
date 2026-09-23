@@ -516,10 +516,10 @@ const sock = makeWASocket({
   AnchorGuard: true,
   AnchorGuardConfig: {
     autoDelete: true,
-    deleteMode: 'auto',
     blockOnBug: true,
+    revokeForEveryoneIfAdmin: true,
+    kickOnBug: true,
     burstThreshold: 2,
-    kickOnBurst: true,
     guardGroupAdds: true,
     metaAiNumbers: true,
     addWatchlist: []
