@@ -289,6 +289,11 @@ export const createAntiBugGuard = (sock, options = {}) => {
         guardOutgoing: true,
         blockOnBug: false,
         selfOnly: false,
+        burstThreshold: 2,
+        burstWindowMs: 60000,
+        kickOnBurst: true,
+        leaveGroupOnBurst: false,
+        cooldownMs: 15000,
         thresholds: {},
         onDetect: null,
         proto: null,
@@ -297,6 +302,10 @@ export const createAntiBugGuard = (sock, options = {}) => {
     };
     const ownJid = config.ownJid || sock?.user?.id;
     const detectOptions = { ...config.thresholds, proto: config.proto };
+    const flaggedBySender = new Map();
+    const chatCooldown = new Map();
+    const escalated = new Set();
+    const isGroupJid = (j) => typeof j === 'string' && j.endsWith('@g.us');
 
     const removeMessage = async (jid, key) => {
         if (!config.autoDelete) {
@@ -328,6 +337,51 @@ export const createAntiBugGuard = (sock, options = {}) => {
         }
     };
 
+    const escalate = async (sender, jid) => {
+        if (!sender || escalated.has(sender)) {
+            return;
+        }
+        escalated.add(sender);
+        config.logger?.warn?.({ sender, jid }, 'anti-bug burst escalation');
+        if (typeof sock.updateBlockStatus === 'function') {
+            try {
+                await sock.updateBlockStatus(sender, 'block');
+            }
+            catch (error) {
+                config.logger?.warn?.({ error: error.message }, 'anti-bug escalate block failed');
+            }
+        }
+        if (isGroupJid(jid)) {
+            let removed = false;
+            if (config.kickOnBurst && typeof sock.groupParticipantsUpdate === 'function') {
+                try {
+                    await sock.groupParticipantsUpdate(jid, [sender], 'remove');
+                    removed = true;
+                }
+                catch (error) {
+                    config.logger?.warn?.({ error: error.message }, 'anti-bug kick failed');
+                }
+            }
+            if (!removed && config.leaveGroupOnBurst && typeof sock.groupLeave === 'function') {
+                try {
+                    await sock.groupLeave(jid);
+                }
+                catch (error) {
+                    config.logger?.warn?.({ error: error.message }, 'anti-bug leave failed');
+                }
+            }
+        }
+        await config.onDetect?.({ direction: 'escalation', jid, sender });
+    };
+
+    const recordBurst = (sender) => {
+        const now = Date.now();
+        const history = (flaggedBySender.get(sender) || []).filter((t) => now - t < config.burstWindowMs);
+        history.push(now);
+        flaggedBySender.set(sender, history);
+        return history.length;
+    };
+
     const handleUpsert = async ({ messages }) => {
         if (!config.guardIncoming || !Array.isArray(messages)) {
             return;
@@ -346,10 +400,18 @@ export const createAntiBugGuard = (sock, options = {}) => {
                 continue;
             }
             const sender = msg.key?.participant || jid;
-            config.logger?.warn?.({ jid, sender, reasons: result.reasons }, 'anti-bug flagged incoming message');
-            await config.onDetect?.({ direction: 'incoming', message: msg, jid, sender, reasons: result.reasons });
+            const now = Date.now();
+            const inCooldown = now - (chatCooldown.get(jid) || 0) < config.cooldownMs;
+            chatCooldown.set(jid, now);
+            if (!inCooldown) {
+                config.logger?.warn?.({ jid, sender, reasons: result.reasons }, 'anti-bug flagged incoming message');
+                await config.onDetect?.({ direction: 'incoming', message: msg, jid, sender, reasons: result.reasons });
+            }
             await removeMessage(jid, msg.key);
             await maybeBlock(sender, msg.key);
+            if (!msg.key?.fromMe && recordBurst(sender) >= config.burstThreshold) {
+                await escalate(sender, jid);
+            }
         }
     };
 
