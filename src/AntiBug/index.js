@@ -14,13 +14,15 @@ export const ANTIBUG_DEFAULTS = {
     maxParamsJson: 262144,
     maxInvisibleRun: 500,
     maxCombiningRun: 100,
+    maxControlChars: 0,
     maxNewlines: 20000,
     maxPollOptions: 512,
     maxContacts: 1024,
     maxAiRichItems: 500
 };
 
-const INVISIBLE = /[​-‏‪-‮⁠-⁤⁪-⁯﻿￹-￻]/;
+const INVISIBLE = /[\u200A-\u200F\u202A-\u202E\u2028\u2029\u2060-\u2064\u206A-\u206F\u2800\u3164\u115F\u1160\uFFA0\uFEFF\uFFF9-\uFFFB]/;
+const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/;
 const COMBINING = /[̀-ͯ҃-҉֑-ֽؐ-ًؚ-ٟۖ-ۜ۟-ۤัิ-ฺັິ-ຼ᪰-᫿᷀-᷿⃐-⃿︠-︯]/;
 
 const longestRun = (text, matcher) => {
@@ -104,6 +106,15 @@ export const detectBug = (message, options = {}) => {
             }
             if (countChar(value, '\n') > limits.maxNewlines) {
                 reasons.push('excessive newlines');
+            }
+            let controls = 0;
+            for (const ch of value) {
+                if (CONTROL.test(ch)) {
+                    controls += 1;
+                }
+            }
+            if (controls > limits.maxControlChars) {
+                reasons.push(`control/null chars ${controls}`);
             }
             const invisibleRun = longestRun(value, INVISIBLE);
             if (invisibleRun > limits.maxInvisibleRun) {
