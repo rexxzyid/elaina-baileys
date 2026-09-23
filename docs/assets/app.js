@@ -33,6 +33,27 @@
         })
     })
 
+    const tocLinks = Array.from(document.querySelectorAll('.toc a'))
+    if (tocLinks.length && 'IntersectionObserver' in window) {
+        const map = new Map()
+        tocLinks.forEach(function (link) {
+            const target = document.getElementById(decodeURIComponent(link.getAttribute('href').slice(1)))
+            if (target) map.set(target, link)
+        })
+        let current = null
+        const spy = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return
+                const link = map.get(entry.target)
+                if (!link) return
+                if (current) current.classList.remove('active')
+                link.classList.add('active')
+                current = link
+            })
+        }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 })
+        map.forEach(function (_link, target) { spy.observe(target) })
+    }
+
     const search = document.getElementById('api-search')
     if (search) {
         const entries = Array.from(document.querySelectorAll('.api-entry'))

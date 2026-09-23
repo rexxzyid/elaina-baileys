@@ -12,6 +12,8 @@
  "strings": {
   "en": {
    "skip": "Skip to content",
+   "heroTag": "WhatsApp Multi-Device for Node.js",
+   "heroStart": "Get started",
    "onThisPage": "On this page",
    "footer": "Elaina Baileys documentation. Source on {repo}.",
    "apiIntro": "{total} socket members, generated from the type declarations of v{version} on {date}. Every entry below is read straight from the code, so it never drifts from what the library actually exposes.",
@@ -24,6 +26,8 @@
   },
   "id": {
    "skip": "Lompat ke konten",
+   "heroTag": "WhatsApp Multi-Device untuk Node.js",
+   "heroStart": "Mulai",
    "onThisPage": "Di halaman ini",
    "footer": "Dokumentasi Elaina Baileys. Sumbernya di {repo}.",
    "apiIntro": "{total} anggota socket, dibangkitkan dari deklarasi tipe v{version} pada {date}. Semua entri di bawah dibaca langsung dari kode, jadi tidak pernah melenceng dari yang benar-benar disediakan library.",

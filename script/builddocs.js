@@ -62,11 +62,27 @@ const layout = ({ language, page, body, headings, api }) => {
         return `<a href="./${entry.id}.html"${active}>${escapeHtml(entry.title[language])}</a>`
     }).join('')
 
-    const toc = headings.length
+    const isHome = page.id === 'index'
+    const toc = (headings.length && !isHome)
         ? `<nav class="toc"><span class="toc-title">${escapeHtml(strings.onThisPage)}</span>${headings
             .filter(heading => heading.level === 2)
             .map(heading => `<a href="#${heading.id}">${escapeHtml(heading.text)}</a>`).join('')}</nav>`
         : ''
+
+    let article = body
+    let hero = ''
+    if (isHome) {
+        article = body.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/, '')
+        hero = `<section class="hero">
+      <span class="eyebrow">💜 v${escapeHtml(pkg.version)} · ${escapeHtml(strings.heroTag)}</span>
+      <h1>${escapeHtml(meta.site.name)}</h1>
+      <p class="lead">${escapeHtml(page.description[language])}</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="./getting-started.html">${escapeHtml(strings.heroStart)} →</a>
+        <a class="btn btn-ghost" href="${escapeHtml(meta.site.repository)}" rel="noreferrer">GitHub</a>
+      </div>
+    </section>`
+    }
 
     return `<!doctype html>
 <html lang="${language}" data-page="${page.id}">
@@ -79,6 +95,9 @@ const layout = ({ language, page, body, headings, api }) => {
 <meta property="og:description" content="${escapeHtml(page.description[language])}">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body${api ? ' data-api="1"' : ''}>
@@ -103,7 +122,8 @@ const layout = ({ language, page, body, headings, api }) => {
   </aside>
   <main id="content">
     ${toc}
-    <article class="prose">${body}</article>
+    ${hero}
+    <article class="prose">${article}</article>
     <footer class="page-foot">
       <p>${strings.footer.replace('{repo}', `<a href="${escapeHtml(meta.site.repository)}" rel="noreferrer">GitHub</a>`)}</p>
     </footer>
