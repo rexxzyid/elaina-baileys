@@ -9,6 +9,9 @@
 <meta property="og:description" content="Create and run WhatsApp channels: metadata, admins, polls, questions and insights.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -33,6 +36,7 @@
   </aside>
   <main id="content">
     <nav class="toc"><span class="toc-title">On this page</span><a href="#creating-and-editing">Creating and editing</a><a href="#following-and-muting">Following and muting</a><a href="#reading-a-channel">Reading a channel</a><a href="#reacting">Reacting</a><a href="#check-what-you-are-allowed-to-do-first">Check what you are allowed to do first</a><a href="#moderation">Moderation</a><a href="#admins">Admins</a><a href="#polls-and-who-voted">Polls and who voted</a><a href="#followers-and-insights">Followers and insights</a><a href="#discovery">Discovery</a><a href="#how-far-this-is-verified">How far this is verified</a></nav>
+    
     <article class="prose"><h1 id="newsletter">Newsletter<a class="anchor" href="#newsletter" aria-label="link">#</a></h1>
 <p>Newsletters are WhatsApp channels. A channel JID ends in <code>@newsletter</code>, and messages inside one are addressed by a numeric <strong>server id</strong> rather than by a message key.</p>
 <p>That distinction matters: most of the moderation and analytics methods below take a <code>server_id</code>, which you read from an incoming channel message, not the <code>key.id</code> you would use in a chat.</p>

@@ -9,6 +9,9 @@
 <meta property="og:description" content="Interactive messages: buttons, lists, carousels and AIRich rich responses.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -33,6 +36,7 @@
   </aside>
   <main id="content">
     <nav class="toc"><span class="toc-title">On this page</span><a href="#button">Button</a><a href="#lists">Lists</a><a href="#buttonv2">ButtonV2</a><a href="#carousel">Carousel</a><a href="#airich">AIRich</a><a href="#choosing-one">Choosing one</a><a href="#rendering-differences">Rendering differences</a></nav>
+    
     <article class="prose"><h1 id="messagebuilder">MessageBuilder<a class="anchor" href="#messagebuilder" aria-label="link">#</a></h1>
 <p>MessageBuilder is included in the package. It builds WhatsApp's interactive message types without you assembling the protobuf by hand.</p>
 <div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import {

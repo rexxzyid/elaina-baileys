@@ -9,6 +9,9 @@
 <meta property="og:description" content="Receive messages, read their text, address users correctly, and send every basic message type.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -33,6 +36,7 @@
   </aside>
   <main id="content">
     <nav class="toc"><span class="toc-title">On this page</span><a href="#receiving">Receiving</a><a href="#reading-the-text">Reading the text</a><a href="#addressing-jid-pn-and-lid">Addressing: JID, PN and LID</a><a href="#sending">Sending</a><a href="#replying-and-quoting">Replying and quoting</a><a href="#link-preview-cards">Link preview cards</a><a href="#next">Next</a></nav>
+    
     <article class="prose"><h1 id="messages">Messages<a class="anchor" href="#messages" aria-label="link">#</a></h1>
 <h2 id="receiving">Receiving<a class="anchor" href="#receiving" aria-label="link">#</a></h2>
 <p>Everything arrives through <code>messages.upsert</code>. The <code>type</code> tells you whether this is a live message or part of a history sync — for a bot you usually want only <code>notify</code>.</p>

@@ -9,6 +9,9 @@
 <meta property="og:description" content="Library WhatsApp Multi-Device modern untuk Node.js, dengan MessageBuilder dan dukungan channel bawaan.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -32,9 +35,17 @@
     </div>
   </aside>
   <main id="content">
-    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#isinya-apa-saja">Isinya apa saja</a><a href="#mulai-dari-mana">Mulai dari mana</a><a href="#pemasangan">Pemasangan</a><a href="#versi-terpendek-yang-sudah-jalan">Versi terpendek yang sudah jalan</a><a href="#catatan-soal-tingkat-verifikasi">Catatan soal tingkat verifikasi</a><a href="#lisensi-dan-kredit">Lisensi dan kredit</a></nav>
-    <article class="prose"><h1 id="elaina-baileys">Elaina Baileys<a class="anchor" href="#elaina-baileys" aria-label="link">#</a></h1>
-<p>Library WhatsApp Multi-Device untuk Node.js. Bicara langsung ke protokol WhatsApp Web lewat WebSocket — tanpa browser, tanpa Selenium, tanpa headless Chrome.</p>
+    
+    <section class="hero">
+      <span class="eyebrow">💜 v1.4.0 · WhatsApp Multi-Device untuk Node.js</span>
+      <h1>Elaina Baileys</h1>
+      <p class="lead">Library WhatsApp Multi-Device modern untuk Node.js, dengan MessageBuilder dan dukungan channel bawaan.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="./getting-started.html">Mulai →</a>
+        <a class="btn btn-ghost" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+      </div>
+    </section>
+    <article class="prose"><p>Library WhatsApp Multi-Device untuk Node.js. Bicara langsung ke protokol WhatsApp Web lewat WebSocket — tanpa browser, tanpa Selenium, tanpa headless Chrome.</p>
 <p>Fork ini mengikuti bundle WhatsApp Web dari dekat: skema protobuf, revisi klien, dan tipe pesan baru dijaga tetap sejalan dengan yang benar-benar dikirim klien resmi.</p>
 <h2 id="isinya-apa-saja">Isinya apa saja<a class="anchor" href="#isinya-apa-saja" aria-label="link">#</a></h2>
 <ul><li><strong>MessageBuilder sudah termasuk.</strong> Tombol, list, carousel, dan respons AIRich tanpa memasang paket kedua.</li><li><strong>Dukungan channel.</strong> Buat dan kelola newsletter, termasuk polling, pertanyaan, insight, dan undangan admin.</li><li><strong>Skema protobuf yang selalu terkini.</strong> Workflow harian membandingkan <code>WAProto</code> dengan bundle live dan menerapkan yang kurang.</li><li><strong>Sadar LID.</strong> Menangani identitas <code>@lid</code> yang baru berdampingan dengan JID nomor telepon.</li></ul>
