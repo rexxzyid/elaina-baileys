@@ -294,6 +294,10 @@ export const createAntiBugGuard = (sock, options = {}) => {
         kickOnBurst: true,
         leaveGroupOnBurst: false,
         cooldownMs: 15000,
+        guardGroupAdds: true,
+        autoKickBadAdds: true,
+        metaAiNumbers: true,
+        addWatchlist: [],
         thresholds: {},
         onDetect: null,
         proto: null,
@@ -382,6 +386,41 @@ export const createAntiBugGuard = (sock, options = {}) => {
         return history.length;
     };
 
+    const numberOf = (jid) => String(jid || '').split('@')[0].split(':')[0];
+    const isBadAdd = (jid) => {
+        const num = numberOf(jid);
+        if (!num) {
+            return false;
+        }
+        if (config.metaAiNumbers && num.startsWith('1313555')) {
+            return true;
+        }
+        return config.addWatchlist.some((w) => numberOf(w) === num);
+    };
+
+    const handleGroupUpdate = async ({ id, author, participants, action }) => {
+        if (!config.guardGroupAdds || action !== 'add' || !Array.isArray(participants)) {
+            return;
+        }
+        const bad = participants.filter(isBadAdd);
+        if (!bad.length) {
+            return;
+        }
+        config.logger?.warn?.({ id, author, bad }, 'anti-bug bad group add');
+        if (config.autoKickBadAdds && typeof sock.groupParticipantsUpdate === 'function') {
+            try {
+                await sock.groupParticipantsUpdate(id, bad, 'remove');
+            }
+            catch (error) {
+                config.logger?.warn?.({ error: error.message }, 'anti-bug kick bad-add failed');
+            }
+        }
+        await config.onDetect?.({ direction: 'group-add', id, author, participants: bad });
+        if (author && author !== ownJid && recordBurst(author) >= config.burstThreshold) {
+            await escalate(author, id);
+        }
+    };
+
     const handleUpsert = async ({ messages }) => {
         if (!config.guardIncoming || !Array.isArray(messages)) {
             return;
@@ -419,6 +458,10 @@ export const createAntiBugGuard = (sock, options = {}) => {
         sock.ev.on('messages.upsert', handleUpsert);
     }
 
+    if (config.guardGroupAdds && sock?.ev?.on) {
+        sock.ev.on('group-participants.update', handleGroupUpdate);
+    }
+
     let originalSend = null;
     if (config.guardOutgoing && typeof sock?.sendMessage === 'function') {
         originalSend = sock.sendMessage.bind(sock);
@@ -438,6 +481,9 @@ export const createAntiBugGuard = (sock, options = {}) => {
         stop: () => {
             if (config.guardIncoming && sock?.ev?.off) {
                 sock.ev.off('messages.upsert', handleUpsert);
+            }
+            if (config.guardGroupAdds && sock?.ev?.off) {
+                sock.ev.off('group-participants.update', handleGroupUpdate);
             }
             if (originalSend) {
                 sock.sendMessage = originalSend;
