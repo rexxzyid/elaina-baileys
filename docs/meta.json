@@ -63,6 +63,28 @@
    }
   },
   {
+   "id": "sessions",
+   "title": {
+    "en": "Session storage",
+    "id": "Penyimpanan sesi"
+   },
+   "description": {
+    "en": "Keep credentials safe across restarts: multi-file, single-file, SQLite, SQL, Mongo, Redis, NekoDB and caching.",
+    "id": "Jaga kredensial tetap aman lintas restart: multi-berkas, satu berkas, SQLite, SQL, Mongo, Redis, NekoDB, dan caching."
+   }
+  },
+  {
+   "id": "pairing",
+   "title": {
+    "en": "Pairing code",
+    "id": "Kode pairing"
+   },
+   "description": {
+    "en": "Link a device without a QR: server-confirmed requests, one code at a time, and custom codes.",
+    "id": "Pasangkan perangkat tanpa QR: permintaan dikonfirmasi server, satu kode sekali waktu, dan kode kustom."
+   }
+  },
+  {
    "id": "messages",
    "title": {
     "en": "Messages",
