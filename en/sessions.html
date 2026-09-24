@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-page="sessions">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session storage — Elaina Baileys</title>
+<meta name="description" content="Keep credentials safe across restarts: multi-file, single-file, SQLite, SQL, Mongo, Redis, NekoDB and caching.">
+<meta property="og:title" content="Session storage — Elaina Baileys">
+<meta property="og:description" content="Keep credentials safe across restarts: multi-file, single-file, SQLite, SQL, Mongo, Redis, NekoDB and caching.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.4.0</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/sessions.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./sessions.html" class="active">Session storage</a><a href="./pairing.html">Pairing code</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#multi-file-default">Multi-file (default)</a><a href="#single-file">Single file</a><a href="#sqlite">SQLite</a><a href="#postgresql-mysql-mongodb-redis">PostgreSQL, MySQL, MongoDB, Redis</a><a href="#nekodb">NekoDB</a><a href="#caching-signal-keys">Caching Signal keys</a><a href="#storing-chats-and-messages">Storing chats and messages</a><a href="#next">Next</a></nav>
+    
+    <article class="prose"><h1 id="session-storage">Session storage<a class="anchor" href="#session-storage" aria-label="link">#</a></h1>
+<p>Auth state holds your credentials and Signal keys. Lose it and you pair again; leak it and someone else can use your account. The package ships several backends, and every one returns the same <code>{ state, saveCreds }</code> shape.</p>
+<p>Whichever you pick, wire <code>saveCreds</code> to the <code>creds.update</code> event. Without it, nothing is persisted:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('creds.update', saveCreds)</code></pre></div>
+<h2 id="multi-file-default">Multi-file (default)<a class="anchor" href="#multi-file-default" aria-label="link">#</a></h2>
+<p>One folder, one file per key. Simple, dependency-free, and the right call for a single bot on a single machine.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')</code></pre></div>
+<p>It writes many small files — a busy account produces thousands of pre-key files. That is normal; deleting them mid-session breaks the session.</p>
+<h2 id="single-file">Single file<a class="anchor" href="#single-file" aria-label="link">#</a></h2>
+<p>Everything in one JSON file. Easier to back up or move between hosts, but it slows down as the key set grows because the whole file is rewritten on every change.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSingleFileAuthState('./session.json')</code></pre></div>
+<h2 id="sqlite">SQLite<a class="anchor" href="#sqlite" aria-label="link">#</a></h2>
+<p>Keys live in a real database, so concurrent reads and large key sets stay fast. Needs <code>better-sqlite3</code> v11, v12, or v13.</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm i better-sqlite3</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useSqliteAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSqliteAuthState({ dbPath: './session.db' })</code></pre></div>
+<p>If the rest of your bot already has a connection, hand that connection over:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import Database from 'better-sqlite3'
+
+const database = new Database('./bot.db')
+const { state, saveCreds } = await useSqliteAuthState({ database })</code></pre></div>
+<p>Two tables are created on first use: <code>creds</code> and <code>signal_keys</code>.</p>
+<h2 id="postgresql-mysql-mongodb-redis">PostgreSQL, MySQL, MongoDB, Redis<a class="anchor" href="#postgresql-mysql-mongodb-redis" aria-label="link">#</a></h2>
+<p>For bots already running a database, or several bots sharing one. Each takes a connection you already have or the details to open its own, and each stores its rows under a <code>session</code> name, so one database can hold many accounts.</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm i pg        # PostgreSQL
+npm i mysql2    # MySQL or MariaDB
+npm i mongodb   # MongoDB
+npm i ioredis   # Redis (node-redis works too)</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import {
+  usePostgresAuthState,
+  useMySQLAuthState,
+  useMongoAuthState,
+  useRedisAuthState
+} from '@rexxhayanasi/elaina-baileys'
+
+const pg = await usePostgresAuthState({
+  connectionString: 'postgres://user:pass@localhost:5432/bot'
+})
+
+const mysql = await useMySQLAuthState({
+  uri: 'mysql://user:pass@localhost:3306/bot'
+})
+
+const mongo = await useMongoAuthState({
+  uri: 'mongodb://localhost:27017',
+  dbName: 'bot'
+})
+
+const redis = await useRedisAuthState({
+  uri: 'redis://localhost:6379'
+})</code></pre></div>
+<p>Hand over your own connection when the rest of the bot already has one, and name the session when several accounts share the same database:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Pool } from 'pg'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const { state, saveCreds } = await usePostgresAuthState({ pool, session: 'sales-bot' })</code></pre></div>
+<p><code>useMySQLAuthState</code> takes <code>pool</code>, <code>useMongoAuthState</code> takes <code>db</code> or <code>collection</code>, and <code>useRedisAuthState</code> takes <code>client</code> — both node-redis and ioredis are accepted, the command names are detected at start.</p>
+<p>All four return <code>clearAuth()</code> to wipe the session and <code>close()</code> to release connections they opened themselves; a connection you handed over is left alone. <code>useSqliteAuthState</code> returns both too.</p>
+<div class="table-scroll"><table><thead><tr><th>Backend</th><th>Where keys live</th><th>Table or key</th></tr></thead><tbody><tr><td>PostgreSQL</td><td>one table</td><td><code>baileys_auth (session, type, id, value)</code></td></tr><tr><td>MySQL</td><td>one table</td><td><code>baileys_auth (session, type, id, value)</code></td></tr><tr><td>MongoDB</td><td>one collection</td><td><code>baileys_auth</code>, indexed on session + type + id</td></tr><tr><td>Redis</td><td>one hash per key type</td><td><code>baileys_auth:&lt;session&gt;:&lt;type&gt;</code></td></tr></tbody></table></div>
+<p>Rename them with <code>table</code>, <code>collectionName</code>, or <code>prefix</code>. The SQL backends write a batch of keys inside one transaction, MongoDB uses a single <code>bulkWrite</code>, and Redis pipes them through <code>MULTI</code>, so one decryption that stores thirty pre-keys costs one round trip, not thirty.</p>
+<h2 id="nekodb">NekoDB<a class="anchor" href="#nekodb" aria-label="link">#</a></h2>
+<p>For bots whose state already lives in NekoDB, so the session rides along with the rest of the data.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useNekoDBAuth } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useNekoDBAuth(db)</code></pre></div>
+<p>The first argument must be a connected NekoDB instance; the collection defaults to <code>baileys_elaina_auth</code>. Pass a second argument to keep several sessions in one database:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')</code></pre></div>
+<h2 id="caching-signal-keys">Caching Signal keys<a class="anchor" href="#caching-signal-keys" aria-label="link">#</a></h2>
+<p>Every backend reads keys from disk or the database on each decryption. Wrapping the key store in a cache removes that trip:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { makeCacheableSignalKeyStore, useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+const logger = pino({ level: 'silent' })
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+const sock = makeWASocket({
+  auth: {
+    creds: state.creds,
+    keys: makeCacheableSignalKeyStore(state.keys, logger)
+  },
+  logger
+})</code></pre></div>
+<p>Worth it on any backend, and all but required on the file-based ones for a busy group bot.</p>
+<h2 id="storing-chats-and-messages">Storing chats and messages<a class="anchor" href="#storing-chats-and-messages" aria-label="link">#</a></h2>
+<p>Auth state holds keys, not conversations. For chats, contacts, and message history, attach an in-memory store:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { makeInMemoryStore } from '@rexxhayanasi/elaina-baileys'
+
+const store = makeInMemoryStore({ logger })
+store.readFromFile('./store.json')
+setInterval(() =&gt; store.writeToFile('./store.json'), 10_000)
+
+const sock = makeWASocket({
+  auth: state,
+  logger,
+  getMessage: async (key) =&gt; (await store.loadMessage(key.remoteJid, key.id))?.message
+})
+
+store.bind(sock.ev)</code></pre></div>
+<p>From there <code>store.chats</code>, <code>store.contacts</code>, <code>store.messages</code>, and <code>store.groupMetadata</code> stay in sync, and <code>loadMessage</code> is exactly what <code>getMessage</code> needs. It lives in memory, so size it against your traffic — a bot in large groups will keep inflating it.</p>
+<h2 id="next">Next<a class="anchor" href="#next" aria-label="link">#</a></h2>
+<p>With the session safe, move on to <a href="./pairing.html">Pairing code</a> to link a device, or <a href="./messages.html">Messages</a> to start receiving and replying.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

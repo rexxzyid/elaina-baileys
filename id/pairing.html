@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id" data-page="pairing">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kode pairing — Elaina Baileys</title>
+<meta name="description" content="Pasangkan perangkat tanpa QR: permintaan dikonfirmasi server, satu kode sekali waktu, dan kode kustom.">
+<meta property="og:title" content="Kode pairing — Elaina Baileys">
+<meta property="og:description" content="Pasangkan perangkat tanpa QR: permintaan dikonfirmasi server, satu kode sekali waktu, dan kode kustom.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.4.0</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/pairing.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./sessions.html">Penyimpanan sesi</a><a href="./pairing.html" class="active">Kode pairing</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#permintaannya-dikonfirmasi-server">Permintaannya dikonfirmasi server</a><a href="#satu-kode-dalam-satu-waktu">Satu kode dalam satu waktu</a><a href="#kode-pairing-kustom">Kode pairing kustom</a><a href="#memeriksa-pairing-tanpa-menyentuh-bot-yang-jalan">Memeriksa pairing tanpa menyentuh bot yang jalan</a><a href="#selanjutnya">Selanjutnya</a></nav>
+    
+    <article class="prose"><h1 id="kode-pairing">Kode Pairing<a class="anchor" href="#kode-pairing" aria-label="link">#</a></h1>
+<p>Pairing lewat kode menghindari scan QR. Kode bisa diminta setelah socket dibuat, dan hanya kalau akun belum terdaftar.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const phoneNumber = '6281234567890'
+
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Kode pairing:', code)
+}</code></pre></div>
+<p>Nomornya dinormalkan sebelum dipakai, jadi <code>+62 812-3456-7890</code> dan <code>6281234567890</code> itu permintaan yang sama. Yang ditolak adalah nomor yang mustahil valid: kurang dari 6 atau lebih dari 15 digit, atau diawali <code>0</code> — kode negara tidak pernah dimulai dengan nol, jadi <code>081234567890</code> itu bentuk lokal, bukan bentuk internasional yang diharapkan WhatsApp.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.requestPairingCode('081234567890')
+// Boom 400: phoneNumber harus dalam format internasional:
+// kode negara lalu nomor nasionalnya, hanya digit</code></pre></div>
+<h2 id="permintaannya-dikonfirmasi-server">Permintaannya dikonfirmasi server<a class="anchor" href="#permintaannya-dikonfirmasi-server" aria-label="link">#</a></h2>
+<p><code>requestPairingCode</code> menunggu jawaban WhatsApp dan baru kembali setelah server mendaftarkan kodenya. Penolakan dilempar, bukan ditelan, jadi kode yang kamu terima memang kode yang benar-benar diketahui server:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>try {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Kode pairing:', code)
+} catch (error) {
+  console.log(error.message)   // misalnya rate-overlimit, not-allowed
+  console.log(error.data)      // misalnya 429
+}</code></pre></div>
+<p>Dua penolakan yang paling sering muncul: <code>rate-overlimit</code> — terlalu banyak percobaan, tunggu dulu sebelum mencoba lagi — dan varian not-allowed, artinya tautan-lewat-nomor-telepon tidak diaktifkan untuk akun itu.</p>
+<h2 id="satu-kode-dalam-satu-waktu">Satu kode dalam satu waktu<a class="anchor" href="#satu-kode-dalam-satu-waktu" aria-label="link">#</a></h2>
+<p>Respons pairing hanya bisa didekripsi oleh kunci yang menghasilkannya, jadi permintaan kedua saat yang pertama masih menggantung akan merusak yang pertama. Itu ditolak dengan <code>409</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>try {
+  await sock.requestPairingCode(phoneNumber)
+} catch (error) {
+  if (error.output?.statusCode === 409) {
+    console.log('masih menggantung, sisa detik:', error.data.secondsLeft)
+  }
+}</code></pre></div>
+<p>Panggil <code>cancelPairingCode()</code> untuk meninggalkan percobaan yang menggantung lalu langsung meminta yang baru. Ia mengembalikan apakah memang ada yang dibatalkan:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.cancelPairingCode()
+const code = await sock.requestPairingCode(phoneNumber)</code></pre></div>
+<p>Pengamannya membersihkan diri sendiri begitu kodenya kedaluwarsa. WhatsApp merotasi kode pairing setiap 3 menit; sesuaikan dengan <code>pairingCodeTimeoutMs</code> kalau kamu butuh jendela lain.</p>
+<h2 id="kode-pairing-kustom">Kode pairing kustom<a class="anchor" href="#kode-pairing-kustom" aria-label="link">#</a></h2>
+<p>Kode pairing kustom harus berisi tepat <strong>8 karakter</strong>. Lebih pendek atau lebih panjang akan ditolak.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const code = await sock.requestPairingCode(
+  '6281234567890',
+  'ELAINA01'
+)
+
+console.log(code)</code></pre></div>
+<h2 id="memeriksa-pairing-tanpa-menyentuh-bot-yang-jalan">Memeriksa pairing tanpa menyentuh bot yang jalan<a class="anchor" href="#memeriksa-pairing-tanpa-menyentuh-bot-yang-jalan" aria-label="link">#</a></h2>
+<p><code>script/testpairing.js</code> menjalankan satu permintaan pairing ke direktori sesi sekali pakai, jadi kredensial bot yang sudah tersambung tidak pernah tertimpa:</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>node script/testpairing.js 6281234567890 --check-only</code></pre></div>
+<p><code>--check-only</code> melaporkan apakah server menerima registrasinya dan tidak pernah mencetak kodenya — pakai itu di tempat mana pun yang outputnya bisa dibaca orang lain. Lepas flag-nya untuk mencetak kode dan menunggu penautannya selesai.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>Kalau kode muncul tapi ponsel tidak pernah menampilkan prompt, biasanya nomor yang diminta bukan nomor yang membuka WhatsApp di ponsel itu. Kode dikirim ke nomor di argumen, bukan ke perangkat yang menjalankan botmu.</p></div>
+<h2 id="selanjutnya">Selanjutnya<a class="anchor" href="#selanjutnya" aria-label="link">#</a></h2>
+<p>Setelah tersambung, lanjut ke <a href="./messages.html">Pesan</a> untuk membaca yang masuk dan membalasnya, atau <a href="./events.html">Event</a> untuk melihat semua yang dipancarkan socket.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

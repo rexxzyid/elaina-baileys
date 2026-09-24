@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-page="pairing">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pairing code — Elaina Baileys</title>
+<meta name="description" content="Link a device without a QR: server-confirmed requests, one code at a time, and custom codes.">
+<meta property="og:title" content="Pairing code — Elaina Baileys">
+<meta property="og:description" content="Link a device without a QR: server-confirmed requests, one code at a time, and custom codes.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.4.0</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../id/pairing.html">ID</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Overview</a><a href="./getting-started.html">Getting started</a><a href="./sessions.html">Session storage</a><a href="./pairing.html" class="active">Pairing code</a><a href="./messages.html">Messages</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Groups</a><a href="./examples.html">Examples</a><a href="./api.html">API reference</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">On this page</span><a href="#the-request-is-confirmed-by-the-server">The request is confirmed by the server</a><a href="#one-code-at-a-time">One code at a time</a><a href="#custom-pairing-code">Custom pairing code</a><a href="#checking-pairing-without-touching-a-running-bot">Checking pairing without touching a running bot</a><a href="#next">Next</a></nav>
+    
+    <article class="prose"><h1 id="pairing-code">Pairing code<a class="anchor" href="#pairing-code" aria-label="link">#</a></h1>
+<p>Pairing by code avoids scanning a QR. A code can be requested after the socket is built, and only if the account is not yet registered.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const phoneNumber = '6281234567890'
+
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Pairing code:', code)
+}</code></pre></div>
+<p>The number is normalised before use, so <code>+62 812-3456-7890</code> and <code>6281234567890</code> are the same request. What gets rejected is a number that cannot possibly be valid: fewer than 6 or more than 15 digits, or a leading <code>0</code> — a country code never starts with a zero, so <code>081234567890</code> is the local form, not the international form WhatsApp expects.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>await sock.requestPairingCode('081234567890')
+// Boom 400: phoneNumber must be in international format:
+// country code then the national number, digits only</code></pre></div>
+<h2 id="the-request-is-confirmed-by-the-server">The request is confirmed by the server<a class="anchor" href="#the-request-is-confirmed-by-the-server" aria-label="link">#</a></h2>
+<p><code>requestPairingCode</code> waits for WhatsApp's answer and only returns once the server has registered the code. Rejections are thrown, not swallowed, so the code you receive is the one the server actually knows:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>try {
+  const code = await sock.requestPairingCode(phoneNumber)
+  console.log('Pairing code:', code)
+} catch (error) {
+  console.log(error.message)   // e.g. rate-overlimit, not-allowed
+  console.log(error.data)      // e.g. 429
+}</code></pre></div>
+<p>The two rejections you meet most: <code>rate-overlimit</code> — too many attempts, wait before trying again — and a not-allowed variant, meaning link-by-phone-number is not enabled for that account.</p>
+<h2 id="one-code-at-a-time">One code at a time<a class="anchor" href="#one-code-at-a-time" aria-label="link">#</a></h2>
+<p>A pairing response can only be decrypted by the key that produced it, so a second request while the first is still pending destroys the first. That is rejected with a <code>409</code>:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>try {
+  await sock.requestPairingCode(phoneNumber)
+} catch (error) {
+  if (error.output?.statusCode === 409) {
+    console.log('still pending, seconds left:', error.data.secondsLeft)
+  }
+}</code></pre></div>
+<p>Call <code>cancelPairingCode()</code> to abandon a pending attempt and request a fresh one right away. It returns whether there was anything to cancel:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.cancelPairingCode()
+const code = await sock.requestPairingCode(phoneNumber)</code></pre></div>
+<p>The guard cleans up after itself once the code expires. WhatsApp rotates pairing codes every 3 minutes; adjust <code>pairingCodeTimeoutMs</code> if you need a different window.</p>
+<h2 id="custom-pairing-code">Custom pairing code<a class="anchor" href="#custom-pairing-code" aria-label="link">#</a></h2>
+<p>A custom pairing code must be exactly <strong>8 characters</strong>. Shorter or longer is rejected.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const code = await sock.requestPairingCode(
+  '6281234567890',
+  'ELAINA01'
+)
+
+console.log(code)</code></pre></div>
+<h2 id="checking-pairing-without-touching-a-running-bot">Checking pairing without touching a running bot<a class="anchor" href="#checking-pairing-without-touching-a-running-bot" aria-label="link">#</a></h2>
+<p><code>script/testpairing.js</code> runs a single pairing request against a throwaway session directory, so a connected bot's credentials are never overwritten:</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>node script/testpairing.js 6281234567890 --check-only</code></pre></div>
+<p><code>--check-only</code> reports whether the server accepted the registration and never prints the code — use it anywhere the output can be read by someone else. Drop the flag to print the code and wait for the link to finish.</p>
+<div class="alert alert-important"><span class="alert-label">important</span><p>If a code appears but the phone never shows a prompt, the number requested is usually not the one that opens WhatsApp on that phone. The code goes to the number in the argument, not to the device running your bot.</p></div>
+<h2 id="next">Next<a class="anchor" href="#next" aria-label="link">#</a></h2>
+<p>Once connected, move on to <a href="./messages.html">Messages</a> to read what comes in and reply, or <a href="./events.html">Events</a> to see everything the socket emits.</p></article>
+    <footer class="page-foot">
+      <p>Elaina Baileys documentation. Source on <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

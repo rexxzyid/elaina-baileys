@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id" data-page="sessions">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penyimpanan sesi — Elaina Baileys</title>
+<meta name="description" content="Jaga kredensial tetap aman lintas restart: multi-berkas, satu berkas, SQLite, SQL, Mongo, Redis, NekoDB, dan caching.">
+<meta property="og:title" content="Penyimpanan sesi — Elaina Baileys">
+<meta property="og:description" content="Jaga kredensial tetap aman lintas restart: multi-berkas, satu berkas, SQLite, SQL, Mongo, Redis, NekoDB, dan caching.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,560&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#content">Lompat ke konten</a>
+<header class="topbar">
+  <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
+  <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
+  <span class="version">v1.4.0</span>
+  <div class="topbar-actions">
+    <a class="lang" href="../en/sessions.html">EN</a>
+    <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
+    <a class="ghlink" href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>
+  </div>
+</header>
+<div class="shell">
+  <aside class="sidebar" data-sidebar>
+    <nav><a href="./index.html">Ringkasan</a><a href="./getting-started.html">Mulai cepat</a><a href="./sessions.html" class="active">Penyimpanan sesi</a><a href="./pairing.html">Kode pairing</a><a href="./messages.html">Pesan</a><a href="./builder.html">MessageBuilder</a><a href="./newsletter.html">Newsletter</a><a href="./groups.html">Grup</a><a href="./examples.html">Contoh</a><a href="./api.html">Referensi API</a></nav>
+    <div class="sidebar-foot">
+      <a href="https://www.npmjs.com/package/@rexxhayanasi/elaina-baileys" rel="noreferrer">npm</a>
+      <a href="https://github.com/rexxzyid/elaina-baileys/blob/main/EXPERIMENTAL.md" rel="noreferrer">EXPERIMENTAL.md</a>
+    </div>
+  </aside>
+  <main id="content">
+    <nav class="toc"><span class="toc-title">Di halaman ini</span><a href="#multi-berkas-bawaan">Multi-berkas (bawaan)</a><a href="#satu-berkas">Satu berkas</a><a href="#sqlite">SQLite</a><a href="#postgresql-mysql-mongodb-redis">PostgreSQL, MySQL, MongoDB, Redis</a><a href="#nekodb">NekoDB</a><a href="#menyimpan-kunci-signal-di-cache">Menyimpan kunci Signal di cache</a><a href="#menyimpan-chat-dan-pesan">Menyimpan chat dan pesan</a><a href="#selanjutnya">Selanjutnya</a></nav>
+    
+    <article class="prose"><h1 id="penyimpanan-sesi">Penyimpanan Sesi<a class="anchor" href="#penyimpanan-sesi" aria-label="link">#</a></h1>
+<p>Auth state menyimpan kredensial dan kunci Signal kamu. Kehilangannya berarti pairing ulang; membocorkannya berarti orang lain bisa memakai akunmu. Paket ini membawa beberapa backend sekaligus, dan semuanya mengembalikan bentuk <code>{ state, saveCreds }</code> yang sama.</p>
+<p>Mana pun yang kamu pilih, sambungkan <code>saveCreds</code> ke event <code>creds.update</code>. Kalau tidak, tidak ada yang tersimpan:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>sock.ev.on('creds.update', saveCreds)</code></pre></div>
+<h2 id="multi-berkas-bawaan">Multi-berkas (bawaan)<a class="anchor" href="#multi-berkas-bawaan" aria-label="link">#</a></h2>
+<p>Satu folder, satu berkas per kunci. Sederhana, tanpa dependensi, dan pilihan yang tepat untuk satu bot di satu mesin.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useMultiFileAuthState('./session')</code></pre></div>
+<p>Ia menulis banyak berkas kecil — akun yang sibuk menghasilkan ribuan berkas pre-key. Itu normal; menghapusnya di tengah sesi merusak sesinya.</p>
+<h2 id="satu-berkas">Satu berkas<a class="anchor" href="#satu-berkas" aria-label="link">#</a></h2>
+<p>Semuanya dalam satu berkas JSON. Lebih mudah dibackup atau dipindah antar host, tapi melambat begitu kumpulan kuncinya membesar karena seluruh berkas ditulis ulang setiap ada perubahan.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSingleFileAuthState('./session.json')</code></pre></div>
+<h2 id="sqlite">SQLite<a class="anchor" href="#sqlite" aria-label="link">#</a></h2>
+<p>Kunci disimpan di database sungguhan, jadi pembacaan bersamaan dan kumpulan kunci besar tetap cepat. Butuh <code>better-sqlite3</code> v11, v12, atau v13.</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm i better-sqlite3</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useSqliteAuthState } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useSqliteAuthState({ dbPath: './session.db' })</code></pre></div>
+<p>Kalau bagian lain botmu sudah punya koneksi, serahkan koneksi itu saja:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import Database from 'better-sqlite3'
+
+const database = new Database('./bot.db')
+const { state, saveCreds } = await useSqliteAuthState({ database })</code></pre></div>
+<p>Dua tabel dibuat saat pertama dipakai: <code>creds</code> dan <code>signal_keys</code>.</p>
+<h2 id="postgresql-mysql-mongodb-redis">PostgreSQL, MySQL, MongoDB, Redis<a class="anchor" href="#postgresql-mysql-mongodb-redis" aria-label="link">#</a></h2>
+<p>Untuk bot yang sudah menjalankan database, atau beberapa bot yang berbagi satu database. Masing-masing menerima koneksi yang sudah kamu punya atau detail untuk membuka koneksinya sendiri, dan masing-masing menyimpan barisnya di bawah satu nama <code>session</code>, jadi satu database bisa memuat banyak akun.</p>
+<div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm i pg        # PostgreSQL
+npm i mysql2    # MySQL atau MariaDB
+npm i mongodb   # MongoDB
+npm i ioredis   # Redis (node-redis juga bisa)</code></pre></div>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import {
+  usePostgresAuthState,
+  useMySQLAuthState,
+  useMongoAuthState,
+  useRedisAuthState
+} from '@rexxhayanasi/elaina-baileys'
+
+const pg = await usePostgresAuthState({
+  connectionString: 'postgres://user:pass@localhost:5432/bot'
+})
+
+const mysql = await useMySQLAuthState({
+  uri: 'mysql://user:pass@localhost:3306/bot'
+})
+
+const mongo = await useMongoAuthState({
+  uri: 'mongodb://localhost:27017',
+  dbName: 'bot'
+})
+
+const redis = await useRedisAuthState({
+  uri: 'redis://localhost:6379'
+})</code></pre></div>
+<p>Serahkan koneksimu sendiri kalau bagian lain bot sudah punya, dan beri nama sesinya kalau beberapa akun berbagi database yang sama:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { Pool } from 'pg'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const { state, saveCreds } = await usePostgresAuthState({ pool, session: 'sales-bot' })</code></pre></div>
+<p><code>useMySQLAuthState</code> menerima <code>pool</code>, <code>useMongoAuthState</code> menerima <code>db</code> atau <code>collection</code>, dan <code>useRedisAuthState</code> menerima <code>client</code> — node-redis maupun ioredis dua-duanya diterima, nama perintahnya dideteksi saat start.</p>
+<p>Keempatnya mengembalikan <code>clearAuth()</code> untuk menghapus sesi dan <code>close()</code> untuk melepas koneksi yang mereka buka sendiri; koneksi yang kamu serahkan tidak disentuh. <code>useSqliteAuthState</code> juga mengembalikan keduanya.</p>
+<div class="table-scroll"><table><thead><tr><th>Backend</th><th>Tempat kuncinya</th><th>Tabel atau key</th></tr></thead><tbody><tr><td>PostgreSQL</td><td>satu tabel</td><td><code>baileys_auth (session, type, id, value)</code></td></tr><tr><td>MySQL</td><td>satu tabel</td><td><code>baileys_auth (session, type, id, value)</code></td></tr><tr><td>MongoDB</td><td>satu koleksi</td><td><code>baileys_auth</code>, terindeks pada session + type + id</td></tr><tr><td>Redis</td><td>satu hash per jenis kunci</td><td><code>baileys_auth:&lt;session&gt;:&lt;type&gt;</code></td></tr></tbody></table></div>
+<p>Ganti namanya dengan <code>table</code>, <code>collectionName</code>, atau <code>prefix</code>. Backend SQL menulis sekumpulan kunci di dalam satu transaksi, MongoDB memakai satu <code>bulkWrite</code>, dan Redis menyalurkannya lewat <code>MULTI</code>, jadi satu dekripsi yang menyimpan tiga puluh pre-key memakan satu perjalanan, bukan tiga puluh.</p>
+<h2 id="nekodb">NekoDB<a class="anchor" href="#nekodb" aria-label="link">#</a></h2>
+<p>Untuk bot yang state-nya sudah ada di NekoDB, supaya sesinya ikut bersama data yang lain.</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useNekoDBAuth } from '@rexxhayanasi/elaina-baileys'
+
+const { state, saveCreds } = await useNekoDBAuth(db)</code></pre></div>
+<p>Argumen pertama harus instance NekoDB yang sudah tersambung; koleksinya default ke <code>baileys_elaina_auth</code>. Beri argumen kedua untuk menyimpan beberapa sesi dalam satu database:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>const { state, saveCreds } = await useNekoDBAuth(db, 'my_sessions')</code></pre></div>
+<h2 id="menyimpan-kunci-signal-di-cache">Menyimpan kunci Signal di cache<a class="anchor" href="#menyimpan-kunci-signal-di-cache" aria-label="link">#</a></h2>
+<p>Setiap backend membaca kunci dari disk atau database pada tiap dekripsi. Membungkus penyimpanan kunci dengan cache menghilangkan perjalanan itu:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import makeWASocket, { makeCacheableSignalKeyStore, useMultiFileAuthState } from '@rexxhayanasi/elaina-baileys'
+import pino from 'pino'
+
+const logger = pino({ level: 'silent' })
+const { state, saveCreds } = await useMultiFileAuthState('./session')
+
+const sock = makeWASocket({
+  auth: {
+    creds: state.creds,
+    keys: makeCacheableSignalKeyStore(state.keys, logger)
+  },
+  logger
+})</code></pre></div>
+<p>Layak dipakai di backend apa pun, dan hampir wajib di yang berbasis berkas untuk bot grup yang sibuk.</p>
+<h2 id="menyimpan-chat-dan-pesan">Menyimpan chat dan pesan<a class="anchor" href="#menyimpan-chat-dan-pesan" aria-label="link">#</a></h2>
+<p>Auth state menyimpan kunci, bukan percakapan. Untuk chat, kontak, dan riwayat pesan, pasang penyimpanan in-memory:</p>
+<div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { makeInMemoryStore } from '@rexxhayanasi/elaina-baileys'
+
+const store = makeInMemoryStore({ logger })
+store.readFromFile('./store.json')
+setInterval(() =&gt; store.writeToFile('./store.json'), 10_000)
+
+const sock = makeWASocket({
+  auth: state,
+  logger,
+  getMessage: async (key) =&gt; (await store.loadMessage(key.remoteJid, key.id))?.message
+})
+
+store.bind(sock.ev)</code></pre></div>
+<p>Dari situ <code>store.chats</code>, <code>store.contacts</code>, <code>store.messages</code>, dan <code>store.groupMetadata</code> akan terus sinkron, dan <code>loadMessage</code> persis yang dibutuhkan <code>getMessage</code>. Ia hidup di memori, jadi ukur terhadap trafikmu — bot di grup besar akan terus menggembungkannya.</p>
+<h2 id="selanjutnya">Selanjutnya<a class="anchor" href="#selanjutnya" aria-label="link">#</a></h2>
+<p>Setelah sesi aman, lanjut ke <a href="./pairing.html">Kode pairing</a> untuk memasangkan perangkat, atau <a href="./messages.html">Pesan</a> untuk mulai menerima dan membalas.</p></article>
+    <footer class="page-foot">
+      <p>Dokumentasi Elaina Baileys. Sumbernya di <a href="https://github.com/rexxzyid/elaina-baileys" rel="noreferrer">GitHub</a>.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>
