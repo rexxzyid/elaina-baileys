@@ -1216,6 +1216,13 @@ export const generateWAMessageContent = async (message, options) => {
         m = await prepareWAMessageMedia(message, options);
     }
 
+    if (m?.videoMessage && (message.motionPhoto || typeof message.motionPhotoOffsetMs === 'number')) {
+        const offset = typeof message.motionPhotoOffsetMs === 'number'
+            ? message.motionPhotoOffsetMs
+            : (typeof message.motionPhoto === 'number' ? message.motionPhoto : 0);
+        m.videoMessage.motionPhotoPresentationOffsetMs = Math.max(0, Math.round(offset));
+    }
+
     if (hasNonNullishProperty(message, 'buttons')) {
         const buttonsMessage = {
             buttons: message.buttons.map(button => {
