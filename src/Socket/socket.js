@@ -1023,13 +1023,15 @@ export const makeSocket = (config) => {
         const totalQuota = toNumber(response?.total_quota);
         const usedQuota = toNumber(response?.used_quota);
         const status = response?.capping_status ?? NewChatMessageCappingStatusType.NONE;
+        const unlimited = totalQuota === undefined || totalQuota < 0;
         return {
             status,
             capped: status === NewChatMessageCappingStatusType.CAPPED,
             warned: status === NewChatMessageCappingStatusType.FIRST_WARNING || status === NewChatMessageCappingStatusType.SECOND_WARNING,
+            unlimited,
             totalQuota,
             usedQuota,
-            remaining: totalQuota !== undefined && usedQuota !== undefined ? Math.max(totalQuota - usedQuota, 0) : undefined,
+            remaining: unlimited ? null : Math.max(totalQuota - (usedQuota ?? 0), 0),
             cycleStart: toNumber(response?.cycle_start_timestamp),
             cycleEnd: toNumber(response?.cycle_end_timestamp),
             serverTime: toNumber(response?.server_sent_timestamp),
