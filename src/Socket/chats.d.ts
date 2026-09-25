@@ -25,6 +25,21 @@ export function buildSpamListNode(jid: string, options?: {
     attrs: Record<string, string>;
 };
 export function makeChatsSocket(config: any): {
+    checkAccountHealth: (jid: string) => Promise<{
+        jid: string;
+        exists: boolean;
+        isBusiness: boolean;
+        verifiedName: string | null;
+        about: string | null;
+        hasProfilePhoto: boolean;
+        self: {
+            capped: boolean;
+            warned: boolean;
+            unlimited: boolean;
+            remaining: number | null;
+        } | null;
+        notes: string[];
+    }>;
     findUserId: (pnLid: any) => Promise<{
         lid: undefined;
         phoneNumber: undefined;

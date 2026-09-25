@@ -1367,8 +1367,55 @@ export const makeChatsSocket = (config) => {
         syncState = SyncState.Connecting;
         privacySettings = undefined;
     });
+    const checkAccountHealth = async (jid) => {
+        const number = String(jid).split('@')[0].split(':')[0];
+        const info = {
+            jid,
+            exists: false,
+            isBusiness: false,
+            verifiedName: null,
+            about: null,
+            hasProfilePhoto: false,
+            self: null,
+            notes: []
+        };
+        const [onWa] = await sock.onWhatsApp(number).catch(() => []);
+        info.exists = !!onWa?.exists;
+        if (onWa?.jid) {
+            info.jid = onWa.jid;
+        }
+        if (!info.exists) {
+            info.notes.push('Nomor tidak terdaftar di WhatsApp');
+            return info;
+        }
+        const biz = await getBusinessProfile(info.jid).catch(() => null);
+        if (biz && Object.keys(biz).length) {
+            info.isBusiness = true;
+            info.verifiedName = biz.verifiedName || biz.business_name || biz.description || null;
+        }
+        const status = await fetchStatus(info.jid).catch(() => null);
+        const entry = Array.isArray(status) ? status[0] : status;
+        info.about = entry?.status?.status ?? entry?.status ?? null;
+        const pic = await profilePictureUrl(info.jid, 'image').catch(() => null);
+        info.hasProfilePhoto = !!pic;
+        const cap = await sock.fetchNewChatMessageCap().catch(() => null);
+        if (cap) {
+            info.self = { capped: cap.capped, warned: cap.warned, unlimited: cap.unlimited, remaining: cap.remaining };
+            if (cap.capped) {
+                info.notes.push('Akunmu sedang di-cap untuk chat baru, rem dulu');
+            }
+            else if (cap.warned) {
+                info.notes.push('Akunmu sudah diperingatkan soal chat baru');
+            }
+            else {
+                info.notes.push('Akunmu sehat untuk chat baru');
+            }
+        }
+        return info;
+    };
     return {
         ...sock,
+        checkAccountHealth,
         findUserId,
         serverProps,
         fetchProps,
