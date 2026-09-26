@@ -34,6 +34,11 @@ export function makeMessagesSocket(config: any): {
         hd?: any;
         caption?: string;
     }, options?: any) => Promise<any>;
+    sendImgVid: (jid: string, content: {
+        image: any;
+        video: any;
+        caption?: string;
+    }, options?: any) => Promise<any>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;

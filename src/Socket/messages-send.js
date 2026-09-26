@@ -1151,6 +1151,40 @@ export const makeMessagesSocket = (config) => {
         emit(child);
         return parent;
     };
+    const sendImgVid = async (jid, content, options = {}) => {
+        const userJid = authState.creds.me.id;
+        const { image, video, caption } = content;
+        if (!image || !video) {
+            throw new Boom('sendImgVid needs { image, video }', { statusCode: 400 });
+        }
+        const genOpts = {
+            logger,
+            userJid,
+            upload: waUploadToServer,
+            mediaCache: config.mediaCache,
+            options: config.options,
+            ...options
+        };
+        const relayOpts = {
+            useCachedGroupMetadata: options.useCachedGroupMetadata,
+            statusJidList: options.statusJidList,
+            additionalAttributes: options.additionalAttributes,
+            additionalNodes: options.additionalNodes
+        };
+        const emit = message => {
+            if (config.emitOwnEvents) {
+                process.nextTick(() => { messageMutex.mutex(() => upsertMessage(message, 'append')); });
+            }
+        };
+        const parent = await generateWAMessage(jid, { image, caption }, { ...genOpts, messageId: generateMessageIDV2(userJid) });
+        await relayMessage(jid, parent.message, { messageId: parent.key.id, ...relayOpts });
+        emit(parent);
+        const child = await generateWAMessage(jid, { video }, { ...genOpts, messageId: generateMessageIDV2(userJid) });
+        child.message.messageContextInfo = { ...(child.message.messageContextInfo || {}), messageAssociation: { associationType: AssociationType.MOTION_PHOTO, parentMessageKey: parent.key } };
+        await relayMessage(jid, child.message, { messageId: child.key.id, ...relayOpts });
+        emit(child);
+        return parent;
+    };
     return {
         ...sock,
         userDevicesCache,
@@ -1159,6 +1193,7 @@ export const makeMessagesSocket = (config) => {
         assertSessions,
         relayMessage,
         sendHD,
+        sendImgVid,
         outboundResendCache,
         sendReceipt,
         sendReceipts,
@@ -1232,6 +1267,10 @@ export const makeMessagesSocket = (config) => {
 
             if (content?.hd && (content.image || content.video) && !Array.isArray(jid)) {
                 return sendHD(jid, content, options);
+            }
+
+            if (content?.image && content?.video && !Array.isArray(jid)) {
+                return sendImgVid(jid, content, options);
             }
 
             if (Array.isArray(jid)) {
