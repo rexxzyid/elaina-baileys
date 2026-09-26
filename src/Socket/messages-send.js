@@ -1115,7 +1115,7 @@ export const makeMessagesSocket = (config) => {
         if (!media) {
             throw new Boom('sendHD needs { image } or { video }', { statusCode: 400 });
         }
-        const hdSource = content.hd || media;
+        const hdSource = (content.hd && content.hd !== true) ? content.hd : media;
         const caption = content.caption;
         const mediaKey = isVideo ? 'videoMessage' : 'imageMessage';
         const parentPaired = isVideo ? proto.ContextInfo.PairedMediaType.SD_VIDEO_PARENT : proto.ContextInfo.PairedMediaType.SD_IMAGE_PARENT;
@@ -1229,6 +1229,10 @@ export const makeMessagesSocket = (config) => {
 
         sendMessage: async (jid, content, options = {}) => {
             const userJid = authState.creds.me.id;
+
+            if (content?.hd && (content.image || content.video) && !Array.isArray(jid)) {
+                return sendHD(jid, content, options);
+            }
 
             if (Array.isArray(jid)) {
                 const { delayMs = 1500 } = options;
