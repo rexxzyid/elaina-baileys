@@ -1108,6 +1108,49 @@ export const makeMessagesSocket = (config) => {
             messageRetryManager.clear();
         }
     });
+    const sendHD = async (jid, content, options = {}) => {
+        const userJid = authState.creds.me.id;
+        const isVideo = !!content.video;
+        const media = isVideo ? content.video : content.image;
+        if (!media) {
+            throw new Boom('sendHD needs { image } or { video }', { statusCode: 400 });
+        }
+        const hdSource = content.hd || media;
+        const caption = content.caption;
+        const mediaKey = isVideo ? 'videoMessage' : 'imageMessage';
+        const parentPaired = isVideo ? proto.ContextInfo.PairedMediaType.SD_VIDEO_PARENT : proto.ContextInfo.PairedMediaType.SD_IMAGE_PARENT;
+        const childPaired = isVideo ? proto.ContextInfo.PairedMediaType.HD_VIDEO_CHILD : proto.ContextInfo.PairedMediaType.HD_IMAGE_CHILD;
+        const association = isVideo ? AssociationType.HD_VIDEO_DUAL_UPLOAD : AssociationType.HD_IMAGE_DUAL_UPLOAD;
+        const genOpts = {
+            logger,
+            userJid,
+            upload: waUploadToServer,
+            mediaCache: config.mediaCache,
+            options: config.options,
+            ...options
+        };
+        const relayOpts = {
+            useCachedGroupMetadata: options.useCachedGroupMetadata,
+            statusJidList: options.statusJidList,
+            additionalAttributes: options.additionalAttributes,
+            additionalNodes: options.additionalNodes
+        };
+        const emit = message => {
+            if (config.emitOwnEvents) {
+                process.nextTick(() => { messageMutex.mutex(() => upsertMessage(message, 'append')); });
+            }
+        };
+        const parent = await generateWAMessage(jid, isVideo ? { video: media, caption } : { image: media, caption }, { ...genOpts, messageId: generateMessageIDV2(userJid) });
+        parent.message[mediaKey].contextInfo = { ...(parent.message[mediaKey].contextInfo || {}), pairedMediaType: parentPaired };
+        await relayMessage(jid, parent.message, { messageId: parent.key.id, ...relayOpts });
+        emit(parent);
+        const child = await generateWAMessage(jid, isVideo ? { video: hdSource } : { image: hdSource }, { ...genOpts, messageId: generateMessageIDV2(userJid) });
+        child.message[mediaKey].contextInfo = { ...(child.message[mediaKey].contextInfo || {}), pairedMediaType: childPaired };
+        child.message.messageContextInfo = { ...(child.message.messageContextInfo || {}), messageAssociation: { parentMessageKey: parent.key, associationType: association } };
+        await relayMessage(jid, child.message, { messageId: child.key.id, ...relayOpts });
+        emit(child);
+        return parent;
+    };
     return {
         ...sock,
         userDevicesCache,
@@ -1115,6 +1158,7 @@ export const makeMessagesSocket = (config) => {
         issuePrivacyTokens,
         assertSessions,
         relayMessage,
+        sendHD,
         outboundResendCache,
         sendReceipt,
         sendReceipts,
