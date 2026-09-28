@@ -1,0 +1,44 @@
+ekspor tetap S_WHATSAPP_NET = "@s.whatsapp.net"
+ekspor tetap STORIES_JID = "status@broadcast"
+
+ekspor fungsi berakhirDengan(teks, akhiran) {
+  jika (jenisdari teks != "teks") kembalikan salah
+  jika (teks.panjang < akhiran.panjang) kembalikan salah
+  kembalikan teks.iris(teks.panjang - akhiran.panjang) == akhiran
+}
+
+ekspor fungsi jidEncode(user, server, device, agent) {
+  misal hasil = user atau ""
+  jika (agent) hasil = hasil + "_" + agent
+  jika (device) hasil = hasil + ":" + device
+  hasil = hasil + "@" + (server atau "lid")
+  kembalikan hasil
+}
+
+ekspor fungsi jidDecode(jid) {
+  jika (jenisdari jid != "teks") kembalikan taktentu
+  tetap sepIdx = jid.indeksDari("@")
+  jika (sepIdx < 0) kembalikan taktentu
+  tetap server = jid.iris(sepIdx + 1)
+  tetap userCombined = jid.iris(0, sepIdx)
+  tetap bagianDevice = userCombined.pisah(":")
+  tetap bagianAgent = bagianDevice[0].pisah("_")
+  kembalikan {
+    server: server,
+    user: bagianAgent[0],
+    agent: bagianAgent[1],
+    device: bagianDevice[1]
+  }
+}
+
+ekspor fungsi apakahGrup(jid) { kembalikan berakhirDengan(jid, "@g.us") }
+ekspor fungsi apakahPengguna(jid) { kembalikan berakhirDengan(jid, S_WHATSAPP_NET) }
+ekspor fungsi apakahLid(jid) { kembalikan berakhirDengan(jid, "@lid") }
+ekspor fungsi apakahNewsletter(jid) { kembalikan berakhirDengan(jid, "@newsletter") }
+ekspor fungsi apakahSiaran(jid) { kembalikan berakhirDengan(jid, "@broadcast") }
+ekspor fungsi samaPengguna(a, b) {
+  tetap da = jidDecode(a)
+  tetap db = jidDecode(b)
+  jika (da == taktentu atau db == taktentu) kembalikan salah
+  kembalikan da.user == db.user
+}

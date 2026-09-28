@@ -1,0 +1,9 @@
+impor * sebagai jid dari "./jid.wni"
+
+cetak("encode:", jid.jidEncode("628123", "s.whatsapp.net", 3, kosong))
+cetak("decode:", JSON.teks(jid.jidDecode("628123:3@s.whatsapp.net")))
+cetak("grup:", jid.apakahGrup("120@g.us"))
+cetak("pengguna:", jid.apakahPengguna("628@s.whatsapp.net"))
+cetak("newsletter:", jid.apakahNewsletter("120@newsletter"))
+cetak("samaPengguna:", jid.samaPengguna("628:3@s.whatsapp.net", "628@s.whatsapp.net"))
+cetak("bukanGrup:", jid.apakahGrup("628@s.whatsapp.net"))
