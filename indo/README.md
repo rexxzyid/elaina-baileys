@@ -25,6 +25,12 @@ dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
   (SHA256+base64), `bytesToCrockford`, `isStringNullOrEmpty`,
   `isWABusinessPlatform`, dan `trimUndefined`. Nilai keluaran dicocokkan persis
   dengan versi JS (hash `2:GpK7wo`, crockford `14ZJ1931S14H`, dst).
+- **Sandi media** (`sandimedia.wni`) — `enkripsiMedia`/`dekripsiMedia`, alur
+  enkripsi media WhatsApp utuh: AES-256-CBC dengan `cipherKey`/`iv` dari
+  `kunciMedia`, MAC = 10 byte pertama HMAC-SHA256(`macKey`, `iv || enc`),
+  `fileEnc = enc || mac`, plus `fileSha256` dan `fileEncSha256`. `dekripsiMedia`
+  memverifikasi MAC sebelum dekripsi. Nilai `enc`, `mac`, dan kedua sha256
+  dicocokkan persis dengan `encryptedStream` di `src/Utils/messages-media.js`.
 - **Kripto** (`kripto.wni`) — `aesEncryptGCM`/`aesDecryptGCM`,
   `aesEncrypt`/`aesDecrypt` (CBC dengan iv 16 byte di depan), `hmacSign`
   (HMAC-SHA256), `sha256`, `generateSignalPubKey` (prefix `05` bila kunci 32
@@ -59,6 +65,7 @@ indo jalankan indo/pesan.tes.wni
 indo jalankan indo/media.tes.wni
 indo jalankan indo/kripto.tes.wni
 indo jalankan indo/generik.tes.wni
+indo jalankan indo/sandimedia.tes.wni
 ```
 
 ## Berkas
@@ -75,6 +82,8 @@ indo jalankan indo/generik.tes.wni
 | `kripto.tes.wni` | Uji round-trip AES, HMAC/SHA256, dan kesepakatan x25519 |
 | `generik.wni` | Port pembantu murni `src/Utils/generics.js` |
 | `generik.tes.wni` | Uji nilai pembantu generik vs versi JS |
+| `sandimedia.wni` | Alur enkripsi/dekripsi media (AES-CBC + HMAC MAC) |
+| `sandimedia.tes.wni` | Uji enc/mac/sha256 dan round-trip vs versi JS |
 
 ## Catatan porting
 

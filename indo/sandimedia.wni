@@ -1,0 +1,24 @@
+impor * sebagai media dari "./media.wni"
+
+ekspor fungsi enkripsiMedia(polos, mediaKey, tipe) {
+  tetap kunci = media.kunciMedia(mediaKey, tipe)
+  tetap enc = Kripto.aesCbcEnkripsi(kunci.cipherKey, kunci.iv, polos)
+  tetap mac = Bita.iris(Kripto.hmacSha256(kunci.macKey, Bita.gabung(kunci.iv, enc)), 0, 10)
+  tetap fileEnc = Bita.gabung(enc, mac)
+  kembalikan {
+    fileEnc: fileEnc,
+    mac: mac,
+    fileSha256: Kripto.sha256(polos),
+    fileEncSha256: Kripto.sha256(fileEnc)
+  }
+}
+
+ekspor fungsi dekripsiMedia(fileEnc, mediaKey, tipe) {
+  tetap kunci = media.kunciMedia(mediaKey, tipe)
+  tetap panjang = Bita.panjang(fileEnc)
+  tetap enc = Bita.iris(fileEnc, 0, panjang - 10)
+  tetap mac = Bita.iris(fileEnc, panjang - 10)
+  tetap macHarap = Bita.iris(Kripto.hmacSha256(kunci.macKey, Bita.gabung(kunci.iv, enc)), 0, 10)
+  jika (bukan Bita.sama(mac, macHarap)) lempar baru Galat("MAC media tidak cocok")
+  kembalikan Kripto.aesCbcDekripsi(kunci.cipherKey, kunci.iv, enc)
+}

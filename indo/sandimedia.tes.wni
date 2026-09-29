@@ -1,0 +1,19 @@
+impor * sebagai sm dari "./sandimedia.wni"
+
+tetap mediaKey = baru LarikUint8(32)
+misal i = 0
+selama (i < 32) {
+  mediaKey[i] = 2
+  i = i + 1
+}
+tetap polos = Bita.dariTeks("hello media world, this is a test payload for cbc")
+tetap hasil = sm.enkripsiMedia(polos, mediaKey, "image")
+
+tetap encHarap = "606c6df67673fca22db04047d69e9474260f7ed31ec0ece7ae6757a6cfa57d74c0eff9a6046d625f60f488d742861b836847fa071a5ec2ca9445e46b3c04434b"
+cetak("enc:", Bita.keHeks(Bita.iris(hasil.fileEnc, 0, Bita.panjang(hasil.fileEnc) - 10)) == encHarap)
+cetak("mac:", Bita.keHeks(hasil.mac) == "ae0ad5fd9e84b786488a")
+cetak("fileSha256:", Bita.keHeks(hasil.fileSha256) == "7aae65c1fad2c4a38c864ee6a64ff5b6e71157e322851ae3a79d47855eb9b295")
+cetak("fileEncSha256:", Bita.keHeks(hasil.fileEncSha256) == "4073bd8960ef14747e0c572d49f1494faf36ecf40c560af1e0728eb8a2a710b3")
+
+tetap kembali = sm.dekripsiMedia(hasil.fileEnc, mediaKey, "image")
+cetak("round-trip:", Bita.keTeks(kembali) == "hello media world, this is a test payload for cbc")
