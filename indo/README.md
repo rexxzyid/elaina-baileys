@@ -31,6 +31,12 @@ dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
   `fileEnc = enc || mac`, plus `fileSha256` dan `fileEncSha256`. `dekripsiMedia`
   memverifikasi MAC sebelum dekripsi. Nilai `enc`, `mac`, dan kedua sha256
   dicocokkan persis dengan `encryptedStream` di `src/Utils/messages-media.js`.
+- **Retry media** (`retrymedia.wni`) — `getMediaRetryKey`
+  (HKDF-SHA256, info `WhatsApp Media Retry Notification`),
+  `enkripsiRetryMedia`/`dekripsiRetryMedia` (AES-256-GCM dengan AAD = id pesan).
+  Bagian kripto dari alur media-retry di `src/Utils/messages-media.js`
+  (encode/decode protobuf ditinggal ke pemanggil). retryKey dan ciphertext
+  dicocokkan persis dengan versi JS.
 - **Kripto** (`kripto.wni`) — `aesEncryptGCM`/`aesDecryptGCM`,
   `aesEncrypt`/`aesDecrypt` (CBC dengan iv 16 byte di depan), `hmacSign`
   (HMAC-SHA256), `sha256`, `generateSignalPubKey` (prefix `05` bila kunci 32
@@ -66,6 +72,7 @@ indo jalankan indo/media.tes.wni
 indo jalankan indo/kripto.tes.wni
 indo jalankan indo/generik.tes.wni
 indo jalankan indo/sandimedia.tes.wni
+indo jalankan indo/retrymedia.tes.wni
 ```
 
 ## Berkas
@@ -84,6 +91,8 @@ indo jalankan indo/sandimedia.tes.wni
 | `generik.tes.wni` | Uji nilai pembantu generik vs versi JS |
 | `sandimedia.wni` | Alur enkripsi/dekripsi media (AES-CBC + HMAC MAC) |
 | `sandimedia.tes.wni` | Uji enc/mac/sha256 dan round-trip vs versi JS |
+| `retrymedia.wni` | Kripto media-retry (HKDF + AES-GCM) |
+| `retrymedia.tes.wni` | Uji retryKey dan ciphertext vs versi JS |
 
 ## Catatan porting
 

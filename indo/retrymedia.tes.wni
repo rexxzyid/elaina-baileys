@@ -1,0 +1,21 @@
+impor * sebagai rm dari "./retrymedia.wni"
+
+tetap mk = baru LarikUint8(32)
+misal i = 0
+selama (i < 32) {
+  mk[i] = 5
+  i = i + 1
+}
+
+cetak("retryKey:", Bita.keHeks(rm.getMediaRetryKey(mk)) == "8e04224d9b3cdcdef5f75007575546b1aecf68131c965cf7b43d131bf9e29cc8")
+
+tetap iv = baru LarikUint8(12)
+misal j = 0
+selama (j < 12) {
+  iv[j] = 9
+  j = j + 1
+}
+tetap polos = Bita.dariTeks("retry-payload-123")
+tetap sandi = rm.enkripsiRetryMedia(polos, mk, iv, "MSGID42")
+cetak("ciphertext:", Bita.keHeks(sandi) == "f076637023f4b0331e88a67ea42f041a289874102c8c7eee7691a238fa5de5a541")
+cetak("round-trip:", Bita.keTeks(rm.dekripsiRetryMedia(sandi, mk, iv, "MSGID42")) == "retry-payload-123")

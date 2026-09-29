@@ -1,0 +1,16 @@
+tetap INFO_RETRY = "WhatsApp Media Retry Notification"
+
+ekspor fungsi getMediaRetryKey(mediaKey) {
+  tetap garam = baru LarikUint8(0)
+  kembalikan Kripto.hkdf(mediaKey, garam, INFO_RETRY, 32)
+}
+
+ekspor fungsi enkripsiRetryMedia(polos, mediaKey, iv, idPesan) {
+  tetap retryKey = getMediaRetryKey(mediaKey)
+  kembalikan Kripto.aesGcmEnkripsi(retryKey, iv, polos, Bita.dariTeks(idPesan))
+}
+
+ekspor fungsi dekripsiRetryMedia(sandi, mediaKey, iv, idPesan) {
+  tetap retryKey = getMediaRetryKey(mediaKey)
+  kembalikan Kripto.aesGcmDekripsi(retryKey, iv, sandi, Bita.dariTeks(idPesan))
+}
