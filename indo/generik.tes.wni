@@ -1,0 +1,18 @@
+impor * sebagai g dari "./generik.wni"
+
+cetak("hash:", g.generateParticipantHashV2(["b@s", "a@s", "c@s"]) == "2:GpK7wo")
+
+tetap krock = g.bytesToCrockford(Bita.dariHeks("00ff102040c807"))
+cetak("crockford:", krock == "14ZJ1931S14H")
+
+cetak("bigEndian 1000/4:", Bita.keHeks(g.encodeBigEndian(1000, 4)) == "000003e8")
+cetak("bigEndian 70000/3:", Bita.keHeks(g.encodeBigEndian(70000, 3)) == "011170")
+
+cetak("unpad:", Bita.keHeks(g.unpadRandomMax16(Bita.dariHeks("01020304030303"))) == "01020304")
+
+cetak("kosong a:", g.isStringNullOrEmpty(""))
+cetak("kosong b:", g.isStringNullOrEmpty("x") == salah)
+cetak("bisnis:", g.isWABusinessPlatform("smba") dan g.isWABusinessPlatform("web") == salah)
+
+tetap o = g.trimUndefined({ a: 1, b: taktentu, c: 3 })
+cetak("trim:", Objek.kunci(o).gabung(",") == "a,c")

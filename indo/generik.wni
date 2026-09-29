@@ -1,0 +1,68 @@
+tetap KARAKTER_CROCKFORD = "123456789ABCDEFGHJKLMNPQRSTVWXYZ"
+
+ekspor fungsi isStringNullOrEmpty(nilai) {
+  kembalikan nilai == kosong atau nilai == taktentu atau nilai == ""
+}
+
+ekspor fungsi isWABusinessPlatform(platform) {
+  kembalikan platform == "smbi" atau platform == "smba"
+}
+
+ekspor fungsi encodeBigEndian(e, t) {
+  jika (t == taktentu) t = 4
+  misal r = e
+  tetap a = baru LarikUint8(t)
+  misal i = t - 1
+  selama (i >= 0) {
+    a[i] = 255 & r
+    r = r >>> 8
+    i = i - 1
+  }
+  kembalikan a
+}
+
+ekspor fungsi unpadRandomMax16(e) {
+  tetap panjang = Bita.panjang(e)
+  jika (panjang == 0) lempar baru Galat("unpadPkcs7 given empty bytes")
+  tetap r = e[panjang - 1]
+  jika (r > panjang) lempar baru Galat("unpad given " + panjang + " bytes, but pad is " + r)
+  kembalikan Bita.iris(e, 0, panjang - r)
+}
+
+ekspor fungsi generateParticipantHashV2(peserta) {
+  peserta.urutkan()
+  tetap hash = Bita.keBase64(Kripto.sha256(Bita.dariTeks(peserta.gabung(""))))
+  kembalikan "2:" + hash.iris(0, 6)
+}
+
+ekspor fungsi bytesToCrockford(penyangga) {
+  misal nilai = 0
+  misal jumlahBit = 0
+  tetap keluaran = []
+  misal i = 0
+  tetap panjang = Bita.panjang(penyangga)
+  selama (i < panjang) {
+    nilai = (nilai << 8) | (penyangga[i] & 255)
+    jumlahBit = jumlahBit + 8
+    selama (jumlahBit >= 5) {
+      keluaran.tambah(KARAKTER_CROCKFORD.karakterDi((nilai >>> (jumlahBit - 5)) & 31))
+      jumlahBit = jumlahBit - 5
+    }
+    i = i + 1
+  }
+  jika (jumlahBit > 0) {
+    keluaran.tambah(KARAKTER_CROCKFORD.karakterDi((nilai << (5 - jumlahBit)) & 31))
+  }
+  kembalikan keluaran.gabung("")
+}
+
+ekspor fungsi trimUndefined(objek) {
+  tetap kunci = Objek.kunci(objek)
+  tetap hasil = {}
+  misal i = 0
+  selama (i < kunci.panjang) {
+    jika (objek[kunci[i]] != taktentu) hasil[kunci[i]] = objek[kunci[i]]
+    i = i + 1
+  }
+  kembalikan hasil
+}

@@ -20,6 +20,11 @@ dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
   info `WhatsApp <Tipe> Keys`). Hasilnya **byte-per-byte identik** dengan
   `getMediaKeys` di `src/Utils/messages-media.js`. Ini memakai primitif kripto
   baru di `indo-langvm` (`Kripto.hkdf`, `Bita`).
+- **Generik** (`generik.wni`) — pembantu murni dari `src/Utils/generics.js`:
+  `encodeBigEndian`, `unpadRandomMax16`, `generateParticipantHashV2`
+  (SHA256+base64), `bytesToCrockford`, `isStringNullOrEmpty`,
+  `isWABusinessPlatform`, dan `trimUndefined`. Nilai keluaran dicocokkan persis
+  dengan versi JS (hash `2:GpK7wo`, crockford `14ZJ1931S14H`, dst).
 - **Kripto** (`kripto.wni`) — `aesEncryptGCM`/`aesDecryptGCM`,
   `aesEncrypt`/`aesDecrypt` (CBC dengan iv 16 byte di depan), `hmacSign`
   (HMAC-SHA256), `sha256`, `generateSignalPubKey` (prefix `05` bila kunci 32
@@ -53,6 +58,7 @@ indo jalankan indo/jid.tes.wni
 indo jalankan indo/pesan.tes.wni
 indo jalankan indo/media.tes.wni
 indo jalankan indo/kripto.tes.wni
+indo jalankan indo/generik.tes.wni
 ```
 
 ## Berkas
@@ -67,9 +73,15 @@ indo jalankan indo/kripto.tes.wni
 | `media.tes.wni` | Uji kunci media vs versi JS |
 | `kripto.wni` | Port `src/Utils/crypto.js` (AES-GCM/CBC, HMAC, SHA256, x25519 Curve) |
 | `kripto.tes.wni` | Uji round-trip AES, HMAC/SHA256, dan kesepakatan x25519 |
+| `generik.wni` | Port pembantu murni `src/Utils/generics.js` |
+| `generik.tes.wni` | Uji nilai pembantu generik vs versi JS |
 
 ## Catatan porting
 
 `typeof` di b-indo mengembalikan nama Indonesia (`"teks"` untuk string),
 `Object.keys` → `Objek.kunci`, `Array.find` → `.cari`, `String.includes` →
 `.berisi`. `device` pada `jidDecode` tetap berupa teks; selebihnya field cocok.
+
+Operator `hapus` (delete) belum didukung tahap bytecode di runtime ini, jadi
+`trimUndefined` di sini membangun objek baru tanpa kunci `taktentu` (bukan
+mengubah objek asal di tempat seperti versi JS); hasil untuk konsumen sama.
