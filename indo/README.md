@@ -20,6 +20,14 @@ dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
   info `WhatsApp <Tipe> Keys`). Hasilnya **byte-per-byte identik** dengan
   `getMediaKeys` di `src/Utils/messages-media.js`. Ini memakai primitif kripto
   baru di `indo-langvm` (`Kripto.hkdf`, `Bita`).
+- **Kripto** (`kripto.wni`) — `aesEncryptGCM`/`aesDecryptGCM`,
+  `aesEncrypt`/`aesDecrypt` (CBC dengan iv 16 byte di depan), `hmacSign`
+  (HMAC-SHA256), `sha256`, `generateSignalPubKey` (prefix `05` bila kunci 32
+  byte), dan `Curve` (`buatKunci` x25519, `kunciBersama` ECDH x25519). Padanan
+  `src/Utils/crypto.js`. `hmacSign` dan `sha256` dicocokkan persis dengan
+  keluaran JS, dan `Curve.kunciBersama` menghasilkan rahasia yang identik dari
+  kedua sisi. Ini memakai primitif kripto `indo-langvm` (`Kripto.aesGcm*`,
+  `Kripto.aesCbc*`, `Kripto.x25519*`, `Kripto.hmacSha256`, `Kripto.sha256`).
 
 ## Kenapa belum bisa full port
 
@@ -27,7 +35,8 @@ Port yang benar-benar bisa konek WhatsApp masih terhalang. Runtime b-indo
 (cabang utama repo InDo) kini sudah punya **WebSocket** dan **primitif kripto**
 (x25519, ed25519, aes-gcm/cbc, hmac, hkdf, sha256, base64/hex, zlib), tetapi:
 
-- Versi npm `@rexxhayanasi/b-indo` masih 1.0.0 (belum memuat primitif itu).
+- Runtime itu dipublikasikan ke npm sebagai `indo-langvm` (sudah memuat
+  WebSocket + primitif kripto), tetapi ia tetap VM sendiri, bukan transpiler JS.
 - Untuk memakai **baileys apa adanya** butuh interop npm — b-indo berjalan di
   VM sendiri, tidak bisa `impor` modul JavaScript (`ws`, `libsignal`,
   `protobufjs`). Full port berarti menulis ulang Noise + Signal + protobuf +
@@ -43,6 +52,7 @@ npm install -g indo-langvm
 indo jalankan indo/jid.tes.wni
 indo jalankan indo/pesan.tes.wni
 indo jalankan indo/media.tes.wni
+indo jalankan indo/kripto.tes.wni
 ```
 
 ## Berkas
@@ -55,6 +65,8 @@ indo jalankan indo/media.tes.wni
 | `pesan.tes.wni` | Uji tipe pesan vs versi JS |
 | `media.wni` | Port `getMediaKeys` (derivasi kunci media via HKDF) |
 | `media.tes.wni` | Uji kunci media vs versi JS |
+| `kripto.wni` | Port `src/Utils/crypto.js` (AES-GCM/CBC, HMAC, SHA256, x25519 Curve) |
+| `kripto.tes.wni` | Uji round-trip AES, HMAC/SHA256, dan kesepakatan x25519 |
 
 ## Catatan porting
 

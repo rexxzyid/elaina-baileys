@@ -1,0 +1,32 @@
+ekspor fungsi generateSignalPubKey(pub) {
+  jika (Bita.panjang(pub) == 33) kembalikan pub
+  kembalikan Bita.gabung(Bita.dariHeks("05"), pub)
+}
+
+ekspor fungsi aesEncryptGCM(teks, kunci, iv, aad) {
+  kembalikan Kripto.aesGcmEnkripsi(kunci, iv, teks, aad)
+}
+ekspor fungsi aesDecryptGCM(sandi, kunci, iv, aad) {
+  kembalikan Kripto.aesGcmDekripsi(kunci, iv, sandi, aad)
+}
+
+ekspor fungsi aesEncrypt(buf, kunci) {
+  tetap iv = Kripto.byteAcakBiner(16)
+  kembalikan Bita.gabung(iv, Kripto.aesCbcEnkripsi(kunci, iv, buf))
+}
+ekspor fungsi aesDecrypt(buf, kunci) {
+  tetap iv = Bita.iris(buf, 0, 16)
+  kembalikan Kripto.aesCbcDekripsi(kunci, iv, Bita.iris(buf, 16))
+}
+
+ekspor fungsi hmacSign(buf, kunci) { kembalikan Kripto.hmacSha256(kunci, buf) }
+ekspor fungsi sha256(buf) { kembalikan Kripto.sha256(buf) }
+
+ekspor tetap Curve = {
+  buatKunci: fungsi() { kembalikan Kripto.x25519BuatKunci() },
+  kunciBersama: fungsi(privat, publik) {
+    misal p = publik
+    jika (Bita.panjang(publik) == 33) p = Bita.iris(publik, 1)
+    kembalikan Kripto.x25519Rahasia(privat, p)
+  }
+}

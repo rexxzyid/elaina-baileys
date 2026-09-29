@@ -1,0 +1,17 @@
+impor * sebagai c dari "./kripto.wni"
+
+tetap k32 = Bita.dariHeks("0707070707070707070707070707070707070707070707070707070707070707")
+tetap iv12 = Bita.dariHeks("0102030405060708090a0b0c")
+tetap g = c.aesEncryptGCM(Bita.dariTeks("rahasia"), k32, iv12, Bita.dariTeks("aad"))
+cetak("gcm rt:", Bita.keTeks(c.aesDecryptGCM(g, k32, iv12, Bita.dariTeks("aad"))) == "rahasia")
+
+tetap e = c.aesEncrypt(Bita.dariTeks("pesan cbc"), k32)
+cetak("cbc rt:", Bita.keTeks(c.aesDecrypt(e, k32)) == "pesan cbc")
+
+cetak("hmac(halo):", Bita.keHeks(c.hmacSign(Bita.dariTeks("halo"), k32)))
+cetak("sha256(abc):", Bita.keHeks(c.sha256(Bita.dariTeks("abc"))))
+
+tetap a = c.Curve.buatKunci()
+tetap b = c.Curve.buatKunci()
+cetak("x25519 sepakat:", Bita.sama(c.Curve.kunciBersama(a.privat, b.publik), c.Curve.kunciBersama(b.privat, a.publik)))
+cetak("signalPub 33:", Bita.panjang(c.generateSignalPubKey(a.publik)) == 33)
