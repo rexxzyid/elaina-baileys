@@ -1,0 +1,7 @@
+impor * sebagai p dari "./pesan.wni"
+cetak("tipe image:", p.tipeKonten({ imageMessage: 1 }))
+cetak("tipe conv:", p.tipeKonten({ conversation: "hi" }))
+cetak("skip skdm:", p.tipeKonten({ senderKeyDistributionMessage: 1, videoMessage: 2 }))
+cetak("futureProof ephemeral:", p.adalahFutureProof("ephemeralMessage"))
+cetak("futureProof image:", p.adalahFutureProof("imageMessage"))
+cetak("buka:", p.tipeKonten(p.bukaFutureProof({ ephemeralMessage: { message: { conversation: "halo" } } })))

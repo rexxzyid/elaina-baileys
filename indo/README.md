@@ -6,30 +6,37 @@ kunci berbahasa Indonesia).
 
 ## Status: proof-of-concept logika murni
 
-Yang di-port di sini **hanya logika murni** yang tidak butuh jaringan atau
-kripto: utilitas JID (`jidEncode`, `jidDecode`, dan pengecekan jenis JID).
-Hasilnya sudah dibuktikan **identik** dengan implementasi JavaScript di
-`src/WABinary/jid-utils.js`.
+Yang di-port di sini **logika murni** yang tidak butuh jaringan atau kripto,
+dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
+
+- **JID** (`jid.wni`) — `jidEncode`, `jidDecode`, dan pengecekan jenis JID,
+  identik dengan `src/WABinary/jid-utils.js`.
+- **Tipe pesan** (`pesan.wni`) — `tipeKonten` (getContentType), daftar dan
+  pengecekan kunci future-proof, serta `bukaFutureProof` (membuka bungkus
+  `ephemeralMessage`/`viewOnce` dst), identik dengan `getContentType` +
+  `normalizeMessageContent` di `src/Utils`.
 
 ## Kenapa belum bisa full port
 
-Baileys butuh tiga hal inti untuk terhubung ke WhatsApp yang **belum ada** di
-b-indo saat ini:
+Port yang benar-benar bisa konek WhatsApp masih terhalang. Runtime b-indo
+(cabang utama repo InDo) kini sudah punya **WebSocket** dan **primitif kripto**
+(x25519, ed25519, aes-gcm/cbc, hmac, hkdf, sha256, base64/hex, zlib), tetapi:
 
-- **WebSocket (WSS)** — b-indo `Jaringan` baru mendukung HTTP dan server dasar.
-- **Kripto Signal** — b-indo `Kripto` baru `acakUUID`, `hash`, `byteAcak`;
-  belum ada Curve25519, HKDF, AES-GCM, HMAC-SHA256 untuk handshake Noise.
-- **Interop npm** — b-indo berjalan di VM sendiri, tidak bisa memuat dependency
-  JavaScript baileys (`ws`, `libsignal`, `protobufjs`).
+- Versi npm `@rexxhayanasi/b-indo` masih 1.0.0 (belum memuat primitif itu).
+- Untuk memakai **baileys apa adanya** butuh interop npm — b-indo berjalan di
+  VM sendiri, tidak bisa `impor` modul JavaScript (`ws`, `libsignal`,
+  `protobufjs`). Full port berarti menulis ulang Noise + Signal + protobuf +
+  seluruh baileys dalam `.wni`, atau menambahkan backend **transpile-ke-JS**
+  ke InDo (model TypeScript) supaya `.wni` bisa langsung `impor` npm.
 
-Selama tiga hal itu belum ada di bahasanya, port yang benar-benar bisa konek WA
-tidak mungkin. POC ini fokus ke bagian yang murni logika, sebagai fondasi.
+POC ini fokus ke logika murni sebagai fondasi.
 
 ## Menjalankan
 
 ```bash
 npm install -g @rexxhayanasi/b-indo
 indo jalankan indo/jid.tes.wni
+indo jalankan indo/pesan.tes.wni
 ```
 
 ## Berkas
@@ -37,10 +44,12 @@ indo jalankan indo/jid.tes.wni
 | Berkas | Isi |
 | --- | --- |
 | `jid.wni` | Port utilitas JID (encode, decode, pengecekan jenis) |
-| `jid.tes.wni` | Uji yang mencetak hasil untuk dibandingkan dengan versi JS |
+| `jid.tes.wni` | Uji JID vs versi JS |
+| `pesan.wni` | Port `getContentType`, kunci future-proof, `bukaFutureProof` |
+| `pesan.tes.wni` | Uji tipe pesan vs versi JS |
 
-## Catatan
+## Catatan porting
 
-`typeof` di b-indo mengembalikan nama Indonesia (`"teks"` untuk string, bukan
-`"string"`) — penting saat mem-port penjaga tipe. `device` di sini tetap berupa
-teks, sedangkan versi JS mengubahnya ke angka; selebihnya field cocok.
+`typeof` di b-indo mengembalikan nama Indonesia (`"teks"` untuk string),
+`Object.keys` → `Objek.kunci`, `Array.find` → `.cari`, `String.includes` →
+`.berisi`. `device` pada `jidDecode` tetap berupa teks; selebihnya field cocok.

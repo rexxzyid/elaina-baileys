@@ -1,0 +1,37 @@
+ekspor tetap KUNCI_FUTURE_PROOF = [
+  "acp2SettingMessage", "associatedChildMessage", "audioStickerMessage",
+  "botForwardedMessage", "botInvokeMessage", "botPlatformRegistrationSuccessMessage",
+  "botTaskMessage", "documentWithCaptionMessage", "editedMessage", "ephemeralMessage",
+  "eventCoverImage", "groupMentionedMessage", "groupStatusMentionMessage",
+  "groupStatusMessage", "groupStatusMessageV2", "limitSharingMessage",
+  "lottieStickerMessage", "newsletterAdminProfileMessage", "newsletterAdminProfileMessageV2",
+  "newsletterAdminProfileStatusMessage", "newsletterScheduledMessage", "pollCreationMessageV4",
+  "pollCreationOptionImageMessage", "questionMessage", "questionReplyMessage",
+  "spoilerMessage", "statusAddYours", "statusMentionMessage", "viewOnceMessage",
+  "viewOnceMessageV2", "viewOnceMessageV2Extension"
+]
+
+ekspor fungsi tipeKonten(konten) {
+  jika (bukan konten) kembalikan taktentu
+  tetap kunci = Objek.kunci(konten)
+  kembalikan kunci.cari(fungsi(k) {
+    kembalikan (k == "conversation" atau k.berisi("Message")) dan k != "senderKeyDistributionMessage"
+  })
+}
+
+ekspor fungsi adalahFutureProof(kunci) {
+  kembalikan KUNCI_FUTURE_PROOF.berisi(kunci)
+}
+
+ekspor fungsi bukaFutureProof(pesan) {
+  misal saatIni = pesan
+  selama (saatIni) {
+    tetap kunci = tipeKonten(saatIni)
+    jika (kunci dan adalahFutureProof(kunci) dan saatIni[kunci] dan saatIni[kunci].message) {
+      saatIni = saatIni[kunci].message
+    } lainnya {
+      henti
+    }
+  }
+  kembalikan saatIni
+}
