@@ -15,6 +15,11 @@ dan hasilnya dibuktikan **identik** dengan implementasi JavaScript-nya:
   pengecekan kunci future-proof, serta `bukaFutureProof` (membuka bungkus
   `ephemeralMessage`/`viewOnce` dst), identik dengan `getContentType` +
   `normalizeMessageContent` di `src/Utils`.
+- **Kunci media** (`media.wni`) — `kunciMedia` (getMediaKeys) + `infoHkdf`,
+  derivasi iv/cipherKey/macKey dari mediaKey lewat HKDF-SHA256 (salt 32 nol,
+  info `WhatsApp <Tipe> Keys`). Hasilnya **byte-per-byte identik** dengan
+  `getMediaKeys` di `src/Utils/messages-media.js`. Ini memakai primitif kripto
+  baru di `indo-langvm` (`Kripto.hkdf`, `Bita`).
 
 ## Kenapa belum bisa full port
 
@@ -34,9 +39,10 @@ POC ini fokus ke logika murni sebagai fondasi.
 ## Menjalankan
 
 ```bash
-npm install -g @rexxhayanasi/b-indo
+npm install -g indo-langvm
 indo jalankan indo/jid.tes.wni
 indo jalankan indo/pesan.tes.wni
+indo jalankan indo/media.tes.wni
 ```
 
 ## Berkas
@@ -47,6 +53,8 @@ indo jalankan indo/pesan.tes.wni
 | `jid.tes.wni` | Uji JID vs versi JS |
 | `pesan.wni` | Port `getContentType`, kunci future-proof, `bukaFutureProof` |
 | `pesan.tes.wni` | Uji tipe pesan vs versi JS |
+| `media.wni` | Port `getMediaKeys` (derivasi kunci media via HKDF) |
+| `media.tes.wni` | Uji kunci media vs versi JS |
 
 ## Catatan porting
 

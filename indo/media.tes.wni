@@ -1,0 +1,7 @@
+impor * sebagai m dari "./media.wni"
+tetap kunci = Bita.dariHeks("0101010101010101010101010101010101010101010101010101010101010101")
+tetap k = m.kunciMedia(kunci, "image")
+cetak("info:", m.infoHkdf("image"))
+cetak("iv:", Bita.keHeks(k.iv))
+cetak("cipherKey:", Bita.keHeks(k.cipherKey))
+cetak("macKey:", Bita.keHeks(k.macKey))

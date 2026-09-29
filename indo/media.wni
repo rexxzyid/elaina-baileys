@@ -1,0 +1,22 @@
+tetap PETA_HKDF = {
+  audio: "Audio", document: "Document", gif: "Video", image: "Image",
+  ppic: "", product: "Image", ptt: "Audio",
+  "sticker-pack": "Sticker Pack", "thumbnail-sticker-pack": "Sticker Pack Thumbnail",
+  sticker: "Image", video: "Video",
+  "thumbnail-document": "Document Thumbnail", "thumbnail-image": "Image Thumbnail",
+  "thumbnail-video": "Video Thumbnail"
+}
+
+ekspor fungsi infoHkdf(tipe) {
+  kembalikan `WhatsApp ${PETA_HKDF[tipe]} Keys`
+}
+
+ekspor fungsi kunciMedia(mediaKey, tipe) {
+  tetap garam = baru LarikUint8(32)
+  tetap diperluas = Kripto.hkdf(mediaKey, garam, infoHkdf(tipe), 112)
+  kembalikan {
+    iv: Bita.iris(diperluas, 0, 16),
+    cipherKey: Bita.iris(diperluas, 16, 48),
+    macKey: Bita.iris(diperluas, 48, 80)
+  }
+}
