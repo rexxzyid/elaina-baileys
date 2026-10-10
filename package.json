@@ -1,6 +1,6 @@
 {
   "name": "@rexxhayanasi/elaina-baileys",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Elaina Baileys — an independently maintained Baileys distribution with integrated MessageBuilder, interactive messages, carousel/native-flow helpers, and Elaina-specific compatibility work.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
