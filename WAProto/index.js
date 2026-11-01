@@ -11522,6 +11522,7 @@ export const proto = $root.proto = (() => {
 
         BotMetadata.prototype.botHistoryShareMetadata = null;
         BotMetadata.prototype.responseStoppedByUser = null;
+        BotMetadata.prototype.interjectionMetadata = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -11786,6 +11787,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(BotMetadata.prototype, "_interjectionMetadata", {
+            get: $util.oneOfGetter($oneOfFields = ["interjectionMetadata"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         BotMetadata.create = function create(properties) {
             return new BotMetadata(properties);
         };
@@ -11881,6 +11887,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.BotHistoryShareMetadata.encode(m.botHistoryShareMetadata, w.uint32(346).fork()).ldelim();
             if (m.responseStoppedByUser != null && Object.hasOwnProperty.call(m, "responseStoppedByUser"))
                 w.uint32(352).bool(m.responseStoppedByUser);
+            if (m.interjectionMetadata != null && Object.hasOwnProperty.call(m, "interjectionMetadata"))
+                $root.proto.BotInterjectionMetadata.encode(m.interjectionMetadata, w.uint32(362).fork()).ldelim();
             return w;
         };
 
@@ -12071,6 +12079,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 44: {
                         m.responseStoppedByUser = r.bool();
+                        break;
+                    }
+                case 45: {
+                        m.interjectionMetadata = $root.proto.BotInterjectionMetadata.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -12296,6 +12308,11 @@ export const proto = $root.proto = (() => {
             }
             if (d.responseStoppedByUser != null) {
                 m.responseStoppedByUser = Boolean(d.responseStoppedByUser);
+            }
+            if (d.interjectionMetadata != null) {
+                if (typeof d.interjectionMetadata !== "object")
+                    throw TypeError(".proto.interjectionMetadata: object expected");
+                m.interjectionMetadata = $root.proto.BotInterjectionMetadata.fromObject(d.interjectionMetadata, n + 1);
             }
             return m;
         };
@@ -12523,6 +12540,11 @@ export const proto = $root.proto = (() => {
                 d.responseStoppedByUser = m.responseStoppedByUser;
                 if (o.oneofs)
                     d._responseStoppedByUser = "responseStoppedByUser";
+            }
+            if (m.interjectionMetadata != null && m.hasOwnProperty("interjectionMetadata")) {
+                d.interjectionMetadata = $root.proto.BotInterjectionMetadata.toObject(m.interjectionMetadata, o);
+                if (o.oneofs)
+                    d._interjectionMetadata = "interjectionMetadata";
             }
             return d;
         };
@@ -24136,6 +24158,7 @@ export const proto = $root.proto = (() => {
         ContextInfo.prototype.experienceIds = $util.emptyArray;
         ContextInfo.prototype.partnerDeepLinkToken = null;
         ContextInfo.prototype.sourceExperienceId = null;
+        ContextInfo.prototype.sourceExperienceIds = $util.emptyArray;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -24663,6 +24686,10 @@ export const proto = $root.proto = (() => {
                 w.uint32(666).string(m.partnerDeepLinkToken);
             if (m.sourceExperienceId != null && Object.hasOwnProperty.call(m, "sourceExperienceId"))
                 w.uint32(672).uint32(m.sourceExperienceId);
+            if (m.sourceExperienceIds != null && m.sourceExperienceIds.length) {
+                for (var i = 0; i < m.sourceExperienceIds.length; ++i)
+                    w.uint32(680).uint32(m.sourceExperienceIds[i]);
+            }
             return w;
         };
 
@@ -24958,6 +24985,12 @@ export const proto = $root.proto = (() => {
                     }
                 case 84: {
                         m.sourceExperienceId = r.uint32();
+                        break;
+                    }
+                case 85: {
+                        if (!(m.sourceExperienceIds && m.sourceExperienceIds.length))
+                            m.sourceExperienceIds = [];
+                        m.sourceExperienceIds.push(r.uint32());
                         break;
                     }
                 default:
@@ -25414,6 +25447,14 @@ export const proto = $root.proto = (() => {
             if (d.sourceExperienceId != null) {
                 m.sourceExperienceId = d.sourceExperienceId >>> 0;
             }
+            if (d.sourceExperienceIds) {
+                if (!Array.isArray(d.sourceExperienceIds))
+                    throw TypeError(".proto.sourceExperienceIds: array expected");
+                m.sourceExperienceIds = [];
+                for (var i = 0; i < d.sourceExperienceIds.length; ++i) {
+                    m.sourceExperienceIds[i] = d.sourceExperienceIds[i] >>> 0;
+                }
+            }
             return m;
         };
 
@@ -25767,6 +25808,12 @@ export const proto = $root.proto = (() => {
                 d.sourceExperienceId = m.sourceExperienceId;
                 if (o.oneofs)
                     d._sourceExperienceId = "sourceExperienceId";
+            }
+            if (m.sourceExperienceIds && m.sourceExperienceIds.length) {
+                d.sourceExperienceIds = [];
+                for (var j = 0; j < m.sourceExperienceIds.length; ++j) {
+                    d.sourceExperienceIds[j] = m.sourceExperienceIds[j];
+                }
             }
             return d;
         };
@@ -67656,6 +67703,7 @@ export const proto = $root.proto = (() => {
                 HistorySyncOnDemandRequest.prototype.accountLid = null;
                 HistorySyncOnDemandRequest.prototype.supportInlineResponse = null;
 
+                HistorySyncOnDemandRequest.prototype.mode = null;
                 let $oneOfFields;
 
                 // Virtual OneOf for proto3 optional field
@@ -67700,6 +67748,11 @@ export const proto = $root.proto = (() => {
                     set: $util.oneOfSetter($oneOfFields)
                 });
 
+                Object.defineProperty(HistorySyncOnDemandRequest.prototype, "_mode", {
+                    get: $util.oneOfGetter($oneOfFields = ["mode"]),
+                    set: $util.oneOfSetter($oneOfFields)
+                });
+
                 HistorySyncOnDemandRequest.create = function create(properties) {
                     return new HistorySyncOnDemandRequest(properties);
                 };
@@ -67721,6 +67774,8 @@ export const proto = $root.proto = (() => {
                         w.uint32(50).string(m.accountLid);
                     if (m.supportInlineResponse != null && Object.hasOwnProperty.call(m, "supportInlineResponse"))
                         w.uint32(56).bool(m.supportInlineResponse);
+                    if (m.mode != null && Object.hasOwnProperty.call(m, "mode"))
+                        w.uint32(64).int32(m.mode);
                     return w;
                 };
 
@@ -67763,6 +67818,10 @@ export const proto = $root.proto = (() => {
                             }
                         case 7: {
                                 m.supportInlineResponse = r.bool();
+                                break;
+                            }
+                        case 8: {
+                                m.mode = r.int32();
                                 break;
                             }
                         default:
@@ -67809,6 +67868,9 @@ export const proto = $root.proto = (() => {
                     if (d.supportInlineResponse != null) {
                         m.supportInlineResponse = Boolean(d.supportInlineResponse);
                     }
+                    if (d.mode != null) {
+                        m.mode = d.mode >>> 0;
+                    }
                     return m;
                 };
 
@@ -67853,6 +67915,11 @@ export const proto = $root.proto = (() => {
                         d.supportInlineResponse = m.supportInlineResponse;
                         if (o.oneofs)
                             d._supportInlineResponse = "supportInlineResponse";
+                    }
+                    if (m.mode != null && m.hasOwnProperty("mode")) {
+                        d.mode = m.mode;
+                        if (o.oneofs)
+                            d._mode = "mode";
                     }
                     return d;
                 };
@@ -81799,6 +81866,7 @@ export const proto = $root.proto = (() => {
                     Line.prototype.endTimeInMs = null;
                     Line.prototype.text = null;
 
+                    Line.prototype.wordOffsets = $util.emptyArray;
                     let $oneOfFields;
 
                     Object.defineProperty(Line.prototype, "_startTimeInMs", {
@@ -81829,6 +81897,10 @@ export const proto = $root.proto = (() => {
                             w.uint32(16).int64(m.endTimeInMs);
                         if (m.text != null && Object.hasOwnProperty.call(m, "text"))
                             w.uint32(26).string(m.text);
+                        if (m.wordOffsets != null && m.wordOffsets.length) {
+                            for (var i = 0; i < m.wordOffsets.length; ++i)
+                                $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset.encode(m.wordOffsets[i], w.uint32(34).fork()).ldelim();
+                        }
                         return w;
                     };
 
@@ -81855,6 +81927,12 @@ export const proto = $root.proto = (() => {
                                 }
                             case 3: {
                                     m.text = r.string();
+                                    break;
+                                }
+                            case 4: {
+                                    if (!(m.wordOffsets && m.wordOffsets.length))
+                                        m.wordOffsets = [];
+                                    m.wordOffsets.push($root.proto.Message.MusicMessage.Lyrics.Line.WordOffset.decode(r, r.uint32(), undefined, n + 1));
                                     break;
                                 }
                             default:
@@ -81896,6 +81974,16 @@ export const proto = $root.proto = (() => {
                         if (d.text != null) {
                             m.text = String(d.text);
                         }
+                        if (d.wordOffsets) {
+                            if (!Array.isArray(d.wordOffsets))
+                                throw TypeError(".proto.wordOffsets: array expected");
+                            m.wordOffsets = [];
+                            for (var i = 0; i < d.wordOffsets.length; ++i) {
+                                if (typeof d.wordOffsets[i] !== "object")
+                                    throw TypeError(".proto.wordOffsets: object expected");
+                                m.wordOffsets[i] = $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset.fromObject(d.wordOffsets[i], n + 1);
+                            }
+                        }
                         return m;
                     };
 
@@ -81924,6 +82012,12 @@ export const proto = $root.proto = (() => {
                             if (o.oneofs)
                                 d._text = "text";
                         }
+                        if (m.wordOffsets && m.wordOffsets.length) {
+                            d.wordOffsets = [];
+                            for (var j = 0; j < m.wordOffsets.length; ++j) {
+                                d.wordOffsets[j] = $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset.toObject(m.wordOffsets[j], o);
+                            }
+                        }
                         return d;
                     };
 
@@ -81937,6 +82031,181 @@ export const proto = $root.proto = (() => {
                         }
                         return typeUrlPrefix + "/proto.Message.MusicMessage.Lyrics.Line";
                     };
+
+                    Line.WordOffset = (function() {
+
+                        function WordOffset(p) {
+                            if (p)
+                                for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                                    if (p[ks[i]] != null && ks[i] !== "__proto__")
+                                        this[ks[i]] = p[ks[i]];
+                        }
+
+                        WordOffset.prototype.startIndex = null;
+                        WordOffset.prototype.endIndex = null;
+                        WordOffset.prototype.startOffsetMs = null;
+                        WordOffset.prototype.endOffsetMs = null;
+
+                        let $oneOfFields;
+
+                        Object.defineProperty(WordOffset.prototype, "_startIndex", {
+                            get: $util.oneOfGetter($oneOfFields = ["startIndex"]),
+                            set: $util.oneOfSetter($oneOfFields)
+                        });
+
+                        Object.defineProperty(WordOffset.prototype, "_endIndex", {
+                            get: $util.oneOfGetter($oneOfFields = ["endIndex"]),
+                            set: $util.oneOfSetter($oneOfFields)
+                        });
+
+                        Object.defineProperty(WordOffset.prototype, "_startOffsetMs", {
+                            get: $util.oneOfGetter($oneOfFields = ["startOffsetMs"]),
+                            set: $util.oneOfSetter($oneOfFields)
+                        });
+
+                        Object.defineProperty(WordOffset.prototype, "_endOffsetMs", {
+                            get: $util.oneOfGetter($oneOfFields = ["endOffsetMs"]),
+                            set: $util.oneOfSetter($oneOfFields)
+                        });
+
+                        WordOffset.create = function create(properties) {
+                            return new WordOffset(properties);
+                        };
+
+                        WordOffset.encode = function encode(m, w) {
+                            if (!w)
+                                w = $Writer.create();
+                            if (m.startIndex != null && Object.hasOwnProperty.call(m, "startIndex"))
+                                w.uint32(8).int32(m.startIndex);
+                            if (m.endIndex != null && Object.hasOwnProperty.call(m, "endIndex"))
+                                w.uint32(16).int32(m.endIndex);
+                            if (m.startOffsetMs != null && Object.hasOwnProperty.call(m, "startOffsetMs"))
+                                w.uint32(24).int64(m.startOffsetMs);
+                            if (m.endOffsetMs != null && Object.hasOwnProperty.call(m, "endOffsetMs"))
+                                w.uint32(32).int64(m.endOffsetMs);
+                            return w;
+                        };
+
+                        WordOffset.decode = function decode(r, l, e, n) {
+                            if (!(r instanceof $Reader))
+                                r = $Reader.create(r);
+                            if (n === undefined)
+                                n = 0;
+                            if (n > $Reader.recursionLimit)
+                                throw Error("maximum nesting depth exceeded");
+                            var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset();
+                            while (r.pos < c) {
+                                var t = r.uint32();
+                                if (t === e)
+                                    break;
+                                switch (t >>> 3) {
+                                case 1: {
+                                        m.startIndex = r.int32();
+                                        break;
+                                    }
+                                case 2: {
+                                        m.endIndex = r.int32();
+                                        break;
+                                    }
+                                case 3: {
+                                        m.startOffsetMs = r.int64();
+                                        break;
+                                    }
+                                case 4: {
+                                        m.endOffsetMs = r.int64();
+                                        break;
+                                    }
+                                default:
+                                    r.skipType(t & 7, n);
+                                    break;
+                                }
+                            }
+                            return m;
+                        };
+
+                        WordOffset.fromObject = function fromObject(d, n) {
+                            if (d instanceof $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset)
+                                return d;
+                            if (n === undefined)
+                                n = 0;
+                            if (n > $util.recursionLimit)
+                                throw Error("maximum nesting depth exceeded");
+                            var m = new $root.proto.Message.MusicMessage.Lyrics.Line.WordOffset();
+                            if (d.startIndex != null) {
+                                m.startIndex = d.startIndex | 0;
+                            }
+                            if (d.endIndex != null) {
+                                m.endIndex = d.endIndex | 0;
+                            }
+                            if (d.startOffsetMs != null) {
+                                if ($util.Long)
+                                    (m.startOffsetMs = $util.Long.fromValue(d.startOffsetMs)).unsigned = false;
+                                else if (typeof d.startOffsetMs === "string")
+                                    m.startOffsetMs = parseInt(d.startOffsetMs, 10);
+                                else if (typeof d.startOffsetMs === "number")
+                                    m.startOffsetMs = d.startOffsetMs;
+                                else if (typeof d.startOffsetMs === "object")
+                                    m.startOffsetMs = new $util.LongBits(d.startOffsetMs.low >>> 0, d.startOffsetMs.high >>> 0).toNumber(false);
+                            }
+                            if (d.endOffsetMs != null) {
+                                if ($util.Long)
+                                    (m.endOffsetMs = $util.Long.fromValue(d.endOffsetMs)).unsigned = false;
+                                else if (typeof d.endOffsetMs === "string")
+                                    m.endOffsetMs = parseInt(d.endOffsetMs, 10);
+                                else if (typeof d.endOffsetMs === "number")
+                                    m.endOffsetMs = d.endOffsetMs;
+                                else if (typeof d.endOffsetMs === "object")
+                                    m.endOffsetMs = new $util.LongBits(d.endOffsetMs.low >>> 0, d.endOffsetMs.high >>> 0).toNumber(false);
+                            }
+                            return m;
+                        };
+
+                        WordOffset.toObject = function toObject(m, o) {
+                            if (!o)
+                                o = {};
+                            var d = {};
+                            if (m.startIndex != null && m.hasOwnProperty("startIndex")) {
+                                d.startIndex = m.startIndex;
+                                if (o.oneofs)
+                                    d._startIndex = "startIndex";
+                            }
+                            if (m.endIndex != null && m.hasOwnProperty("endIndex")) {
+                                d.endIndex = m.endIndex;
+                                if (o.oneofs)
+                                    d._endIndex = "endIndex";
+                            }
+                            if (m.startOffsetMs != null && m.hasOwnProperty("startOffsetMs")) {
+                                if (typeof m.startOffsetMs === "number")
+                                    d.startOffsetMs = o.longs === String ? String(m.startOffsetMs) : m.startOffsetMs;
+                                else
+                                    d.startOffsetMs = o.longs === String ? longToString(m.startOffsetMs, false) : o.longs === Number ? longToNumber(m.startOffsetMs, false) : m.startOffsetMs;
+                                if (o.oneofs)
+                                    d._startOffsetMs = "startOffsetMs";
+                            }
+                            if (m.endOffsetMs != null && m.hasOwnProperty("endOffsetMs")) {
+                                if (typeof m.endOffsetMs === "number")
+                                    d.endOffsetMs = o.longs === String ? String(m.endOffsetMs) : m.endOffsetMs;
+                                else
+                                    d.endOffsetMs = o.longs === String ? longToString(m.endOffsetMs, false) : o.longs === Number ? longToNumber(m.endOffsetMs, false) : m.endOffsetMs;
+                                if (o.oneofs)
+                                    d._endOffsetMs = "endOffsetMs";
+                            }
+                            return d;
+                        };
+
+                        WordOffset.prototype.toJSON = function toJSON() {
+                            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                        };
+
+                        WordOffset.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                            if (typeUrlPrefix === undefined) {
+                                typeUrlPrefix = "type.googleapis.com";
+                            }
+                            return typeUrlPrefix + "/proto.Message.MusicMessage.Lyrics.Line.WordOffset";
+                        };
+
+                        return WordOffset;
+                    })();
 
                     return Line;
                 })();
@@ -86920,6 +87189,8 @@ export const proto = $root.proto = (() => {
             MusicData.prototype.consumptionCheckedAtS = null;
             MusicData.prototype.isAvailableForConsumption = null;
 
+            MusicData.prototype.lyrics = $util.emptyArray;
+            MusicData.prototype.lyricsConfirmedAtS = null;
             let $oneOfFields;
 
             Object.defineProperty(MusicData.prototype, "_musicContentMediaId", {
@@ -87012,6 +87283,11 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            Object.defineProperty(MusicData.prototype, "_lyricsConfirmedAtS", {
+                get: $util.oneOfGetter($oneOfFields = ["lyricsConfirmedAtS"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             MusicData.create = function create(properties) {
                 return new MusicData(properties);
             };
@@ -87055,6 +87331,12 @@ export const proto = $root.proto = (() => {
                     w.uint32(136).int64(m.consumptionCheckedAtS);
                 if (m.isAvailableForConsumption != null && Object.hasOwnProperty.call(m, "isAvailableForConsumption"))
                     w.uint32(144).bool(m.isAvailableForConsumption);
+                if (m.lyrics != null && m.lyrics.length) {
+                    for (var i = 0; i < m.lyrics.length; ++i)
+                        $root.proto.MsgOpaqueData.MusicData.LyricsLine.encode(m.lyrics[i], w.uint32(154).fork()).ldelim();
+                }
+                if (m.lyricsConfirmedAtS != null && Object.hasOwnProperty.call(m, "lyricsConfirmedAtS"))
+                    w.uint32(160).int64(m.lyricsConfirmedAtS);
                 return w;
             };
 
@@ -87141,6 +87423,16 @@ export const proto = $root.proto = (() => {
                         }
                     case 18: {
                             m.isAvailableForConsumption = r.bool();
+                            break;
+                        }
+                    case 19: {
+                            if (!(m.lyrics && m.lyrics.length))
+                                m.lyrics = [];
+                            m.lyrics.push($root.proto.MsgOpaqueData.MusicData.LyricsLine.decode(r, r.uint32(), undefined, n + 1));
+                            break;
+                        }
+                    case 20: {
+                            m.lyricsConfirmedAtS = r.int64();
                             break;
                         }
                     default:
@@ -87231,6 +87523,26 @@ export const proto = $root.proto = (() => {
                 }
                 if (d.isAvailableForConsumption != null) {
                     m.isAvailableForConsumption = Boolean(d.isAvailableForConsumption);
+                }
+                if (d.lyrics) {
+                    if (!Array.isArray(d.lyrics))
+                        throw TypeError(".proto.lyrics: array expected");
+                    m.lyrics = [];
+                    for (var i = 0; i < d.lyrics.length; ++i) {
+                        if (typeof d.lyrics[i] !== "object")
+                            throw TypeError(".proto.lyrics: object expected");
+                        m.lyrics[i] = $root.proto.MsgOpaqueData.MusicData.LyricsLine.fromObject(d.lyrics[i], n + 1);
+                    }
+                }
+                if (d.lyricsConfirmedAtS != null) {
+                    if ($util.Long)
+                        (m.lyricsConfirmedAtS = $util.Long.fromValue(d.lyricsConfirmedAtS)).unsigned = false;
+                    else if (typeof d.lyricsConfirmedAtS === "string")
+                        m.lyricsConfirmedAtS = parseInt(d.lyricsConfirmedAtS, 10);
+                    else if (typeof d.lyricsConfirmedAtS === "number")
+                        m.lyricsConfirmedAtS = d.lyricsConfirmedAtS;
+                    else if (typeof d.lyricsConfirmedAtS === "object")
+                        m.lyricsConfirmedAtS = new $util.LongBits(d.lyricsConfirmedAtS.low >>> 0, d.lyricsConfirmedAtS.high >>> 0).toNumber(false);
                 }
                 return m;
             };
@@ -87332,6 +87644,20 @@ export const proto = $root.proto = (() => {
                     if (o.oneofs)
                         d._isAvailableForConsumption = "isAvailableForConsumption";
                 }
+                if (m.lyrics && m.lyrics.length) {
+                    d.lyrics = [];
+                    for (var j = 0; j < m.lyrics.length; ++j) {
+                        d.lyrics[j] = $root.proto.MsgOpaqueData.MusicData.LyricsLine.toObject(m.lyrics[j], o);
+                    }
+                }
+                if (m.lyricsConfirmedAtS != null && m.hasOwnProperty("lyricsConfirmedAtS")) {
+                    if (typeof m.lyricsConfirmedAtS === "number")
+                        d.lyricsConfirmedAtS = o.longs === String ? String(m.lyricsConfirmedAtS) : m.lyricsConfirmedAtS;
+                    else
+                        d.lyricsConfirmedAtS = o.longs === String ? longToString(m.lyricsConfirmedAtS, false) : o.longs === Number ? longToNumber(m.lyricsConfirmedAtS, false) : m.lyricsConfirmedAtS;
+                    if (o.oneofs)
+                        d._lyricsConfirmedAtS = "lyricsConfirmedAtS";
+                }
                 return d;
             };
 
@@ -87345,6 +87671,326 @@ export const proto = $root.proto = (() => {
                 }
                 return typeUrlPrefix + "/proto.MsgOpaqueData.MusicData";
             };
+
+            MusicData.LyricsLine = (function() {
+
+                function LyricsLine(p) {
+                    if (p)
+                        for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                            if (p[ks[i]] != null && ks[i] !== "__proto__")
+                                this[ks[i]] = p[ks[i]];
+                }
+
+                LyricsLine.prototype.startTimeMs = null;
+                LyricsLine.prototype.endTimeMs = null;
+                LyricsLine.prototype.text = null;
+                LyricsLine.prototype.wordOffsets = $util.emptyArray;
+
+                let $oneOfFields;
+
+                Object.defineProperty(LyricsLine.prototype, "_startTimeMs", {
+                    get: $util.oneOfGetter($oneOfFields = ["startTimeMs"]),
+                    set: $util.oneOfSetter($oneOfFields)
+                });
+
+                Object.defineProperty(LyricsLine.prototype, "_endTimeMs", {
+                    get: $util.oneOfGetter($oneOfFields = ["endTimeMs"]),
+                    set: $util.oneOfSetter($oneOfFields)
+                });
+
+                Object.defineProperty(LyricsLine.prototype, "_text", {
+                    get: $util.oneOfGetter($oneOfFields = ["text"]),
+                    set: $util.oneOfSetter($oneOfFields)
+                });
+
+                LyricsLine.create = function create(properties) {
+                    return new LyricsLine(properties);
+                };
+
+                LyricsLine.encode = function encode(m, w) {
+                    if (!w)
+                        w = $Writer.create();
+                    if (m.startTimeMs != null && Object.hasOwnProperty.call(m, "startTimeMs"))
+                        w.uint32(8).int32(m.startTimeMs);
+                    if (m.endTimeMs != null && Object.hasOwnProperty.call(m, "endTimeMs"))
+                        w.uint32(16).int32(m.endTimeMs);
+                    if (m.text != null && Object.hasOwnProperty.call(m, "text"))
+                        w.uint32(26).string(m.text);
+                    if (m.wordOffsets != null && m.wordOffsets.length) {
+                        for (var i = 0; i < m.wordOffsets.length; ++i)
+                            $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset.encode(m.wordOffsets[i], w.uint32(34).fork()).ldelim();
+                    }
+                    return w;
+                };
+
+                LyricsLine.decode = function decode(r, l, e, n) {
+                    if (!(r instanceof $Reader))
+                        r = $Reader.create(r);
+                    if (n === undefined)
+                        n = 0;
+                    if (n > $Reader.recursionLimit)
+                        throw Error("maximum nesting depth exceeded");
+                    var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.MsgOpaqueData.MusicData.LyricsLine();
+                    while (r.pos < c) {
+                        var t = r.uint32();
+                        if (t === e)
+                            break;
+                        switch (t >>> 3) {
+                        case 1: {
+                                m.startTimeMs = r.int32();
+                                break;
+                            }
+                        case 2: {
+                                m.endTimeMs = r.int32();
+                                break;
+                            }
+                        case 3: {
+                                m.text = r.string();
+                                break;
+                            }
+                        case 4: {
+                                if (!(m.wordOffsets && m.wordOffsets.length))
+                                    m.wordOffsets = [];
+                                m.wordOffsets.push($root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset.decode(r, r.uint32(), undefined, n + 1));
+                                break;
+                            }
+                        default:
+                            r.skipType(t & 7, n);
+                            break;
+                        }
+                    }
+                    return m;
+                };
+
+                LyricsLine.fromObject = function fromObject(d, n) {
+                    if (d instanceof $root.proto.MsgOpaqueData.MusicData.LyricsLine)
+                        return d;
+                    if (n === undefined)
+                        n = 0;
+                    if (n > $util.recursionLimit)
+                        throw Error("maximum nesting depth exceeded");
+                    var m = new $root.proto.MsgOpaqueData.MusicData.LyricsLine();
+                    if (d.startTimeMs != null) {
+                        m.startTimeMs = d.startTimeMs | 0;
+                    }
+                    if (d.endTimeMs != null) {
+                        m.endTimeMs = d.endTimeMs | 0;
+                    }
+                    if (d.text != null) {
+                        m.text = String(d.text);
+                    }
+                    if (d.wordOffsets) {
+                        if (!Array.isArray(d.wordOffsets))
+                            throw TypeError(".proto.wordOffsets: array expected");
+                        m.wordOffsets = [];
+                        for (var i = 0; i < d.wordOffsets.length; ++i) {
+                            if (typeof d.wordOffsets[i] !== "object")
+                                throw TypeError(".proto.wordOffsets: object expected");
+                            m.wordOffsets[i] = $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset.fromObject(d.wordOffsets[i], n + 1);
+                        }
+                    }
+                    return m;
+                };
+
+                LyricsLine.toObject = function toObject(m, o) {
+                    if (!o)
+                        o = {};
+                    var d = {};
+                    if (o.arrays || o.defaults) {
+                        d.wordOffsets = [];
+                    }
+                    if (m.startTimeMs != null && m.hasOwnProperty("startTimeMs")) {
+                        d.startTimeMs = m.startTimeMs;
+                        if (o.oneofs)
+                            d._startTimeMs = "startTimeMs";
+                    }
+                    if (m.endTimeMs != null && m.hasOwnProperty("endTimeMs")) {
+                        d.endTimeMs = m.endTimeMs;
+                        if (o.oneofs)
+                            d._endTimeMs = "endTimeMs";
+                    }
+                    if (m.text != null && m.hasOwnProperty("text")) {
+                        d.text = m.text;
+                        if (o.oneofs)
+                            d._text = "text";
+                    }
+                    if (m.wordOffsets && m.wordOffsets.length) {
+                        d.wordOffsets = [];
+                        for (var j = 0; j < m.wordOffsets.length; ++j) {
+                            d.wordOffsets[j] = $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset.toObject(m.wordOffsets[j], o);
+                        }
+                    }
+                    return d;
+                };
+
+                LyricsLine.prototype.toJSON = function toJSON() {
+                    return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                };
+
+                LyricsLine.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                    if (typeUrlPrefix === undefined) {
+                        typeUrlPrefix = "type.googleapis.com";
+                    }
+                    return typeUrlPrefix + "/proto.MsgOpaqueData.MusicData.LyricsLine";
+                };
+
+                LyricsLine.WordOffset = (function() {
+
+                    function WordOffset(p) {
+                        if (p)
+                            for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                                if (p[ks[i]] != null && ks[i] !== "__proto__")
+                                    this[ks[i]] = p[ks[i]];
+                    }
+
+                    WordOffset.prototype.startIndex = null;
+                    WordOffset.prototype.endIndex = null;
+                    WordOffset.prototype.startOffsetMs = null;
+                    WordOffset.prototype.endOffsetMs = null;
+
+                    let $oneOfFields;
+
+                    Object.defineProperty(WordOffset.prototype, "_startIndex", {
+                        get: $util.oneOfGetter($oneOfFields = ["startIndex"]),
+                        set: $util.oneOfSetter($oneOfFields)
+                    });
+
+                    Object.defineProperty(WordOffset.prototype, "_endIndex", {
+                        get: $util.oneOfGetter($oneOfFields = ["endIndex"]),
+                        set: $util.oneOfSetter($oneOfFields)
+                    });
+
+                    Object.defineProperty(WordOffset.prototype, "_startOffsetMs", {
+                        get: $util.oneOfGetter($oneOfFields = ["startOffsetMs"]),
+                        set: $util.oneOfSetter($oneOfFields)
+                    });
+
+                    Object.defineProperty(WordOffset.prototype, "_endOffsetMs", {
+                        get: $util.oneOfGetter($oneOfFields = ["endOffsetMs"]),
+                        set: $util.oneOfSetter($oneOfFields)
+                    });
+
+                    WordOffset.create = function create(properties) {
+                        return new WordOffset(properties);
+                    };
+
+                    WordOffset.encode = function encode(m, w) {
+                        if (!w)
+                            w = $Writer.create();
+                        if (m.startIndex != null && Object.hasOwnProperty.call(m, "startIndex"))
+                            w.uint32(8).int32(m.startIndex);
+                        if (m.endIndex != null && Object.hasOwnProperty.call(m, "endIndex"))
+                            w.uint32(16).int32(m.endIndex);
+                        if (m.startOffsetMs != null && Object.hasOwnProperty.call(m, "startOffsetMs"))
+                            w.uint32(24).int32(m.startOffsetMs);
+                        if (m.endOffsetMs != null && Object.hasOwnProperty.call(m, "endOffsetMs"))
+                            w.uint32(32).int32(m.endOffsetMs);
+                        return w;
+                    };
+
+                    WordOffset.decode = function decode(r, l, e, n) {
+                        if (!(r instanceof $Reader))
+                            r = $Reader.create(r);
+                        if (n === undefined)
+                            n = 0;
+                        if (n > $Reader.recursionLimit)
+                            throw Error("maximum nesting depth exceeded");
+                        var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset();
+                        while (r.pos < c) {
+                            var t = r.uint32();
+                            if (t === e)
+                                break;
+                            switch (t >>> 3) {
+                            case 1: {
+                                    m.startIndex = r.int32();
+                                    break;
+                                }
+                            case 2: {
+                                    m.endIndex = r.int32();
+                                    break;
+                                }
+                            case 3: {
+                                    m.startOffsetMs = r.int32();
+                                    break;
+                                }
+                            case 4: {
+                                    m.endOffsetMs = r.int32();
+                                    break;
+                                }
+                            default:
+                                r.skipType(t & 7, n);
+                                break;
+                            }
+                        }
+                        return m;
+                    };
+
+                    WordOffset.fromObject = function fromObject(d, n) {
+                        if (d instanceof $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset)
+                            return d;
+                        if (n === undefined)
+                            n = 0;
+                        if (n > $util.recursionLimit)
+                            throw Error("maximum nesting depth exceeded");
+                        var m = new $root.proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset();
+                        if (d.startIndex != null) {
+                            m.startIndex = d.startIndex | 0;
+                        }
+                        if (d.endIndex != null) {
+                            m.endIndex = d.endIndex | 0;
+                        }
+                        if (d.startOffsetMs != null) {
+                            m.startOffsetMs = d.startOffsetMs | 0;
+                        }
+                        if (d.endOffsetMs != null) {
+                            m.endOffsetMs = d.endOffsetMs | 0;
+                        }
+                        return m;
+                    };
+
+                    WordOffset.toObject = function toObject(m, o) {
+                        if (!o)
+                            o = {};
+                        var d = {};
+                        if (m.startIndex != null && m.hasOwnProperty("startIndex")) {
+                            d.startIndex = m.startIndex;
+                            if (o.oneofs)
+                                d._startIndex = "startIndex";
+                        }
+                        if (m.endIndex != null && m.hasOwnProperty("endIndex")) {
+                            d.endIndex = m.endIndex;
+                            if (o.oneofs)
+                                d._endIndex = "endIndex";
+                        }
+                        if (m.startOffsetMs != null && m.hasOwnProperty("startOffsetMs")) {
+                            d.startOffsetMs = m.startOffsetMs;
+                            if (o.oneofs)
+                                d._startOffsetMs = "startOffsetMs";
+                        }
+                        if (m.endOffsetMs != null && m.hasOwnProperty("endOffsetMs")) {
+                            d.endOffsetMs = m.endOffsetMs;
+                            if (o.oneofs)
+                                d._endOffsetMs = "endOffsetMs";
+                        }
+                        return d;
+                    };
+
+                    WordOffset.prototype.toJSON = function toJSON() {
+                        return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                    };
+
+                    WordOffset.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                        if (typeUrlPrefix === undefined) {
+                            typeUrlPrefix = "type.googleapis.com";
+                        }
+                        return typeUrlPrefix + "/proto.MsgOpaqueData.MusicData.LyricsLine.WordOffset";
+                    };
+
+                    return WordOffset;
+                })();
+
+                return LyricsLine;
+            })();
 
             return MusicData;
         })();
@@ -95264,6 +95910,129 @@ export const proto = $root.proto = (() => {
         return OmittedConversationMetadata;
     })();
 
+    proto.BotInterjectionMetadata = (function() {
+
+        function BotInterjectionMetadata(p) {
+            if (p)
+                for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                    if (p[ks[i]] != null && ks[i] !== "__proto__")
+                        this[ks[i]] = p[ks[i]];
+        }
+
+        BotInterjectionMetadata.prototype.targetPromptMessageId = null;
+        BotInterjectionMetadata.prototype.foldedPromptMessageIds = $util.emptyArray;
+
+        let $oneOfFields;
+
+        Object.defineProperty(BotInterjectionMetadata.prototype, "_targetPromptMessageId", {
+            get: $util.oneOfGetter($oneOfFields = ["targetPromptMessageId"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        BotInterjectionMetadata.create = function create(properties) {
+            return new BotInterjectionMetadata(properties);
+        };
+
+        BotInterjectionMetadata.encode = function encode(m, w) {
+            if (!w)
+                w = $Writer.create();
+            if (m.targetPromptMessageId != null && Object.hasOwnProperty.call(m, "targetPromptMessageId"))
+                w.uint32(10).string(m.targetPromptMessageId);
+            if (m.foldedPromptMessageIds != null && m.foldedPromptMessageIds.length) {
+                for (var i = 0; i < m.foldedPromptMessageIds.length; ++i)
+                    w.uint32(18).string(m.foldedPromptMessageIds[i]);
+            }
+            return w;
+        };
+
+        BotInterjectionMetadata.decode = function decode(r, l, e, n) {
+            if (!(r instanceof $Reader))
+                r = $Reader.create(r);
+            if (n === undefined)
+                n = 0;
+            if (n > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.BotInterjectionMetadata();
+            while (r.pos < c) {
+                var t = r.uint32();
+                if (t === e)
+                    break;
+                switch (t >>> 3) {
+                case 1: {
+                        m.targetPromptMessageId = r.string();
+                        break;
+                    }
+                case 2: {
+                        if (!(m.foldedPromptMessageIds && m.foldedPromptMessageIds.length))
+                            m.foldedPromptMessageIds = [];
+                        m.foldedPromptMessageIds.push(r.string());
+                        break;
+                    }
+                default:
+                    r.skipType(t & 7, n);
+                    break;
+                }
+            }
+            return m;
+        };
+
+        BotInterjectionMetadata.fromObject = function fromObject(d, n) {
+            if (d instanceof $root.proto.BotInterjectionMetadata)
+                return d;
+            if (n === undefined)
+                n = 0;
+            if (n > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var m = new $root.proto.BotInterjectionMetadata();
+            if (d.targetPromptMessageId != null) {
+                m.targetPromptMessageId = String(d.targetPromptMessageId);
+            }
+            if (d.foldedPromptMessageIds) {
+                if (!Array.isArray(d.foldedPromptMessageIds))
+                    throw TypeError(".proto.foldedPromptMessageIds: array expected");
+                m.foldedPromptMessageIds = [];
+                for (var i = 0; i < d.foldedPromptMessageIds.length; ++i) {
+                    m.foldedPromptMessageIds[i] = String(d.foldedPromptMessageIds[i]);
+                }
+            }
+            return m;
+        };
+
+        BotInterjectionMetadata.toObject = function toObject(m, o) {
+            if (!o)
+                o = {};
+            var d = {};
+            if (o.arrays || o.defaults) {
+                d.foldedPromptMessageIds = [];
+            }
+            if (m.targetPromptMessageId != null && m.hasOwnProperty("targetPromptMessageId")) {
+                d.targetPromptMessageId = m.targetPromptMessageId;
+                if (o.oneofs)
+                    d._targetPromptMessageId = "targetPromptMessageId";
+            }
+            if (m.foldedPromptMessageIds && m.foldedPromptMessageIds.length) {
+                d.foldedPromptMessageIds = [];
+                for (var j = 0; j < m.foldedPromptMessageIds.length; ++j) {
+                    d.foldedPromptMessageIds[j] = m.foldedPromptMessageIds[j];
+                }
+            }
+            return d;
+        };
+
+        BotInterjectionMetadata.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        BotInterjectionMetadata.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/proto.BotInterjectionMetadata";
+        };
+
+        return BotInterjectionMetadata;
+    })();
+
     proto.ReportingTokenInfo = (function() {
 
         function ReportingTokenInfo(p) {
@@ -100653,6 +101422,7 @@ export const proto = $root.proto = (() => {
         SyncActionValue.prototype.bbProPendingCustomerBaseAction = null;
         SyncActionValue.prototype.communityNestingStateAction = null;
         SyncActionValue.prototype.sharedDeviceSecretAction = null;
+        SyncActionValue.prototype.hatchCvmSecretAction = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -101190,6 +101960,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(SyncActionValue.prototype, "_hatchCvmSecretAction", {
+            get: $util.oneOfGetter($oneOfFields = ["hatchCvmSecretAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         SyncActionValue.create = function create(properties) {
             return new SyncActionValue(properties);
         };
@@ -101379,6 +102154,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.SyncActionValue.CommunityNestingStateAction.encode(m.communityNestingStateAction, w.uint32(794).fork()).ldelim();
             if (m.sharedDeviceSecretAction != null && Object.hasOwnProperty.call(m, "sharedDeviceSecretAction"))
                 $root.proto.SyncActionValue.SharedDeviceSecretAction.encode(m.sharedDeviceSecretAction, w.uint32(802).fork()).ldelim();
+            if (m.hatchCvmSecretAction != null && Object.hasOwnProperty.call(m, "hatchCvmSecretAction"))
+                $root.proto.SyncActionValue.HatchCVMSecretAction.encode(m.hatchCvmSecretAction, w.uint32(810).fork()).ldelim();
             return w;
         };
 
@@ -101757,6 +102534,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 100: {
                         m.sharedDeviceSecretAction = $root.proto.SyncActionValue.SharedDeviceSecretAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 101: {
+                        m.hatchCvmSecretAction = $root.proto.SyncActionValue.HatchCVMSecretAction.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -102235,6 +103016,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.sharedDeviceSecretAction: object expected");
                 m.sharedDeviceSecretAction = $root.proto.SyncActionValue.SharedDeviceSecretAction.fromObject(d.sharedDeviceSecretAction, n + 1);
             }
+            if (d.hatchCvmSecretAction != null) {
+                if (typeof d.hatchCvmSecretAction !== "object")
+                    throw TypeError(".proto.hatchCvmSecretAction: object expected");
+                m.hatchCvmSecretAction = $root.proto.SyncActionValue.HatchCVMSecretAction.fromObject(d.hatchCvmSecretAction, n + 1);
+            }
             return m;
         };
 
@@ -102699,6 +103485,11 @@ export const proto = $root.proto = (() => {
                 d.sharedDeviceSecretAction = $root.proto.SyncActionValue.SharedDeviceSecretAction.toObject(m.sharedDeviceSecretAction, o);
                 if (o.oneofs)
                     d._sharedDeviceSecretAction = "sharedDeviceSecretAction";
+            }
+            if (m.hatchCvmSecretAction != null && m.hasOwnProperty("hatchCvmSecretAction")) {
+                d.hatchCvmSecretAction = $root.proto.SyncActionValue.HatchCVMSecretAction.toObject(m.hatchCvmSecretAction, o);
+                if (o.oneofs)
+                    d._hatchCvmSecretAction = "hatchCvmSecretAction";
             }
             return d;
         };
@@ -111534,6 +112325,7 @@ export const proto = $root.proto = (() => {
             SettingsSyncAction.prototype.colorSchemeId = null;
 
             SettingsSyncAction.prototype.stockWallpaperImageId = null;
+            SettingsSyncAction.prototype.mediaAutoDownloadQuality = null;
             let $oneOfFields;
 
             // Virtual OneOf for proto3 optional field
@@ -111739,6 +112531,11 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            Object.defineProperty(SettingsSyncAction.prototype, "_mediaAutoDownloadQuality", {
+                get: $util.oneOfGetter($oneOfFields = ["mediaAutoDownloadQuality"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             SettingsSyncAction.create = function create(properties) {
                 return new SettingsSyncAction(properties);
             };
@@ -111814,6 +112611,8 @@ export const proto = $root.proto = (() => {
                     w.uint32(266).string(m.colorSchemeId);
                 if (m.stockWallpaperImageId != null && Object.hasOwnProperty.call(m, "stockWallpaperImageId"))
                     w.uint32(274).string(m.stockWallpaperImageId);
+                if (m.mediaAutoDownloadQuality != null && Object.hasOwnProperty.call(m, "mediaAutoDownloadQuality"))
+                    w.uint32(280).int32(m.mediaAutoDownloadQuality);
                 return w;
             };
 
@@ -111964,6 +112763,10 @@ export const proto = $root.proto = (() => {
                         }
                     case 34: {
                             m.stockWallpaperImageId = r.string();
+                            break;
+                        }
+                    case 35: {
+                            m.mediaAutoDownloadQuality = r.int32();
                             break;
                         }
                     default:
@@ -112143,6 +112946,9 @@ export const proto = $root.proto = (() => {
                 if (d.stockWallpaperImageId != null) {
                     m.stockWallpaperImageId = String(d.stockWallpaperImageId);
                 }
+                if (d.mediaAutoDownloadQuality != null) {
+                    m.mediaAutoDownloadQuality = d.mediaAutoDownloadQuality >>> 0;
+                }
                 return m;
             };
 
@@ -112319,6 +113125,11 @@ export const proto = $root.proto = (() => {
                     d.stockWallpaperImageId = m.stockWallpaperImageId;
                     if (o.oneofs)
                         d._stockWallpaperImageId = "stockWallpaperImageId";
+                }
+                if (m.mediaAutoDownloadQuality != null && m.hasOwnProperty("mediaAutoDownloadQuality")) {
+                    d.mediaAutoDownloadQuality = m.mediaAutoDownloadQuality;
+                    if (o.oneofs)
+                        d._mediaAutoDownloadQuality = "mediaAutoDownloadQuality";
                 }
                 return d;
             };
@@ -116530,6 +117341,134 @@ export const proto = $root.proto = (() => {
             };
 
             return SharedDeviceSecretAction;
+        })();
+
+        SyncActionValue.HatchCVMSecretAction = (function() {
+
+            function HatchCVMSecretAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            HatchCVMSecretAction.prototype.secret = null;
+            HatchCVMSecretAction.prototype.generation = null;
+
+            let $oneOfFields;
+
+            Object.defineProperty(HatchCVMSecretAction.prototype, "_secret", {
+                get: $util.oneOfGetter($oneOfFields = ["secret"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            Object.defineProperty(HatchCVMSecretAction.prototype, "_generation", {
+                get: $util.oneOfGetter($oneOfFields = ["generation"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            HatchCVMSecretAction.create = function create(properties) {
+                return new HatchCVMSecretAction(properties);
+            };
+
+            HatchCVMSecretAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.secret != null && Object.hasOwnProperty.call(m, "secret"))
+                    w.uint32(10).bytes(m.secret);
+                if (m.generation != null && Object.hasOwnProperty.call(m, "generation"))
+                    w.uint32(16).int64(m.generation);
+                return w;
+            };
+
+            HatchCVMSecretAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.HatchCVMSecretAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.secret = r.bytes();
+                            break;
+                        }
+                    case 2: {
+                            m.generation = r.int64();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            HatchCVMSecretAction.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.SyncActionValue.HatchCVMSecretAction)
+                    return d;
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.SyncActionValue.HatchCVMSecretAction();
+                if (d.secret != null) {
+                    if (typeof d.secret === "string")
+                        $util.base64.decode(d.secret, m.secret = $util.newBuffer($util.base64.length(d.secret)), 0);
+                    else if (d.secret.length >= 0)
+                        m.secret = d.secret;
+                }
+                if (d.generation != null) {
+                    if ($util.Long)
+                        (m.generation = $util.Long.fromValue(d.generation)).unsigned = false;
+                    else if (typeof d.generation === "string")
+                        m.generation = parseInt(d.generation, 10);
+                    else if (typeof d.generation === "number")
+                        m.generation = d.generation;
+                    else if (typeof d.generation === "object")
+                        m.generation = new $util.LongBits(d.generation.low >>> 0, d.generation.high >>> 0).toNumber(false);
+                }
+                return m;
+            };
+
+            HatchCVMSecretAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.secret != null && m.hasOwnProperty("secret")) {
+                    d.secret = o.bytes === String ? $util.base64.encode(m.secret, 0, m.secret.length) : o.bytes === Array ? Array.prototype.slice.call(m.secret) : m.secret;
+                    if (o.oneofs)
+                        d._secret = "secret";
+                }
+                if (m.generation != null && m.hasOwnProperty("generation")) {
+                    if (typeof m.generation === "number")
+                        d.generation = o.longs === String ? String(m.generation) : m.generation;
+                    else
+                        d.generation = o.longs === String ? longToString(m.generation, false) : o.longs === Number ? longToNumber(m.generation, false) : m.generation;
+                    if (o.oneofs)
+                        d._generation = "generation";
+                }
+                return d;
+            };
+
+            HatchCVMSecretAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            HatchCVMSecretAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.HatchCVMSecretAction";
+            };
+
+            return HatchCVMSecretAction;
         })();
 
         return SyncActionValue;
