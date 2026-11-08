@@ -817,6 +817,7 @@ export namespace proto {
     }
 
     interface IAccount {
+        pnLearnState?: (number|null);
         lid?: (string|null);
         username?: (string|null);
         countryCode?: (string|null);
@@ -824,6 +825,7 @@ export namespace proto {
     }
 
     class Account implements IAccount {
+        public pnLearnState?: (number|null);
         constructor(p?: proto.IAccount);
         public lid?: (string|null);
         public username?: (string|null);
@@ -2971,6 +2973,7 @@ export namespace proto {
     }
 
     interface IClientPairingProps {
+        isCompanionRegistrationFgsEnabled?: (boolean|null);
         companionAddPeerPayload?: (Uint8Array|null);
         isBotJidDbMigrated?: (boolean|null);
         isChatDbLidMigrated?: (boolean|null);
@@ -2981,6 +2984,7 @@ export namespace proto {
     }
 
     class ClientPairingProps implements IClientPairingProps {
+        public isCompanionRegistrationFgsEnabled?: (boolean|null);
         public companionAddPeerPayload?: (Uint8Array|null);
         public isBotJidDbMigrated?: (boolean|null);
         constructor(p?: proto.IClientPairingProps);
@@ -2999,6 +3003,7 @@ export namespace proto {
     }
 
     interface IClientPayload {
+        integrationAttestation?: (proto.ClientPayload.IIntegrationAttestation|null);
         messageSts?: (number|Long|null);
         username?: (number|Long|null);
         passive?: (boolean|null);
@@ -3039,6 +3044,7 @@ export namespace proto {
     }
 
     class ClientPayload implements IClientPayload {
+        public integrationAttestation?: (proto.ClientPayload.IIntegrationAttestation|null);
         public messageSts?: (number|Long|null);
         constructor(p?: proto.IClientPayload);
         public username?: (number|Long|null);
@@ -3087,6 +3093,27 @@ export namespace proto {
     }
 
     namespace ClientPayload {
+        interface IIntegrationAttestation {
+            staticUnbound?: (string|null);
+            onlineSigned?: (string|null);
+        }
+
+        class IntegrationAttestation implements IIntegrationAttestation {
+            constructor(p?: proto.ClientPayload.IIntegrationAttestation);
+            public staticUnbound?: (string|null);
+            public onlineSigned?: (string|null);
+            public _staticUnbound?: "staticUnbound";
+            public _onlineSigned?: "onlineSigned";
+            public static create(properties?: proto.ClientPayload.IIntegrationAttestation): proto.ClientPayload.IntegrationAttestation;
+            public static encode(m: proto.ClientPayload.IIntegrationAttestation, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.ClientPayload.IntegrationAttestation;
+            public static fromObject(d: { [k: string]: any }): proto.ClientPayload.IntegrationAttestation;
+            public static toObject(m: proto.ClientPayload.IntegrationAttestation, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
 
         enum AccountType {
             DEFAULT = 0,
@@ -4208,6 +4235,7 @@ export namespace proto {
     }
 
     interface IConversation {
+        groupRootKeys?: (proto.IGroupRootKey[]|null);
         acp2HistoryWithheld?: (boolean|null);
         acp2Setting?: (proto.IACP2Setting|null);
         identityVerification?: (proto.IIdentityVerificationState|null);
@@ -4276,6 +4304,7 @@ export namespace proto {
     }
 
     class Conversation implements IConversation {
+        public groupRootKeys?: (proto.IGroupRootKey[]|null);
         public acp2HistoryWithheld?: (boolean|null);
         public acp2Setting?: (proto.IACP2Setting|null);
         public identityVerification?: (proto.IIdentityVerificationState|null);
@@ -4369,6 +4398,7 @@ export namespace proto {
     }
 
     interface IDeviceCapabilities {
+        phoneNumberSharing?: (proto.DeviceCapabilities.IPhoneNumberSharing|null);
         bizAiWebOnboarding?: (proto.DeviceCapabilities.IBizAiWebOnboarding|null);
         hostWriteMutationSupport?: (proto.DeviceCapabilities.IHostWriteMutationSupport|null);
         reverseHistorySync?: (proto.DeviceCapabilities.IReverseHistorySync|null);
@@ -4385,6 +4415,7 @@ export namespace proto {
     }
 
     class DeviceCapabilities implements IDeviceCapabilities {
+        public phoneNumberSharing?: (proto.DeviceCapabilities.IPhoneNumberSharing|null);
         public bizAiWebOnboarding?: (proto.DeviceCapabilities.IBizAiWebOnboarding|null);
         public hostWriteMutationSupport?: (proto.DeviceCapabilities.IHostWriteMutationSupport|null);
         public reverseHistorySync?: (proto.DeviceCapabilities.IReverseHistorySync|null);
@@ -4409,6 +4440,24 @@ export namespace proto {
     }
 
     namespace DeviceCapabilities {
+        interface IPhoneNumberSharing {
+            phoneSharingSupported?: (boolean|null);
+        }
+
+        class PhoneNumberSharing implements IPhoneNumberSharing {
+            constructor(p?: proto.DeviceCapabilities.IPhoneNumberSharing);
+            public phoneSharingSupported?: (boolean|null);
+            public _phoneSharingSupported?: "phoneSharingSupported";
+            public static create(properties?: proto.DeviceCapabilities.IPhoneNumberSharing): proto.DeviceCapabilities.PhoneNumberSharing;
+            public static encode(m: proto.DeviceCapabilities.IPhoneNumberSharing, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.DeviceCapabilities.PhoneNumberSharing;
+            public static fromObject(d: { [k: string]: any }): proto.DeviceCapabilities.PhoneNumberSharing;
+            public static toObject(m: proto.DeviceCapabilities.PhoneNumberSharing, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
         interface IBizAiWebOnboarding {
             version?: (number|null);
         }
@@ -6162,11 +6211,13 @@ export namespace proto {
     }
 
     interface IMemberLabel {
+        showAdminBadge?: (boolean|null);
         label?: (string|null);
         labelTimestamp?: (number|Long|null);
     }
 
     class MemberLabel implements IMemberLabel {
+        public showAdminBadge?: (boolean|null);
         constructor(p?: proto.IMemberLabel);
         public label?: (string|null);
         public labelTimestamp?: (number|Long|null);
@@ -6180,6 +6231,7 @@ export namespace proto {
     }
 
     interface IMessage {
+        vpcRequestMessage?: (proto.Message.IVpcRequestMessage|null);
         instantImageMessage?: (proto.Message.IImageMessage|null);
         requestLocationMessage?: (proto.Message.IRequestLocationMessage|null);
         requestLocationUpdateMessage?: (proto.Message.IRequestLocationUpdateMessage|null);
@@ -6302,6 +6354,7 @@ export namespace proto {
     }
 
     class Message implements IMessage {
+        public vpcRequestMessage?: (proto.Message.IVpcRequestMessage|null);
         public instantImageMessage?: (proto.Message.IImageMessage|null);
         public requestLocationMessage?: (proto.Message.IRequestLocationMessage|null);
         public requestLocationUpdateMessage?: (proto.Message.IRequestLocationUpdateMessage|null);
@@ -10313,6 +10366,9 @@ export namespace proto {
         }
 
         interface IProtocolMessage {
+            groupRootKeyRequest?: (proto.IGroupRootKeyRequest|null);
+            membershipFormKeyFingerprintVerification?: (proto.IMembershipFormKeyFingerprintVerification|null);
+            groupRootKeyShare?: (proto.IGroupRootKeyShare|null);
             additionalPromptIds?: (string[]|null);
             sharedDeviceContactHashKeyShare?: (proto.Message.ISharedDeviceContactHashKeyShare|null);
             sharedDeviceContactHashKeyRequest?: (proto.Message.ISharedDeviceContactHashKeyRequest|null);
@@ -10350,6 +10406,9 @@ export namespace proto {
         }
 
         class ProtocolMessage implements IProtocolMessage {
+            public groupRootKeyRequest?: (proto.IGroupRootKeyRequest|null);
+            public membershipFormKeyFingerprintVerification?: (proto.IMembershipFormKeyFingerprintVerification|null);
+            public groupRootKeyShare?: (proto.IGroupRootKeyShare|null);
             public additionalPromptIds?: (string[]|null);
             public sharedDeviceContactHashKeyShare?: (proto.Message.ISharedDeviceContactHashKeyShare|null);
             public sharedDeviceContactHashKeyRequest?: (proto.Message.ISharedDeviceContactHashKeyRequest|null);
@@ -11659,6 +11718,10 @@ export namespace proto {
     }
 
     interface IMsgOpaqueData {
+        sharableEventInviteStatus?: (string|null);
+        sharableEventInviteLocationName?: (string|null);
+        sharableEventInviteCoverImageHandle?: (string|null);
+        sharableEventInviteLastUpdatedTsUsec?: (number|Long|null);
         pollAddedOptionName?: (string|null);
         musicData?: (proto.MsgOpaqueData.IMusicData|null);
         qrUrl?: (string|null);
@@ -11721,6 +11784,10 @@ export namespace proto {
     }
 
     class MsgOpaqueData implements IMsgOpaqueData {
+        public sharableEventInviteStatus?: (string|null);
+        public sharableEventInviteLocationName?: (string|null);
+        public sharableEventInviteCoverImageHandle?: (string|null);
+        public sharableEventInviteLastUpdatedTsUsec?: (number|Long|null);
         public pollAddedOptionName?: (string|null);
         public musicData?: (proto.MsgOpaqueData.IMusicData|null);
         public qrUrl?: (string|null);
@@ -13292,6 +13359,69 @@ export namespace proto {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
+    interface IGroupRootKey {
+        keyId?: (string|null);
+        rootKey?: (Uint8Array|null);
+        isCurrent?: (boolean|null);
+    }
+
+    class GroupRootKey implements IGroupRootKey {
+        constructor(p?: proto.IGroupRootKey);
+        public keyId?: (string|null);
+        public rootKey?: (Uint8Array|null);
+        public isCurrent?: (boolean|null);
+        public _keyId?: "keyId";
+        public _rootKey?: "rootKey";
+        public _isCurrent?: "isCurrent";
+        public static create(properties?: proto.IGroupRootKey): proto.GroupRootKey;
+        public static encode(m: proto.IGroupRootKey, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.GroupRootKey;
+        public static fromObject(d: { [k: string]: any }): proto.GroupRootKey;
+        public static toObject(m: proto.GroupRootKey, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    interface IGroupRootKeyRequest {
+        keyId?: (string|null);
+    }
+
+    class GroupRootKeyRequest implements IGroupRootKeyRequest {
+        constructor(p?: proto.IGroupRootKeyRequest);
+        public keyId?: (string|null);
+        public _keyId?: "keyId";
+        public static create(properties?: proto.IGroupRootKeyRequest): proto.GroupRootKeyRequest;
+        public static encode(m: proto.IGroupRootKeyRequest, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.GroupRootKeyRequest;
+        public static fromObject(d: { [k: string]: any }): proto.GroupRootKeyRequest;
+        public static toObject(m: proto.GroupRootKeyRequest, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    interface IMembershipFormKeyFingerprintVerification {
+        requestId?: (string|null);
+        keyId?: (string|null);
+        keyFingerprint?: (Uint8Array|null);
+    }
+
+    class MembershipFormKeyFingerprintVerification implements IMembershipFormKeyFingerprintVerification {
+        constructor(p?: proto.IMembershipFormKeyFingerprintVerification);
+        public requestId?: (string|null);
+        public keyId?: (string|null);
+        public keyFingerprint?: (Uint8Array|null);
+        public _requestId?: "requestId";
+        public _keyId?: "keyId";
+        public _keyFingerprint?: "keyFingerprint";
+        public static create(properties?: proto.IMembershipFormKeyFingerprintVerification): proto.MembershipFormKeyFingerprintVerification;
+        public static encode(m: proto.IMembershipFormKeyFingerprintVerification, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.MembershipFormKeyFingerprintVerification;
+        public static fromObject(d: { [k: string]: any }): proto.MembershipFormKeyFingerprintVerification;
+        public static toObject(m: proto.MembershipFormKeyFingerprintVerification, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
     interface IReportingTokenInfo {
         reportingTagTimestamp?: (number|Long|null);
         reportingTag?: (Uint8Array|null);
@@ -13715,6 +13845,7 @@ export namespace proto {
     }
 
     interface IStatusAttribution {
+        statusTemplate?: (proto.StatusAttribution.IStatusTemplate|null);
         type?: (proto.StatusAttribution.Type|null);
         actionUrl?: (string|null);
         statusReshare?: (proto.StatusAttribution.IStatusReshare|null);
@@ -13726,6 +13857,7 @@ export namespace proto {
     }
 
     class StatusAttribution implements IStatusAttribution {
+        public statusTemplate?: (proto.StatusAttribution.IStatusTemplate|null);
         constructor(p?: proto.IStatusAttribution);
         public type?: (proto.StatusAttribution.Type|null);
         public actionUrl?: (string|null);
@@ -13746,6 +13878,30 @@ export namespace proto {
     }
 
     namespace StatusAttribution {
+        interface IStatusTemplate {
+            templateId?: (string|null);
+            templateName?: (string|null);
+            thumbnailUrl?: (string|null);
+        }
+
+        class StatusTemplate implements IStatusTemplate {
+            constructor(p?: proto.StatusAttribution.IStatusTemplate);
+            public templateId?: (string|null);
+            public templateName?: (string|null);
+            public thumbnailUrl?: (string|null);
+            public _templateId?: "templateId";
+            public _templateName?: "templateName";
+            public _thumbnailUrl?: "thumbnailUrl";
+            public static create(properties?: proto.StatusAttribution.IStatusTemplate): proto.StatusAttribution.StatusTemplate;
+            public static encode(m: proto.StatusAttribution.IStatusTemplate, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.StatusAttribution.StatusTemplate;
+            public static fromObject(d: { [k: string]: any }): proto.StatusAttribution.StatusTemplate;
+            public static toObject(m: proto.StatusAttribution.StatusTemplate, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
 
         interface IAiCreatedAttribution {
             source?: (proto.StatusAttribution.AiCreatedAttribution.Source|null);
@@ -17019,6 +17175,7 @@ export namespace proto {
     }
 
     interface IWebMessageInfo {
+        groupHistoryLastCountedMessageTimestamp?: (number|Long|null);
         eventInviteAdditionalMetadata?: (proto.IEventInviteAdditionalMetadata|null);
         key?: (proto.IMessageKey|null);
         message?: (proto.IMessage|null);
@@ -17095,6 +17252,7 @@ export namespace proto {
     }
 
     class WebMessageInfo implements IWebMessageInfo {
+        public groupHistoryLastCountedMessageTimestamp?: (number|Long|null);
         public eventInviteAdditionalMetadata?: (proto.IEventInviteAdditionalMetadata|null);
         constructor(p?: proto.IWebMessageInfo);
         public key?: (proto.IMessageKey|null);
