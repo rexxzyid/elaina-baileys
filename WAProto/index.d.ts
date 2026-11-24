@@ -4243,6 +4243,7 @@ export namespace proto {
     }
 
     interface IConversation {
+        unreadReplyToMyMessageCount?: (number|null);
         isWorkGroup?: (boolean|null);
         nonE2EeType?: (number|null);
         contactAccountEncryptionAttestationType?: (number|null);
@@ -4315,6 +4316,7 @@ export namespace proto {
     }
 
     class Conversation implements IConversation {
+        public unreadReplyToMyMessageCount?: (number|null);
         public isWorkGroup?: (boolean|null);
         public nonE2EeType?: (number|null);
         public contactAccountEncryptionAttestationType?: (number|null);
@@ -7266,8 +7268,6 @@ export namespace proto {
             backgroundDarkArgb?: (number|null);
             doodleLightArgb?: (number|null);
             doodleDarkArgb?: (number|null);
-            colorLight?: (string|null);
-            colorDark?: (string|null);
             isDoodleEnabled?: (boolean|null);
         }
 
@@ -7277,8 +7277,6 @@ export namespace proto {
             public doodleLightArgb?: (number|null);
             public doodleDarkArgb?: (number|null);
             constructor(p?: proto.Message.IChatSolidColorWallpaper);
-            public colorLight?: (string|null);
-            public colorDark?: (string|null);
             public isDoodleEnabled?: (boolean|null);
             public static create(properties?: proto.Message.IChatSolidColorWallpaper): proto.Message.ChatSolidColorWallpaper;
             public static encode(m: proto.Message.IChatSolidColorWallpaper, w?: $protobuf.Writer): $protobuf.Writer;

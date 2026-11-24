@@ -29648,6 +29648,7 @@ export const proto = $root.proto = (() => {
         Conversation.prototype.isWorkGroup = null;
         Conversation.prototype.nonE2EeType = null;
         Conversation.prototype.contactAccountEncryptionAttestationType = null;
+        Conversation.prototype.unreadReplyToMyMessageCount = null;
         let $oneOfFields;
 
         // Virtual OneOf for proto3 optional field
@@ -30034,6 +30035,11 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(Conversation.prototype, "_unreadReplyToMyMessageCount", {
+            get: $util.oneOfGetter($oneOfFields = ["unreadReplyToMyMessageCount"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         Conversation.create = function create(properties) {
             return new Conversation(properties);
         };
@@ -30185,6 +30191,8 @@ export const proto = $root.proto = (() => {
                 w.uint32(544).int32(m.nonE2EeType);
             if (m.contactAccountEncryptionAttestationType != null && Object.hasOwnProperty.call(m, "contactAccountEncryptionAttestationType"))
                 w.uint32(552).int32(m.contactAccountEncryptionAttestationType);
+            if (m.unreadReplyToMyMessageCount != null && Object.hasOwnProperty.call(m, "unreadReplyToMyMessageCount"))
+                w.uint32(560).uint32(m.unreadReplyToMyMessageCount);
             return w;
         };
 
@@ -30481,6 +30489,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 69: {
                         m.contactAccountEncryptionAttestationType = r.int32();
+                        break;
+                    }
+                case 70: {
+                        m.unreadReplyToMyMessageCount = r.uint32();
                         break;
                     }
                 default:
@@ -30901,6 +30913,9 @@ export const proto = $root.proto = (() => {
             if (d.contactAccountEncryptionAttestationType != null) {
                 m.contactAccountEncryptionAttestationType = d.contactAccountEncryptionAttestationType >>> 0;
             }
+            if (d.unreadReplyToMyMessageCount != null) {
+                m.unreadReplyToMyMessageCount = d.unreadReplyToMyMessageCount >>> 0;
+            }
             return m;
         };
 
@@ -31287,6 +31302,11 @@ export const proto = $root.proto = (() => {
                 d.contactAccountEncryptionAttestationType = m.contactAccountEncryptionAttestationType;
                 if (o.oneofs)
                     d._contactAccountEncryptionAttestationType = "contactAccountEncryptionAttestationType";
+            }
+            if (m.unreadReplyToMyMessageCount != null && m.hasOwnProperty("unreadReplyToMyMessageCount")) {
+                d.unreadReplyToMyMessageCount = m.unreadReplyToMyMessageCount;
+                if (o.oneofs)
+                    d._unreadReplyToMyMessageCount = "unreadReplyToMyMessageCount";
             }
             return d;
         };
@@ -51586,8 +51606,6 @@ export const proto = $root.proto = (() => {
                             this[ks[i]] = p[ks[i]];
             }
 
-            ChatSolidColorWallpaper.prototype.colorLight = null;
-            ChatSolidColorWallpaper.prototype.colorDark = null;
             ChatSolidColorWallpaper.prototype.isDoodleEnabled = null;
 
             ChatSolidColorWallpaper.prototype.backgroundLightArgb = null;
@@ -51595,18 +51613,6 @@ export const proto = $root.proto = (() => {
             ChatSolidColorWallpaper.prototype.doodleLightArgb = null;
             ChatSolidColorWallpaper.prototype.doodleDarkArgb = null;
             let $oneOfFields;
-
-            // Virtual OneOf for proto3 optional field
-            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_colorLight", {
-                get: $util.oneOfGetter($oneOfFields = ["colorLight"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-
-            // Virtual OneOf for proto3 optional field
-            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_colorDark", {
-                get: $util.oneOfGetter($oneOfFields = ["colorDark"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
 
             // Virtual OneOf for proto3 optional field
             Object.defineProperty(ChatSolidColorWallpaper.prototype, "_isDoodleEnabled", {
@@ -51641,10 +51647,6 @@ export const proto = $root.proto = (() => {
             ChatSolidColorWallpaper.encode = function encode(m, w) {
                 if (!w)
                     w = $Writer.create();
-                if (m.colorLight != null && Object.hasOwnProperty.call(m, "colorLight"))
-                    w.uint32(10).string(m.colorLight);
-                if (m.colorDark != null && Object.hasOwnProperty.call(m, "colorDark"))
-                    w.uint32(18).string(m.colorDark);
                 if (m.isDoodleEnabled != null && Object.hasOwnProperty.call(m, "isDoodleEnabled"))
                     w.uint32(24).bool(m.isDoodleEnabled);
                 if (m.backgroundLightArgb != null && Object.hasOwnProperty.call(m, "backgroundLightArgb"))
@@ -51671,14 +51673,6 @@ export const proto = $root.proto = (() => {
                     if (t === e)
                         break;
                     switch (t >>> 3) {
-                    case 1: {
-                            m.colorLight = r.string();
-                            break;
-                        }
-                    case 2: {
-                            m.colorDark = r.string();
-                            break;
-                        }
                     case 3: {
                             m.isDoodleEnabled = r.bool();
                             break;
@@ -51715,12 +51709,6 @@ export const proto = $root.proto = (() => {
                 if (n > $util.recursionLimit)
                     throw Error("maximum nesting depth exceeded");
                 var m = new $root.proto.Message.ChatSolidColorWallpaper();
-                if (d.colorLight != null) {
-                    m.colorLight = String(d.colorLight);
-                }
-                if (d.colorDark != null) {
-                    m.colorDark = String(d.colorDark);
-                }
                 if (d.isDoodleEnabled != null) {
                     m.isDoodleEnabled = Boolean(d.isDoodleEnabled);
                 }
@@ -51743,16 +51731,6 @@ export const proto = $root.proto = (() => {
                 if (!o)
                     o = {};
                 var d = {};
-                if (m.colorLight != null && m.hasOwnProperty("colorLight")) {
-                    d.colorLight = m.colorLight;
-                    if (o.oneofs)
-                        d._colorLight = "colorLight";
-                }
-                if (m.colorDark != null && m.hasOwnProperty("colorDark")) {
-                    d.colorDark = m.colorDark;
-                    if (o.oneofs)
-                        d._colorDark = "colorDark";
-                }
                 if (m.isDoodleEnabled != null && m.hasOwnProperty("isDoodleEnabled")) {
                     d.isDoodleEnabled = m.isDoodleEnabled;
                     if (o.oneofs)
@@ -82636,9 +82614,13 @@ export const proto = $root.proto = (() => {
                 return w;
             };
 
-            MusicMessage.decode = function decode(r, l, e) {
+            MusicMessage.decode = function decode(r, l, e, n) {
                 if (!(r instanceof $Reader))
                     r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.MusicMessage();
                 while (r.pos < c) {
                     var t = r.uint32();
@@ -82646,7 +82628,7 @@ export const proto = $root.proto = (() => {
                         break;
                     switch (t >>> 3) {
                     case 1: {
-                            m.embeddedMusic = $root.proto.EmbeddedMusic.decode(r, r.uint32());
+                            m.embeddedMusic = $root.proto.EmbeddedMusic.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     case 2: {
@@ -82662,7 +82644,7 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     case 5: {
-                            m.contextInfo = $root.proto.ContextInfo.decode(r, r.uint32());
+                            m.contextInfo = $root.proto.ContextInfo.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     case 6: {
@@ -82670,21 +82652,25 @@ export const proto = $root.proto = (() => {
                             break;
                         }
                     default:
-                        r.skipType(t & 7);
+                        r.skipType(t & 7, n);
                         break;
                     }
                 }
                 return m;
             };
 
-            MusicMessage.fromObject = function fromObject(d) {
+            MusicMessage.fromObject = function fromObject(d, n) {
                 if (d instanceof $root.proto.Message.MusicMessage)
                     return d;
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var m = new $root.proto.Message.MusicMessage();
                 if (d.embeddedMusic != null) {
                     if (typeof d.embeddedMusic !== "object")
                         throw TypeError(".proto.Message.MusicMessage.embeddedMusic: object expected");
-                    m.embeddedMusic = $root.proto.EmbeddedMusic.fromObject(d.embeddedMusic);
+                    m.embeddedMusic = $root.proto.EmbeddedMusic.fromObject(d.embeddedMusic, n + 1);
                 }
                 if (d.songUri != null) {
                     m.songUri = String(d.songUri);
@@ -82698,7 +82684,7 @@ export const proto = $root.proto = (() => {
                 if (d.contextInfo != null) {
                     if (typeof d.contextInfo !== "object")
                         throw TypeError(".proto.Message.MusicMessage.contextInfo: object expected");
-                    m.contextInfo = $root.proto.ContextInfo.fromObject(d.contextInfo);
+                    m.contextInfo = $root.proto.ContextInfo.fromObject(d.contextInfo, n + 1);
                 }
                 if (d.lyrics != null) {
                     if (typeof d.lyrics !== "object")
