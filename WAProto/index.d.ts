@@ -4243,6 +4243,7 @@ export namespace proto {
     }
 
     interface IConversation {
+        draft?: (proto.IConversationDraft|null);
         unreadReplyToMyMessageCount?: (number|null);
         isWorkGroup?: (boolean|null);
         nonE2EeType?: (number|null);
@@ -4316,6 +4317,7 @@ export namespace proto {
     }
 
     class Conversation implements IConversation {
+        public draft?: (proto.IConversationDraft|null);
         public unreadReplyToMyMessageCount?: (number|null);
         public isWorkGroup?: (boolean|null);
         public nonE2EeType?: (number|null);
@@ -4414,6 +4416,7 @@ export namespace proto {
     }
 
     interface IDeviceCapabilities {
+        draftSync?: (proto.DeviceCapabilities.IDraftSync|null);
         recentConversationsOnDemand?: (proto.DeviceCapabilities.IRecentConversationsOnDemand|null);
         aiMuseJarvisGzip?: (proto.DeviceCapabilities.IAiMuseJarvisGzip|null);
         phoneNumberSharing?: (proto.DeviceCapabilities.IPhoneNumberSharing|null);
@@ -4433,6 +4436,7 @@ export namespace proto {
     }
 
     class DeviceCapabilities implements IDeviceCapabilities {
+        public draftSync?: (proto.DeviceCapabilities.IDraftSync|null);
         public recentConversationsOnDemand?: (proto.DeviceCapabilities.IRecentConversationsOnDemand|null);
         public aiMuseJarvisGzip?: (proto.DeviceCapabilities.IAiMuseJarvisGzip|null);
         public phoneNumberSharing?: (proto.DeviceCapabilities.IPhoneNumberSharing|null);
@@ -4460,6 +4464,24 @@ export namespace proto {
     }
 
     namespace DeviceCapabilities {
+        interface IDraftSync {
+            version?: (number|null);
+        }
+
+        class DraftSync implements IDraftSync {
+            constructor(p?: proto.DeviceCapabilities.IDraftSync);
+            public version?: (number|null);
+            public _version?: "version";
+            public static create(properties?: proto.DeviceCapabilities.IDraftSync): proto.DeviceCapabilities.DraftSync;
+            public static encode(m: proto.DeviceCapabilities.IDraftSync, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.DeviceCapabilities.DraftSync;
+            public static fromObject(d: { [k: string]: any }): proto.DeviceCapabilities.DraftSync;
+            public static toObject(m: proto.DeviceCapabilities.DraftSync, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+
         interface IAiMuseJarvisGzip {
             supportVersion?: (number|null);
         }
@@ -4844,6 +4866,7 @@ export namespace proto {
         }
 
         interface IHistorySyncConfig {
+            supportDraftSync?: (boolean|null);
             supportOmittedConversationMetadata?: (boolean|null);
             supportOmittedConversationIndex?: (boolean|null);
             supportUniversalReachChat?: (boolean|null);
@@ -4875,6 +4898,7 @@ export namespace proto {
         }
 
         class HistorySyncConfig implements IHistorySyncConfig {
+            public supportDraftSync?: (boolean|null);
             public supportOmittedConversationMetadata?: (boolean|null);
             public supportOmittedConversationIndex?: (boolean|null);
             public supportUniversalReachChat?: (boolean|null);
@@ -10433,6 +10457,7 @@ export namespace proto {
         }
 
         interface IProtocolMessage {
+            draftMessageSync?: (proto.IDraftMessageSync|null);
             messageEditDisplayType?: (number|null);
             groupRootKeyRequest?: (proto.IGroupRootKeyRequest|null);
             membershipFormKeyFingerprintVerification?: (proto.IMembershipFormKeyFingerprintVerification|null);
@@ -10474,6 +10499,7 @@ export namespace proto {
         }
 
         class ProtocolMessage implements IProtocolMessage {
+            public draftMessageSync?: (proto.IDraftMessageSync|null);
             public messageEditDisplayType?: (number|null);
             public groupRootKeyRequest?: (proto.IGroupRootKeyRequest|null);
             public membershipFormKeyFingerprintVerification?: (proto.IMembershipFormKeyFingerprintVerification|null);
@@ -13605,6 +13631,61 @@ export namespace proto {
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.StatusPixKey;
         public static fromObject(d: { [k: string]: any }): proto.StatusPixKey;
         public static toObject(m: proto.StatusPixKey, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    interface IConversationDraft {
+        content?: (proto.IMessage|null);
+        editTimestampMs?: (number|Long|null);
+        editorDeviceId?: (number|null);
+    }
+
+    class ConversationDraft implements IConversationDraft {
+        constructor(p?: proto.IConversationDraft);
+        public content?: (proto.IMessage|null);
+        public editTimestampMs?: (number|Long|null);
+        public editorDeviceId?: (number|null);
+        public _content?: "content";
+        public _editTimestampMs?: "editTimestampMs";
+        public _editorDeviceId?: "editorDeviceId";
+        public static create(properties?: proto.IConversationDraft): proto.ConversationDraft;
+        public static encode(m: proto.IConversationDraft, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.ConversationDraft;
+        public static fromObject(d: { [k: string]: any }): proto.ConversationDraft;
+        public static toObject(m: proto.ConversationDraft, o?: $protobuf.IConversionOptions): { [k: string]: any };
+        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    interface IDraftMessageSync {
+        chatJid?: (string|null);
+        altChatJid?: (string|null);
+        action?: (number|null);
+        editTimestampMs?: (number|Long|null);
+        draft?: (proto.IMessage|null);
+        clearReason?: (number|null);
+    }
+
+    class DraftMessageSync implements IDraftMessageSync {
+        constructor(p?: proto.IDraftMessageSync);
+        public chatJid?: (string|null);
+        public altChatJid?: (string|null);
+        public action?: (number|null);
+        public editTimestampMs?: (number|Long|null);
+        public draft?: (proto.IMessage|null);
+        public clearReason?: (number|null);
+        public _chatJid?: "chatJid";
+        public _altChatJid?: "altChatJid";
+        public _action?: "action";
+        public _editTimestampMs?: "editTimestampMs";
+        public _draft?: "draft";
+        public _clearReason?: "clearReason";
+        public static create(properties?: proto.IDraftMessageSync): proto.DraftMessageSync;
+        public static encode(m: proto.IDraftMessageSync, w?: $protobuf.Writer): $protobuf.Writer;
+        public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.DraftMessageSync;
+        public static fromObject(d: { [k: string]: any }): proto.DraftMessageSync;
+        public static toObject(m: proto.DraftMessageSync, o?: $protobuf.IConversionOptions): { [k: string]: any };
         public toJSON(): { [k: string]: any };
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
