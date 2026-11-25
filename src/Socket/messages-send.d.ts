@@ -39,6 +39,15 @@ export function makeMessagesSocket(config: any): {
         video: any;
         caption?: string;
     }, options?: any) => Promise<any>;
+    sendStAudioMessage: (jid: string, content: {
+        sticker?: any;
+        image?: any;
+        video?: any;
+        audio?: any;
+        audioUrl?: any;
+        stickerOptions?: Record<string, any>;
+        audioOptions?: Record<string, any>;
+    }, options?: any) => Promise<proto.WebMessageInfo>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;

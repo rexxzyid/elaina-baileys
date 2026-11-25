@@ -4549,11 +4549,32 @@ Pemeriksaan itulah yang menangkap `acp2SettingMessage` dan `audioStickerMessage`
 salah satunya hanya melihat kunci buram dan `conversation` yang kosong.
 
 `audioStickerMessage` (field 134) datang bersama satu saudara,
-`stickerMessage.audioMessage` (field 26, di dalam oneof baru `audio`): stiker yang
-membawa klip suara. Keduanya bisa didekode, dan belum ada yang menggambarnya —
-WhatsApp Web memetakan `audioStickerMessage` ke tidak ada jenis pesan sama
-sekali, dan parser stikernya tidak membaca `audioMessage` kembali keluar. Anggap
-keduanya field untuk dikenali saat mulai berdatangan, bukan untuk dikirim.
+`stickerMessage.audioMessage` (field 26, di dalam oneof `audio`): stiker yang
+membawa klip suara. Keduanya bisa didekode, dan parser stiker WhatsApp Web membaca
+deskriptor audio untuk stiker yang diterima.
+
+Untuk mengirimnya tanpa menyusun proto dan mengunggah dua media secara manual:
+
+```js
+await sock.sendStAudioMessage(jid, {
+    image: './sticker-animasi.webp',
+    audioUrl: 'https://example.com/suara.ogg'
+})
+
+await sock.sendStAudioMessage(jid, {
+    image: './animasi.mp4',
+    audio: './suara.m4a',
+    audioOptions: { mimetype: 'audio/m4a' }
+})
+```
+
+`sticker` menerima WebP yang sudah jadi. `image` menerima gambar atau MP4, sedangkan
+`video` menerima video; semuanya dikonversi otomatis menjadi WebP, dengan video
+menjadi WebP animasi 512×512. Konversi gambar memakai `sharp` atau
+`@napi-rs/image`; konversi video membutuhkan paket opsional `fluent-ffmpeg` dan
+executable `ffmpeg` dengan encoder `libwebp_anim`. Audio yang diterima adalah
+Ogg/Opus, MP4, M4A, atau X-M4A. Opsi media tambahan dapat diberikan lewat
+`stickerOptions` dan `audioOptions`.
 
 ### 84 sisanya
 

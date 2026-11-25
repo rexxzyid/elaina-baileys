@@ -14,6 +14,7 @@ import { makeKeyedMutex, makeMutex } from '../Utils/make-mutex.js';
 import { getMessageReportingToken, shouldIncludeReportingToken } from '../Utils/reporting-utils.js';
 import { buildMergedTcTokenIndexWrite, isTcTokenExpired, resolveIssuanceJid, resolveTcTokenJid, shouldSendNewTcToken, storeTcTokensFromIqResult } from '../Utils/tc-token-utils.js';
 import { areJidsSameUser, getBinaryNodeChild, getBinaryNodeChildren, getBizBinaryNode, isHostedLidUser, isHostedPnUser, isJidBot, isJidGroup, isJidMetaAI, isJidNewsletter, isLidUser, isPnUser, jidDecode, jidEncode, jidNormalizedUser, PSA_WID, S_WHATSAPP_NET } from '../WABinary/index.js';
+import { prepareAudioStickerMessage } from '../Utils/audio-sticker.js';
 import { USyncQuery, USyncUser } from '../WAUSync/index.js';
 import { makeNewsletterSocket } from './newsletter.js';
 export const buildMemberLabelMessage = (jid, memberLabel) => {
@@ -1186,6 +1187,34 @@ export const makeMessagesSocket = (config) => {
         emit(child);
         return parent;
     };
+    const sendStAudioMessage = async (jid, content, options = {}) => {
+        const userJid = authState.creds.me.id;
+        const genOpts = {
+            logger,
+            userJid,
+            upload: waUploadToServer,
+            mediaCache: config.mediaCache,
+            options: config.options,
+            ...options,
+            jid
+        };
+        const message = await prepareAudioStickerMessage(content, genOpts);
+        const fullMsg = generateWAMessageFromContent(jid, message, {
+            ...genOpts,
+            messageId: generateMessageIDV2(userJid)
+        });
+        await relayMessage(jid, fullMsg.message, {
+            messageId: fullMsg.key.id,
+            useCachedGroupMetadata: options.useCachedGroupMetadata,
+            statusJidList: options.statusJidList,
+            additionalAttributes: options.additionalAttributes,
+            additionalNodes: options.additionalNodes
+        });
+        if (config.emitOwnEvents) {
+            process.nextTick(() => { messageMutex.mutex(() => upsertMessage(fullMsg, 'append')); });
+        }
+        return fullMsg;
+    };
     return {
         ...sock,
         userDevicesCache,
@@ -1195,6 +1224,7 @@ export const makeMessagesSocket = (config) => {
         relayMessage,
         sendHD,
         sendImgVid,
+        sendStAudioMessage,
         outboundResendCache,
         sendReceipt,
         sendReceipts,
