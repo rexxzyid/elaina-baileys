@@ -119,7 +119,10 @@ export const extractVideoThumb = async (path, time, size) => {
         buffer = Buffer.concat([buffer, chunk]);
     });
     ffmpeg.stderr.on('data', (chunk) => stderrChunks.push(chunk));
-    const [code] = await once(ffmpeg, 'close');
+    const code = await new Promise((resolve, reject) => {
+        ffmpeg.once('error', reject);
+        ffmpeg.once('close', resolve);
+    });
     if (code !== 0) {
         throw new Boom(`FFmpeg failed (code ${code}):\n` +
             Buffer.concat(stderrChunks).toString('utf8'));

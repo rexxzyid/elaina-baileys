@@ -1,8 +1,10 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
 import { Boom } from '@hapi/boom';
 import { promises as fs } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { proto } from '../../WAProto/index.js';
-import { encryptedStream } from './messages-media.js';
+import { encryptedStream, extractVideoThumb, getStream, toBuffer } from './messages-media.js';
 
 export const CHAT_THEME_COLOR_PRESETS = Object.freeze({
     pink: '#ff69b4',
@@ -142,11 +144,46 @@ const normalizeWallpaper = wallpaper => {
     return wallpaper;
 };
 
+const isGif = buffer => buffer.length >= 6 && ['GIF87a', 'GIF89a'].includes(buffer.toString('ascii', 0, 6));
+const isVideo = buffer => buffer.length >= 12 && (
+    buffer.toString('ascii', 4, 8) === 'ftyp'
+    || (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3)
+    || (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'AVI ')
+);
+
+const prepareWallpaper = async (wallpaper, options) => {
+    const { stream } = await getStream(normalizeWallpaper(wallpaper), options.options);
+    const source = await toBuffer(stream);
+    if (!source.length) {
+        throw new Boom('chat wallpaper is empty', { statusCode: 400 });
+    }
+    if (!isGif(source) && !isVideo(source)) {
+        return source;
+    }
+    const directory = await fs.mkdtemp(join(tmpdir(), 'elaina-chat-wallpaper-'));
+    try {
+        const sourcePath = join(directory, 'source');
+        await fs.writeFile(sourcePath, source);
+        const converted = await extractVideoThumb(sourcePath, '00:00:00', { width: 1080, height: 1080 });
+        if (!converted.length) {
+            throw new Boom('ffmpeg produced an empty wallpaper frame', { statusCode: 400 });
+        }
+        return converted;
+    }
+    catch (error) {
+        throw new Boom(`failed to convert GIF/video wallpaper to JPEG: ${error.message}`, { statusCode: 400 });
+    }
+    finally {
+        await fs.rm(directory, { recursive: true, force: true });
+    }
+};
+
 const uploadWallpaper = async (wallpaper, options) => {
     if (typeof options.upload !== 'function') {
         throw new Boom('setThemeGroup wallpaper needs an uploaded media backend', { statusCode: 500 });
     }
-    const encrypted = await encryptedStream(normalizeWallpaper(wallpaper), 'chat-wallpaper', {
+    const media = await prepareWallpaper(wallpaper, options);
+    const encrypted = await encryptedStream(media, 'chat-wallpaper', {
         logger: options.logger,
         opts: options.options
     }, WALLPAPER_HKDF_INFO);

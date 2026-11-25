@@ -4638,9 +4638,12 @@ tidak lagi masuk ke `getStream` sebagai string mentah.
 `color` menerima `#RRGGBB` atau preset lama `pink`, `biru`, `ungu`, `hitam`, `hijau`,
 `merah`, `kuning`, `oren`, `putih`. `wallpaper` menerima path, URL, Buffer,
 `Uint8Array`, `{ url }`, atau `{ stream }`, dienkripsi dengan info HKDF
-`Chat Wallpaper`, lalu diunggah melalui `mediaType` `chat-wallpaper`. `dimLevel`
-dapat ditambahkan sebagai angka 0–1. `colorSchemeId` tetap tersedia untuk mengirim
-ID skema mentah; gunakan `bubble` untuk validasi terhadap katalog.
+`Chat Wallpaper`, lalu diunggah melalui `mediaType` `chat-wallpaper`. GIF serta video
+MP4/MOV, WebM/MKV, dan AVI otomatis diambil frame awalnya dan dikonversi menjadi JPEG
+sebelum enkripsi. Konversi tersebut membutuhkan executable `ffmpeg` dan menghasilkan
+wallpaper statis, bukan wallpaper animasi; gambar lain diteruskan tanpa konversi.
+`dimLevel` dapat ditambahkan sebagai angka 0–1. `colorSchemeId` tetap tersedia untuk
+mengirim ID skema mentah; gunakan `bubble` untuk validasi terhadap katalog.
 
 Protobuf hanya menyediakan satu `colorSchemeId` per pesan. Oleh karena itu, tema
 bernama dan bubble dari keluarga berbeda dikirim berurutan sebagai tema lalu override
