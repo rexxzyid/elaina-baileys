@@ -59,9 +59,9 @@ const imageToWebp = async (image, options) => {
     return { buffer, isAnimated: isAnimatedWebp(buffer) };
 };
 
-const videoToWebp = async (video, options) => {
+const runFfmpeg = async (media, options, outputOptions, errorMessage) => {
     const ffmpeg = await loadFfmpeg();
-    const { stream } = await getStream(mediaInput(video), options.options);
+    const { stream } = await getStream(mediaInput(media), options.options);
     const output = new PassThrough();
     const chunks = [];
     output.on('data', chunk => chunks.push(chunk));
@@ -69,23 +69,51 @@ const videoToWebp = async (video, options) => {
         output.on('end', resolve);
         output.on('error', reject);
         ffmpeg(stream)
-            .outputOptions([
-                '-vf', 'format=rgba,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000',
-                '-c:v', 'libwebp_anim',
-                '-lossless', '0',
-                '-q:v', '75',
-                '-loop', '0',
-                '-an',
-                '-f', 'webp'
-            ])
+            .outputOptions(outputOptions)
             .on('error', reject)
             .pipe(output, { end: true });
     });
     const buffer = Buffer.concat(chunks);
     if (!buffer.length) {
-        throw new Boom('ffmpeg produced an empty animated sticker', { statusCode: 400 });
+        throw new Boom(errorMessage, { statusCode: 400 });
     }
     return buffer;
+};
+
+const videoToWebp = (video, options) => runFfmpeg(video, options, [
+    '-vf', 'format=rgba,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000',
+    '-c:v', 'libwebp_anim',
+    '-lossless', '0',
+    '-q:v', '75',
+    '-loop', '0',
+    '-an',
+    '-f', 'webp'
+], 'ffmpeg produced an empty animated sticker');
+
+const prepareAudio = async (audio, audioOptions, options) => {
+    const { stream } = await getStream(mediaInput(audio), options.options);
+    const source = await toBuffer(stream);
+    if (!source.length) {
+        throw new Boom('audio sticker audio is empty', { statusCode: 400 });
+    }
+    if (source.toString('ascii', 0, 4) === 'OggS' && source.includes(Buffer.from('OpusHead'))) {
+        audioOptions.mimetype = 'audio/ogg; codecs=opus';
+        return { media: source, audioOptions };
+    }
+    if (source.length >= 12 && source.toString('ascii', 4, 8) === 'ftyp') {
+        if (!AUDIO_MIMETYPES.has(audioOptions.mimetype?.toLowerCase()) || audioOptions.mimetype === 'audio/ogg; codecs=opus') {
+            audioOptions.mimetype = 'audio/mp4';
+        }
+        return { media: source, audioOptions };
+    }
+    const media = await runFfmpeg(source, options, [
+        '-vn',
+        '-c:a', 'libopus',
+        '-b:a', '64k',
+        '-f', 'ogg'
+    ], 'ffmpeg produced empty ogg/opus audio');
+    audioOptions.mimetype = 'audio/ogg; codecs=opus';
+    return { media, audioOptions };
 };
 
 export const prepareAudioStickerMessage = async (content, options = {}) => {
@@ -100,12 +128,8 @@ export const prepareAudioStickerMessage = async (content, options = {}) => {
     const stickerOptions = { ...content.stickerOptions };
     const audioOptions = { ...content.audioOptions };
     stickerOptions.mimetype ||= 'image/webp';
-    audioOptions.mimetype ||= 'audio/ogg; codecs=opus';
     if (!STICKER_MIMETYPES.has(stickerOptions.mimetype.toLowerCase())) {
         throw new Boom('audio sticker media must be image/webp or application/was', { statusCode: 400 });
-    }
-    if (!AUDIO_MIMETYPES.has(audioOptions.mimetype.toLowerCase())) {
-        throw new Boom('audio sticker audio must be ogg/opus, mp4, m4a, or x-m4a', { statusCode: 400 });
     }
     const kind = kinds[0];
     let visual;
@@ -129,6 +153,7 @@ export const prepareAudioStickerMessage = async (content, options = {}) => {
     else {
         visual = mediaInput(content[kind]);
     }
+    const preparedAudio = await prepareAudio(audio, audioOptions, options);
     const [sticker, sound] = await Promise.all([
         prepareWAMessageMedia({
             sticker: visual,
@@ -136,8 +161,8 @@ export const prepareAudioStickerMessage = async (content, options = {}) => {
             ...stickerOptions
         }, options),
         prepareWAMessageMedia({
-            audio: mediaInput(audio),
-            ...audioOptions,
+            audio: preparedAudio.media,
+            ...preparedAudio.audioOptions,
             ptt: false
         }, options)
     ]);

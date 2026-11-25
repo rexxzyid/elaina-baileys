@@ -4572,9 +4572,10 @@ await sock.sendStAudioMessage(jid, {
 `video` menerima video; semuanya dikonversi otomatis menjadi WebP, dengan video
 menjadi WebP animasi 512×512. Konversi gambar memakai `sharp` atau
 `@napi-rs/image`; konversi video membutuhkan paket opsional `fluent-ffmpeg` dan
-executable `ffmpeg` dengan encoder `libwebp_anim`. Audio yang diterima adalah
-Ogg/Opus, MP4, M4A, atau X-M4A. Opsi media tambahan dapat diberikan lewat
-`stickerOptions` dan `audioOptions`.
+executable `ffmpeg` dengan encoder `libwebp_anim`. Audio Ogg/Opus dan MP4/M4A
+dipakai langsung; format lain, termasuk MP3, ditranscode otomatis ke Ogg/Opus
+melalui FFmpeg. Opsi media tambahan dapat diberikan lewat `stickerOptions` dan
+`audioOptions`.
 
 ### 84 sisanya
 
