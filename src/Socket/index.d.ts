@@ -269,13 +269,9 @@ declare function makeWASocket(config: any): {
         stickerOptions?: Record<string, any>;
         audioOptions?: Record<string, any>;
     }, options?: any) => Promise<import("../index.js").proto.WebMessageInfo>;
-    setThemGroup: (jid: string, content: string | Buffer | URL | {
-        color?: string;
-        wallpaper?: any;
-        reset?: boolean;
-        colorSchemeId?: string;
-        dimLevel?: number;
-    }, options?: any) => Promise<import("../index.js").proto.WebMessageInfo>;
+    setThemeGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<import("../index.js").proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
+    setThemGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<import("../index.js").proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
+    setTgemGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<import("../index.js").proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
     sendMessage: (jid: any, content: any, options?: {}) => Promise<import("../index.js").proto.WebMessageInfo | undefined>;
     executeWMexQuery: (variables: any, queryId: any, dataPath: any) => Promise<any>;
     newsletterCreate: (name: any, description: any) => Promise<{

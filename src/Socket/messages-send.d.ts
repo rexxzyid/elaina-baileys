@@ -48,13 +48,9 @@ export function makeMessagesSocket(config: any): {
         stickerOptions?: Record<string, any>;
         audioOptions?: Record<string, any>;
     }, options?: any) => Promise<proto.WebMessageInfo>;
-    setThemGroup: (jid: string, content: string | Buffer | URL | {
-        color?: string;
-        wallpaper?: any;
-        reset?: boolean;
-        colorSchemeId?: string;
-        dimLevel?: number;
-    }, options?: any) => Promise<proto.WebMessageInfo>;
+    setThemeGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
+    setThemGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
+    setTgemGroup: (jid: string, content: import("../Utils/chat-theme.js").ChatThemeContent, options?: any) => Promise<proto.WebMessageInfo | import("../Utils/chat-theme.js").ChatThemeCatalog>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;

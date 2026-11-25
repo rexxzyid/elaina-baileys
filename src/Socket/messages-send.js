@@ -15,7 +15,7 @@ import { getMessageReportingToken, shouldIncludeReportingToken } from '../Utils/
 import { buildMergedTcTokenIndexWrite, isTcTokenExpired, resolveIssuanceJid, resolveTcTokenJid, shouldSendNewTcToken, storeTcTokensFromIqResult } from '../Utils/tc-token-utils.js';
 import { areJidsSameUser, getBinaryNodeChild, getBinaryNodeChildren, getBizBinaryNode, isHostedLidUser, isHostedPnUser, isJidBot, isJidGroup, isJidMetaAI, isJidNewsletter, isLidUser, isPnUser, jidDecode, jidEncode, jidNormalizedUser, PSA_WID, S_WHATSAPP_NET } from '../WABinary/index.js';
 import { prepareAudioStickerMessage } from '../Utils/audio-sticker.js';
-import { prepareChatThemeMessage } from '../Utils/chat-theme.js';
+import { getChatThemeExamples, isChatThemeExample, prepareChatThemeMessages } from '../Utils/chat-theme.js';
 import { USyncQuery, USyncUser } from '../WAUSync/index.js';
 import { makeNewsletterSocket } from './newsletter.js';
 export const buildMemberLabelMessage = (jid, memberLabel) => {
@@ -1217,9 +1217,12 @@ export const makeMessagesSocket = (config) => {
         }
         return fullMsg;
     };
-    const setThemGroup = async (jid, content, options = {}) => {
+    const setThemeGroup = async (jid, content, options = {}) => {
         if (!isJidGroup(jid)) {
-            throw new Boom('setThemGroup only accepts a group jid', { statusCode: 400, data: { jid } });
+            throw new Boom('setThemeGroup only accepts a group jid', { statusCode: 400, data: { jid } });
+        }
+        if (isChatThemeExample(content)) {
+            return getChatThemeExamples();
         }
         const userJid = authState.creds.me.id;
         const genOpts = {
@@ -1231,22 +1234,26 @@ export const makeMessagesSocket = (config) => {
             ...options,
             jid
         };
-        const message = await prepareChatThemeMessage(content, genOpts);
-        const fullMsg = generateWAMessageFromContent(jid, message, {
-            ...genOpts,
-            messageId: generateMessageIDV2(userJid)
-        });
-        await relayMessage(jid, fullMsg.message, {
-            messageId: fullMsg.key.id,
-            mediaType: 'chat_theme',
-            messageType: 'media',
-            useCachedGroupMetadata: options.useCachedGroupMetadata,
-            statusJidList: options.statusJidList,
-            additionalAttributes: options.additionalAttributes,
-            additionalNodes: options.additionalNodes
-        });
-        if (config.emitOwnEvents) {
-            process.nextTick(() => { messageMutex.mutex(() => upsertMessage(fullMsg, 'append')); });
+        const messages = await prepareChatThemeMessages(content, genOpts);
+        let fullMsg;
+        for (const message of messages) {
+            const currentMsg = generateWAMessageFromContent(jid, message, {
+                ...genOpts,
+                messageId: generateMessageIDV2(userJid)
+            });
+            fullMsg = currentMsg;
+            await relayMessage(jid, currentMsg.message, {
+                messageId: currentMsg.key.id,
+                mediaType: 'chat_theme',
+                messageType: 'media',
+                useCachedGroupMetadata: options.useCachedGroupMetadata,
+                statusJidList: options.statusJidList,
+                additionalAttributes: options.additionalAttributes,
+                additionalNodes: options.additionalNodes
+            });
+            if (config.emitOwnEvents) {
+                process.nextTick(() => { messageMutex.mutex(() => upsertMessage(currentMsg, 'append')); });
+            }
         }
         return fullMsg;
     };
@@ -1260,7 +1267,9 @@ export const makeMessagesSocket = (config) => {
         sendHD,
         sendImgVid,
         sendStAudioMessage,
-        setThemGroup,
+        setThemeGroup,
+        setThemGroup: setThemeGroup,
+        setTgemGroup: setThemeGroup,
         outboundResendCache,
         sendReceipt,
         sendReceipts,

@@ -4577,34 +4577,76 @@ dipakai langsung; format lain, termasuk MP3, ditranscode otomatis ke Ogg/Opus
 melalui FFmpeg. Opsi media tambahan dapat diberikan lewat `stickerOptions` dan
 `audioOptions`.
 
-### Tema dan wallpaper grup
+### Tema, bubble, dan wallpaper grup
 
-`sock.setThemGroup()` mengirim `protocolMessage.chatThemeSetting` (tipe
-`CHAT_THEME_SETTING`) ke sebuah grup, dengan warna solid, wallpaper foto, atau
-reset ke tema bawaan:
+`conn.setThemeGroup()` mengirim `protocolMessage.chatThemeSetting` (tipe
+`CHAT_THEME_SETTING`) ke sebuah grup. Nama lama `setThemGroup` dan alias
+`setTgemGroup` tetap tersedia.
 
-```js
-await sock.setThemGroup(jid, { color: '#ff69b4' })
-await sock.setThemGroup(jid, { wallpaper: './wallpaper.jpg' })
-await sock.setThemGroup(jid, { reset: true })
-```
-
-Bentuk singkat juga diterima:
+Lihat seluruh ID tema dan bubble yang dikenali beserta contohnya:
 
 ```js
-await sock.setThemGroup(jid, '#ff69b4')
-await sock.setThemGroup(jid, 'pink')
-await sock.setThemGroup(jid, 'reset')
-await sock.setThemGroup(jid, './wallpaper.jpg')
+await conn.setThemeGroup(m.chat, 'example')
 ```
 
-Preset warna yang tersedia: `pink`, `biru`, `ungu`, `hitam`, `hijau`, `merah`,
-`kuning`, `oren`, `putih`. `color` menerima `#RRGGBB`; kedua varian terang dan
-gelap memakai warna yang sama sebagai ARGB. `wallpaper` menerima path, URL,
-Buffer, atau `{ url }`, dienkripsi dengan info HKDF `Chat Wallpaper`, lalu
-diunggah melalui `mediaType` `chat-wallpaper`. `dimLevel` dapat ditambahkan
-sebagai angka 0–1. `colorSchemeId` dapat diberikan untuk mengirim ID skema warna
-secara eksplisit.
+Hasilnya berupa objek `{ themes, bubbles, usage }`. Katalog tersebut memuat 23 tema
+dasar, 22 varian `@Tonal`, dan 4 varian `@Minimal` dari WhatsApp Web. Alias memakai
+huruf kecil dan tanda hubung, misalnya:
+
+```js
+await conn.setThemeGroup(m.chat, { theme: 'pink' })
+await conn.setThemeGroup(m.chat, { theme: 'royal-blue-tonal' })
+await conn.setThemeGroup(m.chat, { theme: 'default-blue-minimal' })
+await conn.setThemeGroup(m.chat, { bubble: 'emerald' })
+await conn.setThemeGroup(m.chat, { theme: 'pink', bubble: 'royal-blue' })
+```
+
+ID asli seperti `Pink`, `Royal-Blue@Tonal`, dan `Default-Blue@Minimal` juga diterima.
+Tema dasar yang tersedia adalah `default`, `whatsapp-green`, `pearl-indigo`,
+`tyrian-purple`, `sunset-orange`, `merino-teal`, `royal-blue`, `dark-cerulean`,
+`charcoal-green`, `persian-plum`, `dune-mono`, `default-blue`, `default-mono`,
+`sky-blue`, `brown`, `cream`, `emerald`, `lemon`, `lime`, `pink`, `red`,
+`sunrise-orange`, dan `warm-yellow`. Semua kecuali `default` mempunyai varian
+`-tonal`; varian `-minimal` tersedia untuk `default-blue`, `default-mono`, `sky-blue`,
+dan `pearl-indigo`.
+
+`theme` juga dapat berupa warna solid, path gambar, URL, Buffer, atau objek media.
+Bubble dapat digabungkan pada perubahan yang sama:
+
+```js
+await conn.setThemeGroup(m.chat, {
+    theme: 'https://j.top4top.io/p_3981bmxia1.jpg',
+    bubble: 'pink-tonal'
+})
+
+await conn.setThemeGroup(m.chat, {
+    theme: './media/Trina.png',
+    bubble: 'royal-blue'
+})
+
+await conn.setThemeGroup(m.chat, { color: '#ff69b4' })
+await conn.setThemeGroup(m.chat, { wallpaper: './wallpaper.jpg' })
+await conn.setThemeGroup(m.chat, { reset: true })
+```
+
+Untuk kompatibilitas, `wallpaper` tetap dapat dipakai langsung dan bentuk singkat
+lama seperti `conn.setThemGroup(m.chat, '#ff69b4')` atau
+`conn.setThemGroup(m.chat, './wallpaper.jpg')` tetap diterima. String dan `URL`
+dinormalisasi menjadi `{ url }` sebelum dibaca, sehingga path maupun URL wallpaper
+tidak lagi masuk ke `getStream` sebagai string mentah.
+
+`color` menerima `#RRGGBB` atau preset lama `pink`, `biru`, `ungu`, `hitam`, `hijau`,
+`merah`, `kuning`, `oren`, `putih`. `wallpaper` menerima path, URL, Buffer,
+`Uint8Array`, `{ url }`, atau `{ stream }`, dienkripsi dengan info HKDF
+`Chat Wallpaper`, lalu diunggah melalui `mediaType` `chat-wallpaper`. `dimLevel`
+dapat ditambahkan sebagai angka 0–1. `colorSchemeId` tetap tersedia untuk mengirim
+ID skema mentah; gunakan `bubble` untuk validasi terhadap katalog.
+
+Protobuf hanya menyediakan satu `colorSchemeId` per pesan. Oleh karena itu, tema
+bernama dan bubble dari keluarga berbeda dikirim berurutan sebagai tema lalu override
+bubble. Wallpaper atau warna solid dan bubble hanya membutuhkan satu pesan. ID yang
+tersedia di katalog berasal dari bundle WhatsApp Web; dukungan rendering pada versi
+aplikasi penerima tetap bergantung pada klien WhatsApp.
 
 Helper ini hanya memeriksa bahwa JID berupa grup. Hak admin grup, hak owner,
 dan pembatasan grup tetap ditentukan oleh server WhatsApp; plugin pemanggil
