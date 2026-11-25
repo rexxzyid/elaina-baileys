@@ -1,6 +1,6 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
 /** generates all the keys required to encrypt/decrypt & sign a media message */
-export function getMediaKeys(buffer: any, mediaType: any): Promise<{
+export function getMediaKeys(buffer: any, mediaType: any, info?: string): Promise<{
     iv: any;
     cipherKey: any;
     macKey: any;
@@ -46,7 +46,7 @@ export function getStream(item: any, opts: any): Promise<{
     type: string;
 }>;
 export function getHttpStream(url: any, options?: {}): Promise<any>;
-export function encryptedStream(media: any, mediaType: any, { logger, saveOriginalFileIfRequired, opts }?: {}): Promise<{
+export function encryptedStream(media: any, mediaType: any, { logger, saveOriginalFileIfRequired, opts }?: {}, hkdfInfo?: string): Promise<{
     mediaKey: any;
     originalFilePath: any;
     encFilePath: any;

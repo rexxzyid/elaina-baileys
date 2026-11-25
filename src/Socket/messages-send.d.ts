@@ -48,6 +48,13 @@ export function makeMessagesSocket(config: any): {
         stickerOptions?: Record<string, any>;
         audioOptions?: Record<string, any>;
     }, options?: any) => Promise<proto.WebMessageInfo>;
+    setThemGroup: (jid: string, content: string | Buffer | URL | {
+        color?: string;
+        wallpaper?: any;
+        reset?: boolean;
+        colorSchemeId?: string;
+        dimLevel?: number;
+    }, options?: any) => Promise<proto.WebMessageInfo>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;

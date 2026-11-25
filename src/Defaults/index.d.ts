@@ -92,6 +92,7 @@ export const MEDIA_PATH_MAP: {
     'thumbnail-image': string;
     'thumbnail-video': string;
     'thumbnail-document': string;
+    'chat-wallpaper': string;
     'product-catalog-image': string;
     'md-app-state': string;
     'md-msg-hist': string;

@@ -4577,6 +4577,40 @@ dipakai langsung; format lain, termasuk MP3, ditranscode otomatis ke Ogg/Opus
 melalui FFmpeg. Opsi media tambahan dapat diberikan lewat `stickerOptions` dan
 `audioOptions`.
 
+### Tema dan wallpaper grup
+
+`sock.setThemGroup()` mengirim `protocolMessage.chatThemeSetting` (tipe
+`CHAT_THEME_SETTING`) ke sebuah grup, dengan warna solid, wallpaper foto, atau
+reset ke tema bawaan:
+
+```js
+await sock.setThemGroup(jid, { color: '#ff69b4' })
+await sock.setThemGroup(jid, { wallpaper: './wallpaper.jpg' })
+await sock.setThemGroup(jid, { reset: true })
+```
+
+Bentuk singkat juga diterima:
+
+```js
+await sock.setThemGroup(jid, '#ff69b4')
+await sock.setThemGroup(jid, 'pink')
+await sock.setThemGroup(jid, 'reset')
+await sock.setThemGroup(jid, './wallpaper.jpg')
+```
+
+Preset warna yang tersedia: `pink`, `biru`, `ungu`, `hitam`, `hijau`, `merah`,
+`kuning`, `oren`, `putih`. `color` menerima `#RRGGBB`; kedua varian terang dan
+gelap memakai warna yang sama sebagai ARGB. `wallpaper` menerima path, URL,
+Buffer, atau `{ url }`, dienkripsi dengan info HKDF `Chat Wallpaper`, lalu
+diunggah melalui `mediaType` `chat-wallpaper`. `dimLevel` dapat ditambahkan
+sebagai angka 0–1. `colorSchemeId` dapat diberikan untuk mengirim ID skema warna
+secara eksplisit.
+
+Helper ini hanya memeriksa bahwa JID berupa grup. Hak admin grup, hak owner,
+dan pembatasan grup tetap ditentukan oleh server WhatsApp; plugin pemanggil
+harus menangani pesan galatnya. Pengiriman dilakukan sebagai `media` dengan
+`mediatype="chat_theme"`, mengikuti payload grup yang menjadi acuan helper ini.
+
 ### 84 sisanya
 
 Yang ini membawa isinya. Kamu akan memakai segelintir terus-menerus dan tidak

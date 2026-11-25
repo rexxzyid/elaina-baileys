@@ -15,6 +15,7 @@ import { getMessageReportingToken, shouldIncludeReportingToken } from '../Utils/
 import { buildMergedTcTokenIndexWrite, isTcTokenExpired, resolveIssuanceJid, resolveTcTokenJid, shouldSendNewTcToken, storeTcTokensFromIqResult } from '../Utils/tc-token-utils.js';
 import { areJidsSameUser, getBinaryNodeChild, getBinaryNodeChildren, getBizBinaryNode, isHostedLidUser, isHostedPnUser, isJidBot, isJidGroup, isJidMetaAI, isJidNewsletter, isLidUser, isPnUser, jidDecode, jidEncode, jidNormalizedUser, PSA_WID, S_WHATSAPP_NET } from '../WABinary/index.js';
 import { prepareAudioStickerMessage } from '../Utils/audio-sticker.js';
+import { prepareChatThemeMessage } from '../Utils/chat-theme.js';
 import { USyncQuery, USyncUser } from '../WAUSync/index.js';
 import { makeNewsletterSocket } from './newsletter.js';
 export const buildMemberLabelMessage = (jid, memberLabel) => {
@@ -452,7 +453,7 @@ export const makeMessagesSocket = (config) => {
         }
         return { nodes, shouldIncludeDeviceIdentity };
     };
-    const relayMessage = async (jid, message, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList }) => {
+    const relayMessage = async (jid, message, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList, mediaType: forcedMediaType, messageType: forcedMessageType }) => {
         const meId = assertMeId(authState.creds);
         const meLid = authState.creds.me?.lid;
         const isRetryResend = Boolean(participant?.jid);
@@ -498,10 +499,11 @@ export const makeMessagesSocket = (config) => {
         await authState.keys.transaction(async () => {
 
             const innerMessage = normalizeMessageContent(message);
-            const mediaType = getMediaType(innerMessage);
+            const mediaType = forcedMediaType ?? getMediaType(innerMessage);
             if (mediaType) {
                 extraAttrs['mediatype'] = mediaType;
             }
+            const stanzaType = forcedMessageType ?? getMessageType(innerMessage);
             if (isNewsletter) {
                 const patched = patchMessageBeforeSending ? await patchMessageBeforeSending(message, []) : message;
                 const bytes = encodeNewsletterMessage(patched);
@@ -541,7 +543,7 @@ export const makeMessagesSocket = (config) => {
                     attrs: {
                         to: jid,
                         id: msgId,
-                        type: getMessageType(innerMessage),
+                        type: stanzaType,
                         ...(additionalAttributes || {})
                     },
                     content: binaryNodeContent
@@ -840,7 +842,7 @@ export const makeMessagesSocket = (config) => {
                 attrs: {
                     id: msgId,
                     to: destinationJid,
-                    type: getMessageType(innerMessage),
+                    type: stanzaType,
                     ...(additionalAttributes || {})
                 },
                 content: binaryNodeContent
@@ -1215,6 +1217,39 @@ export const makeMessagesSocket = (config) => {
         }
         return fullMsg;
     };
+    const setThemGroup = async (jid, content, options = {}) => {
+        if (!isJidGroup(jid)) {
+            throw new Boom('setThemGroup only accepts a group jid', { statusCode: 400, data: { jid } });
+        }
+        const userJid = authState.creds.me.id;
+        const genOpts = {
+            logger,
+            userJid,
+            upload: waUploadToServer,
+            mediaCache: config.mediaCache,
+            options: config.options,
+            ...options,
+            jid
+        };
+        const message = await prepareChatThemeMessage(content, genOpts);
+        const fullMsg = generateWAMessageFromContent(jid, message, {
+            ...genOpts,
+            messageId: generateMessageIDV2(userJid)
+        });
+        await relayMessage(jid, fullMsg.message, {
+            messageId: fullMsg.key.id,
+            mediaType: 'chat_theme',
+            messageType: 'media',
+            useCachedGroupMetadata: options.useCachedGroupMetadata,
+            statusJidList: options.statusJidList,
+            additionalAttributes: options.additionalAttributes,
+            additionalNodes: options.additionalNodes
+        });
+        if (config.emitOwnEvents) {
+            process.nextTick(() => { messageMutex.mutex(() => upsertMessage(fullMsg, 'append')); });
+        }
+        return fullMsg;
+    };
     return {
         ...sock,
         userDevicesCache,
@@ -1225,6 +1260,7 @@ export const makeMessagesSocket = (config) => {
         sendHD,
         sendImgVid,
         sendStAudioMessage,
+        setThemGroup,
         outboundResendCache,
         sendReceipt,
         sendReceipts,

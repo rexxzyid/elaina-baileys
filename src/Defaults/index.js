@@ -111,6 +111,7 @@ export const MEDIA_PATH_MAP = {
     'thumbnail-image': '/mms/image',
     'thumbnail-video': '/mms/video',
     'thumbnail-document': '/mms/document',
+    'chat-wallpaper': '/mms/chat-wallpaper-image',
     'product-catalog-image': '/product/image',
     'md-app-state': '',
     'md-msg-hist': '/mms/md-app-state',

@@ -82,7 +82,7 @@ export const getRawMediaUploadData = async (media, mediaType, logger) => {
     }
 };
 
-export async function getMediaKeys(buffer, mediaType) {
+export async function getMediaKeys(buffer, mediaType, info) {
     if (!buffer) {
         throw new Boom('Cannot derive from empty media key');
     }
@@ -90,7 +90,7 @@ export async function getMediaKeys(buffer, mediaType) {
         buffer = Buffer.from(buffer.replace('data:;base64,', ''), 'base64');
     }
 
-    const expandedMediaKey = hkdf(buffer, 112, { info: hkdfInfoKey(mediaType) });
+    const expandedMediaKey = hkdf(buffer, 112, { info: info ?? hkdfInfoKey(mediaType) });
     return {
         iv: expandedMediaKey.slice(0, 16),
         cipherKey: expandedMediaKey.slice(16, 48),
@@ -353,11 +353,11 @@ export const getHttpStream = async (url, options = {}) => {
 
     return response.body instanceof Readable ? response.body : Readable.fromWeb(response.body);
 };
-export const encryptedStream = async (media, mediaType, { logger, saveOriginalFileIfRequired, opts } = {}) => {
+export const encryptedStream = async (media, mediaType, { logger, saveOriginalFileIfRequired, opts } = {}, hkdfInfo) => {
     const { stream, type } = await getStream(media, opts);
     logger?.debug('fetched media stream');
     const mediaKey = Crypto.randomBytes(32);
-    const { cipherKey, iv, macKey } = await getMediaKeys(mediaKey, mediaType);
+    const { cipherKey, iv, macKey } = await getMediaKeys(mediaKey, mediaType, hkdfInfo);
     const encFilePath = join(getTmpFilesDirectory(), mediaType + generateMessageIDV2() + '-enc');
     const encFileWriteStream = createWriteStream(encFilePath);
     let originalFileStream;
