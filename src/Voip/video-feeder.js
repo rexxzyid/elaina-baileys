@@ -4,11 +4,11 @@ const PREBUFFER_FRAMES = 3;
 const MAX_QUEUED_FRAMES = 90;
 const RESUME_QUEUE_FRAMES = 30;
 const RESYNC_AFTER_MS = 400;
-export const VIDEO_FORMAT_I420 = 0;
+export const VIDEO_FORMAT_I420 = 1;
 export class VideoFeeder {
     constructor(width, height, fps, onFrame, source = null, hooks = {}) {
-        this.width = width;
-        this.height = height;
+        this.width = Math.max(2, Math.floor((Math.trunc(Number(width)) || 640) / 2) * 2);
+        this.height = Math.max(2, Math.floor((Math.trunc(Number(height)) || 480) / 2) * 2);
         this.fps = fps;
         this.onFrame = onFrame;
         this.source = source;
@@ -147,6 +147,14 @@ export class VideoFeeder {
         proc.stdout.on('data', chunk => this._absorb(chunk));
         proc.stderr.on('data', chunk => {
             process.stderr.write(`[VideoFeeder] ${chunk.toString().trim()}\n`);
+        });
+        proc.on('error', err => {
+            if (this._proc !== proc) {
+                return;
+            }
+            process.stderr.write(`[VideoFeeder] ffmpeg error: ${err?.message || err}\n`);
+            this._proc = null;
+            this._sourceEnded = true;
         });
         proc.on('exit', code => {
             if (this._proc !== proc) {

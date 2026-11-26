@@ -5048,7 +5048,8 @@ Untuk ikut ke panggilan yang dimulai orang lain, serahkan ke `joinGroupCall` apa
 const call = await voip.joinGroupCall({
     callId,
     callCreatorJid,
-    groupJid,
+    groupJid
+}, {
     playlist: ['satu.mp3']
 })
 ```

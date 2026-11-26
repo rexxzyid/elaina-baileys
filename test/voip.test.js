@@ -309,6 +309,182 @@ test('voip-playlist', async () => {
     }
 });
 
+test('voip-group-call', async () => {
+    const makeClient = (startResult = 0, joinResult = 0) => {
+        const starts = [];
+        const joins = [];
+        const ends = [];
+        const client = new VoipClient({
+            socket: {
+                authState: {
+                    creds: {
+                        me: {
+                            id: '999:1@s.whatsapp.net',
+                            lid: '999999999999999@lid'
+                        }
+                    }
+                },
+                signalRepository: {
+                    lidMapping: {
+                        getPNForLID: async () => undefined
+                    }
+                }
+            }
+        });
+        client._engine = {
+            endCall: (...args) => ends.push(args),
+            releaseVideoFrameBuffer() {},
+            startGroupCall(options) {
+                starts.push(options);
+                return startResult;
+            },
+            joinOngoingCall(options) {
+                joins.push(options);
+                return joinResult;
+            }
+        };
+        client._signaling = {
+            resolveLid: async () => undefined,
+            discoverPeerDevices: async lid => [`${lid.split('@')[0]}:1@lid`],
+            ensureSessionsForPeers: async () => {}
+        };
+        const metadata = {
+            subject: 'Grup uji',
+            participants: [
+                { id: '999@s.whatsapp.net', lid: '999999999999999@lid' },
+                { id: '111111111111111@lid', phoneNumber: '628111@s.whatsapp.net', lid: '111111111111111@lid' }
+            ]
+        };
+        return { client, starts, joins, ends, metadata };
+    };
+
+    {
+        const { client, starts, metadata } = makeClient();
+        const call = await client.callGroup('120363000000000000@g.us', {
+            metadata,
+            participants: ['628111@s.whatsapp.net'],
+            video: true,
+            durationMs: 0
+        });
+        assert.deepEqual(starts[0].pnUserJids, ['628111@s.whatsapp.net']);
+        assert.deepEqual(starts[0].lidUserJids, ['111111111111111@lid']);
+        assert.deepEqual(starts[0].deviceJidsCsv, ['111111111111111:1@lid']);
+        assert.equal(starts[0].isVideo, true);
+        assert.equal(call.isVideo(), true);
+        call.end();
+    }
+
+    {
+        const { client, metadata } = makeClient(7);
+        await assert.rejects(() => client.callGroup('120363000000000000@g.us', {
+            metadata,
+            durationMs: 0
+        }), /startGroupCall failed with status 7/);
+        assert.equal(client._activeCall, null);
+    }
+
+    {
+        const { client } = makeClient(0, 7);
+        await assert.rejects(() => client.joinGroupCall({
+            callId: 'GROUP-CALL',
+            callCreatorJid: '111111111111111@lid',
+            groupJid: '120363000000000000@g.us'
+        }), /joinOngoingCall failed with status 7/);
+        assert.equal(client._activeCall, null);
+    }
+
+    {
+        const { client, ends, metadata } = makeClient();
+        const oldCall = new ActiveCall('OLD-CALL', client._engine, 0);
+        let oldEndReason;
+        let audioStops = 0;
+        let videoStops = 0;
+        oldCall.on('ended', reason => { oldEndReason = reason; });
+        client._activeCall = oldCall;
+        client._feeder = { stop() { audioStops += 1; } };
+        client._videoFeeder = { stop() { videoStops += 1; } };
+        client._audioStartTimer = setTimeout(() => {}, 60000);
+        const nextCall = await client.callGroup('120363000000000000@g.us', {
+            metadata,
+            durationMs: 0
+        });
+        assert.equal(oldEndReason, 'replaced');
+        assert.equal(audioStops, 1);
+        assert.equal(videoStops, 1);
+        assert.equal(ends.length, 1);
+        assert.equal(client._audioStartTimer, null);
+        assert.equal(client._activeCall, nextCall);
+        nextCall.end();
+    }
+
+    {
+        const { client } = makeClient();
+        const call = new ActiveCall('EVENT-CALL', client._engine, 0);
+        client._activeCall = call;
+        let ended = false;
+        call.on('ended', () => { ended = true; });
+        client._handleCallEvent(2, JSON.stringify({ call_id: 'EVENT-CALL' }));
+        assert.equal(ended, false, 'an incoming offer is not a remote end');
+        client._handleCallEvent(10, JSON.stringify({ call_id: 'OTHER-CALL' }));
+        assert.equal(ended, false, 'another call cannot terminate the active call');
+        client._handleCallEvent(10, JSON.stringify({ call_id: 'EVENT-CALL' }));
+        assert.equal(ended, true);
+    }
+
+    {
+        const call = new ActiveCall('ELSEWHERE', { endCall() {} }, 0);
+        let ended = false;
+        call.on('ended', () => { ended = true; });
+        call._updateState(CallState.ActiveElsewhere);
+        assert.equal(ended, true);
+    }
+
+    {
+        const call = new ActiveCall('PLAY-IDLE', { endCall() {} }, 0);
+        let audioSkips = 0;
+        let videoSkips = 0;
+        call._attachFeeder({
+            currentTrack: null,
+            clearPlaylist() {},
+            enqueue(source) { this.currentTrack = source; },
+            skip() { audioSkips += 1; }
+        });
+        call._attachVideoFeeder({
+            currentTrack: null,
+            clearPlaylist() {},
+            enqueue(source) { this.currentTrack = source; },
+            skip() { videoSkips += 1; }
+        });
+        call.play('baru.mp3');
+        call.playVideo('baru.mp4');
+        assert.equal(audioSkips, 0);
+        assert.equal(videoSkips, 0);
+        assert.equal(call.nowPlaying(), 'baru.mp3');
+        assert.equal(call.nowPlayingVideo(), 'baru.mp4');
+        call.end();
+    }
+});
+
+test('voip-ffmpeg-error', async () => {
+    const feeders = [
+        new AudioFeeder(16000, 1, 320, () => {}, 'media.mp3', { ffmpegPath: '/definitely/missing/ffmpeg' }),
+        new VideoFeeder(320, 240, 24, () => {}, 'media.mp4', { ffmpegPath: '/definitely/missing/ffmpeg' })
+    ];
+    for (const feeder of feeders) {
+        feeder.start();
+        try {
+            for (let attempt = 0; attempt < 100 && !feeder.idle; attempt += 1) {
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            assert.equal(feeder._proc, null);
+            assert.equal(feeder.currentTrack, null);
+            assert.equal(feeder.idle, true);
+        } finally {
+            feeder.stop();
+        }
+    }
+});
+
 test('voip-session', async () => {
     /**
      * The whole point of the rewrite: the call stack rides the socket the bot is
@@ -395,13 +571,15 @@ test('voip-video', async () => {
         const feeder = new VideoFeeder(640, 480, 24, () => {});
         assert.equal(feeder._frameBytes, 640 * 480 * 1.5);
         assert.equal(feeder._frameIntervalMs, 1000 / 24);
-        assert.equal(VIDEO_FORMAT_I420, 0);
+        assert.equal(VIDEO_FORMAT_I420, 1);
     }
 
-    /** Odd sizes must not produce a fractional frame length. */
+    /** Odd sizes are normalized because I420 uses even-sized chroma planes. */
     {
         const feeder = new VideoFeeder(321, 241, 30, () => {});
-        assert.equal(Number.isInteger(feeder._frameBytes), true);
+        assert.equal(feeder.width, 320);
+        assert.equal(feeder.height, 240);
+        assert.equal(feeder._frameBytes, 320 * 240 * 1.5);
     }
 
     /** A frame split across reads is reassembled in order, same as the audio path. */

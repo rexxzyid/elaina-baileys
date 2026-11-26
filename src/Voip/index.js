@@ -87,11 +87,15 @@ export class ActiveCall extends EventEmitter {
         };
 
         this.play = source => {
+            this._clearIdleTimer();
             this._playlist = [];
             if (this._feeder) {
+                const hadCurrent = !!this._feeder.currentTrack;
                 this._feeder.clearPlaylist();
                 this._feeder.enqueue(source);
-                this._feeder.skip();
+                if (hadCurrent) {
+                    this._feeder.skip();
+                }
                 return true;
             }
             this._playlist.push(source);
@@ -130,9 +134,12 @@ export class ActiveCall extends EventEmitter {
         this.playVideo = source => {
             this._videoPlaylist = [];
             if (this._videoFeeder) {
+                const hadCurrent = !!this._videoFeeder.currentTrack;
                 this._videoFeeder.clearPlaylist();
                 this._videoFeeder.enqueue(source);
-                this._videoFeeder.skip();
+                if (hadCurrent) {
+                    this._videoFeeder.skip();
+                }
                 return true;
             }
             this._videoPlaylist.push(source);
@@ -235,7 +242,7 @@ export class ActiveCall extends EventEmitter {
                 if (this._screenShare) {
                     try { this.engine.startScreenShare(); } catch {}
                 }
-            } else if (state === CallState.Idle || state === CallState.Ending) {
+            } else if (state === CallState.Idle || state === CallState.ActiveElsewhere || state === CallState.Ending) {
                 this._forceEnd("ended");
             }
         };
@@ -294,6 +301,27 @@ export class VoipClient {
         this._wsReceiptHandler = null;
         this._captureStartRequested = false;
         this._audioStartTimer = null;
+        this._videoFeederMode = null;
+
+        this._cleanupActiveCall = reason => {
+            const hadActiveCall = !!this._activeCall;
+            try { this._activeCall?._forceEnd(reason); } catch {}
+            if (hadActiveCall) {
+                try { this._engine?.endCall?.(0, true); } catch {}
+            }
+            try { this._feeder?.stop(); } catch {}
+            this._feeder = null;
+            try { this._videoFeeder?.stop(); } catch {}
+            this._videoFeeder = null;
+            this._videoFeederMode = null;
+            try { this._engine?.releaseVideoFrameBuffer?.(); } catch {}
+            if (this._audioStartTimer) {
+                clearTimeout(this._audioStartTimer);
+                this._audioStartTimer = null;
+            }
+            this._captureStartRequested = false;
+            this._activeCall = null;
+        };
 
         this.connect = async () => {
             if (!this._sock) {
@@ -321,15 +349,7 @@ export class VoipClient {
                 throw new Error("Not connected. Call connect() first.");
             }
 
-            if (this._activeCall) {
-                try { this._activeCall._forceEnd("replaced"); } catch {}
-                try { this._engine?.endCall?.(0, true); } catch {}
-                try { this._feeder?.stop(); } catch {}
-                this._feeder = null;
-                try { this._videoFeeder?.stop(); } catch {}
-                this._videoFeeder = null;
-                this._activeCall = null;
-            }
+            this._cleanupActiveCall("replaced");
 
             const targetNumber = phoneNumber.replace(/\D/g, "");
             if (!targetNumber) {
@@ -456,14 +476,28 @@ export class VoipClient {
                 throw new Error(`${JSON.stringify(groupJid)} is not a group jid`);
             }
 
+            this._cleanupActiveCall("replaced");
             const metadata = opts.metadata ?? await this._sock.groupMetadata(groupJid);
             const selfPn = toBareJid(this._sock.authState?.creds?.me?.id ?? this._sock.user?.id ?? "");
             const selfLid = toBareJid(this._sock.authState?.creds?.me?.lid ?? "");
+            const isSelf = member => [member.id, member.pn, member.lid].some(jid => jid && (jid === selfPn || jid === selfLid));
             const members = (metadata?.participants ?? [])
-                .map(participant => toBareJid(participant.id ?? participant.jid ?? ""))
-                .filter(jid => jid && jid !== selfPn && jid !== selfLid);
+                .map(participant => {
+                    const id = toBareJid(participant.id ?? participant.jid ?? "");
+                    const pn = toBareJid(participant.phoneNumber ?? (id && !id.endsWith("@lid") ? id : ""));
+                    const lid = toBareJid(participant.lid ?? (id.endsWith("@lid") ? id : ""));
+                    return { id, pn, lid };
+                })
+                .filter(member => (member.pn || member.lid) && !isSelf(member));
             const wanted = Array.isArray(opts.participants) && opts.participants.length
-                ? opts.participants.map(toBareJid)
+                ? opts.participants.map(toBareJid).filter(Boolean).map(jid => {
+                    const known = members.find(member => member.id === jid || member.pn === jid || member.lid === jid);
+                    return known ?? {
+                        id: jid,
+                        pn: jid.endsWith("@lid") ? "" : jid,
+                        lid: jid.endsWith("@lid") ? jid : ""
+                    };
+                }).filter(member => !isSelf(member))
                 : members;
 
             if (!wanted.length) {
@@ -473,11 +507,22 @@ export class VoipClient {
             const pnUserJids = [];
             const lidUserJids = [];
             const deviceJidsCsv = [];
+            const seenMembers = new Set();
 
             for (const member of wanted) {
-                const isLid = member.endsWith("@lid");
-                const lid = isLid ? member : await this._signaling.resolveLid(member).catch(() => null);
-                const pn = isLid ? "" : member;
+                let lid = member.lid;
+                let pn = member.pn;
+                if (!lid && pn) {
+                    lid = await this._signaling.resolveLid(pn).catch(() => null);
+                }
+                if (!pn && lid) {
+                    try {
+                        pn = toBareJid(await this._sock.signalRepository?.lidMapping?.getPNForLID?.(lid) ?? "");
+                    } catch {}
+                }
+                const memberKey = lid || pn;
+                if (!memberKey || seenMembers.has(memberKey)) continue;
+                seenMembers.add(memberKey);
                 if (pn) {
                     pnUserJids.push(pn);
                 }
@@ -487,7 +532,7 @@ export class VoipClient {
                     try {
                         devices = await this._signaling.discoverPeerDevices(lid);
                     } catch (err) {
-                        this._log("[RTC GROUP DISCOVER DEVICES ERROR]", member, err?.message || err);
+                        this._log("[RTC GROUP DISCOVER DEVICES ERROR]", member.id, err?.message || err);
                     }
                     deviceJidsCsv.push((devices.length ? devices : [lid]).join(","));
                 }
@@ -536,6 +581,9 @@ export class VoipClient {
                     chatName: metadata?.subject ?? ""
                 });
                 this._log("[RTC START GROUP CALL RESULT]", startResult);
+                if (startResult !== 0) {
+                    throw new Error(`startGroupCall failed with status ${startResult}`);
+                }
             } catch (err) {
                 if (this._activeCall === call) this._activeCall = null;
                 try { call._forceEnd("start_group_call_failed"); } catch {}
@@ -556,6 +604,7 @@ export class VoipClient {
                 throw new Error("joinGroupCall needs at least { callId, callCreatorJid } from the incoming offer");
             }
 
+            this._cleanupActiveCall("replaced");
             const call = new ActiveCall(callId, this._engine, opts.durationMs ?? 0);
             call._audioSource = opts.audioSource ?? "silence";
             call._audioStartDelayMs = Number(opts.audioStartDelayMs ?? opts.audioDelayMs ?? 1800) || 0;
@@ -587,6 +636,9 @@ export class VoipClient {
                     chatName: invite?.chatName ?? ""
                 });
                 this._log("[RTC JOIN CALL RESULT]", result);
+                if (result !== 0) {
+                    throw new Error(`joinOngoingCall failed with status ${result}`);
+                }
             } catch (err) {
                 if (this._activeCall === call) this._activeCall = null;
                 try { call._forceEnd("join_call_failed"); } catch {}
@@ -606,6 +658,7 @@ export class VoipClient {
             this._feeder = null;
             try { this._videoFeeder?.stop(); } catch {}
             this._videoFeeder = null;
+            this._videoFeederMode = null;
             if (this._audioStartTimer) {
                 clearTimeout(this._audioStartTimer);
                 this._audioStartTimer = null;
@@ -626,18 +679,11 @@ export class VoipClient {
         };
 
         this.resetCallState = () => {
-            try { this._activeCall?._forceEnd("reset"); } catch {}
-            try { this._engine?.endCall?.(0, true); } catch {}
-            try { this._feeder?.stop(); } catch {}
-            this._feeder = null;
-            try { this._videoFeeder?.stop(); } catch {}
-            this._videoFeeder = null;
-            if (this._audioStartTimer) {
-                clearTimeout(this._audioStartTimer);
-                this._audioStartTimer = null;
+            const hadActiveCall = !!this._activeCall;
+            this._cleanupActiveCall("reset");
+            if (!hadActiveCall) {
+                try { this._engine?.endCall?.(0, true); } catch {}
             }
-            this._captureStartRequested = false;
-            this._activeCall = null;
         };
 
         this._initVoipStack = async () => {
@@ -751,29 +797,34 @@ export class VoipClient {
         this._handleCallEvent = (eventType, eventData) => {
             this._log("[RTC CALL EVENT]", { eventType, hasData: !!eventData, data: eventData });
 
-            if (eventType === 16 && eventData) {
-                try {
-                    const parsed = JSON.parse(eventData);
-                    const info = parsed.call_info ?? parsed.callInfo ?? {};
-                    const callState = Number(info.call_state ?? info.callState ?? 0);
-                    this._log("[RTC CALL STATE]", callState);
-                    this._activeCall?._updateState(callState);
-                    if (callState === CallState.Active) {
-                        this._captureStartRequested = true;
-                        setTimeout(() => {
-                            try { this._startAudioFeeder?.(); } catch (err) {
-                                this._log("[RTC AUDIO START ON ACTIVE ERROR]", err?.message || err);
-                            }
-                        }, 300);
-                    }
-                } catch {}
-            } else if (eventType === 156 && eventData) {
-                try {
-                    const update = JSON.parse(eventData);
-                    this._relay?.updateRelayList(update);
-                } catch {}
-            } else if (eventType === 2) {
-                this._activeCall?._forceEnd("remote_end");
+            const call = this._activeCall;
+            let parsed;
+            if (eventData) {
+                try { parsed = JSON.parse(eventData); } catch {}
+            }
+            const info = parsed?.call_info ?? parsed?.callInfo ?? {};
+            const eventCallId = parsed?.call_id ?? parsed?.callId ?? info.call_id ?? info.callId;
+            if (call?.callId && eventCallId && String(eventCallId) !== call.callId) {
+                return;
+            }
+
+            if (eventType === 16 && parsed) {
+                const callState = Number(info.call_state ?? info.callState ?? 0);
+                this._log("[RTC CALL STATE]", callState);
+                call?._updateState(callState);
+                if (callState === CallState.Active && call) {
+                    this._captureStartRequested = true;
+                    setTimeout(() => {
+                        if (this._activeCall !== call || call.state !== CallState.Active) return;
+                        try { this._startAudioFeeder?.(); } catch (err) {
+                            this._log("[RTC AUDIO START ON ACTIVE ERROR]", err?.message || err);
+                        }
+                    }, 300);
+                }
+            } else if (eventType === 156 && parsed) {
+                this._relay?.updateRelayList(parsed);
+            } else if (eventType === 10 || eventType === 11 || eventType === 38) {
+                call?._forceEnd("remote_end");
             }
         };
 
@@ -809,11 +860,12 @@ export class VoipClient {
 
     const audioDelayMs = Number(this._activeCall?._audioStartDelayMs ?? 0) || 0;
     if (audioDelayMs > 0 && !this._audioStartTimer) {
+        const delayedCall = this._activeCall;
         this._log("[RTC AUDIO] call active, audio ditunda:", audioDelayMs);
         this._audioStartTimer = setTimeout(() => {
             this._audioStartTimer = null;
-            if (this._activeCall?.state === CallState.Active) {
-                this._activeCall._audioStartDelayMs = 0;
+            if (this._activeCall === delayedCall && delayedCall?.state === CallState.Active) {
+                delayedCall._audioStartDelayMs = 0;
                 this._startAudioFeeder();
             }
         }, audioDelayMs);
@@ -857,13 +909,18 @@ export class VoipClient {
 this._startVideoFeeder = (config, useDesktopCapture) => {
     const call = this._activeCall;
     const label = useDesktopCapture ? "SCREEN" : "VIDEO";
+    const mode = useDesktopCapture ? "desktop" : "camera";
     if (!call?._video) {
         this._log(`[RTC ${label}] capture diminta tapi call ini bukan video, diabaikan`);
         return;
     }
     if (this._videoFeeder) {
-        return;
+        if (this._videoFeederMode === mode) {
+            return;
+        }
+        this._stopVideoFeeder(label);
     }
+    this._videoFeederMode = mode;
     const width = config?.width ?? 640;
     const height = config?.height ?? 480;
     const fps = config?.fps ?? 24;
@@ -877,7 +934,7 @@ this._startVideoFeeder = (config, useDesktopCapture) => {
         fps,
         (frame, w, h, rate) => {
             if (this._engine && (!this._engine.isInitialized || this._engine.isInitialized())) {
-                this._engine.sendVideoFrame(frame, w, h, rate, VIDEO_FORMAT_I420, 0, useDesktopCapture);
+                this._engine.sendVideoFrame(frame, w, h, rate, VIDEO_FORMAT_I420, 1, useDesktopCapture);
             }
         },
         undefined,
@@ -892,17 +949,22 @@ this._startVideoFeeder = (config, useDesktopCapture) => {
     this._videoFeeder.start(playlist);
 };
 
-this._stopVideoFeeder = label => {
+this._stopVideoFeeder = (label, expectedMode = null) => {
+    if (expectedMode && this._videoFeederMode !== expectedMode) {
+        this._log(`[RTC ${label}] stop capture lama diabaikan`);
+        return;
+    }
     this._log(`[RTC ${label}] stop feeder`);
     try { this._videoFeeder?.stop(); } catch {}
     this._videoFeeder = null;
+    this._videoFeederMode = null;
     try { this._engine?.releaseVideoFrameBuffer?.(); } catch {}
 };
 
 this._handleVideoCaptureStart = config => this._startVideoFeeder(config, false);
-this._handleVideoCaptureStop = () => this._stopVideoFeeder("VIDEO");
+this._handleVideoCaptureStop = () => this._stopVideoFeeder("VIDEO", "camera");
 this._handleDesktopCaptureStart = config => this._startVideoFeeder(config, true);
-this._handleDesktopCaptureStop = () => this._stopVideoFeeder("SCREEN");
+this._handleDesktopCaptureStop = () => this._stopVideoFeeder("SCREEN", "desktop");
 
 this._handleAudioCaptureStart = () => {
     this._captureStartRequested = true;

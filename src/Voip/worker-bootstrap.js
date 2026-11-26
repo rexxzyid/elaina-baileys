@@ -770,6 +770,7 @@ let u = false;
 let _ = null;
 let jsWorkerRawVideoFramePtr = 0;
 let jsWorkerRawVideoFrameSize = 0;
+let jsWorkerMessageHandlerActive = false;
 const c = (condition, msg) => {
     if (!condition)
         throw "Assertion failed: " + msg;
@@ -816,8 +817,8 @@ const handleRawVideoFrameOnJsWorker = (msg) => {
     const width = Math.max(0, Math.trunc(Number(msg?.width || 0)));
     const height = Math.max(0, Math.trunc(Number(msg?.height || 0)));
     const fps = Math.max(1, Math.trunc(Number(msg?.fps || 0)) || 1);
-    const orientation = Math.trunc(Number(msg?.orientation || 0));
-    const format = Math.trunc(Number(msg?.format || 0));
+    const orientation = Math.trunc(Number(msg?.orientation ?? 1));
+    const format = Math.trunc(Number(msg?.format ?? 1));
     const timestamp = Math.trunc(Number(msg?.timestamp || 0));
     if (!moduleRef ||
         typeof moduleRef._malloc !== "function" ||
@@ -985,11 +986,18 @@ e.addMessageListener("cmd", f);
 e.addMessageListener("jsWorkerCmd", function (msg) {
     try {
         if (msg?.jsWorkerCmd === "pushRawVideoFrame") {
+            if (!jsWorkerMessageHandlerActive) {
+                return;
+            }
             return handleRawVideoFrameOnJsWorker(msg);
         }
         if (msg?.jsWorkerCmd === "releaseRawVideoFrameBuffer") {
+            if (!jsWorkerMessageHandlerActive) {
+                return;
+            }
             return releaseJsWorkerRawVideoFrameBuffer(getActiveWasmModule());
         }
+        jsWorkerMessageHandlerActive = true;
         return WAWebVoipJsWorkerMessageHandler.handleJsWorkerMessage(_, msg);
     }
     catch (err) {

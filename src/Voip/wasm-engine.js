@@ -59,12 +59,14 @@ const resolveWorkerScriptPath = () => {
 class NodeWorkerMessagePort {
     #listeners = new Map();
     #worker;
+    #notifyCallbacks;
     fullyConnected;
     name;
     workerID = 0;
     pthread_ptr = 0;
-    constructor(worker, name = "WAWebVoipWebWasmWorker") {
+    constructor(worker, name = "WAWebVoipWebWasmWorker", notifyCallbacks) {
         this.#worker = worker;
+        this.#notifyCallbacks = notifyCallbacks;
         this.name = name;
         this.fullyConnected = new Promise((resolve) => {
             const loadedHandler = (msg) => {
@@ -169,7 +171,7 @@ class NodeWorkerMessagePort {
                 if (data.eventDataJson !== undefined)
                     listenerData.eventDataJson = data.eventDataJson;
             }
-            WasmEngine.notifyGlobalCallbackListeners(callbackName, listenerData);
+            this.#notifyCallbacks?.(callbackName, listenerData);
             return;
         }
         const dispatch = (key) => {
@@ -189,19 +191,18 @@ class NodeWorkerMessagePort {
 }
 export class WasmEngine {
     #jsWorkers = new Set();
-    static #globalCallbackListeners = new Map();
-    static #globalCallbacksRegistered = false;
-    static registerGlobalCallbackListener = (callbackName, handler) => {
+    #globalCallbackListeners = new Map();
+    #registerGlobalCallbackListener = (callbackName, handler) => {
         const key = `callback:${callbackName}`;
-        let set = WasmEngine.#globalCallbackListeners.get(key);
+        let set = this.#globalCallbackListeners.get(key);
         if (!set) {
             set = new Set();
-            WasmEngine.#globalCallbackListeners.set(key, set);
+            this.#globalCallbackListeners.set(key, set);
         }
         set.add(handler);
     };
-    static notifyGlobalCallbackListeners = (callbackName, data) => {
-        const set = WasmEngine.#globalCallbackListeners.get(`callback:${callbackName}`);
+    #notifyGlobalCallbackListeners = (callbackName, data) => {
+        const set = this.#globalCallbackListeners.get(`callback:${callbackName}`);
         if (!set)
             return;
         for (const handler of set) {
@@ -315,8 +316,7 @@ export class WasmEngine {
         if (typeof wasmLoader !== "function") {
             throw new Error(`No compatible WASM loader found. Tried: ${loaderModuleNames.join(", ")}`);
         }
-        if (!WasmEngine.#globalCallbacksRegistered)
-            this.#registerGlobalCallbacks();
+        this.#registerGlobalCallbacks();
         await this.#initPThreadPool();
         const workersLoadingPromise = this.#loadWasmModuleToAllWorkers();
         const readyPromise = wasmLoader({
@@ -338,7 +338,7 @@ export class WasmEngine {
             }
             catch { }
         }
-        for (const worker of [...this.#runningWorkers, ...this.#unusedWorkers]) {
+        for (const worker of [...this.#runningWorkers, ...this.#unusedWorkers, ...this.#jsWorkers]) {
             try {
                 worker.terminate();
             }
@@ -346,9 +346,11 @@ export class WasmEngine {
         }
         this.#runningWorkers = [];
         this.#unusedWorkers = [];
+        this.#jsWorkers.clear();
         this.#instance = null;
         this.#vmContext = null;
         this.#moduleRegistry.clear();
+        this.#globalCallbackListeners.clear();
         this.#wasmModule = null;
         this.#wasmMemory = null;
         this.#initialized = false;
@@ -557,7 +559,7 @@ export class WasmEngine {
         this.#ensureInitialized();
         return this.#instance.stopScreenShare?.();
     };
-    sendVideoFrame = (frame, width, height, fps, format = 0, orientation = 0, useDesktopCapture = false) => {
+    sendVideoFrame = (frame, width, height, fps, format = 1, orientation = 1, useDesktopCapture = false) => {
         if (!this.#jsWorkers.size || !frame?.byteLength || !width || !height) {
             return false;
         }
@@ -781,7 +783,11 @@ export class WasmEngine {
                     enableLogs: this.#config.enableLogs,
                 },
             });
-            const port = new NodeWorkerMessagePort(worker, "WAWebVoipWebWasmWorker");
+            const port = new NodeWorkerMessagePort(
+                worker,
+                "WAWebVoipWebWasmWorker",
+                (callbackName, data) => this.#notifyGlobalCallbackListeners(callbackName, data)
+            );
             worker.stdout?.on("data", () => { }); // suppress noisy worker stdout
             worker.stderr?.on("data", filterWorkerStderr);
             this.#unusedWorkers.push(port);
@@ -819,7 +825,7 @@ export class WasmEngine {
     };
     #registerGlobalCallbacks = () => {
         const callbacks = this.#config.callbacks ?? {};
-        WasmEngine.registerGlobalCallbackListener("loggingCallback", (data) => {
+        this.#registerGlobalCallbackListener("loggingCallback", (data) => {
             if (!this.#config.enableLogs)
                 return;
             const level = data?.level;
@@ -828,7 +834,7 @@ export class WasmEngine {
             callbacks.onLog?.(mapped, msg);
         });
         if (callbacks.onAudioCaptureInit) {
-            WasmEngine.registerGlobalCallbackListener("initCaptureDriverJS", (data) => {
+            this.#registerGlobalCallbackListener("initCaptureDriverJS", (data) => {
                 callbacks.onAudioCaptureInit({
                     sampleRate: data?.sample_rate ?? data?.sampleRate,
                     channels: data?.channels,
@@ -837,15 +843,15 @@ export class WasmEngine {
                 });
             });
         }
-        WasmEngine.registerGlobalCallbackListener("startVideoCaptureJS", (data) => callbacks.onVideoCaptureStart?.(normalizeVideoCaptureConfig(data)));
-        WasmEngine.registerGlobalCallbackListener("stopVideoCaptureJS", () => callbacks.onVideoCaptureStop?.());
-        WasmEngine.registerGlobalCallbackListener("videoFrameConsumed", () => callbacks.onVideoFrameConsumed?.());
-        WasmEngine.registerGlobalCallbackListener("startDesktopCaptureJS", (data) => callbacks.onDesktopCaptureStart?.(normalizeVideoCaptureConfig(data)));
-        WasmEngine.registerGlobalCallbackListener("stopDesktopCaptureJS", () => callbacks.onDesktopCaptureStop?.());
-        WasmEngine.registerGlobalCallbackListener("startCaptureJS", () => callbacks.onAudioCaptureStart?.());
-        WasmEngine.registerGlobalCallbackListener("stopCaptureJS", () => callbacks.onAudioCaptureStop?.());
+        this.#registerGlobalCallbackListener("startVideoCaptureJS", (data) => callbacks.onVideoCaptureStart?.(normalizeVideoCaptureConfig(data)));
+        this.#registerGlobalCallbackListener("stopVideoCaptureJS", () => callbacks.onVideoCaptureStop?.());
+        this.#registerGlobalCallbackListener("videoFrameConsumed", () => callbacks.onVideoFrameConsumed?.());
+        this.#registerGlobalCallbackListener("startDesktopCaptureJS", (data) => callbacks.onDesktopCaptureStart?.(normalizeVideoCaptureConfig(data)));
+        this.#registerGlobalCallbackListener("stopDesktopCaptureJS", () => callbacks.onDesktopCaptureStop?.());
+        this.#registerGlobalCallbackListener("startCaptureJS", () => callbacks.onAudioCaptureStart?.());
+        this.#registerGlobalCallbackListener("stopCaptureJS", () => callbacks.onAudioCaptureStop?.());
         if (callbacks.onAudioPlaybackInit) {
-            WasmEngine.registerGlobalCallbackListener("initPlaybackDriverJS", (data) => {
+            this.#registerGlobalCallbackListener("initPlaybackDriverJS", (data) => {
                 callbacks.onAudioPlaybackInit({
                     sampleRate: data?.sample_rate ?? data?.sampleRate,
                     channels: data?.channels,
@@ -854,16 +860,16 @@ export class WasmEngine {
                 });
             });
         }
-        WasmEngine.registerGlobalCallbackListener("startPlaybackJS", () => {
+        this.#registerGlobalCallbackListener("startPlaybackJS", () => {
             callbacks.onAudioPlaybackStart?.();
             this.#startAudioPlaybackLoop();
         });
-        WasmEngine.registerGlobalCallbackListener("stopPlaybackJS", () => {
+        this.#registerGlobalCallbackListener("stopPlaybackJS", () => {
             this.#stopAudioPlaybackLoop();
             callbacks.onAudioPlaybackStop?.();
         });
         if (callbacks.onSignalingXmpp) {
-            WasmEngine.registerGlobalCallbackListener("onSignalingXmpp", (data) => {
+            this.#registerGlobalCallbackListener("onSignalingXmpp", (data) => {
                 const peerJid = data.peerJid ?? data.args?.peerJid;
                 const callId = data.callId ?? data.args?.callId;
                 let xmlPayload = data.xmlPayload ?? data.args?.xmlPayload;
@@ -877,12 +883,12 @@ export class WasmEngine {
             });
         }
         if (callbacks.onCallEvent) {
-            WasmEngine.registerGlobalCallbackListener("onCallEvent", (data) => {
+            this.#registerGlobalCallbackListener("onCallEvent", (data) => {
                 callbacks.onCallEvent(data.eventType, data.eventDataJson);
             });
         }
         if (callbacks.sendDataToRelay) {
-            WasmEngine.registerGlobalCallbackListener("sendDataToRelay", (data) => {
+            this.#registerGlobalCallbackListener("sendDataToRelay", (data) => {
                 let relayData = data.data ?? data.args?.data;
                 const ip = data.ip ?? data.args?.ip;
                 const portNum = data.port ?? data.args?.port;
@@ -904,9 +910,14 @@ export class WasmEngine {
                 return relayData.byteLength;
             });
         }
-        WasmEngine.#globalCallbacksRegistered = true;
     };
     #requireModule = (name) => {
+        const notifyCallbacks = (callbackName, data) => this.#notifyGlobalCallbackListeners(callbackName, data);
+        const EngineWorkerMessagePort = class extends NodeWorkerMessagePort {
+            constructor(worker, portName) {
+                super(worker, portName, notifyCallbacks);
+            }
+        };
         const preDefinedModules = {
             Promise,
             WAWebVoipWebWasmWorkerResource: {
@@ -940,9 +951,9 @@ export class WasmEngine {
             },
             WorkerClient: { init: () => { } },
             WorkerMessagePort: {
-                WorkerMessagePort: NodeWorkerMessagePort,
+                WorkerMessagePort: EngineWorkerMessagePort,
                 CastWorkerMessagePort: (w) => w,
-                WorkerSyncedMessagePort: NodeWorkerMessagePort,
+                WorkerSyncedMessagePort: EngineWorkerMessagePort,
             },
             bx: Object.assign((id) => String(id), { getURL: () => "" }),
             HasteSupportData: { handle: () => { } },

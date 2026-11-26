@@ -148,6 +148,14 @@ export class AudioFeeder {
         proc.stderr.on('data', chunk => {
             process.stderr.write(`[AudioFeeder] ${chunk.toString().trim()}\n`);
         });
+        proc.on('error', err => {
+            if (this._proc !== proc) {
+                return;
+            }
+            process.stderr.write(`[AudioFeeder] ffmpeg error: ${err?.message || err}\n`);
+            this._proc = null;
+            this._sourceEnded = true;
+        });
         proc.on('exit', code => {
             if (this._proc !== proc) {
                 return;
