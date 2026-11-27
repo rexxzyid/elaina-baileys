@@ -30,7 +30,7 @@ export class MessageRetryManager {
      * Check if a session should be recreated based on retry count, history, and error code.
      * MAC errors (codes 4 and 7) trigger immediate session recreation regardless of timeout.
      */
-    shouldRecreateSession(jid: any, hasSession: any, errorCode: any): {
+    shouldRecreateSession(jid: any, hasSession: any, errorCode?: any): {
         reason: string;
         recreate: boolean;
     };

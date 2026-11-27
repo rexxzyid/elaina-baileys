@@ -63,7 +63,7 @@ export function makeBusinessSocket(config: any): {
     updateCoverPhoto: (photo: any) => Promise<any>;
     removeCoverPhoto: (id: any) => Promise<any>;
     sendMessageAck: (node: any, errorCode: any) => Promise<void>;
-    sendRetryRequest: (node: any, forceIncludeKeys?: boolean) => Promise<void>;
+    sendRetryRequest: (node: any, forceIncludeKeys?: boolean, errorCode?: number) => Promise<void>;
     rejectCall: (callId: any, callFrom: any) => Promise<void>;
     fetchMessageHistory: (count: any, oldestMsgKey: any, oldestMsgTimestamp: any) => Promise<any>;
     requestPlaceholderResend: (messageKey: any, msgData: any) => Promise<any>;

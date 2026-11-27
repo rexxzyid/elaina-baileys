@@ -7,5 +7,7 @@ export function useSingleFileAuthState(fileName: any): Promise<{
             set: (data: any) => void;
         };
     };
-    saveCreds: () => void;
+    saveCreds: () => Promise<void>;
+    flush: () => Promise<void>;
+    close: () => Promise<void>;
 }>;

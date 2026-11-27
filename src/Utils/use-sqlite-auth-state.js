@@ -88,7 +88,7 @@ export async function useSqliteAuthState(opts) {
                         for (const category in data) {
                             for (const id in data[category]) {
                                 const value = data[category][id];
-                                if (value) {
+                                if (value !== null && value !== undefined) {
                                     const stringified = JSON.stringify(value, BufferJSON.replacer);
                                     stmts.keyUpsert.run(category, id, stringified);
                                 }

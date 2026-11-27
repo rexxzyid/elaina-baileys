@@ -5,6 +5,7 @@ import { areJidsSameUser, isHostedLidUser, isHostedPnUser, isJidBroadcast, isJid
 
  } from '../WABinary/index.js';
 import { unpadRandomMax16 } from './generics.js';
+import { RetryReason } from './message-retry-manager.js';
 const findChildByTag = (node, tag) => {
     if (!node || !Array.isArray(node.content)) {
         return undefined;
@@ -86,6 +87,21 @@ export const DECRYPTION_RETRY_CONFIG = {
     maxRetries: 3,
     baseDelayMs: 100,
     sessionRecordErrors: ['No session record', 'SessionError: No session record']
+};
+
+export const getDecryptionRetryReason = (error) => {
+    const errorMessage = error?.message || error?.toString() || '';
+    if (errorMessage.includes('Bad MAC') || errorMessage.includes('No matching sessions found for message')) {
+        return RetryReason.SignalErrorBadMac;
+    }
+    if (DECRYPTION_RETRY_CONFIG.sessionRecordErrors.some(pattern => errorMessage.includes(pattern)) ||
+        errorMessage.includes('No sessions') ||
+        errorMessage.includes('No open session') ||
+        errorMessage.includes('No session found to decrypt message') ||
+        errorMessage.includes('No SenderKeyRecord found for decryption')) {
+        return RetryReason.SignalErrorNoSession;
+    }
+    return RetryReason.UnknownError;
 };
 
 export const NACK_REASONS = {
@@ -268,6 +284,7 @@ export const decryptMessageNode = (stanza, meId, meLid, repository, logger) => {
         author,
         async decrypt() {
             let decryptables = 0;
+            let decryptionErrorCode;
             if (Array.isArray(stanza.content)) {
                 for (const { tag, attrs, content } of stanza.content) {
                     if (tag === 'verified_name' && content instanceof Uint8Array) {
@@ -345,17 +362,24 @@ export const decryptMessageNode = (stanza, meId, meLid, repository, logger) => {
                         }
                     }
                     catch (err) {
+                        decryptionErrorCode = getDecryptionRetryReason(err);
                         const errorContext = {
                             key: fullMessage.key,
                             err,
                             messageType: tag === 'plaintext' ? 'plaintext' : attrs.type,
                             sender,
                             author,
+                            decryptionErrorCode,
                             isSessionRecordError: isSessionRecordError(err)
                         };
-                        logger.error(errorContext, 'failed to decrypt message');
+                        if (decryptionErrorCode === RetryReason.SignalErrorBadMac || decryptionErrorCode === RetryReason.SignalErrorNoSession) {
+                            logger.debug(errorContext, 'session decryption failed');
+                        }
+                        else {
+                            logger.error(errorContext, 'failed to decrypt message');
+                        }
                         fullMessage.messageStubType = proto.WebMessageInfo.StubType.CIPHERTEXT;
-                        fullMessage.messageStubParameters = [err.message.toString()];
+                        fullMessage.messageStubParameters = [(err?.message || err?.toString() || 'Unknown decryption error').toString()];
                     }
                 }
             }
@@ -364,6 +388,7 @@ export const decryptMessageNode = (stanza, meId, meLid, repository, logger) => {
                 fullMessage.messageStubType = proto.WebMessageInfo.StubType.CIPHERTEXT;
                 fullMessage.messageStubParameters = [NO_MESSAGE_FOUND_ERROR_TEXT];
             }
+            return decryptionErrorCode;
         }
     };
 };

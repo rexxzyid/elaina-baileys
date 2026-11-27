@@ -36,7 +36,7 @@ export const makeAuthStateFromStore = async (store) => {
                 const rows = await store.readMany(type, ids);
                 for (const id of ids) {
                     const value = decodeAuthValue(type, rows[id]);
-                    if (value) {
+                    if (value !== null && value !== undefined) {
                         data[id] = value;
                     }
                 }
@@ -48,7 +48,7 @@ export const makeAuthStateFromStore = async (store) => {
                 for (const type in data) {
                     for (const id in data[type]) {
                         const value = data[type][id];
-                        if (value) {
+                        if (value !== null && value !== undefined) {
                             writes.push({ type, id, value: encodeAuthValue(value) });
                         }
                         else {

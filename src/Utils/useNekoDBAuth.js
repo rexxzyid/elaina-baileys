@@ -24,23 +24,21 @@ export async function useNekoDBAuth(db, collectionName = 'baileys_elaina_auth') 
     }
 
     const readData = async key => {
-        try {
-            const doc = await col.findOne({ k: key })
+        const doc = await col.findOne({ k: key })
 
-            if (!doc || doc.v == null) {
-                return null
-            }
-
-            return JSON.parse(doc.v, BufferJSON.reviver)
-        } catch {
+        if (!doc || doc.v == null) {
             return null
+        }
+
+        try {
+            return JSON.parse(doc.v, BufferJSON.reviver)
+        } catch (error) {
+            throw new Error(`useNekoDBAuth: data auth '${key}' rusak: ${error.message}`, { cause: error })
         }
     }
 
     const removeData = async key => {
-        try {
-            await col.deleteWhere({ k: key })
-        } catch {}
+        await col.deleteWhere({ k: key })
     }
 
     const creds =
@@ -86,7 +84,7 @@ export async function useNekoDBAuth(db, collectionName = 'baileys_elaina_auth') 
                             const key = `${category}-${id}`
 
                             tasks.push(
-                                value
+                                value !== null && value !== undefined
                                     ? writeData(value, key)
                                     : removeData(key)
                             )
@@ -103,9 +101,7 @@ export async function useNekoDBAuth(db, collectionName = 'baileys_elaina_auth') 
         },
 
         clearAuth: async () => {
-            try {
-                await db.deleteCollection(collectionName)
-            } catch {}
+            await db.deleteCollection(collectionName)
         }
     }
 }

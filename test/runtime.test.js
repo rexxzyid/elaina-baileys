@@ -276,6 +276,10 @@ test('auth-state-sqlite', async () => {
 
             assert.deepEqual(await auth.state.keys.get('pre-key', ['404']), {}, 'an unknown id is absent');
 
+            const falsyValues = { zero: 0, no: false, empty: '' };
+            await auth.state.keys.set({ example: falsyValues });
+            assert.deepEqual(await auth.state.keys.get('example', Object.keys(falsyValues)), falsyValues, 'falsy values survive the round trip');
+
             await auth.state.keys.set({ 'pre-key': { 1: null } });
             assert.deepEqual(await auth.state.keys.get('pre-key', ['1']), {}, 'a null value deletes the row');
 

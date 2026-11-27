@@ -1,7 +1,7 @@
 /* Elaina Baileys maintained distribution. Upstream notices and license are preserved in LICENSE and NOTICE.md. */
 export function makeMessagesRecvSocket(config: any): {
     sendMessageAck: (node: any, errorCode: any) => Promise<void>;
-    sendRetryRequest: (node: any, forceIncludeKeys?: boolean) => Promise<void>;
+    sendRetryRequest: (node: any, forceIncludeKeys?: boolean, errorCode?: number) => Promise<void>;
     rejectCall: (callId: any, callFrom: any) => Promise<void>;
     fetchMessageHistory: (count: any, oldestMsgKey: any, oldestMsgTimestamp: any) => Promise<any>;
     requestPlaceholderResend: (messageKey: any, msgData: any) => Promise<any>;

@@ -39,7 +39,7 @@ export function makeCacheableSignalKeyStore(store, logger, _cache) {
                     const fetched = await store.get(type, idsToFetch);
                     for (const id of idsToFetch) {
                         const item = fetched[id];
-                        if (item) {
+                        if (item !== undefined && item !== null) {
                             data[id] = item;
 
                             await cache.set(getUniqueId(type, id), item);
@@ -51,20 +51,29 @@ export function makeCacheableSignalKeyStore(store, logger, _cache) {
         },
         async set(data) {
             return cacheMutex.runExclusive(async () => {
+                await store.set(data);
                 let keys = 0;
                 for (const type in data) {
                     for (const id in data[type]) {
-                        await cache.set(getUniqueId(type, id), data[type][id]);
+                        const value = data[type][id];
+                        const cacheKey = getUniqueId(type, id);
+                        if (value === null || value === undefined) {
+                            await cache.del(cacheKey);
+                        }
+                        else {
+                            await cache.set(cacheKey, value);
+                        }
                         keys += 1;
                     }
                 }
                 logger?.trace({ keys }, 'updated cache');
-                await store.set(data);
             });
         },
         async clear() {
-            await cache.flushAll();
-            await store.clear?.();
+            return cacheMutex.runExclusive(async () => {
+                await store.clear?.();
+                await cache.flushAll();
+            });
         }
     };
 }

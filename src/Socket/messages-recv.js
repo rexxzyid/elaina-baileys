@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import { proto } from '../../WAProto/index.js';
 import { DEFAULT_CACHE_TTLS, DEFAULT_CONNECTION_CONFIG, KEY_BUNDLE_TYPE, MIN_PREKEY_COUNT, PLACEHOLDER_MAX_AGE_SECONDS, STATUS_EXPIRY_SECONDS } from '../Defaults/index.js';
 import { ReachoutTimelockEnforcementType, WAMessageStatus, WAMessageStubType } from '../Types/index.js';
-import { ACCOUNT_RESTRICTED_TEXT, aesDecryptCTR, aesEncryptGCM, cleanMessage, Curve, decodeMediaRetryNode, decodeMessageNode, decryptMessageNode, delay, derivePairingCodeKey, encodeBigEndian, encodeSignedDeviceIdentity, extractAddressingContext, extractE2ESessionFromRetryReceipt, getCallStatusFromNode, getHistoryMsg, getNextPreKeys, getStatusFromReceiptType, handleIdentityChange, hkdf, MISSING_KEYS_ERROR_TEXT, NACK_REASONS, NO_MESSAGE_FOUND_ERROR_TEXT, RETRYABLE_ACK_CODES, SERVER_ERROR_CODES, toNumber, unixTimestampSeconds, xmppPreKey, xmppSignedPreKey } from '../Utils/index.js';
+import { ACCOUNT_RESTRICTED_TEXT, aesDecryptCTR, aesEncryptGCM, cleanMessage, Curve, decodeMediaRetryNode, decodeMessageNode, decryptMessageNode, delay, derivePairingCodeKey, encodeBigEndian, encodeSignedDeviceIdentity, extractAddressingContext, extractE2ESessionFromRetryReceipt, getCallStatusFromNode, getHistoryMsg, getNextPreKeys, getStatusFromReceiptType, handleIdentityChange, hkdf, MISSING_KEYS_ERROR_TEXT, NACK_REASONS, NO_MESSAGE_FOUND_ERROR_TEXT, RETRYABLE_ACK_CODES, RetryReason, SERVER_ERROR_CODES, toNumber, unixTimestampSeconds, xmppPreKey, xmppSignedPreKey } from '../Utils/index.js';
 import { makeMutex } from '../Utils/make-mutex.js';
 import { makeOfflineNodeProcessor } from '../Utils/offline-node-processor.js';
 import { buildAckStanza } from '../Utils/stanza-ack.js';
@@ -407,7 +407,7 @@ export const makeMessagesRecvSocket = (config) => {
         };
         await query(stanza);
     };
-    const sendRetryRequest = async (node, forceIncludeKeys = false) => {
+    const sendRetryRequest = async (node, forceIncludeKeys = false, errorCode = RetryReason.UnknownError) => {
         const { fullMessage } = decodeMessageNode(node, authState.creds.me.id, authState.creds.me.lid || '');
         const { key: msgKey } = fullMessage;
         const msgId = msgKey.id;
@@ -440,19 +440,21 @@ export const makeMessagesRecvSocket = (config) => {
         const retryCount = (await msgRetryCache.get(key)) || 1;
         const { account, signedPreKey, signedIdentityKey: identityKey } = authState.creds;
         const fromJid = node.attrs.from;
+        const encNode = getBinaryNodeChild(node, 'enc');
+        const isDirectSessionFailure = encNode?.attrs.type === 'msg' || encNode?.attrs.type === 'pkmsg';
 
         let shouldRecreateSession = false;
         let recreateReason = '';
-        if (enableAutoSessionRecreation && messageRetryManager && retryCount > 1) {
+        if (enableAutoSessionRecreation && messageRetryManager && retryCount > 1 && isDirectSessionFailure) {
             try {
-
-                const sessionId = signalRepository.jidToSignalProtocolAddress(fromJid);
-                const hasSession = await signalRepository.validateSession(fromJid);
-                const result = messageRetryManager.shouldRecreateSession(fromJid, hasSession.exists);
+                const sessionJid = node.attrs.participant || fromJid;
+                const sessionId = signalRepository.jidToSignalProtocolAddress(sessionJid);
+                const hasSession = await signalRepository.validateSession(sessionJid);
+                const result = messageRetryManager.shouldRecreateSession(sessionJid, hasSession.exists, errorCode);
                 shouldRecreateSession = result.recreate;
                 recreateReason = result.reason;
                 if (shouldRecreateSession) {
-                    logger.debug({ fromJid, retryCount, reason: recreateReason }, 'recreating session for retry');
+                    logger.debug({ fromJid: sessionJid, retryCount, errorCode, reason: recreateReason }, 'recreating session for retry');
 
                     await authState.keys.set({ session: { [sessionId]: null } });
                     forceIncludeKeys = true;
@@ -500,7 +502,7 @@ export const makeMessagesRecvSocket = (config) => {
                             t: node.attrs.t,
                             v: '1',
 
-                            error: '0'
+                            error: errorCode.toString()
                         }
                     },
                     {
@@ -1122,10 +1124,11 @@ export const makeMessagesRecvSocket = (config) => {
         }
         let shouldRecreateSession = false;
         let recreateReason = '';
-        if (enableAutoSessionRecreation && messageRetryManager && retryCount > 1 && !injectedFromBundle) {
+        if (enableAutoSessionRecreation && messageRetryManager && retryCount > 1 && !injectedFromBundle && !isJidGroup(remoteJid)) {
             try {
                 const hasSession = await signalRepository.validateSession(participant);
-                const result = messageRetryManager.shouldRecreateSession(participant, hasSession.exists);
+                const retryErrorCode = messageRetryManager.parseRetryErrorCode(retryNode.attrs.error);
+                const result = messageRetryManager.shouldRecreateSession(participant, hasSession.exists, retryErrorCode);
                 shouldRecreateSession = result.recreate;
                 recreateReason = result.reason;
                 if (shouldRecreateSession) {
@@ -1298,7 +1301,7 @@ export const makeMessagesRecvSocket = (config) => {
                 }
             }
             await messageMutex.mutex(async () => {
-                await decrypt();
+                const decryptionErrorCode = await decrypt();
                 if (msg.key?.remoteJid && msg.key?.id && msg.message && messageRetryManager) {
                     messageRetryManager.addRecentMessage(msg.key.remoteJid, msg.key.id, msg.message);
                 }
@@ -1386,7 +1389,7 @@ export const makeMessagesRecvSocket = (config) => {
                                         return;
                                     }
                                     const encNode = getBinaryNodeChild(node, 'enc');
-                                    await sendRetryRequest(node, !encNode);
+                                    await sendRetryRequest(node, !encNode, decryptionErrorCode);
                                     if (retryRequestDelayMs) {
                                         await delay(retryRequestDelayMs);
                                     }

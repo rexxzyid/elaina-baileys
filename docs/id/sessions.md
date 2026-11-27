@@ -27,8 +27,10 @@ Semuanya dalam satu berkas JSON. Lebih mudah dibackup atau dipindah antar host, 
 ```js
 import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
 
-const { state, saveCreds } = await useSingleFileAuthState('./session.json')
+const { state, saveCreds, close } = await useSingleFileAuthState('./session.json')
 ```
+
+`saveCreds()` menunggu kredensial benar-benar tertulis. Panggil `await close()` saat mematikan bot agar perubahan Signal key yang masih menunggu debounce ikut disimpan.
 
 ## SQLite
 

@@ -70,6 +70,7 @@ export namespace SERVER_ERROR_CODES {
     let NewChatMessagesCapped: string;
 }
 export const RETRYABLE_ACK_CODES: Set<string>;
+export function getDecryptionRetryReason(error: any): any;
 export function extractAddressingContext(stanza: any): {
     addressingMode: any;
     senderAlt: any;
@@ -96,5 +97,5 @@ export function decryptMessageNode(stanza: any, meId: any, meLid: any, repositor
     };
     category: any;
     author: any;
-    decrypt(): Promise<void>;
+    decrypt(): Promise<number | undefined>;
 };
