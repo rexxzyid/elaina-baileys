@@ -19,7 +19,7 @@
 <header class="topbar">
   <button class="menu-toggle" type="button" aria-label="Menu" data-menu>☰</button>
   <a class="brand" href="./index.html"><span class="brand-mark">💜</span><span>Elaina Baileys</span></a>
-  <span class="version">v1.4.7</span>
+  <span class="version">v1.4.11</span>
   <div class="topbar-actions">
     <a class="lang" href="../en/sessions.html">EN</a>
     <button class="theme" type="button" data-theme-toggle aria-label="Theme">◐</button>
@@ -51,7 +51,8 @@ const { state, saveCreds } = await useMultiFileAuthState('./session')</code></pr
 <p>Semuanya dalam satu berkas JSON. Lebih mudah dibackup atau dipindah antar host, tapi melambat begitu kumpulan kuncinya membesar karena seluruh berkas ditulis ulang setiap ada perubahan.</p>
 <div class="code-block"><span class="code-lang">js</span><button class="copy" type="button" data-copy>copy</button><pre><code>import { useSingleFileAuthState } from '@rexxhayanasi/elaina-baileys'
 
-const { state, saveCreds } = await useSingleFileAuthState('./session.json')</code></pre></div>
+const { state, saveCreds, close } = await useSingleFileAuthState('./session.json')</code></pre></div>
+<p><code>saveCreds()</code> menunggu kredensial benar-benar tertulis. Panggil <code>await close()</code> saat mematikan bot agar perubahan Signal key yang masih menunggu debounce ikut disimpan.</p>
 <h2 id="sqlite">SQLite<a class="anchor" href="#sqlite" aria-label="link">#</a></h2>
 <p>Kunci disimpan di database sungguhan, jadi pembacaan bersamaan dan kumpulan kunci besar tetap cepat. Butuh <code>better-sqlite3</code> v11, v12, atau v13.</p>
 <div class="code-block"><span class="code-lang">bash</span><button class="copy" type="button" data-copy>copy</button><pre><code>npm i better-sqlite3</code></pre></div>
