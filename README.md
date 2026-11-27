@@ -4589,9 +4589,9 @@ Lihat seluruh ID tema dan bubble yang dikenali beserta contohnya:
 await conn.setThemeGroup(m.chat, 'example')
 ```
 
-Hasilnya berupa objek `{ themes, bubbles, usage }`. Katalog tersebut memuat 23 tema
-dasar, 22 varian `@Tonal`, dan 4 varian `@Minimal` dari WhatsApp Web. Alias memakai
-huruf kecil dan tanda hubung, misalnya:
+Hasilnya berupa objek `{ themes, bubbles, animatedWallpapers, usage }`. Katalog tersebut
+memuat 23 tema dasar, 22 varian `@Tonal`, 4 varian `@Minimal`, dan 4 wallpaper animasi
+dari WhatsApp. Alias tema memakai huruf kecil dan tanda hubung, misalnya:
 
 ```js
 await conn.setThemeGroup(m.chat, { theme: 'pink' })
@@ -4626,6 +4626,11 @@ await conn.setThemeGroup(m.chat, {
 
 await conn.setThemeGroup(m.chat, { color: '#ff69b4' })
 await conn.setThemeGroup(m.chat, { wallpaper: './wallpaper.jpg' })
+await conn.setThemeGroup(m.chat, {
+    animatedWallpaper: 'aurora',
+    bubble: 'pink',
+    dimLevel: 0.2
+})
 await conn.setThemeGroup(m.chat, { reset: true })
 ```
 
@@ -4634,6 +4639,12 @@ lama seperti `conn.setThemGroup(m.chat, '#ff69b4')` atau
 `conn.setThemGroup(m.chat, './wallpaper.jpg')` tetap diterima. String dan `URL`
 dinormalisasi menjadi `{ url }` sebelum dibaca, sehingga path maupun URL wallpaper
 tidak lagi masuk ke `getStream` sebagai string mentah.
+
+`animatedWallpaper` menerima empat ID animasi resmi: `gradient`, `iridescent`, `aurora`,
+dan `lava-lamp` (ID wire `lavaLamp`). ID tersebut juga dapat dipakai melalui `theme` atau
+sebagai string langsung. Animasi ini memilih renderer bawaan aplikasi dan tidak mengunggah
+media; ID buatan sendiri ditolak karena tidak mempunyai renderer pada APK resmi. `dimLevel`
+juga berlaku untuk wallpaper animasi.
 
 `color` menerima `#RRGGBB` atau preset lama `pink`, `biru`, `ungu`, `hitam`, `hijau`,
 `merah`, `kuning`, `oren`, `putih`. `wallpaper` menerima path, URL, Buffer,
@@ -4647,9 +4658,10 @@ mengirim ID skema mentah; gunakan `bubble` untuk validasi terhadap katalog.
 
 Protobuf hanya menyediakan satu `colorSchemeId` per pesan. Oleh karena itu, tema
 bernama dan bubble dari keluarga berbeda dikirim berurutan sebagai tema lalu override
-bubble. Wallpaper atau warna solid dan bubble hanya membutuhkan satu pesan. ID yang
-tersedia di katalog berasal dari bundle WhatsApp Web; dukungan rendering pada versi
-aplikasi penerima tetap bergantung pada klien WhatsApp.
+bubble. Wallpaper atau warna solid dan bubble hanya membutuhkan satu pesan. ID tema dan
+bubble yang tersedia di katalog berasal dari bundle WhatsApp Web, sedangkan ID wallpaper
+animasi berasal dari registry APK. Dukungan rendering pada versi aplikasi penerima tetap
+bergantung pada klien WhatsApp.
 
 Helper ini hanya memeriksa bahwa JID berupa grup. Hak admin grup, hak owner,
 dan pembatasan grup tetap ditentukan oleh server WhatsApp; plugin pemanggil

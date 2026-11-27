@@ -57,7 +57,14 @@ for (const [alias, id] of Object.entries(THEME_FAMILIES)) {
 
 export const CHAT_THEME_PRESETS = Object.freeze(schemes);
 export const CHAT_BUBBLE_PRESETS = CHAT_THEME_PRESETS;
+export const CHAT_ANIMATED_WALLPAPER_PRESETS = Object.freeze({
+    gradient: 'gradient',
+    iridescent: 'iridescent',
+    aurora: 'aurora',
+    'lava-lamp': 'lavaLamp'
+});
 const CHAT_SCHEME_IDS = new Set(Object.values(CHAT_THEME_PRESETS));
+const CHAT_ANIMATED_WALLPAPER_IDS = new Set(Object.values(CHAT_ANIMATED_WALLPAPER_PRESETS));
 
 const RESET_WORDS = new Set(['reset', 'clear', 'hapus', 'default']);
 const EXAMPLE_WORDS = new Set(['example', 'examples', 'contoh', 'list']);
@@ -69,11 +76,13 @@ export const isChatThemeExample = content => typeof content === 'string' && EXAM
 export const getChatThemeExamples = () => ({
     themes: CHAT_THEME_PRESETS,
     bubbles: CHAT_BUBBLE_PRESETS,
+    animatedWallpapers: CHAT_ANIMATED_WALLPAPER_PRESETS,
     usage: [
         "conn.setThemeGroup(m.chat, { theme: 'pink' })",
         "conn.setThemeGroup(m.chat, { bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: 'pink', bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: './wallpaper.jpg', bubble: 'pink-tonal' })",
+        "conn.setThemeGroup(m.chat, { animatedWallpaper: 'aurora', dimLevel: 0.2 })",
         "conn.setThemeGroup(m.chat, { reset: true })"
     ]
 });
@@ -111,14 +120,37 @@ const resolveScheme = (value, label) => {
     return scheme;
 };
 
+const findAnimatedWallpaper = value => {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    const input = value.trim();
+    if (CHAT_ANIMATED_WALLPAPER_IDS.has(input)) {
+        return input;
+    }
+    const alias = input.toLowerCase().replace(/[\s_@]+/g, '-');
+    return CHAT_ANIMATED_WALLPAPER_PRESETS[alias] || null;
+};
+
+const resolveAnimatedWallpaper = value => {
+    const id = findAnimatedWallpaper(value);
+    if (!id) {
+        throw new Boom('animatedWallpaper must be gradient, iridescent, aurora, or lava-lamp', { statusCode: 400 });
+    }
+    return id;
+};
+
 const normalizeContent = content => {
     if (content == null) {
-        throw new Boom('setThemeGroup needs a theme, bubble, wallpaper, color, or reset', { statusCode: 400 });
+        throw new Boom('setThemeGroup needs a theme, bubble, wallpaper, animatedWallpaper, color, or reset', { statusCode: 400 });
     }
     if (typeof content === 'string') {
         const value = content.trim();
         if (RESET_WORDS.has(value.toLowerCase())) {
             return { reset: true };
+        }
+        if (findAnimatedWallpaper(value)) {
+            return { animatedWallpaper: value };
         }
         if (value.startsWith('#') || CHAT_THEME_COLOR_PRESETS[value.toLowerCase()] || /^[0-9a-f]{6}$/i.test(value)) {
             return { color: value };
@@ -208,14 +240,15 @@ const uploadWallpaper = async (wallpaper, options) => {
     }
 };
 
-const buildMessage = ({ bubble, color, wallpaper, reset, defaultWallpaper }) => {
+const buildMessage = ({ bubble, color, wallpaper, animatedWallpaper, reset, defaultWallpaper }) => {
     const chatThemeSetting = proto.Message.ChatThemeSetting.fromObject({
         settingTimestampMs: Date.now(),
         ...(reset ? { clearTheme: true } : {}),
         ...(bubble ? { colorSchemeId: bubble } : {}),
         ...(defaultWallpaper ? { defaultWallpaper: {} } : {}),
         ...(color != null ? { solidColor: { backgroundLightArgb: color, backgroundDarkArgb: color } } : {}),
-        ...(wallpaper ? { customImage: wallpaper } : {})
+        ...(wallpaper ? { customImage: wallpaper } : {}),
+        ...(animatedWallpaper ? { animatedWallpaper } : {})
     });
     return proto.Message.fromObject({
         protocolMessage: {
@@ -228,8 +261,8 @@ const buildMessage = ({ bubble, color, wallpaper, reset, defaultWallpaper }) => 
 export const prepareChatThemeMessages = async (content, options = {}) => {
     const input = normalizeContent(content);
     if (input.theme != null) {
-        if (input.color != null || input.wallpaper != null || input.reset === true) {
-            throw new Boom('theme cannot be combined with color, wallpaper, or reset', { statusCode: 400 });
+        if (input.color != null || input.wallpaper != null || input.animatedWallpaper != null || input.reset === true) {
+            throw new Boom('theme cannot be combined with color, wallpaper, animatedWallpaper, or reset', { statusCode: 400 });
         }
         if (typeof input.theme === 'string') {
             const value = input.theme.trim();
@@ -239,6 +272,9 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
             const scheme = findScheme(value);
             if (scheme) {
                 input.themeScheme = scheme;
+            }
+            else if (findAnimatedWallpaper(value)) {
+                input.animatedWallpaper = value;
             }
             else if (value.startsWith('#') || CHAT_THEME_COLOR_PRESETS[value.toLowerCase()] || /^[0-9a-f]{6}$/i.test(value)) {
                 input.color = value;
@@ -259,7 +295,7 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
         throw new Boom('chatThemeSetting.colorSchemeId must be a non-empty string', { statusCode: 400 });
     }
     const reset = input.reset === true;
-    const sources = [reset, input.color != null, input.wallpaper != null, input.themeScheme != null].filter(Boolean).length;
+    const sources = [reset, input.color != null, input.wallpaper != null, input.animatedWallpaper != null, input.themeScheme != null].filter(Boolean).length;
     if (sources > 1 || (sources === 0 && bubble == null) || (reset && bubble != null)) {
         throw new Boom('setThemeGroup needs exactly one theme source, optionally one bubble, or reset', { statusCode: 400 });
     }
@@ -274,6 +310,13 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
             wallpaper.dimLevel = Number(input.dimLevel);
         }
     }
+    let animatedWallpaper;
+    if (input.animatedWallpaper != null) {
+        animatedWallpaper = { animatedWallpaperId: resolveAnimatedWallpaper(input.animatedWallpaper) };
+        if (input.dimLevel != null) {
+            animatedWallpaper.dimLevel = Number(input.dimLevel);
+        }
+    }
     if (input.themeScheme) {
         const themeMessage = buildMessage({ bubble: input.themeScheme, defaultWallpaper: true });
         if (bubble && bubble !== input.themeScheme) {
@@ -281,7 +324,7 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
         }
         return [themeMessage];
     }
-    return [buildMessage({ bubble, color, wallpaper })];
+    return [buildMessage({ bubble, color, wallpaper, animatedWallpaper })];
 };
 
 export const prepareChatThemeMessage = async (content, options = {}) => {

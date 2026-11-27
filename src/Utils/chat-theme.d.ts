@@ -2,6 +2,7 @@
 export const CHAT_THEME_COLOR_PRESETS: Readonly<Record<string, string>>;
 export const CHAT_THEME_PRESETS: Readonly<Record<string, string>>;
 export const CHAT_BUBBLE_PRESETS: Readonly<Record<string, string>>;
+export const CHAT_ANIMATED_WALLPAPER_PRESETS: Readonly<Record<string, string>>;
 
 export type ChatThemeMedia = string | Buffer | Uint8Array | URL | {
     url: string | URL;
@@ -14,6 +15,7 @@ export type ChatThemeContent = string | Buffer | Uint8Array | URL | {
     bubble?: string;
     color?: string;
     wallpaper?: ChatThemeMedia;
+    animatedWallpaper?: string;
     reset?: boolean;
     colorSchemeId?: string;
     dimLevel?: number;
@@ -22,6 +24,7 @@ export type ChatThemeContent = string | Buffer | Uint8Array | URL | {
 export interface ChatThemeCatalog {
     themes: Readonly<Record<string, string>>;
     bubbles: Readonly<Record<string, string>>;
+    animatedWallpapers: Readonly<Record<string, string>>;
     usage: string[];
 }
 
