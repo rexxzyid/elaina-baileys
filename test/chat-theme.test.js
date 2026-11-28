@@ -106,12 +106,14 @@ test('animated wallpaper presets use native IDs without media upload', async () 
 
 test('stock wallpaper IDs are available through theme without media upload', async () => {
     const catalog = getChatThemeExamples();
-    const ids = Object.values(catalog.themes).filter(id => /^wallpaper(?:-|_)/.test(id));
+    const wallpapers = Object.entries(catalog.themes).filter(([, id]) => /^wallpaper(?:-|_)/.test(id));
+    const ids = wallpapers.map(([, id]) => id);
     assert.equal(ids.length, 86);
     assert.equal(new Set(ids).size, 86);
-    for (const id of ids) {
+    for (const [alias, id] of wallpapers) {
+        assert.equal(alias, id.endsWith('_001') ? id.slice(0, -4) : id);
         const message = await prepareChatThemeMessage({
-            theme: id,
+            theme: alias,
             bubble: 'pink',
             dimLevel: 0.25
         }, {
@@ -147,8 +149,10 @@ test('theme and bubble catalogs contain every WA Web scheme', () => {
     assert.equal(Object.keys(catalog.themes).length, 135);
     assert.equal(CHAT_BUBBLE_PRESETS, CHAT_THEME_PRESETS);
     assert.equal(catalog.themes.pink, 'Pink');
-    assert.equal(catalog.themes.wallpaper_bloom_001, 'wallpaper_bloom_001');
-    assert.equal(catalog.themes.wallpaper_lion_HP_001, 'wallpaper_lion_HP_001');
+    assert.equal(catalog.themes.wallpaper_bloom, 'wallpaper_bloom_001');
+    assert.equal(catalog.themes.wallpaper_lion_HP, 'wallpaper_lion_HP_001');
+    assert.equal(catalog.themes['wallpaper-00001'], 'wallpaper-00001');
+    assert.equal(catalog.themes.wallpaper_bloom_001, undefined);
     assert.equal(catalog.bubbles['royal-blue-tonal'], 'Royal-Blue@Tonal');
     assert.equal(catalog.bubbles['default-blue-minimal'], 'Default-Blue@Minimal');
     assert.equal(catalog.bubbles['sunset-orange'], 'Sunset-Orange');

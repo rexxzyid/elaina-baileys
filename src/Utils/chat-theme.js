@@ -154,6 +154,9 @@ const CHAT_STOCK_WALLPAPER_IDS = Object.freeze([
 const CHAT_SCHEME_IDS = new Set(Object.values(CHAT_THEME_PRESETS));
 const CHAT_ANIMATED_WALLPAPER_IDS = new Set(Object.values(CHAT_ANIMATED_WALLPAPER_PRESETS));
 const CHAT_STOCK_WALLPAPER_ID_SET = new Set(CHAT_STOCK_WALLPAPER_IDS);
+const CHAT_STOCK_WALLPAPER_PRESETS = Object.freeze(Object.fromEntries(
+    CHAT_STOCK_WALLPAPER_IDS.map(id => [id.endsWith('_001') ? id.slice(0, -4) : id, id])
+));
 
 const RESET_WORDS = new Set(['reset', 'clear', 'hapus', 'default']);
 const EXAMPLE_WORDS = new Set(['example', 'examples', 'contoh', 'list']);
@@ -165,7 +168,7 @@ export const isChatThemeExample = content => typeof content === 'string' && EXAM
 export const getChatThemeExamples = () => ({
     themes: {
         ...CHAT_THEME_PRESETS,
-        ...Object.fromEntries(CHAT_STOCK_WALLPAPER_IDS.map(id => [id, id]))
+        ...CHAT_STOCK_WALLPAPER_PRESETS
     },
     bubbles: CHAT_BUBBLE_PRESETS,
     animatedWallpapers: CHAT_ANIMATED_WALLPAPER_PRESETS,
@@ -174,7 +177,7 @@ export const getChatThemeExamples = () => ({
         "conn.setThemeGroup(m.chat, { bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: 'pink', bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: './wallpaper.jpg', bubble: 'pink-tonal' })",
-        "conn.setThemeGroup(m.chat, { theme: 'wallpaper_bloom_001', dimLevel: 0.2 })",
+        "conn.setThemeGroup(m.chat, { theme: 'wallpaper_bloom', dimLevel: 0.2 })",
         "conn.setThemeGroup(m.chat, { animatedWallpaper: 'aurora', dimLevel: 0.2 })",
         "conn.setThemeGroup(m.chat, { reset: true })"
     ]
@@ -238,7 +241,10 @@ const findStockWallpaper = value => {
         return null;
     }
     const input = value.trim();
-    return CHAT_STOCK_WALLPAPER_ID_SET.has(input) ? input : null;
+    if (CHAT_STOCK_WALLPAPER_ID_SET.has(input)) {
+        return input;
+    }
+    return CHAT_STOCK_WALLPAPER_PRESETS[input] || null;
 };
 
 const resolveStockWallpaper = value => {
