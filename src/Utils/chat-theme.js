@@ -63,8 +63,97 @@ export const CHAT_ANIMATED_WALLPAPER_PRESETS = Object.freeze({
     aurora: 'aurora',
     'lava-lamp': 'lavaLamp'
 });
+const CHAT_STOCK_WALLPAPER_IDS = Object.freeze([
+    'wallpaper_copper_blue_001',
+    'wallpaper_neon_dusk_001',
+    'wallpaper_fresh_rose_001',
+    'wallpaper_orange_001',
+    'wallpaper_morning_001',
+    'wallpaper_peach_001',
+    'wallpaper_bloom_001',
+    'wallpaper_dusk_001',
+    'wallpaper_laser_001',
+    'wallpaper_violet_001',
+    'wallpaper_leak_001',
+    'wallpaper_lilac_001',
+    'wallpaper_night_001',
+    'wallpaper_space_001',
+    'wallpaper_sunset_001',
+    'wallpaper_blue_gray_001',
+    'wallpaper_muk_001',
+    'wallpaper_late_night_001',
+    'wallpaper_agave_cactus_orange_stucco_wall_001',
+    'wallpaper_joshua_tree_moon_001',
+    'wallpaper_airplane_palm_tree_001',
+    'wallpaper_black_sand_beach_hawaii_001',
+    'wallpaper_looking_up_palm_trees_001',
+    'wallpaper_beach_top_view_bileffahi_001',
+    'wallpaper_fall_grand_teton_mountains_wyoming_001',
+    'wallpaper_buttes_in_monument_valley_arizona_001',
+    'wallpaper_beach_palm_trees_001',
+    'wallpaper_sunset_icebergs_greenland_001',
+    'wallpaper_kauai_shore_hawaii_001',
+    'wallpaper_migrating_bird_sun_001',
+    'wallpaper_sunrise_yosemite_national_park_001',
+    'wallpaper_winding_road_utah_001',
+    'wallpaper_green_meadow_on_hill_001',
+    'wallpaper_rock_joshua_tree_national_park_001',
+    'wallpaper_icebergs_floating_over_sea_greenland_001',
+    'wallpaper_vermilion_cliffs_national_monument_001',
+    'wallpaper_moon_maple_tree_001',
+    'wallpaper_mesa_arch_utah_001',
+    'wallpaper_sunset_snowy_mountain_ridge_alaska_001',
+    'wallpaper_daytime_snow_covered_desert_001',
+    'wallpaper-00012',
+    'wallpaper-00028',
+    'wallpaper-00029',
+    'wallpaper-00030',
+    'wallpaper-00027',
+    'wallpaper-00008',
+    'wallpaper-00021',
+    'wallpaper-00019',
+    'wallpaper-00011',
+    'wallpaper-00022',
+    'wallpaper-00018',
+    'wallpaper-00001',
+    'wallpaper-00025',
+    'wallpaper_burger_hotdog_floaties_001',
+    'wallpaper_dark_iridescent_liquid_001',
+    'wallpaper_prism_cake_001',
+    'wallpaper-00006',
+    'wallpaper_heart_necklace_001',
+    'wallpaper_chrome_metal_001',
+    'wallpaper-00002',
+    'wallpaper_rhinestone_stickers_001',
+    'wallpaper-00010',
+    'wallpaper-00003',
+    'wallpaper-00009',
+    'wallpaper_soft_lemon_001',
+    'wallpaper_star_shape_balloons_001',
+    'wallpaper-00016',
+    'wallpaper_glossy_heart_001',
+    'wallpaper-00020',
+    'wallpaper_glossy_star_001',
+    'wallpaper_heart_and_bubble_001',
+    'wallpaper-00013',
+    'wallpaper-00023',
+    'wallpaper_soft_grape_001',
+    'wallpaper_clear_resin_sculpture_001',
+    'wallpaper_chrome_cherry_001',
+    'wallpaper_disco_tomato_001',
+    'wallpaper_charcoal_heart_001',
+    'wallpaper_clear_organic_resin_in_dark_001',
+    'wallpaper_hexagon_mercedes_001',
+    'wallpaper_blue_stars_karol_g_001',
+    'wallpaper_pink_ribbons_loveshackfancy_001',
+    'wallpaper_lion_HP_001',
+    'wallpaper_badger_HP_001',
+    'wallpaper_bird_HP_001',
+    'wallpaper_snake_HP_001'
+]);
 const CHAT_SCHEME_IDS = new Set(Object.values(CHAT_THEME_PRESETS));
 const CHAT_ANIMATED_WALLPAPER_IDS = new Set(Object.values(CHAT_ANIMATED_WALLPAPER_PRESETS));
+const CHAT_STOCK_WALLPAPER_ID_SET = new Set(CHAT_STOCK_WALLPAPER_IDS);
 
 const RESET_WORDS = new Set(['reset', 'clear', 'hapus', 'default']);
 const EXAMPLE_WORDS = new Set(['example', 'examples', 'contoh', 'list']);
@@ -74,7 +163,10 @@ const ARGB_ALPHA = 0xff000000;
 export const isChatThemeExample = content => typeof content === 'string' && EXAMPLE_WORDS.has(content.trim().toLowerCase());
 
 export const getChatThemeExamples = () => ({
-    themes: CHAT_THEME_PRESETS,
+    themes: {
+        ...CHAT_THEME_PRESETS,
+        ...Object.fromEntries(CHAT_STOCK_WALLPAPER_IDS.map(id => [id, id]))
+    },
     bubbles: CHAT_BUBBLE_PRESETS,
     animatedWallpapers: CHAT_ANIMATED_WALLPAPER_PRESETS,
     usage: [
@@ -82,6 +174,7 @@ export const getChatThemeExamples = () => ({
         "conn.setThemeGroup(m.chat, { bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: 'pink', bubble: 'royal-blue' })",
         "conn.setThemeGroup(m.chat, { theme: './wallpaper.jpg', bubble: 'pink-tonal' })",
+        "conn.setThemeGroup(m.chat, { theme: 'wallpaper_bloom_001', dimLevel: 0.2 })",
         "conn.setThemeGroup(m.chat, { animatedWallpaper: 'aurora', dimLevel: 0.2 })",
         "conn.setThemeGroup(m.chat, { reset: true })"
     ]
@@ -140,6 +233,22 @@ const resolveAnimatedWallpaper = value => {
     return id;
 };
 
+const findStockWallpaper = value => {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    const input = value.trim();
+    return CHAT_STOCK_WALLPAPER_ID_SET.has(input) ? input : null;
+};
+
+const resolveStockWallpaper = value => {
+    const id = findStockWallpaper(value);
+    if (!id) {
+        throw new Boom('stockWallpaper must be an ID from setThemeGroup(jid, \'example\')', { statusCode: 400 });
+    }
+    return id;
+};
+
 const normalizeContent = content => {
     if (content == null) {
         throw new Boom('setThemeGroup needs a theme, bubble, wallpaper, animatedWallpaper, color, or reset', { statusCode: 400 });
@@ -151,6 +260,9 @@ const normalizeContent = content => {
         }
         if (findAnimatedWallpaper(value)) {
             return { animatedWallpaper: value };
+        }
+        if (findStockWallpaper(value)) {
+            return { stockWallpaper: value };
         }
         if (value.startsWith('#') || CHAT_THEME_COLOR_PRESETS[value.toLowerCase()] || /^[0-9a-f]{6}$/i.test(value)) {
             return { color: value };
@@ -240,13 +352,14 @@ const uploadWallpaper = async (wallpaper, options) => {
     }
 };
 
-const buildMessage = ({ bubble, color, wallpaper, animatedWallpaper, reset, defaultWallpaper }) => {
+const buildMessage = ({ bubble, color, wallpaper, stockImage, animatedWallpaper, reset, defaultWallpaper }) => {
     const chatThemeSetting = proto.Message.ChatThemeSetting.fromObject({
         settingTimestampMs: Date.now(),
         ...(reset ? { clearTheme: true } : {}),
         ...(bubble ? { colorSchemeId: bubble } : {}),
         ...(defaultWallpaper ? { defaultWallpaper: {} } : {}),
         ...(color != null ? { solidColor: { backgroundLightArgb: color, backgroundDarkArgb: color } } : {}),
+        ...(stockImage ? { stockImage } : {}),
         ...(wallpaper ? { customImage: wallpaper } : {}),
         ...(animatedWallpaper ? { animatedWallpaper } : {})
     });
@@ -276,6 +389,9 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
             else if (findAnimatedWallpaper(value)) {
                 input.animatedWallpaper = value;
             }
+            else if (findStockWallpaper(value)) {
+                input.stockWallpaper = value;
+            }
             else if (value.startsWith('#') || CHAT_THEME_COLOR_PRESETS[value.toLowerCase()] || /^[0-9a-f]{6}$/i.test(value)) {
                 input.color = value;
             }
@@ -295,7 +411,7 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
         throw new Boom('chatThemeSetting.colorSchemeId must be a non-empty string', { statusCode: 400 });
     }
     const reset = input.reset === true;
-    const sources = [reset, input.color != null, input.wallpaper != null, input.animatedWallpaper != null, input.themeScheme != null].filter(Boolean).length;
+    const sources = [reset, input.color != null, input.wallpaper != null, input.stockWallpaper != null, input.animatedWallpaper != null, input.themeScheme != null].filter(Boolean).length;
     if (sources > 1 || (sources === 0 && bubble == null) || (reset && bubble != null)) {
         throw new Boom('setThemeGroup needs exactly one theme source, optionally one bubble, or reset', { statusCode: 400 });
     }
@@ -308,6 +424,13 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
         wallpaper = await uploadWallpaper(input.wallpaper, options);
         if (input.dimLevel != null) {
             wallpaper.dimLevel = Number(input.dimLevel);
+        }
+    }
+    let stockImage;
+    if (input.stockWallpaper != null) {
+        stockImage = { stockImageId: resolveStockWallpaper(input.stockWallpaper) };
+        if (input.dimLevel != null) {
+            stockImage.dimLevel = Number(input.dimLevel);
         }
     }
     let animatedWallpaper;
@@ -324,7 +447,7 @@ export const prepareChatThemeMessages = async (content, options = {}) => {
         }
         return [themeMessage];
     }
-    return [buildMessage({ bubble, color, wallpaper, animatedWallpaper })];
+    return [buildMessage({ bubble, color, wallpaper, stockImage, animatedWallpaper })];
 };
 
 export const prepareChatThemeMessage = async (content, options = {}) => {

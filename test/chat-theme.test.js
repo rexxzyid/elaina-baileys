@@ -104,6 +104,33 @@ test('animated wallpaper presets use native IDs without media upload', async () 
     await assert.rejects(prepareChatThemeMessage({ animatedWallpaper: 'id-buatan-sendiri' }, { logger }), /animatedWallpaper must be/);
 });
 
+test('stock wallpaper IDs are available through theme without media upload', async () => {
+    const catalog = getChatThemeExamples();
+    const ids = Object.values(catalog.themes).filter(id => /^wallpaper(?:-|_)/.test(id));
+    assert.equal(ids.length, 86);
+    assert.equal(new Set(ids).size, 86);
+    for (const id of ids) {
+        const message = await prepareChatThemeMessage({
+            theme: id,
+            bubble: 'pink',
+            dimLevel: 0.25
+        }, {
+            logger,
+            upload() {
+                assert.fail('stock wallpaper must not upload media');
+            }
+        });
+        const setting = encodeAndDecode(message).protocolMessage.chatThemeSetting;
+        assert.equal(setting.stockImage.stockImageId, id);
+        assert.equal(setting.stockImage.dimLevel, 0.25);
+        assert.equal(setting.colorSchemeId, 'Pink');
+        assert.equal(setting.customImage, null);
+        assert.equal(setting.animatedWallpaper, null);
+    }
+    const direct = encodeAndDecode(await prepareChatThemeMessage('wallpaper_dusk_001', { logger }));
+    assert.equal(direct.protocolMessage.chatThemeSetting.stockImage.stockImageId, 'wallpaper_dusk_001');
+});
+
 test('chat theme rejects ambiguous or invalid input', async () => {
     await assert.rejects(prepareChatThemeMessage({}, { logger }), /exactly one/);
     await assert.rejects(prepareChatThemeMessage({ color: '#ff69b4', reset: true }, { logger }), /exactly one/);
@@ -117,8 +144,11 @@ test('chat theme rejects ambiguous or invalid input', async () => {
 test('theme and bubble catalogs contain every WA Web scheme', () => {
     const catalog = getChatThemeExamples();
     assert.equal(Object.keys(CHAT_THEME_PRESETS).length, 49);
+    assert.equal(Object.keys(catalog.themes).length, 135);
     assert.equal(CHAT_BUBBLE_PRESETS, CHAT_THEME_PRESETS);
     assert.equal(catalog.themes.pink, 'Pink');
+    assert.equal(catalog.themes.wallpaper_bloom_001, 'wallpaper_bloom_001');
+    assert.equal(catalog.themes.wallpaper_lion_HP_001, 'wallpaper_lion_HP_001');
     assert.equal(catalog.bubbles['royal-blue-tonal'], 'Royal-Blue@Tonal');
     assert.equal(catalog.bubbles['default-blue-minimal'], 'Default-Blue@Minimal');
     assert.equal(catalog.bubbles['sunset-orange'], 'Sunset-Orange');
